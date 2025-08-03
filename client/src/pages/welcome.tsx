@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import torristsLogoPath from "@assets/Screenshot_20250803_113321_WhatsApp_1754250527535.jpg";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -6,12 +7,13 @@ export default function Welcome() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-torrist-green to-torrist-green-light">
       <div className="text-center animate-fade-in">
-        {/* Vintage band logo recreation */}
-        <div className="relative mb-8 p-8 bg-torrist-cream rounded-3xl vintage-shadow">
-          <h1 className="text-6xl md:text-8xl font-serif text-torrist-orange mb-2">The</h1>
-          <h1 className="text-6xl md:text-8xl font-serif text-torrist-orange-light">Torrists</h1>
-          <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-torrist-orange rounded-full opacity-80"></div>
-          <div className="absolute -top-2 -left-2 w-12 h-12 bg-torrist-green-dark rounded-full opacity-60"></div>
+        {/* Actual band logo */}
+        <div className="mb-8">
+          <img 
+            src={torristsLogoPath} 
+            alt="The Torrists Band Logo" 
+            className="w-72 h-72 md:w-80 md:h-80 object-cover rounded-2xl shadow-2xl mx-auto"
+          />
         </div>
         
         <h2 className="text-2xl md:text-3xl font-sans text-white mb-8 opacity-90">Band Calendar & Schedule</h2>
