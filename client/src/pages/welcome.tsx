@@ -44,25 +44,23 @@ export default function Welcome() {
         <h2 className="text-2xl md:text-3xl font-sans text-white mb-2 opacity-90">Who's checking in?</h2>
         <p className="text-white opacity-70 font-sans mb-8">Select your band member profile</p>
 
-        {/* User selection boxes - wider but shorter to fit without scrolling */}
-        <div className="grid grid-cols-1 gap-3 mb-8 max-w-sm mx-auto">
+        {/* User selection boxes - 2x2 grid with shorter height */}
+        <div className="grid grid-cols-2 gap-3 mb-8 max-w-lg mx-auto">
           {bandMembers?.map((member) => (
             <div 
               key={member.id}
-              className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+              className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => selectPersona(member)}
             >
-              <div className="flex items-center gap-4">
+              <div className="text-center">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
                   style={{ backgroundColor: member.color }}
                 >
                   <i className={`fas ${member.icon} text-white text-lg`}></i>
                 </div>
-                <div className="text-left flex-1">
-                  <h3 className="text-lg font-sans font-semibold text-torrist-green">{member.name}</h3>
-                  <p className="text-sm text-gray-600">{member.role}</p>
-                </div>
+                <h3 className="text-base font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
+                <p className="text-xs text-gray-600">{member.role}</p>
               </div>
             </div>
           ))}
