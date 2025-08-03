@@ -429,7 +429,7 @@ export default function Calendar() {
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
                               right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
-                              top: `${(bandEvents.length + idx) * 18}px`,
+                              top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -471,7 +471,7 @@ export default function Calendar() {
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
                               right: isLastDay ? 0 : '-2px',
-                              top: `${(bandEvents.length + idx) * 18}px`,
+                              top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
