@@ -59,9 +59,12 @@ export default function Calendar() {
     queryKey: ["/api/band-members"],
   });
 
-  // Get next upcoming event
+  // Get next upcoming band event (only practices and gigs, not unavailability)
   const upcomingEvents = events
     .filter(event => {
+      // Only show band events (practice/gig), not unavailability
+      if (event.type === "unavailable") return false;
+      
       // Parse date as local time by adding T00:00:00 to ensure local timezone
       const eventDate = new Date(event.date + 'T00:00:00');
       const today = new Date();
