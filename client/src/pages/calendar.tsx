@@ -139,6 +139,11 @@ export default function Calendar() {
   };
 
   const openEditEventModal = (event: Event) => {
+    // Check if user can edit this event
+    if (event.type === "unavailable" && event.memberId !== currentUser.id) {
+      return; // Can't edit other members' unavailability
+    }
+    
     setSelectedEvent(event);
     setSelectedDate(event.date);
     setEventType(event.type as "practice" | "gig" | "unavailable");
@@ -412,10 +417,13 @@ export default function Calendar() {
                         const cellsAvailable = getRemainingDaysInWeek(dayIndex);
                         const cellsToSpan = Math.min(spanDays, cellsAvailable);
                         
+                        const canEdit = event.memberId === currentUser.id;
                         return (
                           <div 
                             key={`unavail-start-${idx}`}
-                            className="rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 cursor-pointer hover:opacity-80"
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                              canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
+                            }`}
                             style={{
                               borderLeft: `3px solid ${member?.color}`,
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
@@ -425,11 +433,14 @@ export default function Calendar() {
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              openEditEventModal(event);
+                              if (canEdit) {
+                                openEditEventModal(event);
+                              }
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
                               {member?.name} unavailable
+                              {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                               {isMultiDayEvent(event) && spanDays > cellsAvailable && (
                                 <span className="text-xs opacity-75 ml-1">...</span>
                               )}
@@ -447,7 +458,9 @@ export default function Calendar() {
                         return (
                           <div 
                             key={`unavail-extend-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 cursor-pointer hover:opacity-80 ${
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                              event.memberId === currentUser.id ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
+                            } ${
                               isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
                             } ${
                               isLastDay ? 'rounded-r-sm' : 'rounded-r-none'
@@ -461,11 +474,14 @@ export default function Calendar() {
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              openEditEventModal(event);
+                              if (event.memberId === currentUser.id) {
+                                openEditEventModal(event);
+                              }
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
                               {member?.name} unavailable
+                              {event.memberId !== currentUser.id && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                             </span>
                           </div>
                         );
