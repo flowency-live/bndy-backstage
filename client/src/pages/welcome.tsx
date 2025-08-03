@@ -44,28 +44,24 @@ export default function Welcome() {
         <h2 className="text-2xl md:text-3xl font-sans text-white mb-2 opacity-90">Who's checking in?</h2>
         <p className="text-white opacity-70 font-sans mb-8">Select your band member profile</p>
 
-        {/* User selection boxes in 2 columns */}
-        <div className="grid grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
+        {/* User selection boxes - wider but shorter to fit without scrolling */}
+        <div className="grid grid-cols-1 gap-3 mb-8 max-w-sm mx-auto">
           {bandMembers?.map((member) => (
             <div 
               key={member.id}
-              className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+              className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => selectPersona(member)}
             >
-              <div className="text-center">
+              <div className="flex items-center gap-4">
                 <div 
-                  className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center"
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: member.color }}
                 >
-                  <i className={`fas ${member.icon} text-white text-xl`}></i>
+                  <i className={`fas ${member.icon} text-white text-lg`}></i>
                 </div>
-                <h3 className="text-lg font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
-                <p className="text-sm text-gray-600">{member.role}</p>
-                <div className="mt-3 flex justify-center">
-                  <div 
-                    className="w-4 h-4 rounded-full border border-white shadow-sm"
-                    style={{ backgroundColor: member.color }}
-                  ></div>
+                <div className="text-left flex-1">
+                  <h3 className="text-lg font-sans font-semibold text-torrist-green">{member.name}</h3>
+                  <p className="text-sm text-gray-600">{member.role}</p>
                 </div>
               </div>
             </div>
