@@ -205,46 +205,43 @@ export default function Calendar() {
       </div>
 
       {/* Calendar Navigation */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="bg-torrist-green-light px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="text-white hover:text-gray-200 p-2"
-              >
-                <i className="fas fa-chevron-left text-xl"></i>
-              </button>
-              <h2 className="text-2xl font-serif text-white">
-                {format(currentDate, "MMMM yyyy")}
-              </h2>
-              <button 
-                onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                className="text-white hover:text-gray-200 p-2"
-              >
-                <i className="fas fa-chevron-right text-xl"></i>
-              </button>
-            </div>
+      <div className="bg-white">
+        <div className="bg-torrist-green-light px-4 py-3">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+              className="text-white hover:text-gray-200 p-2 -ml-2"
+            >
+              <i className="fas fa-chevron-left text-xl"></i>
+            </button>
+            <h2 className="text-xl md:text-2xl font-serif text-white uppercase tracking-wide">
+              {format(currentDate, "MMM yyyy")}
+            </h2>
+            <button 
+              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+              className="text-white hover:text-gray-200 p-2 -mr-2"
+            >
+              <i className="fas fa-chevron-right text-xl"></i>
+            </button>
           </div>
+        </div>
 
-          {/* Calendar Grid */}
-          {viewMode === "calendar" && (
-          <div className="p-6">
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                <div key={day} className="text-center font-sans font-semibold text-gray-600 py-2">
-                  {day}
-                </div>
-              ))}
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+          {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+            <div key={`header-${idx}`} className="text-center font-medium text-gray-700 py-2 text-xs">
+              {day}
             </div>
+          ))}
+        </div>
 
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-2">
-              {/* Empty cells for month start */}
-              {Array.from({ length: monthStart.getDay() }, (_, i) => (
-                <div key={`empty-${i}`} className="h-24 md:h-32"></div>
-              ))}
+        {/* Calendar Grid */}
+        {viewMode === "calendar" && (
+          <div className="grid grid-cols-7">
+            {/* Empty cells for month start */}
+            {Array.from({ length: monthStart.getDay() }, (_, i) => (
+              <div key={`empty-${i}`} className="min-h-[100px] border-r border-b border-gray-200"></div>
+            ))}
               
               {calendarDays.map(day => {
                 const dayEvents = getEventsForDate(day);
@@ -254,85 +251,87 @@ export default function Calendar() {
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isTodayDate = isToday(day);
 
-                let cellClasses = "h-24 md:h-32 rounded-lg p-2 cursor-pointer transition-colors ";
-                
-                if (!isCurrentMonth) {
-                  cellClasses += "bg-gray-100 text-gray-400 ";
-                } else if (unavailableMembers.length > 0) {
-                  cellClasses += "bg-torrist-unavailable hover:bg-pink-200 ";
-                } else if (bandEvents.length > 0) {
-                  const hasGig = bandEvents.some(e => e.type === "gig");
-                  cellClasses += hasGig 
-                    ? "bg-torrist-orange bg-opacity-20 hover:bg-torrist-orange hover:bg-opacity-30 border-2 border-torrist-orange border-opacity-50 "
-                    : "bg-torrist-green bg-opacity-20 hover:bg-torrist-green hover:bg-opacity-30 border-2 border-torrist-green border-opacity-50 ";
-                } else if (isTodayDate) {
-                  cellClasses += "bg-blue-100 hover:bg-blue-200 border-2 border-blue-400 ";
-                } else {
-                  cellClasses += "bg-gray-50 hover:bg-gray-100 ";
-                }
-
                 return (
                   <div 
                     key={dateStr}
-                    className={cellClasses}
-                    onClick={() => openEventModal(dateStr, "practice")}
+                    className={`min-h-[90px] border-r border-b border-gray-200 p-1 cursor-pointer hover:bg-gray-50 relative ${
+                      !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                    }`}
+                    onClick={() => openEventModal(day, "practice")}
                   >
-                    <div className={`text-sm font-sans font-semibold ${isTodayDate ? "text-blue-700" : "text-gray-700"}`}>
+                    {/* Date number - Google Calendar style */}
+                    <div className={`text-sm font-medium mb-1 ${
+                      isTodayDate 
+                        ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold' 
+                        : isCurrentMonth 
+                          ? 'text-gray-900' 
+                          : 'text-gray-400'
+                    }`}>
                       {format(day, "d")}
                     </div>
-                    
-                    {isTodayDate && (
-                      <div className="bg-blue-600 text-white text-xs rounded px-2 py-1 mt-1">Today</div>
-                    )}
-                    
-                    {bandEvents.map((event, idx) => (
-                      <div key={idx} className="mt-1">
-                        <div className={`text-white text-xs rounded px-2 py-1 ${
-                          event.type === "gig" ? "bg-torrist-orange" : "bg-torrist-green"
-                        }`}>
-                          <i className={`fas ${event.type === "gig" ? "fa-star" : "fa-music"} mr-1`}></i>
-                          {event.type === "gig" ? "Gig" : "Practice"}
+
+                    {/* Events - Google Calendar style with edge-to-edge bars */}
+                    <div className="space-y-0.5">
+                      {/* Band events - full width colored bars */}
+                      {bandEvents.slice(0, 3).map((event, idx) => {
+                        const eventColor = event.type === "gig" ? "bg-torrist-orange" : "bg-torrist-green";
+                        const timeStr = event.startTime ? event.startTime.substring(0, 5) : "";
+                        
+                        return (
+                          <div 
+                            key={`band-${idx}`}
+                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm`}
+                          >
+                            <div className="flex items-center gap-1">
+                              {event.type === "gig" && <i className="fas fa-star text-xs"></i>}
+                              <span className="truncate flex-1 font-medium">
+                                {timeStr && <span className="font-semibold">{timeStr}</span>}
+                                {timeStr && " "}
+                                {event.title || (event.type === "gig" ? "Gig" : "Practice")}
+                              </span>
+                            </div>
+                            {event.location && (
+                              <div className="text-xs opacity-90 truncate">
+                                <i className="fas fa-map-marker-alt mr-1"></i>
+                                {event.location}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Unavailable members - compact pink bars */}
+                      {unavailableMembers.slice(0, 2).map((member, idx) => (
+                        <div 
+                          key={`unavail-${idx}`}
+                          className="bg-torrist-unavailable rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm"
+                          style={{ 
+                            borderLeft: `3px solid ${member?.color}`,
+                            backgroundColor: 'rgba(219, 112, 147, 0.15)'
+                          }}
+                        >
+                          <span className="text-gray-800 truncate font-medium">
+                            {member?.name} unavailable
+                          </span>
                         </div>
-                        {event.startTime && (
-                          <div className="text-xs text-gray-600 mt-1">{event.startTime}</div>
-                        )}
-                        {event.location && (
-                          <div className="text-xs text-gray-600">{event.location}</div>
-                        )}
-                      </div>
-                    ))}
-                    
-                    {unavailableMembers.length > 0 && (
-                      <div className="flex items-center mt-1">
-                        <div className="flex items-center space-x-1">
-                          {unavailableMembers.slice(0, 2).map((member, idx) => (
-                            <div 
-                              key={idx}
-                              className="w-4 h-4 rounded-full border border-white"
-                              style={{ backgroundColor: member.color }}
-                            ></div>
-                          ))}
-                          {unavailableMembers.length > 2 && (
-                            <span className="text-xs text-gray-600">+{unavailableMembers.length - 2}</span>
-                          )}
+                      ))}
+                      
+                      {/* More events indicator */}
+                      {(bandEvents.length + unavailableMembers.length) > 3 && (
+                        <div className="text-xs text-gray-500 px-1 py-0.5">
+                          +{(bandEvents.length + unavailableMembers.length) - 3} more
                         </div>
-                        <span className="text-xs text-gray-600 ml-2">
-                          {unavailableMembers.length === 1 
-                            ? unavailableMembers[0].name 
-                            : `${unavailableMembers.length} unavailable`}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-          )}
-          
-          {/* Agenda View */}
-          {viewMode === "agenda" && (
-            <div className="p-6">
+        )}
+        
+        {/* Agenda View */}
+        {viewMode === "agenda" && (
+          <div className="p-6">
               <div className="space-y-4">
                 {getAgendaEvents().length === 0 ? (
                   <div className="text-center py-8">
@@ -424,7 +423,6 @@ export default function Calendar() {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       {/* Quick Actions */}
