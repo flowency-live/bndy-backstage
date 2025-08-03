@@ -41,23 +41,25 @@ export default function Welcome() {
           />
         </div>
         
-        {/* User selection boxes - 2x2 grid with shorter height */}
-        <div className="grid grid-cols-2 gap-3 mb-8 max-w-lg mx-auto">
+        {/* User selection boxes - 2x2 grid with horizontal layout */}
+        <div className="grid grid-cols-2 gap-2 mb-6 max-w-sm mx-auto">
           {bandMembers?.map((member) => (
             <div 
               key={member.id}
-              className="bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+              className="bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => selectPersona(member)}
             >
-              <div className="text-center">
+              <div className="flex items-center gap-2">
                 <div 
-                  className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: member.color }}
                 >
-                  <i className={`fas ${member.icon} text-white text-lg`}></i>
+                  <i className={`fas ${member.icon} text-white text-sm`}></i>
                 </div>
-                <h3 className="text-base font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
-                <p className="text-xs text-gray-600">{member.role}</p>
+                <div className="text-left min-w-0 flex-1">
+                  <h3 className="text-sm font-sans font-semibold text-torrist-green leading-tight">{member.name}</h3>
+                  <p className="text-xs text-gray-600 leading-tight">{member.role}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -66,7 +68,7 @@ export default function Welcome() {
         <div className="text-center">
           <button 
             onClick={() => setLocation("/admin")}
-            className="text-white hover:text-gray-200 font-sans underline text-sm"
+            className="text-gray-800 hover:text-gray-600 font-sans underline text-sm bg-white/20 px-3 py-1 rounded"
           >
             Admin: Manage Band Members
           </button>
