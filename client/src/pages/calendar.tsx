@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
+import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths } from "date-fns";
 import type { Event, BandMember } from "@shared/schema";
 import EventModal from "@/components/event-modal";
@@ -15,6 +16,18 @@ export default function Calendar() {
   const [eventType, setEventType] = useState<"practice" | "gig" | "unavailable">("practice");
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
+
+  // Swipe handlers for month navigation
+  const navigateToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const navigateToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+
+  const swipeRef = useSwipe({
+    onSwipeLeft: navigateToNextMonth,
+    onSwipeRight: navigateToPreviousMonth,
+  }, {
+    threshold: 50, // Lower threshold for easier swiping
+    trackMouse: false, // Only track touch events
+  });
 
   // Redirect if no user selected
   if (!currentUser) {
@@ -246,16 +259,25 @@ export default function Calendar() {
         <div className="bg-torrist-green-light px-4 py-3">
           <div className="flex items-center justify-between">
             <button 
-              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+              onClick={navigateToPreviousMonth}
               className="text-white hover:text-gray-200 p-2 -ml-2"
             >
               <i className="fas fa-chevron-left text-xl"></i>
             </button>
-            <h2 className="text-xl md:text-2xl font-serif text-white uppercase tracking-wide">
-              {format(currentDate, "MMM yyyy")}
-            </h2>
+            <div className="flex items-center space-x-2">
+              <div className="hidden md:block text-xs text-white opacity-75">
+                <i className="fas fa-hand-point-left mr-1"></i>
+                Swipe to navigate
+              </div>
+              <h2 className="text-xl md:text-2xl font-serif text-white uppercase tracking-wide">
+                {format(currentDate, "MMM yyyy")}
+              </h2>
+              <div className="hidden md:block text-xs text-white opacity-75">
+                <i className="fas fa-hand-point-right ml-1"></i>
+              </div>
+            </div>
             <button 
-              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+              onClick={navigateToNextMonth}
               className="text-white hover:text-gray-200 p-2 -mr-2"
             >
               <i className="fas fa-chevron-right text-xl"></i>
@@ -274,7 +296,7 @@ export default function Calendar() {
 
         {/* Calendar Grid */}
         {viewMode === "calendar" && (
-          <div className="grid grid-cols-7">
+          <div ref={swipeRef} className="grid grid-cols-7 touch-swipe-area">
             {/* Empty cells for month start */}
             {Array.from({ length: monthStart.getDay() }, (_, i) => (
               <div key={`empty-${i}`} className="min-h-[100px] border-r border-b border-gray-200"></div>

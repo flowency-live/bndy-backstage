@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Torrists Band Calendar is a web application designed for managing band practices, gigs, and member availability. It provides a mobile-optimized calendar interface where band members can select their persona, view schedules, and manage events with conflict detection capabilities. The application features a vintage rock band aesthetic with custom branding and is built as a full-stack React application with Express backend.
+The Torrists Band Calendar is a web application designed for managing band practices, gigs, and member availability. It provides a mobile-optimized calendar interface where band members can select their persona, view schedules, and manage events with conflict detection capabilities. The application features a vintage rock band aesthetic with custom branding, swipe gesture navigation for mobile devices, and is built as a full-stack React application with Express backend.
 
 ## User Preferences
 
@@ -20,7 +20,7 @@ The frontend is built using React with TypeScript, utilizing a modern component-
 - **Routing**: Wouter for lightweight client-side routing
 - **Build Tool**: Vite for fast development and optimized production builds
 
-The application follows a page-based routing structure with persona selection, calendar view, and admin management. Custom components handle date/time picking, event modals, and calendar rendering with conflict detection.
+The application follows a page-based routing structure with persona selection, calendar view, and admin management. Custom components handle date/time picking, event modals, calendar rendering with conflict detection, and mobile-friendly swipe gesture navigation. The calendar supports intuitive left/right swipe gestures for month navigation on touch devices.
 
 ### Backend Architecture
 The backend uses Express.js with TypeScript in a RESTful API pattern:

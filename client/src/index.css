@@ -167,6 +167,17 @@
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
+
+  /* Touch-friendly interactions */
+  .touch-swipe-area {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: pan-y;
+  }
 }
 
 @keyframes fadeIn {
