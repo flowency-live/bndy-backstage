@@ -41,9 +41,6 @@ export default function Welcome() {
           />
         </div>
         
-        <h2 className="text-2xl md:text-3xl font-sans text-white mb-2 opacity-90">Who's checking in?</h2>
-        <p className="text-white opacity-70 font-sans mb-8">Select your band member profile</p>
-
         {/* User selection boxes - 2x2 grid with shorter height */}
         <div className="grid grid-cols-2 gap-3 mb-8 max-w-lg mx-auto">
           {bandMembers?.map((member) => (
