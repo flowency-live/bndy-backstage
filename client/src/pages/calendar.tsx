@@ -379,9 +379,12 @@ export default function Calendar() {
                             <div className="flex items-center gap-1">
                               {event.type === "gig" && <i className="fas fa-star text-xs"></i>}
                               <span className="truncate flex-1 font-medium">
-                                {timeStr && <span className="font-semibold">{timeStr}</span>}
-                                {timeStr && " "}
                                 {event.title || (event.type === "gig" ? "Gig" : "Practice")}
+                                {event.location && (
+                                  <span className="text-xs opacity-90 block truncate">
+                                    {event.location}
+                                  </span>
+                                )}
                                 {isMultiDayEvent(event) && spanDays > cellsAvailable && (
                                   <span className="text-xs opacity-75 ml-1">...</span>
                                 )}
