@@ -132,31 +132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/events/check-conflicts", async (req, res) => {
     try {
       const { date, endDate, type } = req.body;
-      
-      if (type === 'unavailable') {
-        return res.json({ conflicts: [] });
-      }
-
-      const checkEndDate = endDate || date;
-      const events = await storage.getEventsByDateRange(date, checkEndDate);
-      
-      const conflicts = events.filter(event => 
-        event.type === 'unavailable' && 
-        event.date <= checkEndDate && 
-        (event.endDate || event.date) >= date
-      );
-
-      const memberIds = [...new Set(conflicts.map(c => c.memberId).filter(Boolean))];
-      const conflictMembers = [];
-      
-      for (const memberId of memberIds) {
-        const member = await storage.getBandMember(memberId);
-        if (member) {
-          conflictMembers.push(member);
-        }
-      }
-
-      res.json({ conflicts: conflictMembers });
+      const result = await storage.checkConflicts({ date, endDate, type });
+      res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Failed to check conflicts" });
     }

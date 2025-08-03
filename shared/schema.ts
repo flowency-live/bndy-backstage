@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, boolean } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,6 +26,18 @@ export const events = pgTable("events", {
   isAllDay: boolean("is_all_day").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
+
+// Relations
+export const bandMembersRelations = relations(bandMembers, ({ many }) => ({
+  unavailableEvents: many(events),
+}));
+
+export const eventsRelations = relations(events, ({ one }) => ({
+  member: one(bandMembers, {
+    fields: [events.memberId],
+    references: [bandMembers.id],
+  }),
+}));
 
 export const insertBandMemberSchema = createInsertSchema(bandMembers).omit({
   id: true,
