@@ -32,7 +32,7 @@ export default function Calendar() {
 
   // Redirect if no user selected
   if (!currentUser) {
-    setLocation("/personas");
+    setLocation("/");
     return null;
   }
 
@@ -218,7 +218,7 @@ export default function Calendar() {
               <button 
                 onClick={() => {
                   logout();
-                  setLocation("/personas");
+                  setLocation("/");
                 }}
                 className="text-torrist-green hover:text-torrist-green-dark"
                 title="Switch user"
