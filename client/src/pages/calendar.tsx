@@ -8,7 +8,7 @@ import EventModal from "@/components/event-modal";
 
 export default function Calendar() {
   const [, setLocation] = useLocation();
-  const { currentUser } = useUser();
+  const { currentUser, logout } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -61,6 +61,25 @@ export default function Calendar() {
       const eventEndDate = event.endDate || event.date;
       return dateStr >= eventDate && dateStr <= eventEndDate;
     });
+  };
+
+  // Get events that start on a specific date (for rendering spanning events)
+  const getEventsStartingOnDate = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return events.filter(event => event.date === dateStr);
+  };
+
+  // Check if event is multi-day
+  const isMultiDayEvent = (event: any) => {
+    return event.endDate && event.endDate !== event.date;
+  };
+
+  // Calculate how many days an event spans from a given start date
+  const getEventSpanDays = (event: any) => {
+    if (!isMultiDayEvent(event)) return 1;
+    const startDate = new Date(event.date + 'T00:00:00');
+    const endDate = new Date(event.endDate + 'T00:00:00');
+    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   };
 
   const getUnavailableMembers = (dateEvents: Event[]) => {
@@ -143,10 +162,14 @@ export default function Calendar() {
                 </button>
               </div>
               <button 
-                onClick={() => setLocation("/personas")}
+                onClick={() => {
+                  logout();
+                  setLocation("/personas");
+                }}
                 className="text-torrist-green hover:text-torrist-green-dark"
+                title="Switch user"
               >
-                <i className="fas fa-user-switch text-lg"></i>
+                <i className="fas fa-sign-out-alt text-lg"></i>
               </button>
               <button 
                 onClick={() => openEventModal(format(new Date(), "yyyy-MM-dd"), "practice")}
@@ -271,7 +294,7 @@ export default function Calendar() {
                     className={`min-h-[90px] border-r border-b border-gray-200 p-1 cursor-pointer hover:bg-gray-50 relative ${
                       !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                     }`}
-                    onClick={() => openEventModal(day, "practice")}
+                    onClick={() => openEventModal(dateStr, "practice")}
                   >
                     {/* Date number - Google Calendar style */}
                     <div className={`text-sm font-medium mb-1 ${

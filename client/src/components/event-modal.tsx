@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import DatePickerModal from "./date-picker-modal";
+import DateRangePickerModal from "./date-range-picker-modal";
 import TimePickerModal from "./time-picker-modal";
 
 interface EventModalProps {
@@ -26,7 +27,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
     memberId: eventType === "unavailable" ? currentUser.id : undefined,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [timePickerType, setTimePickerType] = useState<"start" | "end">("start");
   const [conflicts, setConflicts] = useState<BandMember[]>([]);
@@ -60,7 +61,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
     if (formData.date && formData.type) {
       checkConflictsMutation.mutate({
         date: formData.date,
-        endDate: formData.endDate,
+        endDate: formData.endDate || undefined,
         type: formData.type,
       });
     }
@@ -233,31 +234,34 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
 
             {/* Date Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Date</label>
+              <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">
+                {formData.type === "unavailable" ? "Dates" : "Date"}
+              </label>
               <button
                 type="button"
-                onClick={() => setShowDatePicker(true)}
-                className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20"
+                onClick={() => {
+                  if (formData.type === "unavailable") {
+                    setShowDateRangePicker(true);
+                  } else {
+                    setShowDatePicker(true);
+                  }
+                }}
+                className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
               >
-                <span>{formData.date ? new Date(formData.date).toLocaleDateString() : "Select date"}</span>
+                <span>
+                  {formData.type === "unavailable" ? (
+                    formData.date ? (
+                      formData.endDate && formData.endDate !== formData.date
+                        ? `${new Date(formData.date + 'T00:00:00').toLocaleDateString()} - ${new Date(formData.endDate + 'T00:00:00').toLocaleDateString()}`
+                        : new Date(formData.date + 'T00:00:00').toLocaleDateString()
+                    ) : "Select dates"
+                  ) : (
+                    formData.date ? new Date(formData.date + 'T00:00:00').toLocaleDateString() : "Select date"
+                  )}
+                </span>
                 <i className="fas fa-calendar-alt absolute right-3 top-3 text-gray-400"></i>
               </button>
             </div>
-
-            {/* End Date (for unavailability) */}
-            {formData.type === "unavailable" && (
-              <div className="mb-6">
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">End Date (Optional)</label>
-                <button
-                  type="button"
-                  onClick={() => setShowEndDatePicker(true)}
-                  className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20"
-                >
-                  <span>{formData.endDate ? new Date(formData.endDate).toLocaleDateString() : "Same day"}</span>
-                  <i className="fas fa-calendar-alt absolute right-3 top-3 text-gray-400"></i>
-                </button>
-              </div>
-            )}
 
             {/* Time Selection (for practices and gigs) */}
             {(formData.type === "practice" || formData.type === "gig") && (
@@ -379,31 +383,26 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
         />
       )}
 
-      {/* End Date Picker Modal */}
-      {showEndDatePicker && (
-        <DatePickerModal
-          isOpen={showEndDatePicker}
-          onClose={() => setShowEndDatePicker(false)}
-          selectedDate={formData.endDate}
-          onSelectDate={(date) => {
-            setFormData(prev => ({ ...prev, endDate: date }));
-            setShowEndDatePicker(false);
-          }}
-          title="Select End Date"
-          allowClear={true}
-          onClear={() => {
-            setFormData(prev => ({ ...prev, endDate: undefined }));
-            setShowEndDatePicker(false);
-          }}
-        />
-      )}
+      {/* Date Range Picker Modal */}
+      <DateRangePickerModal
+        isOpen={showDateRangePicker}
+        onClose={() => setShowDateRangePicker(false)}
+        onDateRangeSelect={(startDate, endDate) => {
+          setFormData(prev => ({ 
+            ...prev, 
+            date: startDate,
+            endDate: startDate === endDate ? undefined : endDate
+          }));
+        }}
+        initialDate={formData.date}
+      />
 
       {/* Time Picker Modal */}
       {showTimePicker && (
         <TimePickerModal
           isOpen={showTimePicker}
           onClose={() => setShowTimePicker(false)}
-          selectedTime={timePickerType === "start" ? formData.startTime : formData.endTime}
+          selectedTime={timePickerType === "start" ? formData.startTime || undefined : formData.endTime || undefined}
           onSelectTime={(time) => {
             if (timePickerType === "start") {
               setFormData(prev => ({ ...prev, startTime: time }));

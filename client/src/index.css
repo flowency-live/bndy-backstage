@@ -32,7 +32,9 @@
   --torrist-green-dark: hsl(120, 60%, 34%);
   --torrist-cream: hsl(44, 30%, 92%);
   --torrist-cream-light: hsl(60, 29%, 96%);
-  --torrist-unavailable: hsl(345, 100%, 86%);
+  --torrist-unavailable: hsl(345, 82%, 58%);
+  --torrist-unavailable-light: hsl(345, 100%, 86%);
+  --torrist-unavailable-dark: hsl(345, 82%, 48%);
 }
 
 .dark {
