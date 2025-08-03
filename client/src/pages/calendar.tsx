@@ -410,85 +410,99 @@ export default function Calendar() {
                         );
                       })}
                       
-                      {/* Unavailable events that start today - with spanning */}
-                      {eventsStartingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
-                        const member = bandMembers.find(m => m.id === event.memberId);
-                        const spanDays = getEventSpanDays(event);
-                        const cellsAvailable = getRemainingDaysInWeek(dayIndex);
-                        const cellsToSpan = Math.min(spanDays, cellsAvailable);
+                      {/* All unavailable events for this day (both starting and extending) - sorted by member name for consistency */}
+                      {(() => {
+                        const startingUnavailable = eventsStartingToday.filter(e => e.type === "unavailable");
+                        const extendingUnavailable = eventsExtendingToday.filter(e => e.type === "unavailable");
                         
-                        const canEdit = event.memberId === currentUser.id;
-                        return (
-                          <div 
-                            key={`unavail-start-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
-                              canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
-                            }`}
-                            style={{
-                              borderLeft: `3px solid ${member?.color}`,
-                              backgroundColor: 'rgba(219, 112, 147, 0.15)',
-                              left: 0,
-                              right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
-                              top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (canEdit) {
-                                openEditEventModal(event);
-                              }
-                            }}
-                          >
-                            <span className="text-gray-800 truncate font-medium">
-                              <i className="fas fa-times text-red-500 mr-1"></i>
-                              {member?.name}
-                              {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
-                              {isMultiDayEvent(event) && spanDays > cellsAvailable && (
-                                <span className="text-xs opacity-75 ml-1">...</span>
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
-
-                      {/* Show continuation bars for multi-day events extending to this day */}
-                      {eventsExtendingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
-                        const member = bandMembers.find(m => m.id === event.memberId);
-                        const isLastDay = event.endDate === dateStr;
-                        const isFirstDayOfWeek = dayIndex % 7 === 0;
-                        const unavailableStartingToday = eventsStartingToday.filter(e => e.type === "unavailable").slice(0, 2);
+                        // Combine and sort by member name for consistent ordering
+                        const allUnavailableEvents = [...startingUnavailable, ...extendingUnavailable]
+                          .sort((a, b) => {
+                            const memberA = bandMembers.find(m => m.id === a.memberId);
+                            const memberB = bandMembers.find(m => m.id === b.memberId);
+                            return (memberA?.name || '').localeCompare(memberB?.name || '');
+                          })
+                          .slice(0, 4); // Show up to 4 unavailable events
                         
-                        return (
-                          <div 
-                            key={`unavail-extend-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
-                              event.memberId === currentUser.id ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
-                            } ${
-                              isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
-                            } ${
-                              isLastDay ? 'rounded-r-sm' : 'rounded-r-none'
-                            }`}
-                            style={{
-                              borderLeft: isFirstDayOfWeek ? `3px solid ${member?.color}` : 'none',
-                              backgroundColor: 'rgba(219, 112, 147, 0.15)',
-                              left: 0,
-                              right: isLastDay ? 0 : '-2px',
-                              top: `${(bandEvents.slice(0, 3).length + unavailableStartingToday.length + idx) * 18}px`,
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (event.memberId === currentUser.id) {
-                                openEditEventModal(event);
-                              }
-                            }}
-                          >
-                            <span className="text-gray-800 truncate font-medium">
-                              <i className="fas fa-times text-red-500 mr-1"></i>
-                              {member?.name}
-                              {event.memberId !== currentUser.id && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
-                            </span>
-                          </div>
-                        );
-                      })}
+                        return allUnavailableEvents.map((event, idx) => {
+                          const member = bandMembers.find(m => m.id === event.memberId);
+                          const isStartingToday = startingUnavailable.includes(event);
+                          const isExtending = extendingUnavailable.includes(event);
+                          const canEdit = event.memberId === currentUser.id;
+                          
+                          if (isStartingToday) {
+                            const spanDays = getEventSpanDays(event);
+                            const cellsAvailable = getRemainingDaysInWeek(dayIndex);
+                            const cellsToSpan = Math.min(spanDays, cellsAvailable);
+                            
+                            return (
+                              <div 
+                                key={`unavail-${event.id}`}
+                                className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
+                                  canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
+                                }`}
+                                style={{
+                                  borderLeft: `3px solid ${member?.color}`,
+                                  backgroundColor: 'rgba(219, 112, 147, 0.15)',
+                                  left: 0,
+                                  right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
+                                  top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (canEdit) {
+                                    openEditEventModal(event);
+                                  }
+                                }}
+                              >
+                                <span className="text-gray-800 truncate font-medium">
+                                  <i className="fas fa-times text-red-500 mr-1"></i>
+                                  {member?.name}
+                                  {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
+                                  {isMultiDayEvent(event) && spanDays > cellsAvailable && (
+                                    <span className="text-xs opacity-75 ml-1">...</span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          } else {
+                            const isLastDay = event.endDate === dateStr;
+                            const isFirstDayOfWeek = dayIndex % 7 === 0;
+                            
+                            return (
+                              <div 
+                                key={`unavail-${event.id}`}
+                                className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
+                                  canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
+                                } ${
+                                  isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
+                                } ${
+                                  isLastDay ? 'rounded-r-sm' : 'rounded-r-none'
+                                }`}
+                                style={{
+                                  borderLeft: isFirstDayOfWeek ? `3px solid ${member?.color}` : 'none',
+                                  backgroundColor: 'rgba(219, 112, 147, 0.15)',
+                                  left: 0,
+                                  right: isLastDay ? 0 : '-2px',
+                                  top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (canEdit) {
+                                    openEditEventModal(event);
+                                  }
+                                }}
+                              >
+                                <span className="text-gray-800 truncate font-medium">
+                                  <i className="fas fa-times text-red-500 mr-1"></i>
+                                  {member?.name}
+                                  {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
+                                </span>
+                              </div>
+                            );
+                          }
+                        });
+                      })()}
                     </div>
                   </div>
                 );
