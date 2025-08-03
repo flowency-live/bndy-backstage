@@ -32,32 +32,32 @@ export default function PersonaSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-torrist-cream to-torrist-cream-light p-4">
-      <div className="max-w-4xl mx-auto pt-8">
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-serif text-torrist-green mb-4">Who's checking in?</h2>
-          <p className="text-lg text-gray-600 font-sans">Select your band member profile</p>
+    <div className="min-h-screen bg-gradient-to-br from-torrist-cream to-torrist-cream-light p-4 flex flex-col">
+      <div className="max-w-2xl mx-auto flex-1 flex flex-col justify-center">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-serif text-torrist-green mb-2">Who's checking in?</h2>
+          <p className="text-gray-600 font-sans">Select your band member profile</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {bandMembers?.map((member) => (
             <div 
               key={member.id}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+              className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => selectPersona(member)}
             >
               <div className="text-center">
                 <div 
-                  className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
+                  className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center"
                   style={{ backgroundColor: member.color }}
                 >
-                  <i className={getIconClass(member.icon)}></i>
+                  <i className={`fas ${member.icon} text-white text-lg`}></i>
                 </div>
-                <h3 className="text-xl font-sans font-semibold text-torrist-green mb-2">{member.name}</h3>
-                <p className="text-gray-600">{member.role}</p>
-                <div className="mt-4 flex justify-center">
+                <h3 className="text-lg font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
+                <p className="text-sm text-gray-600">{member.role}</p>
+                <div className="mt-2 flex justify-center">
                   <div 
-                    className="w-6 h-6 rounded-full border-2 border-white shadow-md"
+                    className="w-4 h-4 rounded-full border border-white shadow-sm"
                     style={{ backgroundColor: member.color }}
                   ></div>
                 </div>
@@ -69,7 +69,7 @@ export default function PersonaSelection() {
         <div className="text-center">
           <button 
             onClick={() => setLocation("/admin")}
-            className="text-torrist-green hover:text-torrist-green-dark font-sans underline"
+            className="text-torrist-green hover:text-torrist-green-dark font-sans underline text-sm"
           >
             Admin: Manage Band Members
           </button>
