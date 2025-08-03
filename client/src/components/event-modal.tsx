@@ -23,7 +23,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
     date: selectedDate,
-    memberId: currentUser.id,
+    memberId: eventType === "unavailable" ? currentUser.id : undefined,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -41,6 +41,20 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
       setConflicts(data.conflicts || []);
     },
   });
+
+  useEffect(() => {
+    setFormData({
+      type: eventType,
+      date: selectedDate,
+      memberId: eventType === "unavailable" ? currentUser.id : undefined,
+      title: undefined,
+      startTime: undefined,
+      endTime: undefined,
+      location: undefined,
+      notes: undefined,
+      endDate: undefined,
+    });
+  }, [selectedDate, eventType, currentUser.id]);
 
   useEffect(() => {
     if (formData.date && formData.type) {
@@ -172,15 +186,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
                   onClick={() => selectEventType("practice")}
                   className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
                     formData.type === "practice"
-                      ? "border-torrist-green bg-torrist-green bg-opacity-10"
+                      ? "border-torrist-green bg-torrist-green text-white"
                       : "border-gray-200 hover:border-torrist-green hover:bg-green-50"
                   }`}
                 >
                   <i className={`fas fa-music text-2xl mb-2 ${
-                    formData.type === "practice" ? "text-torrist-green" : "text-gray-400"
+                    formData.type === "practice" ? "text-white" : "text-gray-400"
                   }`}></i>
                   <div className={`text-sm font-sans font-semibold ${
-                    formData.type === "practice" ? "text-torrist-green" : "text-gray-700"
+                    formData.type === "practice" ? "text-white" : "text-gray-700"
                   }`}>Practice</div>
                 </button>
                 

@@ -82,8 +82,8 @@ export default function DatePickerModal({
             
             {/* Day Headers */}
             <div className="grid grid-cols-7 gap-1 text-xs text-gray-600 mb-2">
-              {["S", "M", "T", "W", "T", "F", "S"].map(day => (
-                <div key={day} className="p-2">{day}</div>
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                <div key={`day-header-${index}`} className="p-2">{day}</div>
               ))}
             </div>
             

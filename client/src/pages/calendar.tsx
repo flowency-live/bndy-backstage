@@ -14,6 +14,7 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [eventType, setEventType] = useState<"practice" | "gig" | "unavailable">("practice");
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
+  const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
 
   // Redirect if no user selected
   if (!currentUser) {
@@ -69,6 +70,22 @@ export default function Calendar() {
     setShowEventModal(true);
   };
 
+  // Get agenda events for the current month
+  const getAgendaEvents = () => {
+    return events
+      .filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate >= monthStart && eventDate <= monthEnd;
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const formatEventTime = (event: Event) => {
+    if (!event.startTime) return "All day";
+    const endTime = event.endTime ? ` - ${event.endTime}` : "";
+    return `${event.startTime}${endTime}`;
+  };
+
   return (
     <div className="min-h-screen bg-torrist-cream-light">
       {/* Header */}
@@ -88,6 +105,29 @@ export default function Calendar() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {/* View Mode Toggle */}
+              <div className="hidden md:flex bg-torrist-cream rounded-full p-1">
+                <button 
+                  onClick={() => setViewMode("calendar")}
+                  className={`px-3 py-1 rounded-full text-sm font-sans font-semibold transition-colors ${
+                    viewMode === "calendar" 
+                      ? "bg-torrist-green text-white" 
+                      : "text-torrist-green hover:bg-white"
+                  }`}
+                >
+                  <i className="fas fa-calendar mr-1"></i>Calendar
+                </button>
+                <button 
+                  onClick={() => setViewMode("agenda")}
+                  className={`px-3 py-1 rounded-full text-sm font-sans font-semibold transition-colors ${
+                    viewMode === "agenda" 
+                      ? "bg-torrist-green text-white" 
+                      : "text-torrist-green hover:bg-white"
+                  }`}
+                >
+                  <i className="fas fa-list mr-1"></i>Agenda
+                </button>
+              </div>
               <button 
                 onClick={() => setLocation("/personas")}
                 className="text-torrist-green hover:text-torrist-green-dark"
@@ -108,28 +148,28 @@ export default function Calendar() {
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="bg-gradient-to-r from-torrist-green to-torrist-green-light rounded-2xl p-6 text-white shadow-lg">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-torrist-orange">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-torrist-orange rounded-full flex items-center justify-center">
                   <i className={`fas ${nextEvent.type === "gig" ? "fa-star" : "fa-music"} text-white text-xl`}></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-sans font-semibold">
+                  <h3 className="text-xl font-sans font-semibold text-torrist-green">
                     Next Up: {nextEvent.title || (nextEvent.type === "gig" ? "Gig" : "Band Practice")}
                   </h3>
-                  <p className="opacity-90">
+                  <p className="text-gray-700">
                     {format(new Date(nextEvent.date), "EEEE, MMMM do")}
                     {nextEvent.startTime && ` at ${nextEvent.startTime}`}
                   </p>
                   {nextEvent.location && (
-                    <p className="opacity-75 text-sm">{nextEvent.location}</p>
+                    <p className="text-gray-600 text-sm">{nextEvent.location}</p>
                   )}
                 </div>
               </div>
               <button 
                 onClick={() => setDismissedHighlight(true)}
-                className="text-white hover:text-gray-200"
+                className="text-gray-400 hover:text-gray-600"
               >
                 <i className="fas fa-times text-lg"></i>
               </button>
@@ -137,6 +177,32 @@ export default function Calendar() {
           </div>
         </div>
       )}
+
+      {/* Mobile View Toggle */}
+      <div className="md:hidden max-w-7xl mx-auto px-4 py-2">
+        <div className="flex bg-torrist-cream rounded-full p-1">
+          <button 
+            onClick={() => setViewMode("calendar")}
+            className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
+              viewMode === "calendar" 
+                ? "bg-torrist-green text-white" 
+                : "text-torrist-green"
+            }`}
+          >
+            <i className="fas fa-calendar mr-1"></i>Calendar
+          </button>
+          <button 
+            onClick={() => setViewMode("agenda")}
+            className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
+              viewMode === "agenda" 
+                ? "bg-torrist-green text-white" 
+                : "text-torrist-green"
+            }`}
+          >
+            <i className="fas fa-list mr-1"></i>Agenda
+          </button>
+        </div>
+      </div>
 
       {/* Calendar Navigation */}
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -162,6 +228,7 @@ export default function Calendar() {
           </div>
 
           {/* Calendar Grid */}
+          {viewMode === "calendar" && (
           <div className="p-6">
             {/* Day Headers */}
             <div className="grid grid-cols-7 gap-2 mb-4">
@@ -261,6 +328,102 @@ export default function Calendar() {
               })}
             </div>
           </div>
+          )}
+          
+          {/* Agenda View */}
+          {viewMode === "agenda" && (
+            <div className="p-6">
+              <div className="space-y-4">
+                {getAgendaEvents().length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-4">
+                      <i className="fas fa-calendar text-4xl"></i>
+                    </div>
+                    <h3 className="text-lg font-sans font-semibold text-gray-600 mb-2">
+                      No events in {format(currentDate, "MMMM yyyy")}
+                    </h3>
+                    <p className="text-gray-500">Add some practices, gigs, or mark your availability</p>
+                  </div>
+                ) : (
+                  getAgendaEvents().map((event) => {
+                    const eventMember = bandMembers.find(member => member.id === event.memberId);
+                    return (
+                      <div key={event.id} className="bg-gray-50 rounded-xl p-4 border-l-4" style={{
+                        borderLeftColor: event.type === "gig" ? "var(--torrist-orange)" : 
+                                        event.type === "practice" ? "var(--torrist-green)" : 
+                                        "var(--torrist-unavailable)"
+                      }}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center"
+                                style={{ 
+                                  backgroundColor: event.type === "gig" ? "var(--torrist-orange)" : 
+                                                 event.type === "practice" ? "var(--torrist-green)" : 
+                                                 "var(--torrist-unavailable)"
+                                }}
+                              >
+                                <i className={`fas ${
+                                  event.type === "gig" ? "fa-star" : 
+                                  event.type === "practice" ? "fa-music" : 
+                                  "fa-ban"
+                                } text-white text-sm`}></i>
+                              </div>
+                              <div>
+                                <h4 className="font-sans font-semibold text-gray-800">
+                                  {event.title || 
+                                   (event.type === "gig" ? "Gig" : 
+                                    event.type === "practice" ? "Band Practice" : 
+                                    "Unavailable")}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  {format(new Date(event.date), "EEEE, MMMM do")}
+                                  {event.endDate && event.endDate !== event.date && 
+                                    ` - ${format(new Date(event.endDate), "MMMM do")}`}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="ml-11 space-y-1">
+                              {(event.type === "practice" || event.type === "gig") && (
+                                <>
+                                  <div className="text-sm text-gray-600">
+                                    <i className="fas fa-clock mr-2"></i>
+                                    {formatEventTime(event)}
+                                  </div>
+                                  {event.location && (
+                                    <div className="text-sm text-gray-600">
+                                      <i className="fas fa-map-marker-alt mr-2"></i>
+                                      {event.location}
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              
+                              {event.type === "unavailable" && eventMember && (
+                                <div className="text-sm text-gray-600">
+                                  <i className="fas fa-user mr-2"></i>
+                                  {eventMember.name}
+                                </div>
+                              )}
+                              
+                              {event.notes && (
+                                <div className="text-sm text-gray-600">
+                                  <i className="fas fa-note-sticky mr-2"></i>
+                                  {event.notes}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
