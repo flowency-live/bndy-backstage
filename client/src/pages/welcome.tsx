@@ -33,36 +33,38 @@ export default function Welcome() {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-torrist-green to-torrist-green-light p-4 flex flex-col">
-        <div className="max-w-2xl mx-auto flex-1 flex flex-col justify-center">
-          {/* Band logo at top */}
-          <div className="text-center mb-6">
+      <div className="min-h-screen bg-gradient-to-br from-torrist-green to-torrist-green-light p-4 flex flex-col items-center justify-center">
+        <div className="text-center animate-fade-in">
+          {/* Keep the large band logo */}
+          <div className="mb-8">
             <img 
               src={torristsLogoPath} 
               alt="The Torrists Band Logo" 
-              className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-xl shadow-lg mx-auto mb-4"
+              className="w-72 h-72 md:w-80 md:h-80 object-cover rounded-2xl shadow-2xl mx-auto"
             />
-            <h2 className="text-2xl md:text-3xl font-serif text-white mb-2">Who's checking in?</h2>
-            <p className="text-white opacity-80 font-sans">Select your band member profile</p>
           </div>
+          
+          <h2 className="text-2xl md:text-3xl font-sans text-white mb-2 opacity-90">Who's checking in?</h2>
+          <p className="text-white opacity-70 font-sans mb-8">Select your band member profile</p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {/* Wider user boxes in 2 columns */}
+          <div className="grid grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
             {bandMembers?.map((member) => (
               <div 
                 key={member.id}
-                className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+                className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
                 onClick={() => selectPersona(member)}
               >
                 <div className="text-center">
                   <div 
-                    className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center"
+                    className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center"
                     style={{ backgroundColor: member.color }}
                   >
-                    <i className={`fas ${member.icon} text-white text-lg`}></i>
+                    <i className={`fas ${member.icon} text-white text-xl`}></i>
                   </div>
                   <h3 className="text-lg font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
                   <p className="text-sm text-gray-600">{member.role}</p>
-                  <div className="mt-2 flex justify-center">
+                  <div className="mt-3 flex justify-center">
                     <div 
                       className="w-4 h-4 rounded-full border border-white shadow-sm"
                       style={{ backgroundColor: member.color }}
