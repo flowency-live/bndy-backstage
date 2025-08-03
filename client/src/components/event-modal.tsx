@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -32,16 +33,34 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [timePickerType, setTimePickerType] = useState<"start" | "end">("start");
-  const [conflicts, setConflicts] = useState<BandMember[]>([]);
+  const [conflicts, setConflicts] = useState<{
+    bandEventConflicts: Event[];
+    unavailabilityConflicts: Event[];
+    affectedBandEvents: Event[];
+  }>({
+    bandEventConflicts: [],
+    unavailabilityConflicts: [],
+    affectedBandEvents: []
+  });
 
   // Check for conflicts when date/type changes
   const checkConflictsMutation = useMutation({
-    mutationFn: async (data: { date: string; endDate?: string; type: string }) => {
+    mutationFn: async (data: { 
+      date: string; 
+      endDate?: string; 
+      type: string; 
+      memberId?: string;
+      excludeEventId?: string;
+    }) => {
       const response = await apiRequest("POST", "/api/events/check-conflicts", data);
       return response.json();
     },
     onSuccess: (data) => {
-      setConflicts(data.conflicts || []);
+      setConflicts({
+        bandEventConflicts: data.bandEventConflicts || [],
+        unavailabilityConflicts: data.unavailabilityConflicts || [],
+        affectedBandEvents: data.affectedBandEvents || []
+      });
     },
   });
 
@@ -83,9 +102,11 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         date: formData.date,
         endDate: formData.endDate || undefined,
         type: formData.type,
+        memberId: formData.memberId || undefined,
+        excludeEventId: isEditing && selectedEvent ? selectedEvent.id : undefined,
       });
     }
-  }, [formData.date, formData.endDate, formData.type]);
+  }, [formData.date, formData.endDate, formData.type, formData.memberId, isEditing, selectedEvent]);
 
   const createEventMutation = useMutation({
     mutationFn: async (event: InsertEvent) => {
@@ -397,16 +418,55 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               />
             </div>
 
-            {/* Conflict Warning */}
-            {conflicts.length > 0 && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            {/* Conflict Warnings */}
+            {(conflicts.bandEventConflicts.length > 0 || 
+              conflicts.unavailabilityConflicts.length > 0 || 
+              conflicts.affectedBandEvents.length > 0) && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-start space-x-3">
-                  <i className="fas fa-exclamation-triangle text-red-500 text-lg mt-1"></i>
-                  <div>
-                    <h4 className="font-sans font-semibold text-red-800 mb-1">Scheduling Conflict</h4>
-                    <p className="text-sm text-red-700">
-                      {conflicts.map(member => member.name).join(" and ")} {conflicts.length === 1 ? "is" : "are"} unavailable on this date.
-                    </p>
+                  <i className="fas fa-exclamation-triangle text-yellow-600 text-lg mt-1"></i>
+                  <div className="space-y-2">
+                    <h4 className="font-sans font-semibold text-yellow-800">Scheduling Warnings</h4>
+                    
+                    {conflicts.bandEventConflicts.length > 0 && (
+                      <p className="text-sm text-yellow-700">
+                        <strong>Existing band events:</strong> {conflicts.bandEventConflicts.map(event => 
+                          event.title || (event.type === "gig" ? "Gig" : "Practice")
+                        ).join(", ")} already scheduled for this date.
+                      </p>
+                    )}
+                    
+                    {conflicts.unavailabilityConflicts.length > 0 && (
+                      <p className="text-sm text-yellow-700">
+                        <strong>Member availability:</strong> {conflicts.unavailabilityConflicts.length} member(s) marked unavailable during this period.
+                      </p>
+                    )}
+                    
+                    {conflicts.affectedBandEvents.length > 0 && (
+                      <div className="text-sm text-yellow-700">
+                        <p className="mb-2">
+                          <strong>This affects existing events:</strong>
+                        </p>
+                        {conflicts.affectedBandEvents.map((event, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-white rounded p-2 mb-1">
+                            <span>
+                              {event.title || (event.type === "gig" ? "Gig" : "Practice")} on {format(new Date(event.date + 'T00:00:00'), "MMM d")}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Cancel ${event.title || (event.type === "gig" ? "gig" : "practice")} on ${format(new Date(event.date + 'T00:00:00'), "MMM d")}?`)) {
+                                  deleteEventMutation.mutate(event.id);
+                                }
+                              }}
+                              className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200"
+                            >
+                              Cancel Event
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -131,8 +131,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check for conflicts
   app.post("/api/events/check-conflicts", async (req, res) => {
     try {
-      const { date, endDate, type } = req.body;
-      const result = await storage.checkConflicts({ date, endDate, type });
+      const { date, endDate, type, memberId, excludeEventId } = req.body;
+      const result = await storage.checkConflicts({ 
+        date, 
+        endDate, 
+        type, 
+        memberId,
+        excludeEventId 
+      });
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Failed to check conflicts" });

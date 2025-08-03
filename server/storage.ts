@@ -18,7 +18,17 @@ export interface IStorage {
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
   deleteEventsByMember(memberId: string): Promise<void>;
-  checkConflicts(data: { date: string; endDate?: string; type: string }): Promise<{ conflicts: Event[] }>;
+  checkConflicts(data: { 
+    date: string; 
+    endDate?: string; 
+    type: string; 
+    memberId?: string;
+    excludeEventId?: string; 
+  }): Promise<{ 
+    bandEventConflicts: Event[];
+    unavailabilityConflicts: Event[];
+    affectedBandEvents: Event[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -99,24 +109,59 @@ export class DatabaseStorage implements IStorage {
     await db.delete(events).where(eq(events.memberId, memberId));
   }
 
-  async checkConflicts(data: { date: string; endDate?: string; type: string }): Promise<{ conflicts: Event[] }> {
+  async checkConflicts(data: { 
+    date: string; 
+    endDate?: string; 
+    type: string; 
+    memberId?: string;
+    excludeEventId?: string; 
+  }): Promise<{ 
+    bandEventConflicts: Event[];
+    unavailabilityConflicts: Event[];
+    affectedBandEvents: Event[];
+  }> {
     const allEvents = await db.select().from(events);
     
-    const conflicts = allEvents.filter(event => {
-      // Check if dates overlap
+    // Filter out the event being edited if provided
+    const eventsToCheck = data.excludeEventId 
+      ? allEvents.filter(event => event.id !== data.excludeEventId)
+      : allEvents;
+    
+    // Check if dates overlap
+    const checkStart = data.date;
+    const checkEnd = data.endDate || data.date;
+    
+    const overlappingEvents = eventsToCheck.filter(event => {
       const eventStart = event.date;
       const eventEnd = event.endDate || event.date;
-      const checkStart = data.date;
-      const checkEnd = data.endDate || data.date;
-      
-      return (
-        (checkStart <= eventEnd && checkEnd >= eventStart) &&
-        (event.type === "practice" || event.type === "gig") &&
-        (data.type === "practice" || data.type === "gig")
-      );
+      return checkStart <= eventEnd && checkEnd >= eventStart;
     });
     
-    return { conflicts };
+    let bandEventConflicts: Event[] = [];
+    let unavailabilityConflicts: Event[] = [];
+    let affectedBandEvents: Event[] = [];
+    
+    if (data.type === "practice" || data.type === "gig") {
+      // For band events, check for other band events and member unavailability
+      bandEventConflicts = overlappingEvents.filter(event => 
+        event.type === "practice" || event.type === "gig"
+      );
+      
+      unavailabilityConflicts = overlappingEvents.filter(event => 
+        event.type === "unavailable"
+      );
+    } else if (data.type === "unavailable") {
+      // For unavailability, check what band events this affects
+      affectedBandEvents = overlappingEvents.filter(event => 
+        event.type === "practice" || event.type === "gig"
+      );
+    }
+    
+    return { 
+      bandEventConflicts,
+      unavailabilityConflicts, 
+      affectedBandEvents 
+    };
   }
 }
 
