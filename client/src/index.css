@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(44, 30%, 97%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(44, 20%, 90%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(26, 71%, 46%);
+  --primary-foreground: hsl(60, 9.1%, 97.8%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* Torrists Brand Colors */
+  --torrist-orange: hsl(26, 71%, 46%);
+  --torrist-orange-light: hsl(30, 44%, 56%);
+  --torrist-green: hsl(70, 56%, 27%);
+  --torrist-green-light: hsl(108, 33%, 56%);
+  --torrist-green-dark: hsl(120, 60%, 34%);
+  --torrist-cream: hsl(44, 30%, 92%);
+  --torrist-cream-light: hsl(60, 29%, 96%);
+  --torrist-unavailable: hsl(345, 100%, 86%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(26, 71%, 46%);
+  --primary-foreground: hsl(60, 9.1%, 97.8%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .font-display {
+    font-family: 'Fredoka One', cursive;
+  }
+  
+  .bg-torrist-orange {
+    background-color: var(--torrist-orange);
+  }
+  
+  .bg-torrist-orange-light {
+    background-color: var(--torrist-orange-light);
+  }
+  
+  .bg-torrist-green {
+    background-color: var(--torrist-green);
+  }
+  
+  .bg-torrist-green-light {
+    background-color: var(--torrist-green-light);
+  }
+  
+  .bg-torrist-green-dark {
+    background-color: var(--torrist-green-dark);
+  }
+  
+  .bg-torrist-cream {
+    background-color: var(--torrist-cream);
+  }
+  
+  .bg-torrist-cream-light {
+    background-color: var(--torrist-cream-light);
+  }
+  
+  .bg-torrist-unavailable {
+    background-color: var(--torrist-unavailable);
+  }
+  
+  .text-torrist-orange {
+    color: var(--torrist-orange);
+  }
+  
+  .text-torrist-orange-light {
+    color: var(--torrist-orange-light);
+  }
+  
+  .text-torrist-green {
+    color: var(--torrist-green);
+  }
+  
+  .text-torrist-green-light {
+    color: var(--torrist-green-light);
+  }
+  
+  .text-torrist-green-dark {
+    color: var(--torrist-green-dark);
+  }
+  
+  .border-torrist-orange {
+    border-color: var(--torrist-orange);
+  }
+  
+  .border-torrist-green {
+    border-color: var(--torrist-green);
+  }
+  
+  .border-torrist-unavailable {
+    border-color: var(--torrist-unavailable);
+  }
+  
+  .hover\:bg-torrist-orange-light:hover {
+    background-color: var(--torrist-orange-light);
+  }
+  
+  .hover\:bg-torrist-green-dark:hover {
+    background-color: var(--torrist-green-dark);
+  }
+  
+  .hover\:text-torrist-green-dark:hover {
+    color: var(--torrist-green-dark);
+  }
+  
+  .vintage-shadow {
+    box-shadow: 0 8px 32px rgba(210, 105, 30, 0.2);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
