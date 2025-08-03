@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { BandMember, InsertEvent } from "@shared/schema";
+import type { BandMember, InsertEvent, Event } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,17 +15,19 @@ interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: string;
+  selectedEvent?: Event | null;
   eventType: "practice" | "gig" | "unavailable";
   currentUser: BandMember;
 }
 
-export default function EventModal({ isOpen, onClose, selectedDate, eventType, currentUser }: EventModalProps) {
+export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser }: EventModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
     date: selectedDate,
     memberId: eventType === "unavailable" ? currentUser.id : undefined,
   });
+  const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -44,18 +46,36 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
   });
 
   useEffect(() => {
-    setFormData({
-      type: eventType,
-      date: selectedDate,
-      memberId: eventType === "unavailable" ? currentUser.id : undefined,
-      title: undefined,
-      startTime: undefined,
-      endTime: undefined,
-      location: undefined,
-      notes: undefined,
-      endDate: undefined,
-    });
-  }, [selectedDate, eventType, currentUser.id]);
+    if (selectedEvent) {
+      // Editing existing event
+      setIsEditing(true);
+      setFormData({
+        type: selectedEvent.type,
+        date: selectedEvent.date,
+        endDate: selectedEvent.endDate,
+        memberId: selectedEvent.memberId,
+        title: selectedEvent.title,
+        startTime: selectedEvent.startTime,
+        endTime: selectedEvent.endTime,
+        location: selectedEvent.location,
+        notes: selectedEvent.notes,
+      });
+    } else {
+      // Creating new event
+      setIsEditing(false);
+      setFormData({
+        type: eventType,
+        date: selectedDate,
+        memberId: eventType === "unavailable" ? currentUser.id : undefined,
+        title: undefined,
+        startTime: undefined,
+        endTime: undefined,
+        location: undefined,
+        notes: undefined,
+        endDate: undefined,
+      });
+    }
+  }, [selectedDate, eventType, currentUser.id, selectedEvent]);
 
   useEffect(() => {
     if (formData.date && formData.type) {
@@ -83,6 +103,48 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
       toast({
         title: "Error",
         description: error.message || "Failed to create event",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateEventMutation = useMutation({
+    mutationFn: async ({ id, ...event }: { id: string } & Partial<InsertEvent>) => {
+      return apiRequest("PATCH", `/api/events/${id}`, event);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update event",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/events/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event",
         variant: "destructive",
       });
     },
@@ -122,7 +184,17 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
       isAllDay: formData.type === "unavailable" || (!formData.startTime && !formData.endTime),
     };
 
-    createEventMutation.mutate(eventData);
+    if (isEditing && selectedEvent) {
+      updateEventMutation.mutate({ id: selectedEvent.id, ...eventData });
+    } else {
+      createEventMutation.mutate(eventData);
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedEvent && confirm("Are you sure you want to delete this event?")) {
+      deleteEventMutation.mutate(selectedEvent.id);
+    }
   };
 
   const selectEventType = (type: "practice" | "gig" | "unavailable") => {
@@ -153,7 +225,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
         <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-slide-up">
           <div className="bg-torrist-green text-white p-6 rounded-t-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-serif">Add New Event</h3>
+              <h3 className="text-2xl font-serif">{isEditing ? "Edit Event" : "Add New Event"}</h3>
               <button onClick={onClose} className="text-white hover:text-gray-200">
                 <i className="fas fa-times text-xl"></i>
               </button>
@@ -342,6 +414,24 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
 
             {/* Action Buttons */}
             <div className="flex space-x-3">
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteEventMutation.isPending}
+                  className="flex-1"
+                >
+                  {deleteEventMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -352,16 +442,16 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
               </Button>
               <Button
                 type="submit"
-                disabled={createEventMutation.isPending}
+                disabled={createEventMutation.isPending || updateEventMutation.isPending}
                 className="flex-1 bg-torrist-green hover:bg-torrist-green-dark"
               >
-                {createEventMutation.isPending ? (
+                {(createEventMutation.isPending || updateEventMutation.isPending) ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Saving...
+                    {isEditing ? "Updating..." : "Saving..."}
                   </>
                 ) : (
-                  "Save Event"
+                  isEditing ? "Update Event" : "Save Event"
                 )}
               </Button>
             </div>

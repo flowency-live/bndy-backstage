@@ -13,6 +13,7 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventType, setEventType] = useState<"practice" | "gig" | "unavailable">("practice");
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
@@ -124,7 +125,15 @@ export default function Calendar() {
 
   const openEventModal = (date: string, type: "practice" | "gig" | "unavailable") => {
     setSelectedDate(date);
+    setSelectedEvent(null);
     setEventType(type);
+    setShowEventModal(true);
+  };
+
+  const openEditEventModal = (event: Event) => {
+    setSelectedEvent(event);
+    setSelectedDate(event.date);
+    setEventType(event.type as "practice" | "gig" | "unavailable");
     setShowEventModal(true);
   };
 
@@ -356,11 +365,15 @@ export default function Calendar() {
                         return (
                           <div 
                             key={`band-${idx}`}
-                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10`}
+                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 cursor-pointer hover:opacity-80`}
                             style={{
                               left: 0,
                               right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
                               top: `${idx * 18}px`,
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditEventModal(event);
                             }}
                           >
                             <div className="flex items-center gap-1">
@@ -388,13 +401,17 @@ export default function Calendar() {
                         return (
                           <div 
                             key={`unavail-start-${idx}`}
-                            className="rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10"
+                            className="rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 cursor-pointer hover:opacity-80"
                             style={{
                               borderLeft: `3px solid ${member?.color}`,
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
                               right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
                               top: `${(bandEvents.length + idx) * 18}px`,
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditEventModal(event);
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
@@ -410,15 +427,13 @@ export default function Calendar() {
                       {/* Show continuation bars for multi-day events extending to this day */}
                       {eventsExtendingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
                         const member = bandMembers.find(m => m.id === event.memberId);
-                        const eventStartDay = calendarDays.findIndex(d => format(d, "yyyy-MM-dd") === event.date);
                         const isLastDay = event.endDate === dateStr;
-                        const startOfWeek = Math.floor(dayIndex / 7) * 7;
                         const isFirstDayOfWeek = dayIndex % 7 === 0;
                         
                         return (
                           <div 
                             key={`unavail-extend-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 cursor-pointer hover:opacity-80 ${
                               isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
                             } ${
                               isLastDay ? 'rounded-r-sm' : 'rounded-r-none'
@@ -427,15 +442,17 @@ export default function Calendar() {
                               borderLeft: isFirstDayOfWeek ? `3px solid ${member?.color}` : 'none',
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
-                              right: isLastDay ? 0 : '-2px', // Extend slightly to next cell
+                              right: isLastDay ? 0 : '-2px',
                               top: `${(bandEvents.length + idx) * 18}px`,
                             }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditEventModal(event);
+                            }}
                           >
-                            {isFirstDayOfWeek && (
-                              <span className="text-gray-800 truncate font-medium text-xs opacity-75">
-                                {member?.name} unavailable...
-                              </span>
-                            )}
+                            <span className="text-gray-800 truncate font-medium">
+                              {member?.name} unavailable
+                            </span>
                           </div>
                         );
                       })}
@@ -596,8 +613,12 @@ export default function Calendar() {
       {showEventModal && (
         <EventModal
           isOpen={showEventModal}
-          onClose={() => setShowEventModal(false)}
+          onClose={() => {
+            setShowEventModal(false);
+            setSelectedEvent(null);
+          }}
           selectedDate={selectedDate}
+          selectedEvent={selectedEvent}
           eventType={eventType}
           currentUser={currentUser}
         />
