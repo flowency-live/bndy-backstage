@@ -84,6 +84,15 @@ export default function Calendar() {
     return events.filter(event => event.date === dateStr);
   };
 
+  // Get events that continue from previous days (for showing partial spans)
+  const getEventsExtendingToDate = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return events.filter(event => {
+      if (!event.endDate || event.date === event.endDate) return false;
+      return dateStr > event.date && dateStr <= event.endDate;
+    });
+  };
+
   // Check if event is multi-day
   const isMultiDayEvent = (event: any) => {
     return event.endDate && event.endDate !== event.date;
@@ -95,6 +104,11 @@ export default function Calendar() {
     const startDate = new Date(event.date + 'T00:00:00');
     const endDate = new Date(event.endDate + 'T00:00:00');
     return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  // Calculate remaining days in current week from a given day
+  const getRemainingDaysInWeek = (dayIndex: number) => {
+    return 7 - (dayIndex % 7);
   };
 
   const getUnavailableMembers = (dateEvents: Event[]) => {
@@ -303,8 +317,9 @@ export default function Calendar() {
               {calendarDays.map((day, dayIndex) => {
                 const dayEvents = getEventsForDate(day);
                 const eventsStartingToday = getEventsStartingOnDate(day);
+                const eventsExtendingToday = getEventsExtendingToDate(day);
                 const unavailableMembers = getUnavailableMembers(dayEvents);
-                const bandEvents = getBandEvents(eventsStartingToday); // Only show events that start today
+                const bandEvents = getBandEvents(eventsStartingToday); // Only events that start today
                 const dateStr = format(day, "yyyy-MM-dd");
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isTodayDate = isToday(day);
@@ -312,13 +327,13 @@ export default function Calendar() {
                 return (
                   <div 
                     key={dateStr}
-                    className={`min-h-[90px] border-r border-b border-gray-200 p-1 cursor-pointer hover:bg-gray-50 relative ${
+                    className={`min-h-[90px] border-r border-b border-gray-200 p-1 cursor-pointer hover:bg-gray-50 relative overflow-hidden ${
                       !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                     }`}
                     onClick={() => openEventModal(dateStr, "practice")}
                   >
                     {/* Date number - Google Calendar style */}
-                    <div className={`text-sm font-medium mb-1 ${
+                    <div className={`text-sm font-medium mb-1 relative z-20 ${
                       isTodayDate 
                         ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold' 
                         : isCurrentMonth 
@@ -328,24 +343,25 @@ export default function Calendar() {
                       {format(day, "d")}
                     </div>
 
-                    {/* Events - Google Calendar style with spanning bars */}
+                    {/* Events - Google Calendar style with spanning capability */}
                     <div className="space-y-0.5 relative">
-                      {/* Band events - full width colored bars */}
+                      {/* Band events that start today - with spanning */}
                       {bandEvents.slice(0, 3).map((event, idx) => {
                         const eventColor = event.type === "gig" ? "bg-torrist-orange" : "bg-torrist-green";
                         const timeStr = event.startTime ? event.startTime.substring(0, 5) : "";
                         const spanDays = getEventSpanDays(event);
-                      
+                        const cellsAvailable = getRemainingDaysInWeek(dayIndex);
+                        const cellsToSpan = Math.min(spanDays, cellsAvailable);
+                        
                         return (
                           <div 
                             key={`band-${idx}`}
-                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm relative z-10`}
-                            style={isMultiDayEvent(event) ? {
-                              width: `${spanDays * 100}%`,
-                              position: 'absolute',
+                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10`}
+                            style={{
                               left: 0,
-                              top: `${idx * 20}px`
-                            } : {}}
+                              right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
+                              top: `${idx * 18}px`,
+                            }}
                           >
                             <div className="flex items-center gap-1">
                               {event.type === "gig" && <i className="fas fa-star text-xs"></i>}
@@ -353,61 +369,76 @@ export default function Calendar() {
                                 {timeStr && <span className="font-semibold">{timeStr}</span>}
                                 {timeStr && " "}
                                 {event.title || (event.type === "gig" ? "Gig" : "Practice")}
-                                {isMultiDayEvent(event) && (
-                                  <span className="text-xs opacity-75 ml-1">
-                                    ({spanDays} days)
-                                  </span>
+                                {isMultiDayEvent(event) && spanDays > cellsAvailable && (
+                                  <span className="text-xs opacity-75 ml-1">...</span>
                                 )}
                               </span>
                             </div>
-                            {event.location && !isMultiDayEvent(event) && (
-                              <div className="text-xs opacity-90 truncate">
-                                <i className="fas fa-map-marker-alt mr-1"></i>
-                                {event.location}
-                              </div>
-                            )}
                           </div>
                         );
                       })}
                       
-                      {/* Unavailable events that start today - show once with span */}
+                      {/* Unavailable events that start today - with spanning */}
                       {eventsStartingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
                         const member = bandMembers.find(m => m.id === event.memberId);
                         const spanDays = getEventSpanDays(event);
+                        const cellsAvailable = getRemainingDaysInWeek(dayIndex);
+                        const cellsToSpan = Math.min(spanDays, cellsAvailable);
                         
                         return (
                           <div 
-                            key={`unavail-${idx}`}
-                            className="bg-torrist-unavailable-light rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm relative z-10"
-                            style={isMultiDayEvent(event) ? {
+                            key={`unavail-start-${idx}`}
+                            className="rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10"
+                            style={{
                               borderLeft: `3px solid ${member?.color}`,
-                              width: `${spanDays * 100}%`,
-                              position: 'absolute',
+                              backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
-                              top: `${(bandEvents.length + idx) * 20}px`
-                            } : {
-                              borderLeft: `3px solid ${member?.color}`,
-                              marginTop: `${bandEvents.length * 20}px`
+                              right: isMultiDayEvent(event) ? `${100 - (cellsToSpan * 100)}%` : 0,
+                              top: `${(bandEvents.length + idx) * 18}px`,
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
                               {member?.name} unavailable
-                              {isMultiDayEvent(event) && (
-                                <span className="text-xs opacity-75 ml-1">
-                                  ({spanDays} days)
-                                </span>
+                              {isMultiDayEvent(event) && spanDays > cellsAvailable && (
+                                <span className="text-xs opacity-75 ml-1">...</span>
                               )}
                             </span>
                           </div>
                         );
                       })}
-                      
-                      {/* More events indicator */}
-                      {(bandEvents.length + eventsStartingToday.filter(e => e.type === "unavailable").length) > 3 && (
-                        <div className="text-xs text-gray-500 px-1 py-0.5">
-                          +{(bandEvents.length + eventsStartingToday.filter(e => e.type === "unavailable").length) - 3} more
-                        </div>
-                      )}
+
+                      {/* Show continuation bars for multi-day events extending to this day */}
+                      {eventsExtendingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
+                        const member = bandMembers.find(m => m.id === event.memberId);
+                        const eventStartDay = calendarDays.findIndex(d => format(d, "yyyy-MM-dd") === event.date);
+                        const isLastDay = event.endDate === dateStr;
+                        const startOfWeek = Math.floor(dayIndex / 7) * 7;
+                        const isFirstDayOfWeek = dayIndex % 7 === 0;
+                        
+                        return (
+                          <div 
+                            key={`unavail-extend-${idx}`}
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                              isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
+                            } ${
+                              isLastDay ? 'rounded-r-sm' : 'rounded-r-none'
+                            }`}
+                            style={{
+                              borderLeft: isFirstDayOfWeek ? `3px solid ${member?.color}` : 'none',
+                              backgroundColor: 'rgba(219, 112, 147, 0.15)',
+                              left: 0,
+                              right: isLastDay ? 0 : '-2px', // Extend slightly to next cell
+                              top: `${(bandEvents.length + idx) * 18}px`,
+                            }}
+                          >
+                            {isFirstDayOfWeek && (
+                              <span className="text-gray-800 truncate font-medium text-xs opacity-75">
+                                {member?.name} unavailable...
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );

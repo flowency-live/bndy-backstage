@@ -259,7 +259,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
                     formData.date ? new Date(formData.date + 'T00:00:00').toLocaleDateString() : "Select date"
                   )}
                 </span>
-                <i className="fas fa-calendar-alt absolute right-3 top-3 text-gray-400"></i>
+                <i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
               </button>
             </div>
 
@@ -275,10 +275,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
                         setTimePickerType("start");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20"
+                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
                     >
                       <span>{formData.startTime ? formatTime(formData.startTime) : "Select time"}</span>
-                      <i className="fas fa-clock absolute right-3 top-3 text-gray-400"></i>
+                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </button>
                   </div>
                   <div>
@@ -289,10 +289,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, eventType, c
                         setTimePickerType("end");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20"
+                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
                     >
                       <span>{formData.endTime ? formatTime(formData.endTime) : "Select time"}</span>
-                      <i className="fas fa-clock absolute right-3 top-3 text-gray-400"></i>
+                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </button>
                   </div>
                 </div>
