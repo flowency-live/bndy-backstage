@@ -455,6 +455,7 @@ export default function Calendar() {
                         const member = bandMembers.find(m => m.id === event.memberId);
                         const isLastDay = event.endDate === dateStr;
                         const isFirstDayOfWeek = dayIndex % 7 === 0;
+                        const unavailableStartingToday = eventsStartingToday.filter(e => e.type === "unavailable").slice(0, 2);
                         
                         return (
                           <div 
@@ -471,7 +472,7 @@ export default function Calendar() {
                               backgroundColor: 'rgba(219, 112, 147, 0.15)',
                               left: 0,
                               right: isLastDay ? 0 : '-2px',
-                              top: `${(bandEvents.slice(0, 3).length + idx) * 18}px`,
+                              top: `${(bandEvents.slice(0, 3).length + unavailableStartingToday.length + idx) * 18}px`,
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
