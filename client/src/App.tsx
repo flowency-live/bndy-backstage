@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/lib/user-context";
 import Welcome from "@/pages/welcome";
-import PersonaSelection from "@/pages/persona-selection";
 import Calendar from "@/pages/calendar";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
@@ -14,7 +13,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Welcome} />
-      <Route path="/personas" component={PersonaSelection} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
