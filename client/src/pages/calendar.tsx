@@ -458,7 +458,6 @@ export default function Calendar() {
                                 <span className="text-gray-800 truncate font-medium">
                                   <i className="fas fa-times text-red-500 mr-1"></i>
                                   {member?.name}
-                                  {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                                   {isMultiDayEvent(event) && spanDays > cellsAvailable && (
                                     <span className="text-xs opacity-75 ml-1">...</span>
                                   )}
@@ -496,7 +495,6 @@ export default function Calendar() {
                                 <span className="text-gray-800 truncate font-medium">
                                   <i className="fas fa-times text-red-500 mr-1"></i>
                                   {member?.name}
-                                  {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                                 </span>
                               </div>
                             );
