@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
 import { useSwipe } from "@/hooks/use-swipe";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Event, BandMember } from "@shared/schema";
 import EventModal from "@/components/event-modal";
 
@@ -37,7 +37,9 @@ export default function Calendar() {
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday = 1
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["/api/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
@@ -287,7 +289,7 @@ export default function Calendar() {
 
         {/* Day Headers */}
         <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-          {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+          {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
             <div key={`header-${idx}`} className="text-center font-medium text-gray-700 py-2 text-xs">
               {day}
             </div>
@@ -297,15 +299,12 @@ export default function Calendar() {
         {/* Calendar Grid */}
         {viewMode === "calendar" && (
           <div ref={swipeRef} className="grid grid-cols-7 touch-swipe-area">
-            {/* Empty cells for month start */}
-            {Array.from({ length: monthStart.getDay() }, (_, i) => (
-              <div key={`empty-${i}`} className="min-h-[100px] border-r border-b border-gray-200"></div>
-            ))}
               
-              {calendarDays.map(day => {
+              {calendarDays.map((day, dayIndex) => {
                 const dayEvents = getEventsForDate(day);
+                const eventsStartingToday = getEventsStartingOnDate(day);
                 const unavailableMembers = getUnavailableMembers(dayEvents);
-                const bandEvents = getBandEvents(dayEvents);
+                const bandEvents = getBandEvents(eventsStartingToday); // Only show events that start today
                 const dateStr = format(day, "yyyy-MM-dd");
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isTodayDate = isToday(day);
@@ -329,17 +328,24 @@ export default function Calendar() {
                       {format(day, "d")}
                     </div>
 
-                    {/* Events - Google Calendar style with edge-to-edge bars */}
-                    <div className="space-y-0.5">
+                    {/* Events - Google Calendar style with spanning bars */}
+                    <div className="space-y-0.5 relative">
                       {/* Band events - full width colored bars */}
                       {bandEvents.slice(0, 3).map((event, idx) => {
                         const eventColor = event.type === "gig" ? "bg-torrist-orange" : "bg-torrist-green";
                         const timeStr = event.startTime ? event.startTime.substring(0, 5) : "";
-                        
+                        const spanDays = getEventSpanDays(event);
+                      
                         return (
                           <div 
                             key={`band-${idx}`}
-                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm`}
+                            className={`${eventColor} text-white rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm relative z-10`}
+                            style={isMultiDayEvent(event) ? {
+                              width: `${spanDays * 100}%`,
+                              position: 'absolute',
+                              left: 0,
+                              top: `${idx * 20}px`
+                            } : {}}
                           >
                             <div className="flex items-center gap-1">
                               {event.type === "gig" && <i className="fas fa-star text-xs"></i>}
@@ -347,9 +353,14 @@ export default function Calendar() {
                                 {timeStr && <span className="font-semibold">{timeStr}</span>}
                                 {timeStr && " "}
                                 {event.title || (event.type === "gig" ? "Gig" : "Practice")}
+                                {isMultiDayEvent(event) && (
+                                  <span className="text-xs opacity-75 ml-1">
+                                    ({spanDays} days)
+                                  </span>
+                                )}
                               </span>
                             </div>
-                            {event.location && (
+                            {event.location && !isMultiDayEvent(event) && (
                               <div className="text-xs opacity-90 truncate">
                                 <i className="fas fa-map-marker-alt mr-1"></i>
                                 {event.location}
@@ -359,26 +370,42 @@ export default function Calendar() {
                         );
                       })}
                       
-                      {/* Unavailable members - compact pink bars */}
-                      {unavailableMembers.slice(0, 2).map((member, idx) => (
-                        <div 
-                          key={`unavail-${idx}`}
-                          className="bg-torrist-unavailable rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm"
-                          style={{ 
-                            borderLeft: `3px solid ${member?.color}`,
-                            backgroundColor: 'rgba(219, 112, 147, 0.15)'
-                          }}
-                        >
-                          <span className="text-gray-800 truncate font-medium">
-                            {member?.name} unavailable
-                          </span>
-                        </div>
-                      ))}
+                      {/* Unavailable events that start today - show once with span */}
+                      {eventsStartingToday.filter(e => e.type === "unavailable").slice(0, 2).map((event, idx) => {
+                        const member = bandMembers.find(m => m.id === event.memberId);
+                        const spanDays = getEventSpanDays(event);
+                        
+                        return (
+                          <div 
+                            key={`unavail-${idx}`}
+                            className="bg-torrist-unavailable-light rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm relative z-10"
+                            style={isMultiDayEvent(event) ? {
+                              borderLeft: `3px solid ${member?.color}`,
+                              width: `${spanDays * 100}%`,
+                              position: 'absolute',
+                              left: 0,
+                              top: `${(bandEvents.length + idx) * 20}px`
+                            } : {
+                              borderLeft: `3px solid ${member?.color}`,
+                              marginTop: `${bandEvents.length * 20}px`
+                            }}
+                          >
+                            <span className="text-gray-800 truncate font-medium">
+                              {member?.name} unavailable
+                              {isMultiDayEvent(event) && (
+                                <span className="text-xs opacity-75 ml-1">
+                                  ({spanDays} days)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
                       
                       {/* More events indicator */}
-                      {(bandEvents.length + unavailableMembers.length) > 3 && (
+                      {(bandEvents.length + eventsStartingToday.filter(e => e.type === "unavailable").length) > 3 && (
                         <div className="text-xs text-gray-500 px-1 py-0.5">
-                          +{(bandEvents.length + unavailableMembers.length) - 3} more
+                          +{(bandEvents.length + eventsStartingToday.filter(e => e.type === "unavailable").length) - 3} more
                         </div>
                       )}
                     </div>
