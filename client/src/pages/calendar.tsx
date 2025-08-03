@@ -40,8 +40,18 @@ export default function Calendar() {
 
   // Get next upcoming event
   const upcomingEvents = events
-    .filter(event => new Date(event.date) >= new Date())
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter(event => {
+      // Parse date as local time by adding T00:00:00 to ensure local timezone
+      const eventDate = new Date(event.date + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of today
+      return eventDate >= today;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date + 'T00:00:00');
+      const dateB = new Date(b.date + 'T00:00:00');
+      return dateA.getTime() - dateB.getTime();
+    });
   const nextEvent = upcomingEvents[0];
 
   const getEventsForDate = (date: Date) => {
@@ -74,10 +84,14 @@ export default function Calendar() {
   const getAgendaEvents = () => {
     return events
       .filter(event => {
-        const eventDate = new Date(event.date);
+        const eventDate = new Date(event.date + 'T00:00:00');
         return eventDate >= monthStart && eventDate <= monthEnd;
       })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.date + 'T00:00:00');
+        const dateB = new Date(b.date + 'T00:00:00');
+        return dateA.getTime() - dateB.getTime();
+      });
   };
 
   const formatEventTime = (event: Event) => {
@@ -159,7 +173,7 @@ export default function Calendar() {
                     Next Up: {nextEvent.title || (nextEvent.type === "gig" ? "Gig" : "Band Practice")}
                   </h3>
                   <p className="text-gray-700">
-                    {format(new Date(nextEvent.date), "EEEE, MMMM do")}
+                    {format(new Date(nextEvent.date + 'T00:00:00'), "EEEE, MMMM do")}
                     {nextEvent.startTime && ` at ${nextEvent.startTime}`}
                   </p>
                   {nextEvent.location && (
@@ -377,9 +391,9 @@ export default function Calendar() {
                                     "Unavailable")}
                                 </h4>
                                 <p className="text-sm text-gray-600">
-                                  {format(new Date(event.date), "EEEE, MMMM do")}
+                                  {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}
                                   {event.endDate && event.endDate !== event.date && 
-                                    ` - ${format(new Date(event.endDate), "MMMM do")}`}
+                                    ` - ${format(new Date(event.endDate + 'T00:00:00'), "MMMM do")}`}
                                 </p>
                               </div>
                             </div>
