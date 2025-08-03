@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
@@ -35,6 +35,11 @@ export default function Calendar() {
     setLocation("/personas");
     return null;
   }
+
+  // Scroll to top when component loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -137,10 +142,13 @@ export default function Calendar() {
     setShowEventModal(true);
   };
 
-  // Get agenda events for the current month
+  // Get agenda events for the current month (only band events, no unavailability)
   const getAgendaEvents = () => {
     return events
       .filter(event => {
+        // Only show band events (practice/gig), not unavailability
+        if (event.type === "unavailable") return false;
+        
         const eventDate = new Date(event.date + 'T00:00:00');
         return eventDate >= monthStart && eventDate <= monthEnd;
       })
