@@ -421,7 +421,7 @@ export default function Calendar() {
                         return (
                           <div 
                             key={`unavail-start-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
                               canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
                             }`}
                             style={{
@@ -439,7 +439,8 @@ export default function Calendar() {
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
-                              {member?.name} unavailable
+                              <i className="fas fa-times text-red-500 mr-1"></i>
+                              {member?.name}
                               {!canEdit && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                               {isMultiDayEvent(event) && spanDays > cellsAvailable && (
                                 <span className="text-xs opacity-75 ml-1">...</span>
@@ -458,7 +459,7 @@ export default function Calendar() {
                         return (
                           <div 
                             key={`unavail-extend-${idx}`}
-                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-10 ${
+                            className={`rounded-sm px-1 py-0.5 text-xs leading-tight shadow-sm absolute z-0 ${
                               event.memberId === currentUser.id ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60'
                             } ${
                               isFirstDayOfWeek ? 'rounded-l-sm' : 'rounded-l-none'
@@ -480,7 +481,8 @@ export default function Calendar() {
                             }}
                           >
                             <span className="text-gray-800 truncate font-medium">
-                              {member?.name} unavailable
+                              <i className="fas fa-times text-red-500 mr-1"></i>
+                              {member?.name}
                               {event.memberId !== currentUser.id && <i className="fas fa-lock text-xs ml-1 opacity-50"></i>}
                             </span>
                           </div>
