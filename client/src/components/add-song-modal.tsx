@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/lib/user-context";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
   const { currentUser } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const addSongMutation = useMutation({
     mutationFn: async (trackData: any) => {
@@ -47,42 +48,28 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
   });
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
+    if (!query) return;
     
-    console.log('Starting search for:', searchQuery); // Debug log
+    console.log('Starting live search for:', query);
     setIsSearching(true);
-    setSearchResults([]); // Clear previous results
     
     try {
-      const response = await fetch(`/api/spotify/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
-      console.log('Response status:', response.status); // Debug log
+      const response = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}&limit=8`);
       
       if (response.ok) {
         const tracks = await response.json();
-        console.log('Search results received:', tracks.length, 'tracks'); // Debug log
-        console.log('First track:', tracks[0]); // Debug log
+        console.log('Live search results:', tracks.length, 'tracks');
         setSearchResults(tracks);
-        console.log('State updated with results'); // Debug log
       } else {
         console.error('Search failed with status:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        toast({ 
-          title: "Search failed", 
-          description: `Could not search Spotify (${response.status})`,
-          variant: "destructive" 
-        });
+        setSearchResults([]);
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast({ 
-        title: "Search failed", 
-        description: "Could not connect to Spotify",
-        variant: "destructive" 
-      });
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
-      console.log('Search completed, isSearching now false'); // Debug log
     }
   };
 
@@ -100,6 +87,36 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
     
     addSongMutation.mutate(songData);
   };
+
+  // Live search with debouncing
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim().length >= 2) {
+      searchTimeoutRef.current = setTimeout(() => {
+        handleSearch();
+      }, 500); // 500ms debounce
+    } else {
+      setSearchResults([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, handleSearch]);
+
+  // Clear search on modal close
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery("");
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -119,28 +136,35 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
         {/* Search */}
         <div className="p-6 border-b">
-          <div className="flex space-x-2">
+          <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Search for songs or artists..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-torrist-green"
+              placeholder="Start typing to search for songs or artists..."
+              className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-torrist-green text-lg"
               disabled={isSearching}
+              autoFocus
             />
-            <button
-              onClick={handleSearch}
-              disabled={isSearching || !searchQuery.trim()}
-              className="px-6 py-2 bg-torrist-green text-white rounded-lg hover:bg-torrist-green-dark disabled:opacity-50 disabled:cursor-not-allowed font-serif"
-            >
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               {isSearching ? (
-                <i className="fas fa-spinner fa-spin"></i>
+                <i className="fas fa-spinner fa-spin text-torrist-green"></i>
               ) : (
-                <i className="fas fa-search"></i>
+                <i className="fas fa-search text-gray-400"></i>
               )}
-            </button>
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            )}
           </div>
+          {searchQuery.length >= 1 && searchQuery.length < 2 && (
+            <p className="text-sm text-gray-500 mt-2">Type at least 2 characters to search</p>
+          )}
         </div>
 
         {/* Results */}
