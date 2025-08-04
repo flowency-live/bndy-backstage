@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/lib/user-context";
 import { useToast } from "@/hooks/use-toast";
@@ -47,9 +47,11 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
     },
   });
 
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
-    if (!query) return;
+  const handleSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
     
     console.log('Starting live search for:', query);
     setIsSearching(true);
@@ -71,7 +73,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   const handleAddSong = (track: SpotifyTrack) => {
     const songData = {
@@ -96,8 +98,8 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
     if (searchQuery.trim().length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
-        handleSearch();
-      }, 500); // 500ms debounce
+        handleSearch(searchQuery);
+      }, 300); // Reduced to 300ms for faster response
     } else {
       setSearchResults([]);
     }
@@ -169,24 +171,31 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto max-h-96">
-          {isSearching && (
+          {!searchQuery && (
             <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-spinner fa-spin text-4xl mb-4 text-gray-300"></i>
-              <p>Searching Spotify...</p>
-            </div>
-          )}
-          
-          {searchResults.length === 0 && !isSearching && searchQuery && (
-            <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-exclamation-circle text-4xl mb-4 text-gray-300"></i>
-              <p>No results found for "{searchQuery}"</p>
+              <i className="fas fa-search text-4xl mb-4 text-gray-300"></i>
+              <p>Start typing to search for songs</p>
             </div>
           )}
 
-          {searchResults.length === 0 && !isSearching && !searchQuery && (
+          {searchQuery && searchQuery.length < 2 && (
             <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-search text-4xl mb-4 text-gray-300"></i>
-              <p>Search for songs to add to your practice list</p>
+              <i className="fas fa-keyboard text-4xl mb-4 text-gray-300"></i>
+              <p>Keep typing... (need at least 2 characters)</p>
+            </div>
+          )}
+
+          {isSearching && searchQuery.length >= 2 && (
+            <div className="p-6 text-center text-gray-500">
+              <i className="fas fa-spinner fa-spin text-2xl mb-2 text-torrist-green"></i>
+              <p>Searching for "{searchQuery}"...</p>
+            </div>
+          )}
+          
+          {searchResults.length === 0 && !isSearching && searchQuery.length >= 2 && (
+            <div className="p-6 text-center text-gray-500">
+              <i className="fas fa-exclamation-circle text-4xl mb-4 text-gray-300"></i>
+              <p>No results found for "{searchQuery}"</p>
             </div>
           )}
 
@@ -216,7 +225,10 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
               {/* Add button */}
               <button
-                onClick={() => handleAddSong(track)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAddSong(track);
+                }}
                 disabled={addSongMutation.isPending}
                 className="px-4 py-2 bg-torrist-orange text-white rounded-lg hover:bg-torrist-orange-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
