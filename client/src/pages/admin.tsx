@@ -222,11 +222,10 @@ export default function Admin() {
               spotifyId: item.track.id,
               title: item.track.name,
               artist: item.track.artists.map((a: any) => a.name).join(", "),
-              album: item.track.album.name,
+              album: item.track.album.name || "",
               spotifyUrl: item.track.external_urls.spotify,
               imageUrl: item.track.album.images.length > 0 ? item.track.album.images[0].url : null,
-              previewUrl: item.track.preview_url,
-              addedBy: 'spotify-import'
+              previewUrl: item.track.preview_url
             }),
           });
           

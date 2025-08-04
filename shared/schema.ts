@@ -113,6 +113,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
 export const insertSongSchema = createInsertSchema(songs).omit({
   id: true,
   createdAt: true,
+}).extend({
+  addedBy: z.string().optional().nullable(),
 });
 
 export const insertSongReadinessSchema = createInsertSchema(songReadiness).omit({
