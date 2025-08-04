@@ -4,6 +4,7 @@ import { useLocation, Link } from "wouter";
 import { useUser } from "@/lib/user-context";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
+import SpotifySettings from "@/components/spotify-settings";
 import type { BandMember } from "@shared/schema";
 
 interface SongWithDetails {
@@ -38,6 +39,7 @@ export default function Songs() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSpotifySettings, setShowSpotifySettings] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
 
@@ -275,13 +277,22 @@ export default function Songs() {
               Songs the band is practicing, with readiness tracking
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2"
-          >
-            <i className="fas fa-plus"></i>
-            <span>Add Song</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSpotifySettings(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2"
+            >
+              <i className="fab fa-spotify"></i>
+              <span className="hidden sm:inline">Spotify</span>
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2"
+            >
+              <i className="fas fa-plus"></i>
+              <span>Add Song</span>
+            </button>
+          </div>
         </div>
 
         {/* Songs List */}
@@ -494,6 +505,12 @@ export default function Songs() {
       <AddSongModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+      />
+
+      {/* Spotify Settings Modal */}
+      <SpotifySettings
+        isOpen={showSpotifySettings}
+        onClose={() => setShowSpotifySettings(false)}
       />
     </div>
   );

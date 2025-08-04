@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema } from "@shared/schema";
 import { spotifyService } from "./spotify";
+import { spotifyUserService } from "./spotify-user";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -154,14 +155,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Query parameter 'q' is required" });
       }
       
+      console.log(`Spotify search query: "${q}"`);
       const tracks = await spotifyService.searchTracks(
         q as string, 
         parseInt(limit as string) || 10
       );
+      console.log(`Found ${tracks.length} tracks`);
       res.json(tracks);
     } catch (error) {
       console.error("Spotify search error:", error);
-      res.status(500).json({ message: "Failed to search Spotify" });
+      res.status(500).json({ message: "Failed to search Spotify", error: error.message });
+    }
+  });
+
+  // Spotify user authentication endpoints
+  app.get("/api/spotify/auth", (req, res) => {
+    try {
+      const authUrl = spotifyUserService.getAuthorizationUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Spotify auth URL error:", error);
+      res.status(500).json({ message: "Failed to generate auth URL" });
+    }
+  });
+
+  app.get("/api/spotify/callback", async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Authorization code required" });
+      }
+
+      if (state !== 'torrists-band-app') {
+        return res.status(400).json({ message: "Invalid state parameter" });
+      }
+
+      const tokens = await spotifyUserService.getAccessToken(code as string);
+      
+      // In production, you'd store these tokens securely
+      // For now, we'll just return them to the frontend
+      res.json(tokens);
+    } catch (error) {
+      console.error("Spotify callback error:", error);
+      res.status(500).json({ message: "Failed to exchange code for tokens" });
+    }
+  });
+
+  app.get("/api/spotify/playlists", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const playlists = await spotifyUserService.getUserPlaylists(accessToken);
+      res.json(playlists);
+    } catch (error) {
+      console.error("Spotify playlists error:", error);
+      res.status(500).json({ message: "Failed to fetch playlists" });
+    }
+  });
+
+  app.get("/api/spotify/playlists/:id/tracks", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const tracks = await spotifyUserService.getPlaylistTracks(req.params.id, accessToken);
+      res.json(tracks);
+    } catch (error) {
+      console.error("Spotify playlist tracks error:", error);
+      res.status(500).json({ message: "Failed to fetch playlist tracks" });
     }
   });
 

@@ -54,15 +54,20 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
       const response = await fetch(`/api/spotify/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
       if (response.ok) {
         const tracks = await response.json();
+        console.log('Search results:', tracks); // Debug log
         setSearchResults(tracks);
       } else {
+        console.error('Search failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         toast({ 
           title: "Search failed", 
-          description: "Could not search Spotify",
+          description: `Could not search Spotify (${response.status})`,
           variant: "destructive" 
         });
       }
     } catch (error) {
+      console.error('Search error:', error);
       toast({ 
         title: "Search failed", 
         description: "Could not connect to Spotify",
