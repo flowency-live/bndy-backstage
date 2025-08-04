@@ -37,11 +37,11 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-full w-80 bg-torrist-green shadow-2xl z-50 animate-in slide-in-from-left duration-300">
-            <div className="p-6">
+          <div className="fixed top-0 left-0 h-full w-64 bg-torrist-green shadow-2xl z-50 animate-in slide-in-from-left duration-300">
+            <div className="p-4">
               {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-white font-serif text-xl">Menu</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-white font-serif text-lg">Menu</h2>
                 <button 
                   onClick={closeDrawer}
                   className="text-white hover:text-gray-200"
