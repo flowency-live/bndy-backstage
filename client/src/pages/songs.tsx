@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useUser } from "@/lib/user-context";
 import { useToast } from "@/hooks/use-toast";
-import Navigation from "@/components/navigation";
 import AddSongModal from "@/components/add-song-modal";
 import type { BandMember } from "@shared/schema";
 
@@ -40,6 +39,7 @@ export default function Songs() {
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
 
   // Redirect if no user selected
   if (!currentUser) {
@@ -168,15 +168,20 @@ export default function Songs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-torrist-cream via-white to-gray-100">
-      {/* Navigation - rendered outside container */}
-      <Navigation currentUser={currentUser} onLogout={logout} />
-      
-      {/* Header */}
+      {/* Header with integrated navigation */}
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="grid grid-cols-3 items-center">
-            {/* Left: Empty space */}
-            <div></div>
+            {/* Left: Clickable band name */}
+            <div className="justify-self-start">
+              <button 
+                onClick={() => setIsNavigationOpen(!isNavigationOpen)}
+                className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight"
+              >
+                <div className="text-xl">The</div>
+                <div className="text-xl">Torrists</div>
+              </button>
+            </div>
             
             {/* Center: User badge */}
             <div className="justify-self-center">
@@ -207,6 +212,51 @@ export default function Songs() {
           </div>
         </div>
       </header>
+      
+      {/* Navigation drawer */}
+      {isNavigationOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50" 
+            onClick={() => setIsNavigationOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-serif text-torrist-green font-bold">The Torrists</h2>
+                <button 
+                  onClick={() => setIsNavigationOpen(false)}
+                  className="text-torrist-green hover:text-torrist-green-dark"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <nav className="space-y-4">
+                <Link 
+                  href="/calendar" 
+                  className="flex items-center space-x-3 text-torrist-green hover:text-torrist-green-dark font-serif text-lg"
+                  onClick={() => setIsNavigationOpen(false)}
+                >
+                  <i className="fas fa-calendar-alt w-6"></i>
+                  <span>Calendar</span>
+                </Link>
+                <Link 
+                  href="/songs" 
+                  className="flex items-center space-x-3 text-torrist-green hover:text-torrist-green-dark font-serif text-lg"
+                  onClick={() => setIsNavigationOpen(false)}
+                >
+                  <i className="fas fa-music w-6"></i>
+                  <span>Songs</span>
+                </Link>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Page Header */}
