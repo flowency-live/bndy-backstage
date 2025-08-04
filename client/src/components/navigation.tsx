@@ -36,13 +36,13 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
       )}
 
       {/* Slide-out drawer */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-torrist-green shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
-        isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+      <div className={`fixed top-0 left-0 h-full w-80 bg-torrist-green shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        isDrawerOpen ? 'translate-x-0' : '-translate-x-80'
       }`}>
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-white font-display text-xl font-bold">Menu</h2>
+            <h2 className="text-white font-serif text-xl">Menu</h2>
             <button 
               onClick={closeDrawer}
               className="text-white hover:text-gray-200"
@@ -55,26 +55,26 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
           <nav className="space-y-4">
             <button 
               onClick={() => navigateTo("/calendar")}
-              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-torrist-green-dark transition-colors flex items-center space-x-3"
+              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-calendar w-5"></i>
-              <span className="font-sans font-semibold">Calendar</span>
+              <span className="font-serif">Calendar</span>
             </button>
             
             <button 
               onClick={() => navigateTo("/songs")}
-              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-torrist-green-dark transition-colors flex items-center space-x-3"
+              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-music w-5"></i>
-              <span className="font-sans font-semibold">Practice List</span>
+              <span className="font-serif">Practice List</span>
             </button>
             
             <button 
               onClick={() => navigateTo("/admin")}
-              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-torrist-green-dark transition-colors flex items-center space-x-3"
+              className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-users-cog w-5"></i>
-              <span className="font-sans font-semibold">Manage Band</span>
+              <span className="font-serif">Manage Band</span>
             </button>
           </nav>
         </div>

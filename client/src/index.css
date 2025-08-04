@@ -27,9 +27,9 @@
   /* Torrists Brand Colors */
   --torrist-orange: hsl(26, 71%, 46%);
   --torrist-orange-light: hsl(30, 44%, 56%);
-  --torrist-green: hsl(70, 56%, 27%);
-  --torrist-green-light: hsl(108, 33%, 56%);
-  --torrist-green-dark: hsl(120, 60%, 34%);
+  --torrist-green: hsl(162, 45%, 35%);
+  --torrist-green-light: hsl(162, 35%, 45%);
+  --torrist-green-dark: hsl(162, 55%, 25%);
   --torrist-cream: hsl(44, 30%, 92%);
   --torrist-cream-light: hsl(60, 29%, 96%);
   --torrist-unavailable: hsl(345, 82%, 58%);
