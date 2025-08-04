@@ -189,14 +189,21 @@ export default function Songs() {
             </div>
             <div className="flex items-center space-x-2">
               <button 
+                onClick={() => setLocation("/calendar")}
+                className="text-torrist-green hover:text-torrist-green-dark p-2"
+                title="Back to Calendar"
+              >
+                <i className="fas fa-calendar text-xl"></i>
+              </button>
+              <button 
                 onClick={() => {
                   logout();
                   setLocation("/");
                 }}
-                className="text-torrist-green hover:text-torrist-green-dark"
+                className="text-torrist-green hover:text-torrist-green-dark p-2"
                 title="Switch user"
               >
-                <i className="fas fa-sign-out-alt text-lg"></i>
+                <i className="fas fa-sign-out-alt text-xl"></i>
               </button>
             </div>
           </div>

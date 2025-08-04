@@ -195,28 +195,30 @@ export default function Calendar() {
                 <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              {/* View Mode Toggle */}
-              <div className="hidden md:flex bg-torrist-cream rounded-full p-1">
+            <div className="flex items-center space-x-3">
+              {/* View Mode Toggle - now visible on mobile too */}
+              <div className="flex bg-torrist-cream rounded-full p-1">
                 <button 
                   onClick={() => setViewMode("calendar")}
-                  className={`px-3 py-1 rounded-full text-sm font-serif font-semibold transition-colors ${
+                  className={`px-3 py-2 rounded-full text-sm font-serif font-medium transition-colors ${
                     viewMode === "calendar" 
                       ? "bg-torrist-green text-white" 
                       : "text-torrist-green hover:bg-white"
                   }`}
                 >
-                  <i className="fas fa-calendar mr-1"></i>Calendar
+                  <i className="fas fa-calendar mr-1"></i>
+                  <span className="hidden sm:inline">Calendar</span>
                 </button>
                 <button 
                   onClick={() => setViewMode("agenda")}
-                  className={`px-3 py-1 rounded-full text-sm font-serif font-semibold transition-colors ${
+                  className={`px-3 py-2 rounded-full text-sm font-serif font-medium transition-colors ${
                     viewMode === "agenda" 
                       ? "bg-torrist-green text-white" 
                       : "text-torrist-green hover:bg-white"
                   }`}
                 >
-                  <i className="fas fa-list mr-1"></i>Agenda
+                  <i className="fas fa-list mr-1"></i>
+                  <span className="hidden sm:inline">Agenda</span>
                 </button>
               </div>
               <button 
@@ -224,16 +226,10 @@ export default function Calendar() {
                   logout();
                   setLocation("/");
                 }}
-                className="text-torrist-green hover:text-torrist-green-dark"
+                className="text-torrist-green hover:text-torrist-green-dark p-2"
                 title="Switch user"
               >
-                <i className="fas fa-sign-out-alt text-lg"></i>
-              </button>
-              <button 
-                onClick={() => openEventModal(format(new Date(), "yyyy-MM-dd"), "practice")}
-                className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-4 py-2 rounded-full font-serif font-semibold"
-              >
-                <i className="fas fa-plus mr-2"></i>Add Event
+                <i className="fas fa-sign-out-alt text-xl"></i>
               </button>
             </div>
           </div>
