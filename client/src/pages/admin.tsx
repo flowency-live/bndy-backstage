@@ -111,7 +111,7 @@ export default function Admin() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-serif">Band Member Management</h2>
               <button 
-                onClick={() => setLocation("/personas")}
+                onClick={() => setLocation("/calendar")}
                 className="text-white hover:text-gray-200"
               >
                 <i className="fas fa-times text-xl"></i>
