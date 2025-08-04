@@ -54,14 +54,16 @@ class SpotifyUserService {
   private redirectUri: string;
 
   constructor() {
-    // Force use of correct Client ID due to Replit environment caching issue
-    const correctClientId = '0e3ff264e5f14e0b8bb908ed1eedd7e5';
-    this.clientId = correctClientId;
+    this.clientId = process.env.SPOTIFY_CLIENT_ID || '';
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || '';
     
-    console.log('SpotifyUserService using corrected Client ID:', this.clientId.substring(0, 10) + '...');
-    console.log('Environment Client ID was:', process.env.SPOTIFY_CLIENT_ID?.substring(0, 10) + '...');
+    console.log('SpotifyUserService initializing...');
+    console.log('Client ID available:', !!this.clientId, this.clientId ? this.clientId.substring(0, 10) + '...' : 'MISSING');
+    console.log('Client Secret available:', !!this.clientSecret);
     
+    if (!this.clientId) {
+      console.error('SPOTIFY_CLIENT_ID not found in environment');
+    }
     if (!this.clientSecret) {
       console.error('SPOTIFY_CLIENT_SECRET not found in environment');
     }
