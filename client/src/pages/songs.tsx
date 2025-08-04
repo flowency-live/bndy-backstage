@@ -304,7 +304,7 @@ export default function Songs() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {sortedSongs.map((song) => {
               const readinessCounts = getReadinessCount(song);
               const userReadiness = getUserReadiness(song);
@@ -315,14 +315,14 @@ export default function Songs() {
               return (
                 <div 
                   key={song.id} 
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-200 ${
+                  className={`bg-white border-b border-gray-100 hover:bg-gray-50 transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
                   }`}
                 >
                   {/* Main song card */}
-                  <div className="p-4 flex items-center space-x-4">
+                  <div className="px-4 py-3 flex items-center space-x-3">
                     {/* Album artwork */}
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                    <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
                       {song.imageUrl ? (
                         <img 
                           src={song.imageUrl} 
@@ -338,11 +338,10 @@ export default function Songs() {
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif font-semibold text-torrist-green text-lg truncate">
+                      <h3 className="font-medium text-gray-900 truncate">
                         {song.title}
                       </h3>
-                      <p className="text-gray-600 truncate">{song.artist}</p>
-                      <p className="text-sm text-gray-500 truncate">{song.album}</p>
+                      <p className="text-sm text-gray-600 truncate">{song.artist}</p>
                     </div>
 
                     {/* Readiness summary */}
