@@ -99,9 +99,10 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
     if (searchQuery.trim().length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
         handleSearch(searchQuery);
-      }, 300); // Reduced to 300ms for faster response
+      }, 200); // Faster response
     } else {
       setSearchResults([]);
+      setIsSearching(false);
     }
 
     return () => {
@@ -145,7 +146,6 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Start typing to search for songs or artists..."
               className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-torrist-green text-lg"
-              disabled={isSearching}
               autoFocus
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
@@ -184,13 +184,6 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
               <p>Keep typing... (need at least 2 characters)</p>
             </div>
           )}
-
-          {isSearching && searchQuery.length >= 2 && (
-            <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-spinner fa-spin text-2xl mb-2 text-torrist-green"></i>
-              <p>Searching for "{searchQuery}"...</p>
-            </div>
-          )}
           
           {searchResults.length === 0 && !isSearching && searchQuery.length >= 2 && (
             <div className="p-6 text-center text-gray-500">
@@ -199,44 +192,58 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
             </div>
           )}
 
-          {searchResults.length > 0 && searchResults.map((track) => (
-            <div key={track.id} className="p-4 border-b hover:bg-gray-50 flex items-center space-x-4">
-              {/* Album artwork */}
-              <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
-                {track.album.images.length > 0 ? (
-                  <img 
-                    src={track.album.images[track.album.images.length - 1].url} 
-                    alt={track.album.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <i className="fas fa-music text-gray-400"></i>
+          {/* Always show results if available, with loading overlay */}
+          {searchResults.length > 0 && (
+            <div className="relative">
+              {isSearching && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                  <div className="flex items-center space-x-2 text-torrist-green">
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span>Updating results...</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+              
+              {searchResults.map((track) => (
+                <div key={track.id} className="p-4 border-b hover:bg-gray-50 flex items-center space-x-4">
+                  {/* Album artwork */}
+                  <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                    {track.album.images.length > 0 ? (
+                      <img 
+                        src={track.album.images[track.album.images.length - 1].url} 
+                        alt={track.album.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <i className="fas fa-music text-gray-400"></i>
+                      </div>
+                    )}
+                  </div>
 
-              {/* Song info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-torrist-green truncate">{track.name}</h3>
-                <p className="text-sm text-gray-600 truncate">{track.artists.map(a => a.name).join(", ")}</p>
-                <p className="text-xs text-gray-500 truncate">{track.album.name}</p>
-              </div>
+                  {/* Song info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-torrist-green truncate">{track.name}</h3>
+                    <p className="text-sm text-gray-600 truncate">{track.artists.map(a => a.name).join(", ")}</p>
+                    <p className="text-xs text-gray-500 truncate">{track.album.name}</p>
+                  </div>
 
-              {/* Add button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleAddSong(track);
-                }}
-                disabled={addSongMutation.isPending}
-                className="px-4 py-2 bg-torrist-orange text-white rounded-lg hover:bg-torrist-orange-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <i className="fas fa-plus"></i>
-                <span className="hidden sm:inline">Add</span>
-              </button>
+                  {/* Add button */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleAddSong(track);
+                    }}
+                    disabled={addSongMutation.isPending}
+                    className="px-4 py-2 bg-torrist-orange text-white rounded-lg hover:bg-torrist-orange-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    <i className="fas fa-plus"></i>
+                    <span className="hidden sm:inline">Add</span>
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
