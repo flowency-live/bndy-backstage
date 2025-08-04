@@ -37,6 +37,7 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>(
     localStorage.getItem('spotify_playlist_id') || ''
   );
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: playlists = [], isLoading: playlistsLoading } = useQuery<SpotifyPlaylist[]>({
@@ -65,6 +66,40 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
     enabled: !!accessToken,
   });
 
+  // Fetch user profile when we have access token
+  const { data: profile } = useQuery({
+    queryKey: ['/api/spotify/user'],
+    queryFn: async () => {
+      if (!accessToken) return null;
+      
+      const response = await fetch("/api/spotify/user", {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired
+          setAccessToken(null);
+          localStorage.removeItem('spotify_access_token');
+          throw new Error('Spotify access token expired');
+        }
+        throw new Error('Failed to fetch user profile');
+      }
+      
+      return response.json();
+    },
+    enabled: !!accessToken,
+  });
+
+  // Update profile state when query data changes
+  useEffect(() => {
+    if (profile) {
+      setUserProfile(profile);
+    }
+  }, [profile]);
+
   const handleSpotifyLogin = async () => {
     try {
       const response = await fetch("/api/spotify/auth");
@@ -73,7 +108,7 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
       // Open Spotify auth in new window
       const authWindow = window.open(authUrl, 'spotify-auth', 'width=600,height=600');
       
-      // Listen for the callback
+      // Listen for the callback and popup closure
       const checkClosed = setInterval(() => {
         if (authWindow?.closed) {
           clearInterval(checkClosed);
@@ -84,6 +119,12 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
             toast({
               title: "Connected to Spotify!",
               description: "You can now access your playlists"
+            });
+          } else {
+            toast({
+              title: "Connection cancelled",
+              description: "Spotify connection was not completed",
+              variant: "destructive"
             });
           }
         }
@@ -109,9 +150,11 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
   const handleDisconnect = () => {
     setAccessToken(null);
     setSelectedPlaylistId('');
+    setUserProfile(null);
     localStorage.removeItem('spotify_access_token');
     localStorage.removeItem('spotify_refresh_token');
     localStorage.removeItem('spotify_playlist_id');
+    localStorage.removeItem('spotify_expires_at');
     toast({
       title: "Disconnected from Spotify",
       description: "You'll need to reconnect to access playlists"
@@ -204,17 +247,38 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="font-serif text-lg font-semibold mb-3">Connection Status</h3>
             {accessToken ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-green-600">
-                  <i className="fas fa-check-circle"></i>
-                  <span>Connected to Spotify</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-green-600">
+                    <i className="fas fa-check-circle"></i>
+                    <span>Connected to Spotify</span>
+                  </div>
+                  <button
+                    onClick={handleDisconnect}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    Disconnect
+                  </button>
                 </div>
-                <button
-                  onClick={handleDisconnect}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                >
-                  Disconnect
-                </button>
+                {userProfile && (
+                  <div className="flex items-center space-x-3 pt-2 border-t border-gray-100">
+                    {userProfile.images && userProfile.images.length > 0 && (
+                      <img 
+                        src={userProfile.images[0].url} 
+                        alt="Profile" 
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {userProfile.display_name || userProfile.id}
+                      </p>
+                      {userProfile.email && (
+                        <p className="text-xs text-gray-500">{userProfile.email}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>

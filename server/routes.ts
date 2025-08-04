@@ -210,19 +210,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const tokens = await spotifyUserService.getAccessToken(code as string);
       
-      // Instead of just returning JSON, redirect to frontend with success message
-      const frontendUrl = process.env.REPLIT_DEV_DOMAIN
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : 'http://localhost:5000';
+      // Send HTML that stores tokens in localStorage and closes the popup
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Spotify Connected</title></head>
+        <body>
+          <h2>Successfully connected to Spotify!</h2>
+          <p>This window will close automatically...</p>
+          <script>
+            // Store tokens in localStorage
+            localStorage.setItem('spotify_access_token', '${tokens.access_token}');
+            localStorage.setItem('spotify_refresh_token', '${tokens.refresh_token}');
+            localStorage.setItem('spotify_expires_at', '${Date.now() + (tokens.expires_in * 1000)}');
+            
+            // Close popup window
+            setTimeout(() => {
+              window.close();
+              if (!window.closed) {
+                // Fallback if window.close() doesn't work
+                window.location.href = 'about:blank';
+              }
+            }, 1000);
+          </script>
+        </body>
+        </html>
+      `;
       
-      // Redirect to admin page with success message
-      res.redirect(`${frontendUrl}/admin?spotify_connected=true`);
+      res.send(html);
     } catch (error) {
       console.error("Spotify callback error:", error);
-      const frontendUrl = process.env.REPLIT_DEV_DOMAIN
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : 'http://localhost:5000';
-      res.redirect(`${frontendUrl}/admin?spotify_error=true`);
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Spotify Connection Failed</title></head>
+        <body>
+          <h2>Failed to connect to Spotify</h2>
+          <p>Please try again. This window will close automatically...</p>
+          <script>
+            setTimeout(() => {
+              window.close();
+              if (!window.closed) {
+                window.location.href = 'about:blank';
+              }
+            }, 2000);
+          </script>
+        </body>
+        </html>
+      `;
+      res.send(html);
+    }
+  });
+
+  // Get Spotify user profile
+  app.get("/api/spotify/user", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const userProfile = await spotifyUserService.getUserProfile(accessToken);
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Spotify user profile error:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
     }
   });
 

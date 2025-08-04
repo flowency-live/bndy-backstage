@@ -48,6 +48,30 @@ interface SpotifyPlaylistTrack {
   };
 }
 
+interface SpotifyTokens {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
+interface SpotifyUser {
+  id: string;
+  display_name: string;
+  email: string;
+  followers: {
+    total: number;
+  };
+  images: Array<{
+    url: string;
+    height: number;
+    width: number;
+  }>;
+  country: string;
+  product: string;
+}
+
 class SpotifyUserService {
   private clientId: string;
   private clientSecret: string;
@@ -99,7 +123,7 @@ class SpotifyUserService {
   }
 
   // Exchange authorization code for access token
-  async getAccessToken(code: string): Promise<{ access_token: string; refresh_token: string }> {
+  async getAccessToken(code: string): Promise<SpotifyTokens> {
     const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
     
     console.log('Token exchange request:', {
@@ -162,6 +186,21 @@ class SpotifyUserService {
     return data.items;
   }
 
+  // Get user profile
+  async getUserProfile(accessToken: string): Promise<SpotifyUser> {
+    const response = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user profile: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   // Add track to playlist
   async addTrackToPlaylist(playlistId: string, trackUri: string, accessToken: string): Promise<void> {
     const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
@@ -182,4 +221,4 @@ class SpotifyUserService {
 }
 
 export const spotifyUserService = new SpotifyUserService();
-export type { SpotifyPlaylist, SpotifyPlaylistTrack };
+export type { SpotifyPlaylist, SpotifyPlaylistTrack, SpotifyUser, SpotifyTokens };
