@@ -37,7 +37,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-full w-64 bg-torrist-green shadow-2xl z-50 animate-in slide-in-from-left duration-300">
+          <div className="fixed top-0 left-0 h-screen w-60 bg-torrist-green shadow-2xl z-50">
             <div className="p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
