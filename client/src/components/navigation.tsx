@@ -20,41 +20,12 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
   return (
     <>
       {/* Header with clickable logo */}
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className="text-torrist-cream hover:text-white font-display text-xl font-bold transition-colors"
-        >
-          The Torrists
-        </button>
-        
-        <div className="flex items-center space-x-3">
-          {/* User indicator */}
-          <div className="flex items-center space-x-2">
-            <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: currentUser.color }}
-            >
-              <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
-            </div>
-            <span className="text-torrist-cream font-sans text-sm hidden sm:block">
-              {currentUser.name}
-            </span>
-          </div>
-          
-          {/* Switch user button */}
-          <button 
-            onClick={() => {
-              onLogout();
-              setLocation("/");
-            }}
-            className="text-torrist-green hover:text-torrist-green-dark"
-            title="Switch user"
-          >
-            <i className="fas fa-sign-out-alt text-lg"></i>
-          </button>
-        </div>
-      </div>
+      <button 
+        onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+        className="text-2xl font-serif text-torrist-green hover:text-torrist-green-dark transition-colors"
+      >
+        The Torrists
+      </button>
 
       {/* Slide-out drawer overlay */}
       {isDrawerOpen && (
