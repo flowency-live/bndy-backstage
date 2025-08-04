@@ -50,10 +50,10 @@ export default function Songs() {
     return null;
   }
 
-  // Check for Spotify settings
+  // Check for Spotify settings from localStorage (same as admin panel uses)
   useEffect(() => {
-    const settings = spotifySync.getSettings();
-    setSpotifyPlaylistId(settings.playlistId);
+    const playlistId = localStorage.getItem('spotify_playlist_id');
+    setSpotifyPlaylistId(playlistId);
   }, []);
 
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
