@@ -173,7 +173,7 @@ export default function Songs() {
       
       {/* Header */}
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="grid grid-cols-3 items-center">
             {/* Left: Empty space */}
             <div></div>

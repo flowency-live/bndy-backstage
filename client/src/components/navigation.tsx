@@ -22,9 +22,10 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
       {/* Header with clickable logo */}
       <button 
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-        className="text-2xl font-serif text-torrist-green hover:text-torrist-green-dark transition-colors"
+        className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight"
       >
-        The Torrists
+        <div className="text-xl">The</div>
+        <div className="text-xl">Torrists</div>
       </button>
 
       {/* Only render drawer elements when open */}
