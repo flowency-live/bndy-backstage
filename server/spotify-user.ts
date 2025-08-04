@@ -218,6 +218,86 @@ class SpotifyUserService {
       throw new Error(`Failed to add track to playlist: ${response.status}`);
     }
   }
+
+  // Remove track from playlist
+  async removeTrackFromPlaylist(playlistId: string, trackUri: string, accessToken: string): Promise<void> {
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tracks: [{ uri: trackUri }]
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to remove track from playlist: ${response.status}`);
+    }
+  }
+
+  // Clear all tracks from playlist
+  async clearPlaylist(playlistId: string, accessToken: string): Promise<void> {
+    // First, get all tracks
+    const tracks = await this.getPlaylistTracks(playlistId, accessToken);
+    
+    if (tracks.length === 0) return;
+    
+    // Prepare tracks for removal
+    const trackUris = tracks.map(item => ({ uri: item.track.external_urls.spotify.replace('https://open.spotify.com/track/', 'spotify:track:') }));
+    
+    // Remove in batches of 100 (Spotify's limit)
+    for (let i = 0; i < trackUris.length; i += 100) {
+      const batch = trackUris.slice(i, i + 100);
+      
+      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tracks: batch
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to clear playlist batch: ${response.status}`);
+      }
+    }
+  }
+
+  // Sync practice list to Spotify playlist
+  async syncToPlaylist(playlistId: string, songs: Array<{spotifyId: string}>, accessToken: string): Promise<void> {
+    // Clear the playlist first
+    await this.clearPlaylist(playlistId, accessToken);
+    
+    // Add all songs from practice list
+    const trackUris = songs.map(song => `spotify:track:${song.spotifyId}`);
+    
+    if (trackUris.length === 0) return;
+    
+    // Add in batches of 100 (Spotify's limit)
+    for (let i = 0; i < trackUris.length; i += 100) {
+      const batch = trackUris.slice(i, i + 100);
+      
+      const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uris: batch
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to sync batch to playlist: ${response.status}`);
+      }
+    }
+  }
 }
 
 export const spotifyUserService = new SpotifyUserService();

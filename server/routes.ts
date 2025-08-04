@@ -311,6 +311,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync practice list to Spotify playlist
+  app.post("/api/spotify/playlists/:id/sync", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const songs = await storage.getSongs();
+      
+      await spotifyUserService.syncToPlaylist(req.params.id, songs, accessToken);
+      res.json({ message: "Successfully synced practice list to Spotify playlist" });
+    } catch (error) {
+      console.error("Spotify sync error:", error);
+      res.status(500).json({ message: "Failed to sync to Spotify playlist" });
+    }
+  });
+
+  // Add single track to Spotify playlist when added to practice list
+  app.post("/api/spotify/playlists/:id/tracks", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const { spotifyId } = req.body;
+      
+      const trackUri = `spotify:track:${spotifyId}`;
+      await spotifyUserService.addTrackToPlaylist(req.params.id, trackUri, accessToken);
+      res.json({ message: "Track added to Spotify playlist" });
+    } catch (error) {
+      console.error("Spotify add track error:", error);
+      res.status(500).json({ message: "Failed to add track to Spotify playlist" });
+    }
+  });
+
+  // Remove single track from Spotify playlist when removed from practice list
+  app.delete("/api/spotify/playlists/:id/tracks/:spotifyId", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Access token required" });
+      }
+
+      const accessToken = authHeader.replace('Bearer ', '');
+      const { spotifyId } = req.params;
+      
+      const trackUri = `spotify:track:${spotifyId}`;
+      await spotifyUserService.removeTrackFromPlaylist(req.params.id, trackUri, accessToken);
+      res.json({ message: "Track removed from Spotify playlist" });
+    } catch (error) {
+      console.error("Spotify remove track error:", error);
+      res.status(500).json({ message: "Failed to remove track from Spotify playlist" });
+    }
+  });
+
   // Songs endpoints
   app.get("/api/songs", async (req, res) => {
     try {

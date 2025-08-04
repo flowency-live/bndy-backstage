@@ -252,6 +252,33 @@ export default function Admin() {
     }
   };
 
+  const syncToSpotify = async () => {
+    if (!selectedPlaylistId || !accessToken) return;
+    
+    try {
+      const response = await fetch(`/api/spotify/playlists/${selectedPlaylistId}/sync`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to sync to Spotify');
+      
+      toast({
+        title: "Synced to Spotify!",
+        description: "Your practice list has been synced to your Spotify playlist"
+      });
+    } catch (error) {
+      toast({
+        title: "Sync failed",
+        description: "Could not sync to Spotify playlist",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMember.name.trim() || !newMember.role.trim()) {
@@ -481,21 +508,32 @@ export default function Admin() {
                           </SelectContent>
                         </Select>
                         {selectedPlaylistId && (
-                          <Button
-                            onClick={importFromPlaylist}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <i className="fas fa-download mr-2"></i>
-                            Import Songs
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={importFromPlaylist}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <i className="fas fa-download mr-2"></i>
+                              Import Songs
+                            </Button>
+                            <Button
+                              onClick={syncToSpotify}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <i className="fas fa-upload mr-2"></i>
+                              Sync to Spotify
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
                     
                     {selectedPlaylistId && (
-                      <p className="text-xs text-gray-600">
-                        Selected playlist will be used for importing songs to your practice list.
-                      </p>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <p>• <strong>Import Songs:</strong> Copy tracks from Spotify to your practice list</p>
+                        <p>• <strong>Sync to Spotify:</strong> Replace Spotify playlist with your complete practice list</p>
+                        <p className="text-amber-600 font-medium">⚠️ Sync will overwrite the entire Spotify playlist</p>
+                      </div>
                     )}
                   </div>
                 </div>
