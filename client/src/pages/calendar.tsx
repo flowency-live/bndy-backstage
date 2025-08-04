@@ -183,13 +183,8 @@ export default function Calendar() {
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="grid grid-cols-3 items-center">
-            {/* Left: Band name on two lines */}
-            <div className="justify-self-start">
-              <h1 className="font-serif text-torrist-green font-bold leading-tight">
-                <div className="text-2xl">The</div>
-                <div className="text-2xl">Torrists</div>
-              </h1>
-            </div>
+            {/* Left: Empty space */}
+            <div></div>
             
             {/* Center: User badge */}
             <div className="justify-self-center">
