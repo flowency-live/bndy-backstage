@@ -53,7 +53,15 @@ export default function Songs() {
   // Check for Spotify settings from localStorage (same as admin panel uses)
   useEffect(() => {
     const playlistId = localStorage.getItem('spotify_playlist_id');
+    console.log('Debug: Spotify playlist ID from localStorage:', playlistId);
     setSpotifyPlaylistId(playlistId);
+    
+    // Also check other possible storage keys
+    console.log('Debug: All Spotify keys:', {
+      playlist_id: localStorage.getItem('spotify_playlist_id'),
+      access_token: localStorage.getItem('spotify_access_token'),
+      settings: localStorage.getItem('spotify-settings')
+    });
   }, []);
 
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
@@ -301,6 +309,12 @@ export default function Songs() {
                   <i className="fab fa-spotify"></i>
                   <span>Open in Spotify</span>
                 </a>
+              )}
+              {/* Debug info - remove after testing */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-400">
+                  Debug: playlistId = {spotifyPlaylistId || 'null'}
+                </div>
               )}
             </div>
           </div>
