@@ -304,7 +304,7 @@ export default function Songs() {
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="space-y-1">
             {sortedSongs.map((song) => {
               const readinessCounts = getReadinessCount(song);
               const userReadiness = getUserReadiness(song);
@@ -315,7 +315,7 @@ export default function Songs() {
               return (
                 <div 
                   key={song.id} 
-                  className={`bg-white border-b border-gray-100 hover:bg-gray-50 transition-all duration-200 ${
+                  className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
                   }`}
                 >
