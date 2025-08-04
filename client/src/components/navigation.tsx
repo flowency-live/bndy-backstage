@@ -37,11 +37,9 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
 
       {/* Slide-out drawer */}
       <div 
-        className="fixed top-0 h-full bg-torrist-green shadow-2xl z-50 transition-all duration-300 ease-in-out"
-        style={{
-          left: isDrawerOpen ? 0 : -320,
-          width: 320
-        }}
+        className={`fixed top-0 left-0 h-full w-80 bg-torrist-green shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <div className="p-6">
           {/* Header */}
