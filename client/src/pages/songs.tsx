@@ -175,8 +175,7 @@ export default function Songs() {
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Empty space where Navigation used to be */}
+            <div className="flex items-center justify-center">
               <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -189,21 +188,14 @@ export default function Songs() {
             </div>
             <div className="flex items-center space-x-2">
               <button 
-                onClick={() => setLocation("/calendar")}
-                className="text-torrist-green hover:text-torrist-green-dark p-2"
-                title="Back to Calendar"
-              >
-                <i className="fas fa-calendar text-xl"></i>
-              </button>
-              <button 
                 onClick={() => {
                   logout();
                   setLocation("/");
                 }}
-                className="text-torrist-green hover:text-torrist-green-dark p-2"
+                className="text-torrist-green hover:text-torrist-green-dark"
                 title="Switch user"
               >
-                <i className="fas fa-sign-out-alt text-xl"></i>
+                <i className="fas fa-sign-out-alt text-lg"></i>
               </button>
             </div>
           </div>

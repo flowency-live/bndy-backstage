@@ -183,8 +183,7 @@ export default function Calendar() {
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Empty space where Navigation used to be */}
+            <div className="flex items-center justify-center">
               <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -195,41 +194,16 @@ export default function Calendar() {
                 <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              {/* View Mode Toggle - now visible on mobile too */}
-              <div className="flex bg-torrist-cream rounded-full p-1">
-                <button 
-                  onClick={() => setViewMode("calendar")}
-                  className={`px-3 py-2 rounded-full text-sm font-serif font-medium transition-colors ${
-                    viewMode === "calendar" 
-                      ? "bg-torrist-green text-white" 
-                      : "text-torrist-green hover:bg-white"
-                  }`}
-                >
-                  <i className="fas fa-calendar mr-1"></i>
-                  <span className="hidden sm:inline">Calendar</span>
-                </button>
-                <button 
-                  onClick={() => setViewMode("agenda")}
-                  className={`px-3 py-2 rounded-full text-sm font-serif font-medium transition-colors ${
-                    viewMode === "agenda" 
-                      ? "bg-torrist-green text-white" 
-                      : "text-torrist-green hover:bg-white"
-                  }`}
-                >
-                  <i className="fas fa-list mr-1"></i>
-                  <span className="hidden sm:inline">Agenda</span>
-                </button>
-              </div>
+            <div className="flex items-center space-x-2">
               <button 
                 onClick={() => {
                   logout();
                   setLocation("/");
                 }}
-                className="text-torrist-green hover:text-torrist-green-dark p-2"
+                className="text-torrist-green hover:text-torrist-green-dark"
                 title="Switch user"
               >
-                <i className="fas fa-sign-out-alt text-xl"></i>
+                <i className="fas fa-sign-out-alt text-lg"></i>
               </button>
             </div>
           </div>
