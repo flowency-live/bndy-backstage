@@ -56,7 +56,13 @@ class SpotifyUserService {
   constructor() {
     this.clientId = process.env.SPOTIFY_CLIENT_ID || '';
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || '';
-    this.redirectUri = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:5000/api/spotify/callback';
+    
+    // Use Replit domain when running on Replit
+    const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER
+      ? `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app`
+      : 'http://localhost:5000';
+    
+    this.redirectUri = process.env.SPOTIFY_REDIRECT_URI || `${baseUrl}/api/spotify/callback`;
   }
 
   // Generate authorization URL for user login

@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(tracks);
     } catch (error) {
       console.error("Spotify search error:", error);
-      res.status(500).json({ message: "Failed to search Spotify", error: error.message });
+      res.status(500).json({ message: "Failed to search Spotify", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
