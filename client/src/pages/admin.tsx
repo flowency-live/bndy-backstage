@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import SpotifySettings from "@/components/spotify-settings";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Microphone" },
@@ -23,7 +22,13 @@ const ICONS = [
 export default function Admin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [showSpotifySettings, setShowSpotifySettings] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(
+    localStorage.getItem('spotify_access_token')
+  );
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>(
+    localStorage.getItem('spotify_playlist_id') || ''
+  );
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [newMember, setNewMember] = useState<InsertBandMember>({
     name: "",
     role: "",
@@ -34,6 +39,63 @@ export default function Admin() {
   const { data: bandMembers = [], isLoading } = useQuery<BandMember[]>({
     queryKey: ["/api/band-members"],
   });
+
+  // Spotify queries
+  const { data: playlists = [] } = useQuery({
+    queryKey: ['/api/spotify/playlists'],
+    queryFn: async () => {
+      if (!accessToken) return [];
+      
+      const response = await fetch("/api/spotify/playlists", {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAccessToken(null);
+          localStorage.removeItem('spotify_access_token');
+          throw new Error('Spotify access token expired');
+        }
+        throw new Error('Failed to fetch playlists');
+      }
+      
+      return response.json();
+    },
+    enabled: !!accessToken,
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ['/api/spotify/user'],
+    queryFn: async () => {
+      if (!accessToken) return null;
+      
+      const response = await fetch("/api/spotify/user", {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAccessToken(null);
+          localStorage.removeItem('spotify_access_token');
+          throw new Error('Spotify access token expired');
+        }
+        throw new Error('Failed to fetch user profile');
+      }
+      
+      return response.json();
+    },
+    enabled: !!accessToken,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setUserProfile(profile);
+    }
+  }, [profile]);
 
   const createMemberMutation = useMutation({
     mutationFn: async (member: InsertBandMember) => {
@@ -76,6 +138,120 @@ export default function Admin() {
       });
     },
   });
+
+  // Spotify handlers
+  const handleSpotifyLogin = async () => {
+    try {
+      const response = await fetch("/api/spotify/auth");
+      const { authUrl } = await response.json();
+      
+      const authWindow = window.open(authUrl, 'spotify-auth', 'width=600,height=600');
+      
+      const checkClosed = setInterval(() => {
+        if (authWindow?.closed) {
+          clearInterval(checkClosed);
+          const token = localStorage.getItem('spotify_access_token');
+          if (token) {
+            setAccessToken(token);
+            toast({
+              title: "Connected to Spotify!",
+              description: "You can now access your playlists"
+            });
+          } else {
+            toast({
+              title: "Connection cancelled",
+              description: "Spotify connection was not completed",
+              variant: "destructive"
+            });
+          }
+        }
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Connection failed",
+        description: "Could not connect to Spotify",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSpotifyDisconnect = () => {
+    setAccessToken(null);
+    setSelectedPlaylistId('');
+    setUserProfile(null);
+    localStorage.removeItem('spotify_access_token');
+    localStorage.removeItem('spotify_refresh_token');
+    localStorage.removeItem('spotify_playlist_id');
+    localStorage.removeItem('spotify_expires_at');
+    toast({
+      title: "Disconnected from Spotify",
+      description: "You'll need to reconnect to access playlists"
+    });
+  };
+
+  const handlePlaylistSelect = (playlistId: string) => {
+    setSelectedPlaylistId(playlistId);
+    localStorage.setItem('spotify_playlist_id', playlistId);
+    toast({
+      title: "Practice playlist set!",
+      description: "This playlist will be used for importing/exporting songs"
+    });
+  };
+
+  const importFromPlaylist = async () => {
+    if (!selectedPlaylistId || !accessToken) return;
+    
+    try {
+      const response = await fetch(`/api/spotify/playlists/${selectedPlaylistId}/tracks`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch playlist tracks');
+      
+      const tracks = await response.json();
+      
+      let addedCount = 0;
+      for (const item of tracks) {
+        try {
+          const addResponse = await fetch("/api/songs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              spotifyId: item.track.id,
+              title: item.track.name,
+              artist: item.track.artists.map((a: any) => a.name).join(", "),
+              album: item.track.album.name,
+              spotifyUrl: item.track.external_urls.spotify,
+              imageUrl: item.track.album.images.length > 0 ? item.track.album.images[0].url : null,
+              previewUrl: item.track.preview_url,
+              addedBy: 'spotify-import'
+            }),
+          });
+          
+          if (addResponse.ok) {
+            addedCount++;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      toast({
+        title: `Imported ${addedCount} songs!`,
+        description: `Added ${addedCount} new songs from your Spotify playlist`
+      });
+      
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Import failed",
+        description: "Could not import songs from playlist",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,29 +427,106 @@ export default function Admin() {
 
             {/* Spotify Integration Section */}
             <div className="border-t pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-sans font-semibold text-torrist-green">Spotify Integration</h3>
-                <button
-                  onClick={() => setShowSpotifySettings(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-serif flex items-center space-x-2"
-                >
-                  <i className="fab fa-spotify"></i>
-                  <span>Connect Spotify</span>
-                </button>
-              </div>
-              <p className="text-gray-600 text-sm">
-                Connect your band's Spotify account to import songs from playlists and sync practice lists.
-              </p>
+              <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Spotify Integration</h3>
+              
+              {/* Connection Status */}
+              {accessToken ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 text-green-600">
+                        <i className="fas fa-check-circle"></i>
+                        <span className="font-medium">Connected to Spotify</span>
+                      </div>
+                      {userProfile && (
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          {userProfile.images && userProfile.images.length > 0 && (
+                            <img 
+                              src={userProfile.images[0].url} 
+                              alt="Profile" 
+                              className="w-6 h-6 rounded-full"
+                            />
+                          )}
+                          <span>{userProfile.display_name || userProfile.id}</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleSpotifyDisconnect}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                  
+                  {/* Playlist Selection */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Practice Playlist:
+                      </label>
+                      <div className="flex gap-2">
+                        <Select value={selectedPlaylistId} onValueChange={handlePlaylistSelect}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Choose a playlist..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {playlists.map((playlist: any) => (
+                              <SelectItem key={playlist.id} value={playlist.id}>
+                                <div className="flex items-center space-x-2">
+                                  <span>{playlist.name}</span>
+                                  <span className="text-xs text-gray-500">({playlist.tracks.total} tracks)</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedPlaylistId && (
+                          <Button
+                            onClick={importFromPlaylist}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <i className="fas fa-download mr-2"></i>
+                            Import Songs
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {selectedPlaylistId && (
+                      <p className="text-xs text-gray-600">
+                        Selected playlist will be used for importing songs to your practice list.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center space-x-2 text-gray-500 mb-2">
+                        <i className="fas fa-times-circle"></i>
+                        <span className="font-medium">Not connected to Spotify</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Connect your band's Spotify account to import songs from playlists and sync practice lists.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSpotifyLogin}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-serif flex items-center space-x-2"
+                    >
+                      <i className="fab fa-spotify"></i>
+                      <span>Connect Spotify</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Spotify Settings Modal */}
-      <SpotifySettings
-        isOpen={showSpotifySettings}
-        onClose={() => setShowSpotifySettings(false)}
-      />
     </div>
   );
 }
