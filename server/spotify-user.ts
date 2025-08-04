@@ -91,6 +91,12 @@ class SpotifyUserService {
   async getAccessToken(code: string): Promise<{ access_token: string; refresh_token: string }> {
     const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
     
+    console.log('Token exchange request:', {
+      redirect_uri: this.redirectUri,
+      client_id: this.clientId,
+      code: code.substring(0, 20) + '...'
+    });
+    
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
@@ -105,7 +111,9 @@ class SpotifyUserService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get access token: ${response.status}`);
+      const errorBody = await response.text();
+      console.error('Spotify token error:', response.status, errorBody);
+      throw new Error(`Failed to get access token: ${response.status} - ${errorBody}`);
     }
 
     return response.json();
