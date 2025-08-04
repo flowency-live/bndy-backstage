@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import SpotifySettings from "@/components/spotify-settings";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Microphone" },
@@ -22,6 +23,7 @@ const ICONS = [
 export default function Admin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [showSpotifySettings, setShowSpotifySettings] = useState(false);
   const [newMember, setNewMember] = useState<InsertBandMember>({
     name: "",
     role: "",
@@ -246,9 +248,32 @@ export default function Admin() {
                 </Button>
               </form>
             </div>
+
+            {/* Spotify Integration Section */}
+            <div className="border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-sans font-semibold text-torrist-green">Spotify Integration</h3>
+                <button
+                  onClick={() => setShowSpotifySettings(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-serif flex items-center space-x-2"
+                >
+                  <i className="fab fa-spotify"></i>
+                  <span>Connect Spotify</span>
+                </button>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Connect your band's Spotify account to import songs from playlists and sync practice lists.
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Spotify Settings Modal */}
+      <SpotifySettings
+        isOpen={showSpotifySettings}
+        onClose={() => setShowSpotifySettings(false)}
+      />
     </div>
   );
 }

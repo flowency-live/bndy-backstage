@@ -49,13 +49,20 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
+    console.log('Starting search for:', searchQuery); // Debug log
     setIsSearching(true);
+    setSearchResults([]); // Clear previous results
+    
     try {
       const response = await fetch(`/api/spotify/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
+      console.log('Response status:', response.status); // Debug log
+      
       if (response.ok) {
         const tracks = await response.json();
-        console.log('Search results:', tracks); // Debug log
+        console.log('Search results received:', tracks.length, 'tracks'); // Debug log
+        console.log('First track:', tracks[0]); // Debug log
         setSearchResults(tracks);
+        console.log('State updated with results'); // Debug log
       } else {
         console.error('Search failed with status:', response.status);
         const errorText = await response.text();
@@ -75,6 +82,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
       });
     } finally {
       setIsSearching(false);
+      console.log('Search completed, isSearching now false'); // Debug log
     }
   };
 
@@ -137,14 +145,28 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto max-h-96">
-          {searchResults.length === 0 && !isSearching && (
+          {isSearching && (
+            <div className="p-6 text-center text-gray-500">
+              <i className="fas fa-spinner fa-spin text-4xl mb-4 text-gray-300"></i>
+              <p>Searching Spotify...</p>
+            </div>
+          )}
+          
+          {searchResults.length === 0 && !isSearching && searchQuery && (
+            <div className="p-6 text-center text-gray-500">
+              <i className="fas fa-exclamation-circle text-4xl mb-4 text-gray-300"></i>
+              <p>No results found for "{searchQuery}"</p>
+            </div>
+          )}
+
+          {searchResults.length === 0 && !isSearching && !searchQuery && (
             <div className="p-6 text-center text-gray-500">
               <i className="fas fa-search text-4xl mb-4 text-gray-300"></i>
               <p>Search for songs to add to your practice list</p>
             </div>
           )}
 
-          {searchResults.map((track) => (
+          {searchResults.length > 0 && searchResults.map((track) => (
             <div key={track.id} className="p-4 border-b hover:bg-gray-50 flex items-center space-x-4">
               {/* Album artwork */}
               <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
