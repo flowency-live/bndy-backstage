@@ -52,25 +52,8 @@ export default function Songs() {
 
   // Check for Spotify settings from localStorage (same as admin panel uses)
   useEffect(() => {
-    // Check localStorage on every component mount
-    const checkSpotifySettings = () => {
-      const playlistId = localStorage.getItem('spotify_playlist_id');
-      console.log('Debug: Checking localStorage for spotify_playlist_id:', playlistId);
-      setSpotifyPlaylistId(playlistId);
-    };
-    
-    checkSpotifySettings();
-    
-    // Listen for storage changes in case admin panel updates it
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'spotify_playlist_id') {
-        console.log('Debug: Storage changed, new playlist ID:', e.newValue);
-        setSpotifyPlaylistId(e.newValue);
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    const playlistId = localStorage.getItem('spotify_playlist_id');
+    setSpotifyPlaylistId(playlistId);
   }, []);
 
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
@@ -119,7 +102,7 @@ export default function Songs() {
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
     },
     onError: () => {
-      toast({ title: "Failed to update veto", variant: "destructive" });
+      toast({ title: "Failed to update", variant: "destructive" });
     },
   });
 
@@ -409,7 +392,7 @@ export default function Songs() {
                         )}
                       </div>
                       
-                      {/* Veto indicators */}
+                      {/* Poo indicators */}
                       {song.vetos.length > 0 && (
                         <span className="text-xl">
                           {"💩".repeat(Math.min(song.vetos.length, 3))}
@@ -456,7 +439,7 @@ export default function Songs() {
                               ))}
                             </div>
                             
-                            {/* Veto button */}
+                            {/* Poo button */}
                             <button
                               onClick={() => toggleVetoMutation.mutate({ songId: song.id, hasVeto: userVeto })}
                               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
@@ -466,7 +449,7 @@ export default function Songs() {
                               }`}
                               disabled={toggleVetoMutation.isPending}
                             >
-                              💩 {userVeto ? "Remove Veto" : "Veto"}
+                              💩
                             </button>
                           </div>
                         </div>
