@@ -179,6 +179,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add debug logging for all requests
+  app.use((req, res, next) => {
+    if (req.path.includes('spotify')) {
+      console.log(`Spotify route hit: ${req.method} ${req.path} from ${req.ip}`);
+    }
+    next();
+  });
+
   app.get("/api/spotify/callback", async (req, res) => {
     try {
       const { code, state } = req.query;
@@ -194,16 +202,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokens = await spotifyUserService.getAccessToken(code as string);
       
       // Instead of just returning JSON, redirect to frontend with success message
-      const frontendUrl = process.env.REPL_SLUG && process.env.REPL_OWNER
-        ? `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app`
+      const frontendUrl = process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
         : 'http://localhost:5000';
       
       // Redirect to admin page with success message
       res.redirect(`${frontendUrl}/admin?spotify_connected=true`);
     } catch (error) {
       console.error("Spotify callback error:", error);
-      const frontendUrl = process.env.REPL_SLUG && process.env.REPL_OWNER
-        ? `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app`
+      const frontendUrl = process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
         : 'http://localhost:5000';
       res.redirect(`${frontendUrl}/admin?spotify_error=true`);
     }

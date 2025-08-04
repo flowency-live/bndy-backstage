@@ -50,7 +50,8 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  const isDevelopment = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+  if (isDevelopment) {
     await setupVite(app, server);
   } else {
     serveStatic(app);
@@ -61,11 +62,21 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
+  
+  // Log debug info
+  console.log('Debug info:');
+  console.log('PORT env var:', process.env.PORT);
+  console.log('Final port:', port);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('REPL_SLUG:', process.env.REPL_SLUG);
+  console.log('REPL_OWNER:', process.env.REPL_OWNER);
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    log(`Environment: NODE_ENV=${process.env.NODE_ENV}, isDev=${isDevelopment}`);
+    log(`Routes registered for Spotify OAuth`);
   });
 })();
