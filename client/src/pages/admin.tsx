@@ -189,12 +189,19 @@ export default function Admin() {
     });
   };
 
-  const handlePlaylistSelect = (playlistId: string) => {
+  const handlePlaylistSelect = async (playlistId: string) => {
     setSelectedPlaylistId(playlistId);
     localStorage.setItem('spotify_playlist_id', playlistId);
+    
+    // Store Spotify settings for real-time sync
+    if (accessToken) {
+      const { spotifySync } = await import('@/lib/spotify-sync');
+      spotifySync.setSettings(playlistId, accessToken);
+    }
+    
     toast({
       title: "Practice playlist set!",
-      description: "This playlist will be used for importing/exporting songs"
+      description: "This playlist will be used for importing/exporting songs and real-time sync"
     });
   };
 

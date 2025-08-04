@@ -29,11 +29,18 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
         const error = await response.json();
         throw new Error(error.message);
       }
+      
+      // Also add to Spotify playlist if configured
+      const { spotifySync } = await import('@/lib/spotify-sync');
+      if (spotifySync.isConfigured()) {
+        await spotifySync.addTrackToSpotify(trackData.spotifyId);
+      }
+      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
-      toast({ title: "Song added to practice list!" });
+      toast({ title: "Song added to practice list and Spotify playlist!" });
       onClose();
       setSearchQuery("");
       setSearchResults([]);

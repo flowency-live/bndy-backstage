@@ -99,15 +99,21 @@ export default function Songs() {
   });
 
   const deleteSongMutation = useMutation({
-    mutationFn: async (songId: string) => {
-      const response = await fetch(`/api/songs/${songId}`, {
+    mutationFn: async (songData: { songId: string; spotifyId: string }) => {
+      const response = await fetch(`/api/songs/${songData.songId}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete song");
+      
+      // Also remove from Spotify playlist if configured
+      const { spotifySync } = await import('@/lib/spotify-sync');
+      if (spotifySync.isConfigured()) {
+        await spotifySync.removeTrackFromSpotify(songData.spotifyId);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
-      toast({ title: "Song removed from practice list" });
+      toast({ title: "Song removed from practice list and Spotify playlist" });
     },
     onError: () => {
       toast({ title: "Failed to remove song", variant: "destructive" });
@@ -161,9 +167,9 @@ export default function Songs() {
     return song.vetos.some(v => v.memberId === currentUser.id);
   };
 
-  const handleDeleteSong = (songId: string, songTitle: string) => {
+  const handleDeleteSong = (songId: string, spotifyId: string, songTitle: string) => {
     if (confirm(`Are you sure you want to remove "${songTitle}" from the practice list?`)) {
-      deleteSongMutation.mutate(songId);
+      deleteSongMutation.mutate({ songId, spotifyId });
     }
   };
 
@@ -472,7 +478,7 @@ export default function Songs() {
                           </a>
                           
                           <button
-                            onClick={() => handleDeleteSong(song.id, song.title)}
+                            onClick={() => handleDeleteSong(song.id, song.spotifyId, song.title)}
                             className="text-red-600 hover:text-red-700 font-semibold"
                             disabled={deleteSongMutation.isPending}
                           >
