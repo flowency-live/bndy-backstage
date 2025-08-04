@@ -95,7 +95,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-torrist-green text-white p-6 flex items-center justify-between">
-          <h2 className="text-xl font-display font-bold">Add Song to Practice List</h2>
+          <h2 className="text-xl font-serif font-bold">Add Song to Practice List</h2>
           <button 
             onClick={onClose}
             className="text-white hover:text-gray-200"
@@ -119,7 +119,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
             <button
               onClick={handleSearch}
               disabled={isSearching || !searchQuery.trim()}
-              className="px-6 py-2 bg-torrist-green text-white rounded-lg hover:bg-torrist-green-dark disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-torrist-green text-white rounded-lg hover:bg-torrist-green-dark disabled:opacity-50 disabled:cursor-not-allowed font-serif"
             >
               {isSearching ? (
                 <i className="fas fa-spinner fa-spin"></i>

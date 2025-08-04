@@ -37,9 +37,11 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
 
       {/* Slide-out drawer */}
       <div 
-        className={`fixed top-0 left-0 h-full w-80 bg-torrist-green shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className="fixed top-0 h-full bg-torrist-green shadow-2xl z-50 transition-all duration-300 ease-in-out"
+        style={{
+          left: isDrawerOpen ? '0px' : '-320px',
+          width: '320px'
+        }}
       >
         <div className="p-6">
           {/* Header */}
@@ -60,7 +62,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
               className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-calendar w-5"></i>
-              <span className="font-serif">Calendar</span>
+              <span className="font-serif text-lg">Calendar</span>
             </button>
             
             <button 
@@ -68,7 +70,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
               className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-music w-5"></i>
-              <span className="font-serif">Practice List</span>
+              <span className="font-serif text-lg">Practice List</span>
             </button>
             
             <button 
@@ -76,7 +78,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
               className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
             >
               <i className="fas fa-users-cog w-5"></i>
-              <span className="font-serif">Manage Band</span>
+              <span className="font-serif text-lg">Manage Band</span>
             </button>
           </nav>
         </div>

@@ -189,7 +189,7 @@ export default function Calendar() {
                 >
                   <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
                 </div>
-                <span className="font-sans text-torrist-green font-semibold">{currentUser.name}</span>
+                <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -197,7 +197,7 @@ export default function Calendar() {
               <div className="hidden md:flex bg-torrist-cream rounded-full p-1">
                 <button 
                   onClick={() => setViewMode("calendar")}
-                  className={`px-3 py-1 rounded-full text-sm font-sans font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full text-sm font-serif font-semibold transition-colors ${
                     viewMode === "calendar" 
                       ? "bg-torrist-green text-white" 
                       : "text-torrist-green hover:bg-white"
@@ -207,7 +207,7 @@ export default function Calendar() {
                 </button>
                 <button 
                   onClick={() => setViewMode("agenda")}
-                  className={`px-3 py-1 rounded-full text-sm font-sans font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full text-sm font-serif font-semibold transition-colors ${
                     viewMode === "agenda" 
                       ? "bg-torrist-green text-white" 
                       : "text-torrist-green hover:bg-white"
@@ -228,7 +228,7 @@ export default function Calendar() {
               </button>
               <button 
                 onClick={() => openEventModal(format(new Date(), "yyyy-MM-dd"), "practice")}
-                className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-4 py-2 rounded-full font-sans font-semibold"
+                className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-4 py-2 rounded-full font-serif font-semibold"
               >
                 <i className="fas fa-plus mr-2"></i>Add Event
               </button>

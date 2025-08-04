@@ -169,9 +169,34 @@ export default function Songs() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-torrist-cream via-white to-gray-100">
       {/* Header */}
-      <header className="bg-torrist-green shadow-lg">
+      <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <Navigation currentUser={currentUser} onLogout={logout} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Navigation currentUser={currentUser} onLogout={logout} />
+              <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: currentUser.color }}
+                >
+                  <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
+                </div>
+                <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => {
+                  logout();
+                  setLocation("/");
+                }}
+                className="text-torrist-green hover:text-torrist-green-dark"
+                title="Switch user"
+              >
+                <i className="fas fa-sign-out-alt text-lg"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -179,14 +204,14 @@ export default function Songs() {
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold text-torrist-green mb-2">Practice List</h1>
-            <p className="text-gray-600 font-sans">
+            <h1 className="text-3xl font-serif font-bold text-torrist-green mb-2">Practice List</h1>
+            <p className="text-gray-600 font-serif">
               Songs the band is practicing, with readiness tracking
             </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-sans font-semibold shadow-lg flex items-center space-x-2"
+            className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2"
           >
             <i className="fas fa-plus"></i>
             <span>Add Song</span>
@@ -202,11 +227,11 @@ export default function Songs() {
         ) : sortedSongs.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
             <i className="fas fa-music text-6xl text-gray-300 mb-6"></i>
-            <h3 className="text-xl font-sans font-semibold text-gray-600 mb-2">No songs yet</h3>
+            <h3 className="text-xl font-serif font-semibold text-gray-600 mb-2">No songs yet</h3>
             <p className="text-gray-500 mb-6">Start building your practice list by adding some songs</p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-sans font-semibold"
+              className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-serif font-semibold"
             >
               Add Your First Song
             </button>
@@ -246,7 +271,7 @@ export default function Songs() {
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-sans font-semibold text-torrist-green text-lg truncate">
+                      <h3 className="font-serif font-semibold text-torrist-green text-lg truncate">
                         {song.title}
                       </h3>
                       <p className="text-gray-600 truncate">{song.artist}</p>
