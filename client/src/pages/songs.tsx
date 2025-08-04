@@ -52,16 +52,25 @@ export default function Songs() {
 
   // Check for Spotify settings from localStorage (same as admin panel uses)
   useEffect(() => {
-    const playlistId = localStorage.getItem('spotify_playlist_id');
-    console.log('Debug: Spotify playlist ID from localStorage:', playlistId);
-    setSpotifyPlaylistId(playlistId);
+    // Check localStorage on every component mount
+    const checkSpotifySettings = () => {
+      const playlistId = localStorage.getItem('spotify_playlist_id');
+      console.log('Debug: Checking localStorage for spotify_playlist_id:', playlistId);
+      setSpotifyPlaylistId(playlistId);
+    };
     
-    // Also check other possible storage keys
-    console.log('Debug: All Spotify keys:', {
-      playlist_id: localStorage.getItem('spotify_playlist_id'),
-      access_token: localStorage.getItem('spotify_access_token'),
-      settings: localStorage.getItem('spotify-settings')
-    });
+    checkSpotifySettings();
+    
+    // Listen for storage changes in case admin panel updates it
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'spotify_playlist_id') {
+        console.log('Debug: Storage changed, new playlist ID:', e.newValue);
+        setSpotifyPlaylistId(e.newValue);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
@@ -291,40 +300,34 @@ export default function Songs() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-torrist-green mb-2">Practice List</h1>
-            <div className="flex items-center space-x-4">
-              <p className="text-gray-600 font-serif">
-                Songs the band is practicing, with readiness tracking
-              </p>
-              {spotifyPlaylistId && (
-                <a
-                  href={`https://open.spotify.com/playlist/${spotifyPlaylistId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
-                  title="Open practice playlist in Spotify"
-                >
-                  <i className="fab fa-spotify"></i>
-                  <span>Open in Spotify</span>
-                </a>
-              )}
-              {/* Debug info - remove after testing */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-400">
-                  Debug: playlistId = {spotifyPlaylistId || 'null'}
-                </div>
-              )}
-            </div>
+        <div className="flex flex-col space-y-4 mb-8">
+          {/* Title row */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-serif font-bold text-torrist-green">Practice List</h1>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2 text-sm sm:text-base"
+            >
+              <i className="fas fa-plus"></i>
+              <span>Add Song</span>
+            </button>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-6 py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2"
-          >
-            <i className="fas fa-plus"></i>
-            <span>Add Song</span>
-          </button>
+          
+          {/* Spotify link row - only show if configured */}
+          {spotifyPlaylistId && (
+            <div className="flex justify-start">
+              <a
+                href={`https://open.spotify.com/playlist/${spotifyPlaylistId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
+                title="Open practice playlist in Spotify"
+              >
+                <i className="fab fa-spotify"></i>
+                <span>Open in Spotify</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Songs List */}
