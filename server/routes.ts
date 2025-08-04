@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBandMemberSchema, insertEventSchema } from "@shared/schema";
+import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema } from "@shared/schema";
+import { spotifyService } from "./spotify";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -142,6 +143,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Failed to check conflicts" });
+    }
+  });
+
+  // Spotify search endpoint
+  app.get("/api/spotify/search", async (req, res) => {
+    try {
+      const { q, limit } = req.query;
+      if (!q) {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+      
+      const tracks = await spotifyService.searchTracks(
+        q as string, 
+        parseInt(limit as string) || 10
+      );
+      res.json(tracks);
+    } catch (error) {
+      console.error("Spotify search error:", error);
+      res.status(500).json({ message: "Failed to search Spotify" });
+    }
+  });
+
+  // Songs endpoints
+  app.get("/api/songs", async (req, res) => {
+    try {
+      const songs = await storage.getSongs();
+      
+      // Get readiness and vetos for each song
+      const songsWithDetails = await Promise.all(
+        songs.map(async (song) => {
+          const [readiness, vetos] = await Promise.all([
+            storage.getSongReadiness(song.id),
+            storage.getSongVetos(song.id),
+          ]);
+          return { ...song, readiness, vetos };
+        })
+      );
+      
+      res.json(songsWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch songs" });
+    }
+  });
+
+  app.post("/api/songs", async (req, res) => {
+    try {
+      const validatedData = insertSongSchema.parse(req.body);
+      
+      // Check if song already exists
+      const existingSong = await storage.getSongBySpotifyId(validatedData.spotifyId);
+      if (existingSong) {
+        return res.status(400).json({ message: "Song already exists in practice list" });
+      }
+      
+      const song = await storage.createSong(validatedData);
+      res.status(201).json(song);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add song" });
+    }
+  });
+
+  app.delete("/api/songs/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteSong(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      res.json({ message: "Song deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete song" });
+    }
+  });
+
+  // Song readiness endpoints
+  app.post("/api/songs/:id/readiness", async (req, res) => {
+    try {
+      const songId = req.params.id;
+      const validatedData = insertSongReadinessSchema.parse({
+        ...req.body,
+        songId,
+      });
+      
+      const readiness = await storage.setSongReadiness(validatedData);
+      res.json(readiness);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update song readiness" });
+    }
+  });
+
+  app.delete("/api/songs/:id/readiness/:memberId", async (req, res) => {
+    try {
+      const { id: songId, memberId } = req.params;
+      const success = await storage.removeSongReadiness(songId, memberId);
+      if (!success) {
+        return res.status(404).json({ message: "Readiness status not found" });
+      }
+      res.json({ message: "Readiness status removed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove readiness status" });
+    }
+  });
+
+  // Song veto endpoints
+  app.post("/api/songs/:id/veto", async (req, res) => {
+    try {
+      const songId = req.params.id;
+      const validatedData = insertSongVetoSchema.parse({
+        ...req.body,
+        songId,
+      });
+      
+      const veto = await storage.addSongVeto(validatedData);
+      res.json(veto);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add song veto" });
+    }
+  });
+
+  app.delete("/api/songs/:id/veto/:memberId", async (req, res) => {
+    try {
+      const { id: songId, memberId } = req.params;
+      const success = await storage.removeSongVeto(songId, memberId);
+      if (!success) {
+        return res.status(404).json({ message: "Song veto not found" });
+      }
+      res.json({ message: "Song veto removed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove song veto" });
     }
   });
 

@@ -6,6 +6,7 @@ import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Event, BandMember } from "@shared/schema";
 import EventModal from "@/components/event-modal";
+import Navigation from "@/components/navigation";
 
 export default function Calendar() {
   const [, setLocation] = useLocation();
@@ -179,18 +180,7 @@ export default function Calendar() {
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-serif text-torrist-green">The Torrists</h1>
-              <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: currentUser.color }}
-                >
-                  <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
-                </div>
-                <span className="font-sans text-torrist-green font-semibold">{currentUser.name}</span>
-              </div>
-            </div>
+            <Navigation currentUser={currentUser} onLogout={logout} />
             <div className="flex items-center space-x-2">
               {/* View Mode Toggle */}
               <div className="hidden md:flex bg-torrist-cream rounded-full p-1">
@@ -215,16 +205,6 @@ export default function Calendar() {
                   <i className="fas fa-list mr-1"></i>Agenda
                 </button>
               </div>
-              <button 
-                onClick={() => {
-                  logout();
-                  setLocation("/");
-                }}
-                className="text-torrist-green hover:text-torrist-green-dark"
-                title="Switch user"
-              >
-                <i className="fas fa-sign-out-alt text-lg"></i>
-              </button>
               <button 
                 onClick={() => openEventModal(format(new Date(), "yyyy-MM-dd"), "practice")}
                 className="bg-torrist-orange hover:bg-torrist-orange-light text-white px-4 py-2 rounded-full font-sans font-semibold"

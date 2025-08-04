@@ -1,6 +1,13 @@
-import { type BandMember, type InsertBandMember, type Event, type InsertEvent, bandMembers, events } from "@shared/schema";
+import { 
+  type BandMember, type InsertBandMember, 
+  type Event, type InsertEvent, 
+  type Song, type InsertSong,
+  type SongReadiness, type InsertSongReadiness,
+  type SongVeto, type InsertSongVeto,
+  bandMembers, events, songs, songReadiness, songVetos 
+} from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Band Members
@@ -29,6 +36,23 @@ export interface IStorage {
     unavailabilityConflicts: Event[];
     affectedBandEvents: Event[];
   }>;
+  
+  // Songs
+  getSongs(): Promise<Song[]>;
+  getSong(id: string): Promise<Song | undefined>;
+  getSongBySpotifyId(spotifyId: string): Promise<Song | undefined>;
+  createSong(song: InsertSong): Promise<Song>;
+  deleteSong(id: string): Promise<boolean>;
+  
+  // Song Readiness
+  getSongReadiness(songId: string): Promise<SongReadiness[]>;
+  setSongReadiness(data: InsertSongReadiness): Promise<SongReadiness>;
+  removeSongReadiness(songId: string, memberId: string): Promise<boolean>;
+  
+  // Song Vetos
+  getSongVetos(songId: string): Promise<SongVeto[]>;
+  addSongVeto(data: InsertSongVeto): Promise<SongVeto>;
+  removeSongVeto(songId: string, memberId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -51,8 +75,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBandMember(id: string): Promise<boolean> {
-    // Delete all events associated with this member
+    // Delete all events, song readiness, and song vetos associated with this member
     await this.deleteEventsByMember(id);
+    await db.delete(songReadiness).where(eq(songReadiness.memberId, id));
+    await db.delete(songVetos).where(eq(songVetos.memberId, id));
     
     const result = await db.delete(bandMembers).where(eq(bandMembers.id, id));
     return (result.rowCount ?? 0) > 0;
@@ -162,6 +188,102 @@ export class DatabaseStorage implements IStorage {
       unavailabilityConflicts, 
       affectedBandEvents 
     };
+  }
+
+  // Songs
+  async getSongs(): Promise<Song[]> {
+    return await db.select().from(songs).orderBy(desc(songs.createdAt));
+  }
+
+  async getSong(id: string): Promise<Song | undefined> {
+    const [song] = await db.select().from(songs).where(eq(songs.id, id));
+    return song || undefined;
+  }
+
+  async getSongBySpotifyId(spotifyId: string): Promise<Song | undefined> {
+    const [song] = await db.select().from(songs).where(eq(songs.spotifyId, spotifyId));
+    return song || undefined;
+  }
+
+  async createSong(insertSong: InsertSong): Promise<Song> {
+    const [song] = await db
+      .insert(songs)
+      .values(insertSong)
+      .returning();
+    return song;
+  }
+
+  async deleteSong(id: string): Promise<boolean> {
+    // Delete associated readiness and vetos first
+    await db.delete(songReadiness).where(eq(songReadiness.songId, id));
+    await db.delete(songVetos).where(eq(songVetos.songId, id));
+    
+    const result = await db.delete(songs).where(eq(songs.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Song Readiness
+  async getSongReadiness(songId: string): Promise<SongReadiness[]> {
+    return await db.select().from(songReadiness).where(eq(songReadiness.songId, songId));
+  }
+
+  async setSongReadiness(data: InsertSongReadiness): Promise<SongReadiness> {
+    // First, try to update existing readiness
+    const [existing] = await db
+      .select()
+      .from(songReadiness)
+      .where(and(
+        eq(songReadiness.songId, data.songId),
+        eq(songReadiness.memberId, data.memberId)
+      ));
+
+    if (existing) {
+      const [updated] = await db
+        .update(songReadiness)
+        .set({ status: data.status, updatedAt: new Date() })
+        .where(eq(songReadiness.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(songReadiness)
+        .values(data)
+        .returning();
+      return created;
+    }
+  }
+
+  async removeSongReadiness(songId: string, memberId: string): Promise<boolean> {
+    const result = await db
+      .delete(songReadiness)
+      .where(and(
+        eq(songReadiness.songId, songId),
+        eq(songReadiness.memberId, memberId)
+      ));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Song Vetos
+  async getSongVetos(songId: string): Promise<SongVeto[]> {
+    return await db.select().from(songVetos).where(eq(songVetos.songId, songId));
+  }
+
+  async addSongVeto(data: InsertSongVeto): Promise<SongVeto> {
+    const [veto] = await db
+      .insert(songVetos)
+      .values(data)
+      .returning();
+    return veto;
+  }
+
+  async removeSongVeto(songId: string, memberId: string): Promise<boolean> {
+    const result = await db
+      .delete(songVetos)
+      .where(and(
+        eq(songVetos.songId, songId),
+        eq(songVetos.memberId, memberId)
+      ));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
