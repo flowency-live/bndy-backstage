@@ -168,12 +168,15 @@ export default function Songs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-torrist-cream via-white to-gray-100">
+      {/* Navigation - rendered outside container */}
+      <Navigation currentUser={currentUser} onLogout={logout} />
+      
       {/* Header */}
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Navigation currentUser={currentUser} onLogout={logout} />
+              {/* Empty space where Navigation used to be */}
               <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
