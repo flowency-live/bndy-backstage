@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { useUser } from "@/lib/user-context";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
+import { spotifySync } from "@/lib/spotify-sync";
 
 import type { BandMember } from "@shared/schema";
 
@@ -41,12 +42,19 @@ export default function Songs() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
 
   // Redirect if no user selected
   if (!currentUser) {
     setLocation("/");
     return null;
   }
+
+  // Check for Spotify settings
+  useEffect(() => {
+    const settings = spotifySync.getSettings();
+    setSpotifyPlaylistId(settings.playlistId);
+  }, []);
 
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
     queryKey: ["/api/songs"],
@@ -278,9 +286,23 @@ export default function Songs() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-serif font-bold text-torrist-green mb-2">Practice List</h1>
-            <p className="text-gray-600 font-serif">
-              Songs the band is practicing, with readiness tracking
-            </p>
+            <div className="flex items-center space-x-4">
+              <p className="text-gray-600 font-serif">
+                Songs the band is practicing, with readiness tracking
+              </p>
+              {spotifyPlaylistId && (
+                <a
+                  href={`https://open.spotify.com/playlist/${spotifyPlaylistId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
+                  title="Open practice playlist in Spotify"
+                >
+                  <i className="fab fa-spotify"></i>
+                  <span>Open in Spotify</span>
+                </a>
+              )}
+            </div>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
