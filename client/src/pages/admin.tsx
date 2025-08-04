@@ -35,6 +35,7 @@ export default function Admin() {
     icon: "fa-music",
     color: "#708090",
   });
+  const [activeTab, setActiveTab] = useState<'members' | 'spotify'>('members');
 
   const { data: bandMembers = [], isLoading } = useQuery<BandMember[]>({
     queryKey: ["/api/band-members"],
@@ -320,7 +321,7 @@ export default function Admin() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-torrist-green text-white p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-serif">Band Member Management</h2>
+              <h2 className="text-2xl font-serif">Band Management</h2>
               <button 
                 onClick={() => setLocation("/calendar")}
                 className="text-white hover:text-gray-200"
@@ -328,12 +329,41 @@ export default function Admin() {
                 <i className="fas fa-times text-xl"></i>
               </button>
             </div>
+            
+            {/* Tab Navigation */}
+            <div className="flex space-x-4 mt-4">
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`px-4 py-2 rounded-lg font-serif transition-colors ${
+                  activeTab === 'members' 
+                    ? 'bg-white text-torrist-green' 
+                    : 'text-white hover:bg-torrist-green-light'
+                }`}
+              >
+                <i className="fas fa-users mr-2"></i>
+                Members
+              </button>
+              <button
+                onClick={() => setActiveTab('spotify')}
+                className={`px-4 py-2 rounded-lg font-serif transition-colors ${
+                  activeTab === 'spotify' 
+                    ? 'bg-white text-torrist-green' 
+                    : 'text-white hover:bg-torrist-green-light'
+                }`}
+              >
+                <i className="fab fa-spotify mr-2"></i>
+                Spotify
+              </button>
+            </div>
           </div>
           
           <div className="p-6">
-            {/* Current Members */}
-            <div className="mb-8">
-              <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Current Members</h3>
+            {/* Members Tab */}
+            {activeTab === 'members' && (
+              <div>
+                {/* Current Members */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Current Members</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {bandMembers.map((member) => (
                   <div key={member.id} className="bg-torrist-cream rounded-xl p-4 flex items-center justify-between">
@@ -457,13 +487,23 @@ export default function Admin() {
                 </Button>
               </form>
             </div>
-
-            {/* Spotify Integration Section */}
-            <div className="border-t pt-6">
-              <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Spotify Integration</h3>
+              </div>
+            )}
+            
+            {/* Spotify Tab */}
+            {activeTab === 'spotify' && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h3 className="text-2xl font-serif font-bold text-torrist-green mb-2">
+                    <i className="fab fa-spotify mr-2"></i>
+                    Spotify Integration
+                  </h3>
+                  <p className="text-gray-600">
+                    Connect your Spotify account for real-time playlist synchronization
+                  </p>
+                </div>
               
-              {/* Connection Status */}
-              {accessToken ? (
+                {accessToken ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -538,8 +578,8 @@ export default function Admin() {
                     {selectedPlaylistId && (
                       <div className="text-xs text-gray-600 space-y-1">
                         <p>• <strong>Import Songs:</strong> Copy tracks from Spotify to your practice list</p>
-                        <p>• <strong>Sync to Spotify:</strong> Replace Spotify playlist with your complete practice list</p>
-                        <p className="text-amber-600 font-medium">⚠️ Sync will overwrite the entire Spotify playlist</p>
+                        <p>• <strong>Sync to Spotify:</strong> Update playlist with your complete practice list</p>
+                        <p className="text-green-600 font-medium">✓ Future song changes will sync automatically</p>
                       </div>
                     )}
                   </div>
@@ -553,7 +593,7 @@ export default function Admin() {
                         <span className="font-medium">Not connected to Spotify</span>
                       </div>
                       <p className="text-sm text-gray-600">
-                        Connect your band's Spotify account to import songs from playlists and sync practice lists.
+                        Connect your Spotify account for real-time playlist synchronization with your practice list.
                       </p>
                     </div>
                     <button
@@ -566,11 +606,11 @@ export default function Admin() {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
     </div>
   );
 }
