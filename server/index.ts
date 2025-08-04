@@ -70,6 +70,7 @@ app.use((req, res, next) => {
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('REPL_SLUG:', process.env.REPL_SLUG);
   console.log('REPL_OWNER:', process.env.REPL_OWNER);
+  console.log('SPOTIFY_CLIENT_ID:', process.env.SPOTIFY_CLIENT_ID?.substring(0, 10) + '...');
   server.listen({
     port,
     host: "0.0.0.0",

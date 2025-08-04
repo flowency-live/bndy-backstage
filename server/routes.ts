@@ -168,6 +168,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to check environment variables
+  app.get("/api/spotify/debug-env", (req, res) => {
+    res.json({
+      clientId: process.env.SPOTIFY_CLIENT_ID?.substring(0, 10) + '...',
+      hasSecret: !!process.env.SPOTIFY_CLIENT_SECRET,
+      devDomain: process.env.REPLIT_DEV_DOMAIN
+    });
+  });
+
   // Spotify user authentication endpoints
   app.get("/api/spotify/auth", (req, res) => {
     try {
