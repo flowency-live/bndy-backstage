@@ -182,8 +182,17 @@ export default function Calendar() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center justify-center">
+          <div className="grid grid-cols-3 items-center">
+            {/* Left: Band name on two lines */}
+            <div className="justify-self-start">
+              <h1 className="font-serif text-torrist-green font-bold leading-tight">
+                <div className="text-2xl">The</div>
+                <div className="text-2xl">Torrists</div>
+              </h1>
+            </div>
+            
+            {/* Center: User badge */}
+            <div className="justify-self-center">
               <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -194,7 +203,9 @@ export default function Calendar() {
                 <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            {/* Right: Logout button */}
+            <div className="justify-self-end">
               <button 
                 onClick={() => {
                   logout();
