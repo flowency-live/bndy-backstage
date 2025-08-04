@@ -173,13 +173,13 @@ export default function Songs() {
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="grid grid-cols-3 items-center">
             {/* Left: Clickable band name */}
-            <div className="justify-self-start">
+            <div className="justify-self-start text-left">
               <button 
                 onClick={() => setIsNavigationOpen(!isNavigationOpen)}
-                className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight"
+                className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight text-left"
               >
-                <div className="text-xl">The</div>
-                <div className="text-xl">Torrists</div>
+                <div className="text-xl text-left">The</div>
+                <div className="text-xl text-left">Torrists</div>
               </button>
             </div>
             
@@ -223,13 +223,13 @@ export default function Songs() {
           />
           
           {/* Drawer */}
-          <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-xl">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-serif text-torrist-green font-bold">The Torrists</h2>
+          <div className="absolute left-0 top-0 h-full w-60 bg-torrist-green shadow-xl">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-white font-serif text-lg">Menu</h2>
                 <button 
                   onClick={() => setIsNavigationOpen(false)}
-                  className="text-torrist-green hover:text-torrist-green-dark"
+                  className="text-white hover:text-gray-200"
                 >
                   <i className="fas fa-times text-xl"></i>
                 </button>
@@ -238,19 +238,27 @@ export default function Songs() {
               <nav className="space-y-4">
                 <Link 
                   href="/calendar" 
-                  className="flex items-center space-x-3 text-torrist-green hover:text-torrist-green-dark font-serif text-lg"
+                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
                   onClick={() => setIsNavigationOpen(false)}
                 >
-                  <i className="fas fa-calendar-alt w-6"></i>
-                  <span>Calendar</span>
+                  <i className="fas fa-calendar w-5"></i>
+                  <span className="font-serif text-lg">Calendar</span>
                 </Link>
                 <Link 
                   href="/songs" 
-                  className="flex items-center space-x-3 text-torrist-green hover:text-torrist-green-dark font-serif text-lg"
+                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
                   onClick={() => setIsNavigationOpen(false)}
                 >
-                  <i className="fas fa-music w-6"></i>
-                  <span>Songs</span>
+                  <i className="fas fa-music w-5"></i>
+                  <span className="font-serif text-lg">Practice List</span>
+                </Link>
+                <Link 
+                  href="/admin" 
+                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  onClick={() => setIsNavigationOpen(false)}
+                >
+                  <i className="fas fa-users-cog w-5"></i>
+                  <span className="font-serif text-lg">Manage Band</span>
                 </Link>
               </nav>
             </div>
