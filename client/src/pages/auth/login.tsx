@@ -101,7 +101,18 @@ export default function Login() {
     const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
     
     try {
-      // Development mode - accept 123456 as valid code
+      // God mode for development - specific phone number with any 6-digit code
+      if (import.meta.env.DEV && phone.replace(/\D/g, '') === '07758240770' && otp.length === 6) {
+        toast({
+          title: "🚀 GOD MODE ACCESS",
+          description: "Development admin access granted",
+          variant: "default"
+        })
+        setLocation('/dashboard')
+        return
+      }
+
+      // Development mode - accept 123456 as valid code for any phone
       if (import.meta.env.DEV && otp === '123456') {
         toast({
           title: "Signed in successfully!",
