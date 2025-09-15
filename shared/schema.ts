@@ -348,8 +348,8 @@ export const insertUserProfileSchema = createInsertSchema(users).omit({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"), 
   displayName: z.string().min(1, "Display name is required"),
-  hometown: z.string().optional(),
-  instrument: z.enum(INSTRUMENT_OPTIONS).optional(),
+  hometown: z.string().min(1, "Hometown is required"),
+  instrument: z.enum(INSTRUMENT_OPTIONS, { errorMap: () => ({ message: "Please select an instrument" }) }),
 });
 
 export const updateUserProfileSchema = insertUserProfileSchema.partial();

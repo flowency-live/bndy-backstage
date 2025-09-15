@@ -73,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update the profile completion status if all required fields are provided
       let profileCompleted = req.user.dbUser.profileCompleted;
-      if (validatedData.firstName && validatedData.lastName && validatedData.displayName) {
+      if (validatedData.firstName && validatedData.lastName && validatedData.displayName && validatedData.hometown && validatedData.instrument) {
         profileCompleted = true;
       }
 

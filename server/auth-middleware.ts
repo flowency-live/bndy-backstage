@@ -96,9 +96,12 @@ export async function authenticateSupabaseJWT(
     // Development mode bypass for general dev users
     if (process.env.NODE_ENV === 'development' && token.startsWith('DEV_USER_')) {
       const phone = token.replace('DEV_USER_', '');
+      // Fix phone normalization: remove leading 0 from UK numbers before adding +44
+      const normalizedPhone = phone.startsWith('0') ? phone.substring(1) : phone;
+      const fullPhone = `+44${normalizedPhone}`;
       const devSupabaseId = `dev-user-${phone}`;
       
-      console.log(`🛠️ DEV MODE: Development authentication bypassed for phone ${phone}`);
+      console.log(`🛠️ DEV MODE: Development authentication bypassed for phone ${phone} -> ${fullPhone}`);
       
       let dbUser;
       try {
@@ -107,7 +110,7 @@ export async function authenticateSupabaseJWT(
           // Create the dev user in our database
           dbUser = await storage.createOrGetUser({
             supabaseId: devSupabaseId,
-            phone: `+44${phone}`,
+            phone: fullPhone,
             email: null,
             displayName: null,
           });
@@ -118,7 +121,7 @@ export async function authenticateSupabaseJWT(
       
       req.user = {
         supabaseId: devSupabaseId,
-        phone: `+44${phone}`,
+        phone: fullPhone,
         email: undefined,
         dbUser: dbUser,
       };
