@@ -17,7 +17,7 @@ export default function Invite() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-900 p-4 flex items-center justify-center">
       <div className="max-w-md w-full text-center">
         {/* Logo */}
         <div className="mb-8" data-testid="logo-container">
@@ -66,7 +66,7 @@ export default function Invite() {
           )}
         </div>
 
-        <div className="mt-6 text-white/70 text-sm">
+        <div className="mt-6 text-slate-400 text-sm">
           <p>Joining requires phone verification</p>
         </div>
       </div>

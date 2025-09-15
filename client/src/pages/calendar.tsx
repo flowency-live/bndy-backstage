@@ -204,7 +204,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   };
 
   return (
-    <div className="min-h-screen bg-brand-neutral-light">
+    <div className="min-h-screen bg-slate-900">
       {/* Header with band switcher */}
       <header className="bg-white shadow-sm border-b-4 border-brand-accent">
         <div className="max-w-7xl mx-auto px-4 py-2">

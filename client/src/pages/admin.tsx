@@ -372,7 +372,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-brand-neutral-light p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-brand-primary font-sans">Loading...</p>
@@ -382,7 +382,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
   }
 
   return (
-    <div className="min-h-screen bg-brand-neutral-light p-4">
+    <div className="min-h-screen bg-slate-900 p-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-brand-primary text-white p-6">

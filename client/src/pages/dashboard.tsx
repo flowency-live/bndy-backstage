@@ -158,7 +158,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   // Removed getSongReadinessColor function as songs don't have direct readiness property
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light">
+    <div className="min-h-screen bg-slate-900">
       {/* Header with Band Context and Navigation */}
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
         <div className="px-4 py-3">
@@ -306,9 +306,9 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         </div>
 
         {/* Upcoming Events */}
-        <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader className="pb-3">
-            <CardTitle className="text-brand-primary font-serif flex items-center gap-2">
+            <CardTitle className="text-white font-serif flex items-center gap-2">
               <i className="fas fa-calendar-alt"></i>
               Upcoming Events
             </CardTitle>
@@ -335,10 +335,10 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
                       <i className={`${getEventTypeIcon(event.type)} text-xs`}></i>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-serif text-brand-primary font-semibold truncate">
+                      <h4 className="font-serif text-white font-semibold truncate">
                         {event.title}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-400">
                         {formatEventDate(event.date)}
                         {event.startTime && ` at ${event.startTime}`}
                       </p>
@@ -368,9 +368,9 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         </Card>
 
         {/* Recent Songs */}
-        <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader className="pb-3">
-            <CardTitle className="text-brand-primary font-serif flex items-center gap-2">
+            <CardTitle className="text-white font-serif flex items-center gap-2">
               <i className="fas fa-music"></i>
               Practice List
             </CardTitle>
@@ -394,10 +394,10 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
                     data-testid={`song-${song.id}`}
                   >
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-serif text-brand-primary font-semibold truncate">
+                      <h4 className="font-serif text-white font-semibold truncate">
                         {song.title}
                       </h4>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-slate-400 truncate">
                         {song.artist}
                       </p>
                     </div>
@@ -409,8 +409,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
               </div>
             ) : (
               <div className="text-center py-4">
-                <i className="fas fa-music text-gray-400 text-2xl mb-2"></i>
-                <p className="text-gray-600 font-sans">No songs in practice list</p>
+                <i className="fas fa-music text-slate-400 text-2xl mb-2"></i>
+                <p className="text-slate-400 font-sans">No songs in practice list</p>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -426,20 +426,20 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         </Card>
 
         {/* Band Stats */}
-        <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+        <Card className="bg-slate-800 border-slate-700">
           <CardContent className="pt-6">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-serif text-brand-primary">{bandMembers.length}</div>
-                <div className="text-sm text-gray-600">Members</div>
+                <div className="text-2xl font-serif text-white">{bandMembers.length}</div>
+                <div className="text-sm text-slate-400">Members</div>
               </div>
               <div>
-                <div className="text-2xl font-serif text-brand-primary">{upcomingEvents.length}</div>
-                <div className="text-sm text-gray-600">Upcoming</div>
+                <div className="text-2xl font-serif text-white">{upcomingEvents.length}</div>
+                <div className="text-sm text-slate-400">Upcoming</div>
               </div>
               <div>
-                <div className="text-2xl font-serif text-brand-primary">{recentSongs.length}</div>
-                <div className="text-sm text-gray-600">Songs</div>
+                <div className="text-2xl font-serif text-white">{recentSongs.length}</div>
+                <div className="text-sm text-slate-400">Songs</div>
               </div>
             </div>
           </CardContent>
