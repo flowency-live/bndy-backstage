@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
-import BandSwitcher from "@/components/band-switcher";
 import { spotifySync } from "@/lib/spotify-sync";
+import { PageHeader } from "@/components/layout";
 import type { UserBand, Band } from "@shared/schema";
-import BndyLogo from "@/components/ui/bndy-logo";
 
 interface SongWithDetails {
   id: string;
@@ -47,7 +46,6 @@ export default function Songs({ bandId, membership }: SongsProps) {
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
-  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
 
   // Check for Spotify settings from localStorage
@@ -247,125 +245,35 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Header with band switcher */}
-      <header className="bg-white shadow-sm border-b-4 border-brand-accent">
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="grid grid-cols-3 items-center">
-            {/* Left: Menu toggle */}
-            <div className="justify-self-start text-left">
-              <button 
-                onClick={() => setIsNavigationOpen(!isNavigationOpen)}
-                className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
-                data-testid="button-menu-toggle"
-              >
-                <BndyLogo className="w-6 h-6" />
-              </button>
-            </div>
-            
-            {/* Center: Band switcher */}
-            <div className="justify-self-center max-w-xs w-full">
-              <BandSwitcher 
-                currentBandId={bandId} 
-                currentMembership={membership} 
-              />
-            </div>
-            
-            {/* Right: Practice List text */}
-            <div className="justify-self-end">
-              <span className="text-brand-primary font-serif font-semibold">Practice List</span>
-            </div>
-          </div>
-        </div>
-      </header>
-      
-      {/* Navigation drawer */}
-      {isNavigationOpen && (
-        <div className="fixed inset-0 z-50">
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50" 
-            onClick={() => setIsNavigationOpen(false)}
-          />
-          
-          <div className="absolute left-0 top-0 h-full w-60 bg-brand-primary shadow-xl">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-white font-serif text-lg">Menu</h2>
-                <button 
-                  onClick={() => setIsNavigationOpen(false)}
-                  className="text-white hover:text-gray-200"
-                  data-testid="button-close-menu"
-                >
-                  <i className="fas fa-times text-xl"></i>
-                </button>
-              </div>
-              
-              <nav className="space-y-4">
-                <Link 
-                  href="/calendar" 
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                  data-testid="link-calendar"
-                >
-                  <i className="fas fa-calendar w-5"></i>
-                  <span className="font-serif text-lg">Calendar</span>
-                </Link>
-                <Link 
-                  href="/songs" 
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                  data-testid="link-songs"
-                >
-                  <i className="fas fa-music w-5"></i>
-                  <span className="font-serif text-lg">Practice List</span>
-                </Link>
-                <Link 
-                  href="/admin" 
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                  data-testid="link-admin"
-                >
-                  <i className="fas fa-users-cog w-5"></i>
-                  <span className="font-serif text-lg">Band Settings</span>
-                </Link>
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Page Header */}
+      <PageHeader title="Practice List">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+          data-testid="button-add-song"
+        >
+          <i className="fas fa-plus"></i>
+          <span>Add Song</span>
+        </button>
+      </PageHeader>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="flex flex-col space-y-4 mb-8">
-          {/* Title row */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-serif font-bold text-brand-primary">Practice List</h1>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-brand-accent hover:bg-brand-accent-light text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2 text-sm sm:text-base"
-              data-testid="button-add-song"
+        {/* Spotify link row - only show if configured */}
+        {spotifyPlaylistId && (
+          <div className="flex justify-start mb-8">
+            <a
+              href={`https://open.spotify.com/playlist/${spotifyPlaylistId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
+              title="Open practice playlist in Spotify"
+              data-testid="link-spotify-playlist"
             >
-              <i className="fas fa-plus"></i>
-              <span>Add Song</span>
-            </button>
+              <i className="fab fa-spotify"></i>
+              <span>Open in Spotify</span>
+            </a>
           </div>
-          
-          {/* Spotify link row - only show if configured */}
-          {spotifyPlaylistId && (
-            <div className="flex justify-start">
-              <a
-                href={`https://open.spotify.com/playlist/${spotifyPlaylistId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
-                title="Open practice playlist in Spotify"
-                data-testid="link-spotify-playlist"
-              >
-                <i className="fab fa-spotify"></i>
-                <span>Open in Spotify</span>
-              </a>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Songs List */}
         {isLoading ? (

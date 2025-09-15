@@ -7,6 +7,7 @@ import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth.tsx";
 import { UserProvider } from "@/lib/user-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import BandGate from "@/components/band-gate";
+import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Invite from "@/pages/invite";
@@ -24,34 +25,46 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
-      <Route path="/profile" component={Profile} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/profile">
+        <AppLayout>
+          <Profile />
+        </AppLayout>
+      </Route>
       <Route path="/dashboard">
         <BandGate>
           {({ bandId, membership }) => (
-            <Dashboard bandId={bandId} membership={membership} />
+            <AppLayout bandId={bandId} membership={membership}>
+              <Dashboard bandId={bandId} membership={membership} />
+            </AppLayout>
           )}
         </BandGate>
       </Route>
       <Route path="/calendar">
         <BandGate>
           {({ bandId, membership }) => (
-            <Calendar bandId={bandId} membership={membership} />
+            <AppLayout bandId={bandId} membership={membership}>
+              <Calendar bandId={bandId} membership={membership} />
+            </AppLayout>
           )}
         </BandGate>
       </Route>
       <Route path="/songs">
         <BandGate>
           {({ bandId, membership }) => (
-            <Songs bandId={bandId} membership={membership} />
+            <AppLayout bandId={bandId} membership={membership}>
+              <Songs bandId={bandId} membership={membership} />
+            </AppLayout>
           )}
         </BandGate>
       </Route>
       <Route path="/admin">
         <BandGate>
           {({ bandId, membership }) => (
-            <Admin bandId={bandId} membership={membership} />
+            <AppLayout bandId={bandId} membership={membership}>
+              <Admin bandId={bandId} membership={membership} />
+            </AppLayout>
           )}
         </BandGate>
       </Route>
@@ -67,13 +80,15 @@ function App() {
         <ThemeProvider defaultTheme="dark" storageKey="bndy-ui-theme">
           <SupabaseAuthProvider>
             <UserProvider>
-              <div className="min-h-screen flex flex-col">
-                <div className="flex-1">
-                  <Router />
+              <Layout>
+                <div className="min-h-screen flex flex-col">
+                  <div className="flex-1">
+                    <Router />
+                  </div>
+                  <Footer />
                 </div>
-                <Footer />
-              </div>
-              <Toaster />
+                <Toaster />
+              </Layout>
             </UserProvider>
         </SupabaseAuthProvider>
       </ThemeProvider>

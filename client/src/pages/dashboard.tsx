@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import BandSwitcher from "@/components/band-switcher";
-import BndyLogo from "@/components/ui/bndy-logo";
-import Navigation from "@/components/navigation";
+import { PageHeader } from "@/components/layout";
 import type { Event, Song, UserBand, Band } from "@shared/schema";
 
 interface DashboardProps {
@@ -19,7 +16,6 @@ interface DashboardProps {
 export default function Dashboard({ bandId, membership }: DashboardProps) {
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
-  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
 
   // Get upcoming events for this band
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -159,118 +155,20 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Header with Band Context and Navigation */}
-      <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Navigation Toggle */}
-            <button
-              onClick={() => setIsNavigationOpen(!isNavigationOpen)}
-              className="p-2 text-white hover:text-white/80 transition-colors"
-              data-testid="button-toggle-navigation"
-            >
-              <BndyLogo className="h-8 w-auto" />
-            </button>
-
-            {/* Band Context */}
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: membership.color }}
-              >
-                <i className={`fas ${membership.icon} text-white text-sm`}></i>
-              </div>
-              <div className="text-right min-w-0">
-                <h1 className="text-white font-serif font-semibold text-lg leading-tight">{membership.band.name}</h1>
-                <p className="text-white/80 text-sm leading-tight">{bandMembers.length} members</p>
-              </div>
-            </div>
-
-            {/* Band Switcher */}
-            <BandSwitcher 
-              currentBandId={bandId}
-              currentMembership={membership}
-            />
+      {/* Page Header */}
+      <PageHeader title={`${membership.band.name} Dashboard`}>
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: membership.color }}
+          >
+            <i className={`fas ${membership.icon} text-white text-xs`}></i>
+          </div>
+          <div className="text-right min-w-0">
+            <p className="text-white/80 text-sm leading-tight">{bandMembers.length} members</p>
           </div>
         </div>
-      </div>
-
-      {/* Navigation Drawer */}
-      {isNavigationOpen && (
-        <>
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setIsNavigationOpen(false)}
-          />
-
-          {/* Drawer */}
-          <div className="fixed top-0 left-0 h-screen w-64 bg-brand-primary shadow-2xl z-50">
-            <div className="p-4">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-white font-serif text-lg">Menu</h2>
-                <button 
-                  onClick={() => setIsNavigationOpen(false)}
-                  className="text-white hover:text-gray-200"
-                  data-testid="button-close-navigation"
-                >
-                  <i className="fas fa-times text-xl"></i>
-                </button>
-              </div>
-              
-              {/* Navigation links */}
-              <nav className="space-y-3">
-                <Link
-                  to="/dashboard"
-                  className="w-full text-left py-3 px-4 rounded-lg text-white bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                >
-                  <i className="fas fa-home w-5"></i>
-                  <span className="font-serif text-lg">Dashboard</span>
-                </Link>
-                
-                <Link
-                  to="/calendar"
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                >
-                  <i className="fas fa-calendar w-5"></i>
-                  <span className="font-serif text-lg">Calendar</span>
-                </Link>
-                
-                <Link
-                  to="/songs"
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                >
-                  <i className="fas fa-music w-5"></i>
-                  <span className="font-serif text-lg">Practice List</span>
-                </Link>
-                
-                <Link
-                  to="/admin"
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                >
-                  <i className="fas fa-users-cog w-5"></i>
-                  <span className="font-serif text-lg">Manage Band</span>
-                </Link>
-                
-                <Link
-                  to="/profile"
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
-                  onClick={() => setIsNavigationOpen(false)}
-                  data-testid="link-profile"
-                >
-                  <i className="fas fa-user w-5"></i>
-                  <span className="font-serif text-lg">Profile</span>
-                </Link>
-              </nav>
-            </div>
-          </div>
-        </>
-      )}
+      </PageHeader>
 
       {/* Dashboard Content */}
       <div className="px-4 py-6 space-y-6 max-w-2xl mx-auto">

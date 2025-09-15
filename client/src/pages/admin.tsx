@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import BandSwitcher from "@/components/band-switcher";
+import { PageHeader } from "@/components/layout";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Microphone" },
@@ -382,59 +382,41 @@ export default function Admin({ bandId, membership }: AdminProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="bg-brand-primary text-white p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-serif">Band Settings</h2>
-              <button 
-                onClick={() => setLocation("/calendar")}
-                className="text-white hover:text-gray-200"
-                data-testid="button-close-admin"
-              >
-                <i className="fas fa-times text-xl"></i>
-              </button>
-            </div>
-            
-            {/* Band switcher */}
-            <div className="mb-4">
-              <BandSwitcher 
-                currentBandId={bandId} 
-                currentMembership={membership} 
-              />
-            </div>
-            
-            {/* Tab Navigation */}
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setActiveTab('members')}
-                className={`px-4 py-2 rounded-lg font-serif transition-colors ${
-                  activeTab === 'members' 
-                    ? 'bg-white text-brand-primary' 
-                    : 'text-white hover:bg-brand-primary-light'
-                }`}
-                data-testid="tab-members"
-              >
-                <i className="fas fa-users mr-2"></i>
-                Members
-              </button>
-              <button
-                onClick={() => setActiveTab('spotify')}
-                className={`px-4 py-2 rounded-lg font-serif transition-colors ${
-                  activeTab === 'spotify' 
-                    ? 'bg-white text-brand-primary' 
-                    : 'text-white hover:bg-brand-primary-light'
-                }`}
-                data-testid="tab-spotify"
-              >
-                <i className="fab fa-spotify mr-2"></i>
-                Spotify
-              </button>
-            </div>
-          </div>
-          
-          <div className="p-6">
+    <div className="min-h-screen bg-slate-900">
+      {/* Page Header */}
+      <PageHeader title="Band Settings">
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'members' 
+                ? 'bg-white text-slate-900' 
+                : 'text-white hover:bg-white/10'
+            }`}
+            data-testid="tab-members"
+          >
+            <i className="fas fa-users mr-2"></i>
+            Members
+          </button>
+          <button
+            onClick={() => setActiveTab('spotify')}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'spotify' 
+                ? 'bg-white text-slate-900' 
+                : 'text-white hover:bg-white/10'
+            }`}
+            data-testid="tab-spotify"
+          >
+            <i className="fab fa-spotify mr-2"></i>
+            Spotify
+          </button>
+        </div>
+      </PageHeader>
+      
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="p-6">
             {/* Members Tab */}
             {activeTab === 'members' && (
               <div>
@@ -714,6 +696,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                 )}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
