@@ -51,13 +51,13 @@
   --popover: hsl(0, 0%, 100%, 0.08);
   --popover-foreground: hsl(0, 0%, 95%);
   
-  /* Glass borders and inputs */
-  --border: hsl(0, 0%, 100%, 0.20);
-  --input: hsl(0, 0%, 100%, 0.08);
+  /* Dark form fields with proper contrast */
+  --border: hsl(0, 0%, 100%, 0.15);
+  --input: hsl(215, 20%, 8%); /* Much darker input background */
   
   /* Muted elements with glass effect */
   --muted: hsl(0, 0%, 100%, 0.05);
-  --muted-foreground: hsl(0, 0%, 70%);
+  --muted-foreground: hsl(0, 0%, 60%); /* More muted for better contrast */
   
   /* Secondary and accent using glass effect */
   --secondary: hsl(0, 0%, 100%, 0.08);
@@ -73,8 +73,8 @@
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 98%);
   
-  /* Ring for focus states */
-  --ring: hsl(0, 0%, 100%, 0.30);
+  /* Ring for focus states - use brand orange */
+  --ring: hsl(24, 95%, 53%);
   --radius: 0.5rem;
 }
 
@@ -420,6 +420,86 @@
     -ms-user-select: none;
     user-select: none;
     touch-action: pan-y;
+  }
+  
+  /* Professional dark form styling */
+  .form-field-dark {
+    @apply bg-input border-border text-foreground;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .form-field-dark:hover {
+    @apply border-brand-accent border-opacity-50;
+  }
+  
+  .form-field-dark:focus {
+    @apply ring-2 ring-brand-accent ring-opacity-50 border-brand-accent;
+    outline: none;
+  }
+  
+  .form-field-dark:focus-within {
+    @apply ring-2 ring-brand-accent ring-opacity-50 border-brand-accent;
+  }
+  
+  .form-field-secondary:focus {
+    @apply ring-2 ring-brand-secondary ring-opacity-50 border-brand-secondary;
+  }
+  
+  .form-field-secondary:focus-within {
+    @apply ring-2 ring-brand-secondary ring-opacity-50 border-brand-secondary;
+  }
+  
+  /* Enhanced input styling */
+  .dark input[type="text"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="number"],
+  .dark input[type="tel"],
+  .dark input[type="url"],
+  .dark input[type="search"],
+  .dark textarea {
+    background-color: var(--input) !important;
+    color: hsl(0, 0%, 95%) !important;
+    border-color: hsl(0, 0%, 100%, 0.15) !important;
+  }
+  
+  .dark input[type="text"]:hover,
+  .dark input[type="email"]:hover,
+  .dark input[type="password"]:hover,
+  .dark input[type="number"]:hover,
+  .dark input[type="tel"]:hover,
+  .dark input[type="url"]:hover,
+  .dark input[type="search"]:hover,
+  .dark textarea:hover {
+    border-color: var(--brand-accent) !important;
+    border-opacity: 0.6;
+  }
+  
+  .dark input[type="text"]:focus,
+  .dark input[type="email"]:focus,
+  .dark input[type="password"]:focus,
+  .dark input[type="number"]:focus,
+  .dark input[type="tel"]:focus,
+  .dark input[type="url"]:focus,
+  .dark input[type="search"]:focus,
+  .dark textarea:focus {
+    border-color: var(--brand-accent) !important;
+    ring-color: var(--brand-accent) !important;
+    box-shadow: 0 0 0 2px var(--brand-accent) !important;
+    box-shadow-opacity: 0.5;
+    outline: none !important;
+  }
+  
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(0, 0%, 50%) !important;
+  }
+  
+  /* Alternative cyan focus state class */
+  .focus-cyan:focus {
+    border-color: var(--brand-secondary) !important;
+    ring-color: var(--brand-secondary) !important;
+    box-shadow: 0 0 0 2px var(--brand-secondary) !important;
   }
 }
 
