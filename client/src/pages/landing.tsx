@@ -18,18 +18,18 @@ export default function Landing() {
           <div className="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center mx-auto">
             <BndyLogo 
               className="w-48 h-48 md:w-64 md:h-64"
-              color="white"
               holeColor="rgb(51 65 85)" 
             />
           </div>
         </div>
 
-        {/* Hero Content */}
+        {/* Strapline */}
         <div className="max-w-2xl mx-auto mb-12">
-          <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight">
-            Keep Your Band
-            <br />
-            <span className="text-brand-accent">Organised</span>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            <span className="text-white">Keeping </span>
+            <span className="text-cyan-400">LIVE </span>
+            <span className="text-white">Music </span>
+            <span className="text-orange-500">ALIVE</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">

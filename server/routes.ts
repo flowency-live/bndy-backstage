@@ -84,9 +84,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (totalBandsCount >= 10 || isPlatformAdmin) {
         // Band creation allowed
         const { name, description } = req.body;
+        // Generate slug from name (simple version - replace spaces with hyphens and lowercase)
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         const band = await storage.createBand({
           name,
+          slug,
           description,
+          createdBy: req.user.dbUser.id,
         }, req.user.dbUser.id);
         
         res.status(201).json(band);
@@ -205,12 +209,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check for conflicts (band-scoped)
   app.post("/api/bands/:bandId/events/check-conflicts", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const { date, endDate, type, memberId, excludeEventId } = req.body;
+      const { date, endDate, type, membershipId, excludeEventId } = req.body;
       const result = await storage.checkConflicts(req.params.bandId, { 
         date, 
         endDate, 
         type, 
-        memberId,
+        membershipId,
         excludeEventId 
       });
       res.json(result);

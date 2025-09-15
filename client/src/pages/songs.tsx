@@ -258,7 +258,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
                 className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
                 data-testid="button-menu-toggle"
               >
-                <BndyLogo className="w-6 h-6" color="currentColor" />
+                <BndyLogo className="w-6 h-6" />
               </button>
             </div>
             

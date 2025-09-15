@@ -11,13 +11,13 @@ interface BndyLogoProps {
  * BndyLogo component that displays the BNDY logo with customizable colors.
  * 
  * @param className - Optional CSS class name for styling
- * @param color - The main color of the logo (default: "currentColor")
+ * @param color - The main color of the logo (default: "#f97316" - Orange500)
  * @param holeColor - The color of the holes in the B and D (explicitly set to match background)
  * @param forceDarkMode - Force dark mode hole color regardless of detection
  */
 const BndyLogo: React.FC<BndyLogoProps> = ({ 
   className = "", 
-  color = "currentColor",
+  color = "#f97316",
   holeColor,
   forceDarkMode = false
 }) => {

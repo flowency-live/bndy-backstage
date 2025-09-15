@@ -536,6 +536,7 @@ export class DatabaseStorage implements IStorage {
           email: users.email,
           displayName: users.displayName,
           avatarUrl: users.avatarUrl,
+          platformAdmin: users.platformAdmin,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         }
@@ -812,6 +813,19 @@ export class DatabaseStorage implements IStorage {
   async getTotalBandsCount(): Promise<number> {
     const [{ count: totalBands }] = await db.select({ count: count() }).from(bands);
     return totalBands;
+  }
+
+  // Invite token validation methods
+  async validateInviteToken(token: string): Promise<{ isValid: boolean; invitation?: any; error?: string }> {
+    // TODO: Implement invite token validation
+    // For now, return stub implementation
+    return { isValid: false, error: "Invite token validation not yet implemented" };
+  }
+
+  async acceptInviteToken(token: string, userId: string, userDisplayName: string): Promise<{ success: boolean; bandId?: string; error?: string }> {
+    // TODO: Implement invite token acceptance
+    // For now, return stub implementation
+    return { success: false, error: "Invite token acceptance not yet implemented" };
   }
 
 }

@@ -1,28 +1,38 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useUser } from "@/lib/user-context";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { SpotifyTrack } from "../../../server/spotify";
+import type { UserBand, Band } from "@shared/schema";
 
 interface AddSongModalProps {
   isOpen: boolean;
   onClose: () => void;
+  bandId: string;
+  membership: UserBand & { band: Band };
 }
 
-export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
+export default function AddSongModal({ isOpen, onClose, bandId, membership }: AddSongModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { currentUser } = useUser();
+  const { session } = useSupabaseAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const addSongMutation = useMutation({
     mutationFn: async (trackData: any) => {
-      const response = await fetch("/api/songs", {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/songs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json" 
+        },
         body: JSON.stringify(trackData),
       });
       if (!response.ok) {
@@ -39,7 +49,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
       toast({ title: "Song added to practice list and Spotify playlist!" });
       onClose();
       setSearchQuery("");
@@ -91,7 +101,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
       spotifyUrl: track.external_urls.spotify,
       imageUrl: track.album.images.length > 0 ? track.album.images[0].url : null,
       previewUrl: track.preview_url,
-      addedBy: currentUser?.id,
+      addedByMembershipId: membership.id,
     };
     
     addSongMutation.mutate(songData);

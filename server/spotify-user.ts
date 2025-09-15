@@ -67,7 +67,7 @@ const oauthStates = new Map<string, OAuthState>();
 // Clean up expired states every 10 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [state, data] of oauthStates.entries()) {
+  for (const [state, data] of Array.from(oauthStates.entries())) {
     if (now - data.timestamp > 600000) { // 10 minutes
       oauthStates.delete(state);
     }
