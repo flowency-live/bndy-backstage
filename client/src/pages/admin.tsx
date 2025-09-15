@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/layout";
+import GigAlertBanner from "@/components/gig-alert-banner";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Microphone" },
@@ -412,6 +413,11 @@ export default function Admin({ bandId, membership }: AdminProps) {
           </button>
         </div>
       </PageHeader>
+      
+      {/* Gig Alert Banner */}
+      <div className="px-4">
+        <GigAlertBanner bandId={bandId} className="mb-4" />
+      </div>
       
       <div className="p-4">
         <div className="max-w-4xl mx-auto">

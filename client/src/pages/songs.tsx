@@ -244,7 +244,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       {/* Page Header */}
       <PageHeader title="Practice List">
         <button
@@ -277,9 +277,12 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
         {/* Songs List */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <i className="fas fa-spinner fa-spin text-4xl text-brand-primary mb-4"></i>
-            <p className="text-gray-600">Loading practice list...</p>
+          <div className="text-center py-12 animate-fade-in-up">
+            <div className="relative">
+              <i className="fas fa-spinner fa-spin text-4xl text-brand-primary mb-4 animate-pulse-soft"></i>
+              <div className="absolute inset-0 animate-pulse-orange"></div>
+            </div>
+            <p className="text-gray-600 animate-shimmer">Loading practice list...</p>
           </div>
         ) : sortedSongs.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
@@ -376,8 +379,8 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t bg-gray-50">
-                      <div className="pt-4 space-y-4">
+                    <div className="px-4 pb-4 border-t bg-gray-50 animate-expand overflow-hidden">
+                      <div className="pt-4 space-y-4 animate-fade-in-up">
                         {/* Current user controls */}
                         <div className="flex items-center justify-between">
                           <span className="font-sans font-semibold text-gray-700">Your status:</span>

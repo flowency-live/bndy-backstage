@@ -39,14 +39,14 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-screen w-60 bg-brand-primary shadow-2xl z-50">
-            <div className="p-4">
+          <div className="fixed top-0 left-0 h-screen w-60 bg-brand-primary shadow-2xl z-50 animate-slide-in-left">
+            <div className="p-4 animate-fade-in-up">
               {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 animate-fade-in-up-delayed">
                 <h2 className="text-white font-serif text-lg">Menu</h2>
                 <button 
                   onClick={closeDrawer}
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover-scale-105 transition-transform duration-200"
                 >
                   <i className="fas fa-times text-xl"></i>
                 </button>

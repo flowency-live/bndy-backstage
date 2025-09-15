@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { UserBand, Band, InsertEvent, Event } from "@shared/schema";
+import type { UserBand, Band, InsertEvent, Event, EVENT_TYPES, EVENT_TYPE_CONFIG } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,12 +12,14 @@ import DatePickerModal from "./date-picker-modal";
 import DateRangePickerModal from "./date-range-picker-modal";
 import TimePickerModal from "./time-picker-modal";
 
+type EventType = typeof EVENT_TYPES[number];
+
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: string;
   selectedEvent?: Event | null;
-  eventType: "practice" | "gig" | "unavailable";
+  eventType: EventType;
   currentUser: UserBand & { band: Band };
   bandId: string;
 }
@@ -28,6 +30,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     type: eventType,
     date: selectedDate,
     membershipId: eventType === "unavailable" ? currentUser.id : undefined,
+    isPublic: false,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -78,7 +81,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         startTime: selectedEvent.startTime,
         endTime: selectedEvent.endTime,
         location: selectedEvent.location,
+        venue: selectedEvent.venue,
         notes: selectedEvent.notes,
+        isPublic: selectedEvent.isPublic || false,
       });
     } else {
       // Creating new event
@@ -91,8 +96,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         startTime: undefined,
         endTime: undefined,
         location: undefined,
+        venue: undefined,
         notes: undefined,
         endDate: undefined,
+        isPublic: false,
       });
     }
   }, [selectedDate, eventType, currentUser.id, selectedEvent]);
@@ -184,13 +191,24 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       return;
     }
 
-    if ((formData.type === "practice" || formData.type === "gig") && !formData.location?.trim()) {
-      toast({
-        title: "Error",
-        description: "Location is required for practices and gigs",
-        variant: "destructive",
-      });
-      return;
+    // Validate venue/location based on public/private status
+    if (formData.type !== "unavailable") {
+      if (formData.isPublic && !formData.venue?.trim()) {
+        toast({
+          title: "Error",
+          description: "Venue is required for public events",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!formData.isPublic && !formData.location?.trim()) {
+        toast({
+          title: "Error",
+          description: "Location is required for private events",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     const eventData: InsertEvent = {
@@ -199,11 +217,13 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       endDate: formData.endDate,
       startTime: formData.startTime,
       endTime: formData.endTime,
-      location: formData.location,
+      location: formData.isPublic ? undefined : formData.location,
+      venue: formData.isPublic ? formData.venue : undefined,
       notes: formData.notes,
       membershipId: formData.type === "unavailable" ? currentUser.id : undefined,
       title: formData.title,
       isAllDay: formData.type === "unavailable" || (!formData.startTime && !formData.endTime),
+      isPublic: formData.isPublic || false,
     };
 
     if (isEditing && selectedEvent) {
@@ -219,14 +239,19 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     }
   };
 
-  const selectEventType = (type: "practice" | "gig" | "unavailable") => {
+  const selectEventType = (type: EventType) => {
+    // Determine if event should be public by default based on type
+    const defaultPublic = type === "public_gig" || type === "festival";
+    
     setFormData(prev => ({ 
       ...prev, 
       type,
       membershipId: type === "unavailable" ? currentUser.id : undefined,
       startTime: type === "unavailable" ? undefined : prev.startTime,
       endTime: type === "unavailable" ? undefined : prev.endTime,
-      location: type === "unavailable" ? undefined : prev.location,
+      location: type === "unavailable" || defaultPublic ? undefined : prev.location,
+      venue: type === "unavailable" || !defaultPublic ? undefined : prev.venue,
+      isPublic: defaultPublic,
     }));
   };
 
@@ -258,70 +283,92 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             {/* Event Type Selection */}
             <div className="mb-6">
               <label className="block text-sm font-sans font-semibold text-gray-700 mb-3">Event Type</label>
-              <div className="grid grid-cols-3 gap-3">
-                <button 
-                  type="button"
-                  onClick={() => selectEventType("unavailable")}
-                  className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
-                    formData.type === "unavailable"
-                      ? "border-brand-unavailable bg-pink-50"
-                      : "border-gray-200 hover:border-brand-unavailable hover:bg-pink-50"
-                  }`}
-                >
-                  <i className={`fas fa-ban text-2xl mb-2 ${
-                    formData.type === "unavailable" ? "text-gray-600" : "text-gray-400"
-                  }`}></i>
-                  <div className={`text-sm font-sans font-semibold ${
-                    formData.type === "unavailable" ? "text-gray-700" : "text-gray-700"
-                  }`}>Unavailable</div>
-                </button>
-                
-                <button 
-                  type="button"
-                  onClick={() => selectEventType("practice")}
-                  className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
-                    formData.type === "practice"
-                      ? "border-brand-primary bg-brand-primary text-white"
-                      : "border-gray-200 hover:border-brand-primary hover:bg-green-50"
-                  }`}
-                >
-                  <i className={`fas fa-music text-2xl mb-2 ${
-                    formData.type === "practice" ? "text-white" : "text-gray-400"
-                  }`}></i>
-                  <div className={`text-sm font-sans font-semibold ${
-                    formData.type === "practice" ? "text-white" : "text-gray-700"
-                  }`}>Practice</div>
-                </button>
-                
-                <button 
-                  type="button"
-                  onClick={() => selectEventType("gig")}
-                  className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
-                    formData.type === "gig"
-                      ? "border-brand-accent bg-orange-50"
-                      : "border-gray-200 hover:border-brand-accent hover:bg-orange-50"
-                  }`}
-                >
-                  <i className={`fas fa-star text-2xl mb-2 ${
-                    formData.type === "gig" ? "text-brand-accent" : "text-gray-400"
-                  }`}></i>
-                  <div className={`text-sm font-sans font-semibold ${
-                    formData.type === "gig" ? "text-brand-accent" : "text-gray-700"
-                  }`}>Gig</div>
-                </button>
+              <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
+                {EVENT_TYPES.map((type) => {
+                  const config = EVENT_TYPE_CONFIG[type];
+                  const isSelected = formData.type === type;
+                  
+                  return (
+                    <button 
+                      key={type}
+                      type="button"
+                      onClick={() => selectEventType(type)}
+                      className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
+                        isSelected
+                          ? `border-2 shadow-md`
+                          : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                      }`}
+                      style={{
+                        borderColor: isSelected ? config.color : undefined,
+                        backgroundColor: isSelected ? `${config.color}15` : undefined,
+                      }}
+                      data-testid={`button-event-type-${type}`}
+                    >
+                      <div className="text-xl mb-1">{config.icon}</div>
+                      <div className={`text-xs font-sans font-semibold ${
+                        isSelected ? "text-gray-800" : "text-gray-600"
+                      }`} style={{
+                        color: isSelected ? config.color : undefined,
+                      }}>{config.label}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Title (for practices and gigs) */}
-            {(formData.type === "practice" || formData.type === "gig") && (
+            {/* Public/Private Toggle (for non-unavailable events) */}
+            {formData.type !== "unavailable" && (
+              <div className="mb-6">
+                <label className="block text-sm font-sans font-semibold text-gray-700 mb-3">Visibility</label>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, isPublic: false, venue: undefined }))}
+                    className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
+                      !formData.isPublic
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 hover:border-gray-300 text-gray-600"
+                    }`}
+                    data-testid="button-private-event"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>🔒</span>
+                      <span className="font-semibold">Private</span>
+                    </div>
+                    <div className="text-xs mt-1">Internal band event</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, isPublic: true, location: undefined }))}
+                    className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
+                      formData.isPublic
+                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                        : "border-gray-200 hover:border-gray-300 text-gray-600"
+                    }`}
+                    data-testid="button-public-event"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>🌍</span>
+                      <span className="font-semibold">Public</span>
+                    </div>
+                    <div className="text-xs mt-1">Open to the public</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Title (for most event types) */}
+            {formData.type !== "unavailable" && (
               <div className="mb-6">
                 <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Title (Optional)</label>
                 <Input
                   type="text"
-                  placeholder={`${formData.type === "gig" ? "Gig" : "Practice"} title`}
+                  placeholder={`${EVENT_TYPE_CONFIG[formData.type as EventType]?.label || "Event"} title`}
                   value={formData.title || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   className="focus:border-brand-primary focus:ring-brand-primary"
+                  data-testid="input-event-title"
                 />
               </div>
             )}
@@ -357,8 +404,8 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               </button>
             </div>
 
-            {/* Time Selection (for practices and gigs) */}
-            {(formData.type === "practice" || formData.type === "gig") && (
+            {/* Time Selection (for non-unavailable events) */}
+            {formData.type !== "unavailable" && (
               <div className="mb-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -393,17 +440,34 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               </div>
             )}
 
-            {/* Location (for practices and gigs) */}
-            {(formData.type === "practice" || formData.type === "gig") && (
+            {/* Venue/Location (for non-unavailable events) */}
+            {formData.type !== "unavailable" && (
               <div className="mb-6">
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Location *</label>
-                <Input
-                  type="text"
-                  placeholder="Enter location"
-                  value={formData.location || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  className="focus:border-brand-primary focus:ring-brand-primary"
-                />
+                {formData.isPublic ? (
+                  <>
+                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Venue *</label>
+                    <Input
+                      type="text"
+                      placeholder="Enter public venue name"
+                      value={formData.venue || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
+                      className="focus:border-brand-primary focus:ring-brand-primary"
+                      data-testid="input-event-venue"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Location *</label>
+                    <Input
+                      type="text"
+                      placeholder="Enter private location"
+                      value={formData.location || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      className="focus:border-brand-primary focus:ring-brand-primary"
+                      data-testid="input-event-location"
+                    />
+                  </>
+                )}
               </div>
             )}
 

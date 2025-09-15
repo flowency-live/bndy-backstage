@@ -74,14 +74,16 @@ export const bandMembers = pgTable("band_members", {
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bandId: varchar("band_id").references(() => bands.id), // nullable for migration
-  type: text("type").notNull(), // 'practice', 'gig', 'unavailable'
+  type: text("type").notNull(), // 'practice', 'meeting', 'recording', 'private_booking', 'public_gig', 'festival', 'unavailable'
   title: text("title"),
   date: text("date").notNull(), // YYYY-MM-DD format
   endDate: text("end_date"), // Optional, for date ranges
   startTime: text("start_time"), // HH:MM format (24h)
   endTime: text("end_time"), // HH:MM format (24h)
-  location: text("location"),
+  location: text("location"), // For private events
+  venue: text("venue"), // For public events
   notes: text("notes"),
+  isPublic: boolean("is_public").default(false), // true for public gigs/festivals, false for private events
   membershipId: varchar("membership_id").references(() => userBands.id), // null for band-wide events
   memberId: varchar("member_id").references(() => bandMembers.id), // legacy - keep for migration
   isAllDay: boolean("is_all_day").default(false),
@@ -255,6 +257,28 @@ export const songVetosRelations = relations(songVetos, ({ one }) => ({
   }),
 }));
 
+// Constants for event types (must be defined before schemas that use them)
+export const EVENT_TYPES = [
+  'practice',
+  'meeting', 
+  'recording',
+  'private_booking',
+  'public_gig',
+  'festival',
+  'unavailable'
+] as const;
+
+// Event type configurations with icons and colors
+export const EVENT_TYPE_CONFIG = {
+  practice: { label: 'Practice', icon: '🎵', color: 'hsl(271, 91%, 65%)', theme: 'purple' },
+  meeting: { label: 'Meeting', icon: '👥', color: 'hsl(220, 13%, 69%)', theme: 'neutral' },
+  recording: { label: 'Recording', icon: '🎙️', color: 'hsl(0, 84%, 60%)', theme: 'red' },
+  private_booking: { label: 'Private Booking', icon: '🔒', color: 'hsl(215, 28%, 17%)', theme: 'secure' },
+  public_gig: { label: 'Public Gig', icon: '🎭', color: 'hsl(24, 95%, 53%)', theme: 'orange' },
+  festival: { label: 'Festival', icon: '🎪', color: 'hsl(142, 76%, 36%)', theme: 'bright' },
+  unavailable: { label: 'Unavailable', icon: '🚫', color: 'hsl(0, 0%, 50%)', theme: 'gray' }
+} as const;
+
 // New multi-tenant insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -295,6 +319,10 @@ export const insertEventSchema = createInsertSchema(events).omit({
   bandId: z.string().optional().nullable(), // nullable for migration
   membershipId: z.string().optional().nullable(),
   createdByMembershipId: z.string().optional().nullable(),
+  type: z.enum(EVENT_TYPES, { errorMap: () => ({ message: "Please select a valid event type" }) }),
+  isPublic: z.boolean().optional().default(false),
+  venue: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
 });
 
 export const insertSongSchema = createInsertSchema(songs).omit({

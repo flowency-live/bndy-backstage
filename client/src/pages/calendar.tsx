@@ -5,7 +5,7 @@ import { useUser } from "@/lib/user-context";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
-import type { Event, UserBand, Band } from "@shared/schema";
+import type { Event, UserBand, Band, EVENT_TYPES, EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
 import { PageHeader } from "@/components/layout";
 
@@ -21,7 +21,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [eventType, setEventType] = useState<"practice" | "gig" | "unavailable">("practice");
+  const [eventType, setEventType] = useState<typeof EVENT_TYPES[number]>("practice");
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
 
@@ -158,10 +158,10 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   };
 
   const getBandEvents = (dateEvents: Event[]) => {
-    return dateEvents.filter(e => e.type === "practice" || e.type === "gig");
+    return dateEvents.filter(e => e.type !== "unavailable");
   };
 
-  const openEventModal = (date: string, type: "practice" | "gig" | "unavailable") => {
+  const openEventModal = (date: string, type: typeof EVENT_TYPES[number]) => {
     setSelectedDate(date);
     setSelectedEvent(null);
     setEventType(type);
@@ -176,7 +176,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     
     setSelectedEvent(event);
     setSelectedDate(event.date);
-    setEventType(event.type as "practice" | "gig" | "unavailable");
+    setEventType(event.type as typeof EVENT_TYPES[number]);
     setShowEventModal(true);
   };
 
@@ -202,7 +202,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       {/* Page Header */}
       <PageHeader title="Calendar">
         <div className="flex items-center gap-3">
@@ -236,8 +236,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent">
+        <div className="max-w-7xl mx-auto px-4 py-4 animate-fade-in-up">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent animate-pulse-soft hover-lift-subtle">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-brand-accent rounded-full flex items-center justify-center">
@@ -355,7 +355,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     key={index}
                     className={`min-h-24 border-r border-b border-gray-200 p-1 relative ${
                       isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
+                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
                   >
                     {/* Date number */}
                     <div className={`text-sm font-sans font-semibold mb-1 ${
@@ -370,16 +370,15 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     <div className="space-y-1">
                       {/* Starting events */}
                       {startingEvents.map((event, eventIndex) => {
-                        const eventColor = event.type === "gig" ? "bg-yellow-500" : 
-                                         event.type === "practice" ? "bg-blue-500" : "bg-red-500";
-                        const textColor = "text-white";
+                        const config = EVENT_TYPE_CONFIG[event.type] || EVENT_TYPE_CONFIG.practice;
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
                         
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
-                            className={`${eventColor} ${textColor} text-xs p-1 rounded cursor-pointer relative overflow-hidden`}
+                            className="text-white text-xs p-1 rounded cursor-pointer relative overflow-hidden"
                             style={{
+                              backgroundColor: config.color,
                               gridColumn: isMultiDayEvent(event) ? `span ${spanDays}` : 'span 1',
                               position: isMultiDayEvent(event) ? 'absolute' : 'relative',
                               left: isMultiDayEvent(event) ? '4px' : 'auto',
@@ -391,8 +390,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-${event.id}`}
                           >
-                            <div className="font-semibold truncate">
-                              {event.title || (event.type === "gig" ? "Gig" : event.type === "practice" ? "Practice" : "Unavailable")}
+                            <div className="font-semibold truncate flex items-center">
+                              <span className="mr-1">{config.icon}</span>
+                              {event.title || config.label}
                             </div>
                             {event.startTime && (
                               <div className="truncate opacity-90">{event.startTime}</div>
@@ -403,9 +403,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
                       {/* Extending events */}
                       {extendingEvents.map((event, eventIndex) => {
-                        const eventColor = event.type === "gig" ? "bg-yellow-500" : 
-                                         event.type === "practice" ? "bg-blue-500" : "bg-red-500";
-                        const textColor = "text-white";
+                        const config = EVENT_TYPE_CONFIG[event.type] || EVENT_TYPE_CONFIG.practice;
                         const remainingDays = getRemainingDaysInWeek(index);
                         const eventEndDate = new Date(event.endDate + 'T00:00:00');
                         const currentWeekEnd = new Date(day.getTime() + (remainingDays - 1) * 24 * 60 * 60 * 1000);
@@ -416,8 +414,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
-                            className={`${eventColor} ${textColor} text-xs p-1 rounded cursor-pointer absolute overflow-hidden`}
+                            className="text-white text-xs p-1 rounded cursor-pointer absolute overflow-hidden"
                             style={{
+                              backgroundColor: config.color,
                               left: '4px',
                               right: spanDays < remainingDays ? 'auto' : '4px',
                               zIndex: 10 + eventIndex,
@@ -427,8 +426,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
-                            <div className="font-semibold truncate">
-                              {event.title || (event.type === "gig" ? "Gig" : event.type === "practice" ? "Practice" : "Unavailable")}
+                            <div className="font-semibold truncate flex items-center">
+                              <span className="mr-1">{config.icon}</span>
+                              {event.title || config.label}
                             </div>
                           </div>
                         );
@@ -512,21 +512,22 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                   data-testid={`agenda-event-${event.id}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      event.type === "gig" ? "bg-yellow-500" : "bg-blue-500"
-                    }`}>
-                      <i className={`fas ${event.type === "gig" ? "fa-star" : "fa-music"} text-white`}></i>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                         style={{ backgroundColor: EVENT_TYPE_CONFIG[event.type]?.color || EVENT_TYPE_CONFIG.practice.color }}>
+                      <span className="text-xl">{EVENT_TYPE_CONFIG[event.type]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
                     </div>
                     <div className="flex-1">
                       <h4 className="font-sans font-semibold text-brand-primary">
-                        {event.title || (event.type === "gig" ? "Gig" : "Band Practice")}
+                        {event.title || EVENT_TYPE_CONFIG[event.type]?.label || "Event"}
                       </h4>
                       <p className="text-gray-600">
                         {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}
                         {event.startTime && ` • ${formatEventTime(event)}`}
                       </p>
-                      {event.location && (
-                        <p className="text-gray-500 text-sm">{event.location}</p>
+                      {(event.venue || event.location) && (
+                        <p className="text-gray-500 text-sm">
+                          {event.isPublic ? `📍 ${event.venue}` : `🏠 ${event.location}`}
+                        </p>
                       )}
                     </div>
                   </div>
