@@ -21,13 +21,13 @@ export default function Login() {
     // Remove all non-digits
     const digits = value.replace(/\D/g, '')
     
-    // Format as (XXX) XXX-XXXX
-    if (digits.length <= 3) {
+    // Format UK mobile numbers as 07XXX XXXXXX
+    if (digits.length <= 5) {
       return digits
-    } else if (digits.length <= 6) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+    } else if (digits.length <= 8) {
+      return `${digits.slice(0, 5)} ${digits.slice(5)}`
     } else {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+      return `${digits.slice(0, 5)} ${digits.slice(5, 11)}`
     }
   }
 
@@ -44,9 +44,10 @@ export default function Login() {
 
     setLoading(true)
     
-    // Convert formatted phone to E.164 format (+1XXXXXXXXXX)
+    // Convert formatted phone to E.164 format (+44XXXXXXXXXX)
     const digits = phone.replace(/\D/g, '')
-    const e164Phone = digits.startsWith('1') ? `+${digits}` : `+1${digits}`
+    // UK mobile numbers start with 07, convert to +44 7
+    const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
     
     try {
       const { error } = await sendOTP(e164Phone)
@@ -96,7 +97,8 @@ export default function Login() {
     setLoading(true)
     
     const digits = phone.replace(/\D/g, '')
-    const e164Phone = digits.startsWith('1') ? `+${digits}` : `+1${digits}`
+    // UK mobile numbers start with 07, convert to +44 7
+    const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
     
     try {
       // Development mode - accept 123456 as valid code

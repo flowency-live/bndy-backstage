@@ -24,7 +24,6 @@ export default function Invite() {
           <div className="w-32 h-32 flex items-center justify-center mx-auto">
             <BndyLogo 
               className="w-24 h-24"
-              color="white"
               holeColor="rgb(51 65 85)" 
             />
           </div>
