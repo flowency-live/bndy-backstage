@@ -14,6 +14,7 @@ import Admin from "@/pages/admin";
 import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/auth/login";
 import NotFound from "@/pages/not-found";
+import Footer from "@/components/ui/footer";
 
 function Router() {
   return (
@@ -54,8 +55,13 @@ function App() {
       <TooltipProvider>
         <SupabaseAuthProvider>
           <UserProvider>
+            <div className="min-h-screen flex flex-col">
+              <div className="flex-1">
+                <Router />
+              </div>
+              <Footer />
+            </div>
             <Toaster />
-            <Router />
           </UserProvider>
         </SupabaseAuthProvider>
       </TooltipProvider>

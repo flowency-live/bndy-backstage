@@ -23,14 +23,23 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Strapline */}
+        {/* Strapline - Responsive Layout */}
         <div className="max-w-2xl mx-auto mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          {/* Desktop: Single line */}
+          <h1 className="hidden md:block text-4xl lg:text-6xl font-bold mb-6 leading-tight" data-testid="strapline-desktop">
             <span className="text-white">Keeping </span>
             <span className="text-cyan-400">LIVE </span>
             <span className="text-white">Music </span>
             <span className="text-orange-500">ALIVE</span>
           </h1>
+          
+          {/* Mobile: Two lines with perfect vertical alignment of "LIVE"/"ALIVE" */}
+          <div className="block md:hidden grid grid-cols-[max-content_auto] gap-x-2 font-bold mb-6 text-3xl sm:text-4xl leading-tight" data-testid="strapline-mobile">
+            <span className="col-start-1 row-start-1 text-white">Keeping</span>
+            <span className="col-start-2 row-start-1 text-cyan-400">LIVE</span>
+            <span className="col-start-1 row-start-2 text-white">Music</span>
+            <span className="col-start-2 row-start-2 text-orange-500">ALIVE</span>
+          </div>
           
           <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
             The invite-only platform for bands who take their music seriously. 
@@ -87,10 +96,6 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="text-center p-8 text-white/60 text-sm">
-        <p>© 2025 bndy. Designed for serious UK bands.</p>
-      </div>
     </div>
   );
 }
