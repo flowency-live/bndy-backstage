@@ -1,8 +1,12 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
 
 export default function Landing() {
+  // Force dark mode for branding consistency
+  useForceDarkMode()
+  
   const [, setLocation] = useLocation();
 
   const handleSignIn = () => {

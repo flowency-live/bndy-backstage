@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth.tsx";
 import { UserProvider } from "@/lib/user-context";
+import { ThemeProvider } from "@/contexts/theme-context";
 import BandGate from "@/components/band-gate";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -63,19 +64,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SupabaseAuthProvider>
-          <UserProvider>
-            <div className="min-h-screen flex flex-col">
-              <div className="flex-1">
-                <Router />
+        <ThemeProvider defaultTheme="dark" storageKey="bndy-ui-theme">
+          <SupabaseAuthProvider>
+            <UserProvider>
+              <div className="min-h-screen flex flex-col">
+                <div className="flex-1">
+                  <Router />
+                </div>
+                <Footer />
               </div>
-              <Footer />
-            </div>
-            <Toaster />
-          </UserProvider>
+              <Toaster />
+            </UserProvider>
         </SupabaseAuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+      </ThemeProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
   );
 }
 

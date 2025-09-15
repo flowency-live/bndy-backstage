@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface NavigationProps {
   currentUser: any;
@@ -84,6 +85,30 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 >
                   <i className="fas fa-user w-5"></i>
                   <span className="font-serif text-lg">Profile</span>
+                </button>
+                
+                <hr className="border-white/20 my-4" />
+                
+                {/* Theme Toggle */}
+                <div className="flex items-center justify-between py-3 px-4">
+                  <span className="font-serif text-lg text-white">Theme</span>
+                  <ThemeToggle 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-white hover:bg-white/20"
+                  />
+                </div>
+                
+                <hr className="border-white/20 my-4" />
+                
+                {/* Logout Button */}
+                <button 
+                  onClick={onLogout}
+                  className="w-full text-left py-3 px-4 rounded-lg text-red-300 hover:bg-red-500/20 transition-colors flex items-center space-x-3"
+                  data-testid="button-logout"
+                >
+                  <i className="fas fa-sign-out-alt w-5"></i>
+                  <span className="font-serif text-lg">Sign Out</span>
                 </button>
               </nav>
             </div>

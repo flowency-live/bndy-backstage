@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import BndyLogo from "@/components/ui/bndy-logo"
+import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
 
 type AuthStep = 'phone' | 'verify'
 
 export default function Login() {
+  // Force dark mode for branding consistency
+  useForceDarkMode()
+  
   const [, setLocation] = useLocation()
   const [step, setStep] = useState<AuthStep>('phone')
   const [phone, setPhone] = useState('')

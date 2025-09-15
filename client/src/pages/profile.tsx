@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProfileForm from "@/components/ui/profile-form";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { User, InsertUserProfile, UpdateUserProfile } from "@shared/schema";
@@ -20,6 +21,9 @@ export default function Profile() {
   const { session, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"create" | "edit">("create");
+
+  // Force dark mode for profile creation (branding consistency)
+  useConditionalDarkMode(mode === "create");
 
   // Redirect if not authenticated
   useEffect(() => {

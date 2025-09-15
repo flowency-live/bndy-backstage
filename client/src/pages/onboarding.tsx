@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Vocalist" },
@@ -21,6 +22,9 @@ const ICONS = [
 ];
 
 export default function Onboarding() {
+  // Force dark mode for branding consistency
+  useForceDarkMode()
+  
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
   const { toast } = useToast();
