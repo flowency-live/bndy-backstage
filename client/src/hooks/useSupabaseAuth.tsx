@@ -1,8 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext, useContext } from 'react'
 import { supabase, authHelpers } from '@/lib/supabase'
 import type { Session, User } from '@supabase/supabase-js'
 
+interface SupabaseAuthContextType {
+  user: User | null
+  session: Session | null
+  loading: boolean
+  isAuthenticated: boolean
+  sendOTP: (phone: string) => Promise<any>
+  verifyOTP: (phone: string, token: string) => Promise<any>
+  signOut: () => Promise<any>
+}
+
+const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined)
+
+export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
+  const auth = useSupabaseAuthHook()
+  
+  return (
+    <SupabaseAuthContext.Provider value={auth}>
+      {children}
+    </SupabaseAuthContext.Provider>
+  )
+}
+
 export function useSupabaseAuth() {
+  const context = useContext(SupabaseAuthContext)
+  if (context === undefined) {
+    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider')
+  }
+  return context
+}
+
+function useSupabaseAuthHook() {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { BandMember, InsertEvent, Event } from "@shared/schema";
+import type { UserBand, Band, InsertEvent, Event } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,15 +18,16 @@ interface EventModalProps {
   selectedDate: string;
   selectedEvent?: Event | null;
   eventType: "practice" | "gig" | "unavailable";
-  currentUser: BandMember;
+  currentUser: UserBand & { band: Band };
+  bandId: string;
 }
 
-export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser }: EventModalProps) {
+export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, bandId }: EventModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
     date: selectedDate,
-    memberId: eventType === "unavailable" ? currentUser.id : undefined,
+    membershipId: eventType === "unavailable" ? currentUser.id : undefined,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -49,10 +50,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       date: string; 
       endDate?: string; 
       type: string; 
-      memberId?: string;
+      membershipId?: string;
       excludeEventId?: string;
     }) => {
-      const response = await apiRequest("POST", "/api/events/check-conflicts", data);
+      const response = await apiRequest("POST", `/api/bands/${bandId}/events/check-conflicts`, data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -72,7 +73,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         type: selectedEvent.type,
         date: selectedEvent.date,
         endDate: selectedEvent.endDate,
-        memberId: selectedEvent.memberId,
+        membershipId: selectedEvent.membershipId,
         title: selectedEvent.title,
         startTime: selectedEvent.startTime,
         endTime: selectedEvent.endTime,
@@ -85,7 +86,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       setFormData({
         type: eventType,
         date: selectedDate,
-        memberId: eventType === "unavailable" ? currentUser.id : undefined,
+        membershipId: eventType === "unavailable" ? currentUser.id : undefined,
         title: undefined,
         startTime: undefined,
         endTime: undefined,
@@ -102,18 +103,18 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         date: formData.date,
         endDate: formData.endDate || undefined,
         type: formData.type,
-        memberId: formData.memberId || undefined,
+        membershipId: formData.membershipId || undefined,
         excludeEventId: isEditing && selectedEvent ? selectedEvent.id : undefined,
       });
     }
-  }, [formData.date, formData.endDate, formData.type, formData.memberId, isEditing, selectedEvent]);
+  }, [formData.date, formData.endDate, formData.type, formData.membershipId, isEditing, selectedEvent]);
 
   const createEventMutation = useMutation({
     mutationFn: async (event: InsertEvent) => {
-      return apiRequest("POST", "/api/events", event);
+      return apiRequest("POST", `/api/bands/${bandId}/events`, event);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
       toast({
         title: "Success",
         description: "Event created successfully",
@@ -131,10 +132,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const updateEventMutation = useMutation({
     mutationFn: async ({ id, ...event }: { id: string } & Partial<InsertEvent>) => {
-      return apiRequest("PATCH", `/api/events/${id}`, event);
+      return apiRequest("PATCH", `/api/bands/${bandId}/events/${id}`, event);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
       toast({
         title: "Success",
         description: "Event updated successfully",
@@ -152,10 +153,10 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const deleteEventMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/events/${id}`);
+      return apiRequest("DELETE", `/api/bands/${bandId}/events/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
       toast({
         title: "Success",
         description: "Event deleted successfully",
@@ -200,7 +201,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       endTime: formData.endTime,
       location: formData.location,
       notes: formData.notes,
-      memberId: formData.type === "unavailable" ? currentUser.id : undefined,
+      membershipId: formData.type === "unavailable" ? currentUser.id : undefined,
       title: formData.title,
       isAllDay: formData.type === "unavailable" || (!formData.startTime && !formData.endTime),
     };
@@ -222,7 +223,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     setFormData(prev => ({ 
       ...prev, 
       type,
-      memberId: type === "unavailable" ? currentUser.id : undefined,
+      membershipId: type === "unavailable" ? currentUser.id : undefined,
       startTime: type === "unavailable" ? undefined : prev.startTime,
       endTime: type === "unavailable" ? undefined : prev.endTime,
       location: type === "unavailable" ? undefined : prev.location,

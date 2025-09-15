@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
-import { useUser } from "@/lib/user-context";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
+import BandSwitcher from "@/components/band-switcher";
 import { spotifySync } from "@/lib/spotify-sync";
-
-import type { BandMember } from "@shared/schema";
+import type { UserBand, Band } from "@shared/schema";
 
 interface SongWithDetails {
   id: string;
@@ -17,26 +17,31 @@ interface SongWithDetails {
   spotifyUrl: string;
   imageUrl?: string;
   previewUrl?: string;
-  addedBy?: string;
+  addedByMembershipId?: string;
   createdAt: string;
   readiness: Array<{
     id: string;
     songId: string;
-    memberId: string;
+    membershipId: string;
     status: "red" | "amber" | "green";
     updatedAt: string;
   }>;
   vetos: Array<{
     id: string;
     songId: string;
-    memberId: string;
+    membershipId: string;
     createdAt: string;
   }>;
 }
 
-export default function Songs() {
+interface SongsProps {
+  bandId: string;
+  membership: UserBand & { band: Band };
+}
+
+export default function Songs({ bandId, membership }: SongsProps) {
   const [, setLocation] = useLocation();
-  const { currentUser, logout } = useUser();
+  const { session } = useSupabaseAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -44,38 +49,79 @@ export default function Songs() {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
 
-  // Redirect if no user selected
-  if (!currentUser) {
-    setLocation("/");
-    return null;
-  }
-
-  // Check for Spotify settings from localStorage (same as admin panel uses)
+  // Check for Spotify settings from localStorage
   useEffect(() => {
     const playlistId = localStorage.getItem('spotify_playlist_id');
     setSpotifyPlaylistId(playlistId);
   }, []);
 
+  // Get songs for this band using new band-scoped API
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
-    queryKey: ["/api/songs"],
+    queryKey: ["/api/bands", bandId, "songs"],
+    queryFn: async () => {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/songs`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch songs");
+      }
+      
+      return response.json();
+    },
+    enabled: !!session?.access_token && !!bandId,
   });
 
-  const { data: bandMembers = [] } = useQuery<BandMember[]>({
-    queryKey: ["/api/band-members"],
+  // Get band members using new band-scoped API
+  const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
+    queryKey: ["/api/bands", bandId, "members"],
+    queryFn: async () => {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/members`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch band members");
+      }
+      
+      return response.json();
+    },
+    enabled: !!session?.access_token && !!bandId,
   });
 
   const updateReadinessMutation = useMutation({
     mutationFn: async ({ songId, status }: { songId: string; status: "red" | "amber" | "green" }) => {
-      const response = await fetch(`/api/songs/${songId}/readiness`, {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/songs/${songId}/readiness`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ memberId: currentUser.id, status }),
+        headers: { 
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({ membershipId: membership.id, status }),
       });
       if (!response.ok) throw new Error("Failed to update readiness");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update readiness", variant: "destructive" });
@@ -84,22 +130,32 @@ export default function Songs() {
 
   const toggleVetoMutation = useMutation({
     mutationFn: async ({ songId, hasVeto }: { songId: string; hasVeto: boolean }) => {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
       if (hasVeto) {
-        const response = await fetch(`/api/songs/${songId}/veto/${currentUser.id}`, {
+        const response = await fetch(`/api/bands/${bandId}/songs/${songId}/veto/${membership.id}`, {
           method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+          },
         });
         if (!response.ok) throw new Error("Failed to remove veto");
       } else {
-        const response = await fetch(`/api/songs/${songId}/veto`, {
+        const response = await fetch(`/api/bands/${bandId}/songs/${songId}/veto`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: currentUser.id }),
+          headers: { 
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json" 
+          },
+          body: JSON.stringify({ membershipId: membership.id }),
         });
         if (!response.ok) throw new Error("Failed to add veto");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update", variant: "destructive" });
@@ -108,8 +164,15 @@ export default function Songs() {
 
   const deleteSongMutation = useMutation({
     mutationFn: async (songData: { songId: string; spotifyId: string }) => {
-      const response = await fetch(`/api/songs/${songData.songId}`, {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/songs/${songData.songId}`, {
         method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to delete song");
       
@@ -120,7 +183,7 @@ export default function Songs() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
       toast({ title: "Song removed from practice list and Spotify playlist" });
     },
     onError: () => {
@@ -168,11 +231,11 @@ export default function Songs() {
   };
 
   const getUserReadiness = (song: SongWithDetails) => {
-    return song.readiness.find(r => r.memberId === currentUser.id)?.status;
+    return song.readiness.find(r => r.membershipId === membership.id)?.status;
   };
 
   const getUserVeto = (song: SongWithDetails) => {
-    return song.vetos.some(v => v.memberId === currentUser.id);
+    return song.vetos.some(v => v.membershipId === membership.id);
   };
 
   const handleDeleteSong = (songId: string, spotifyId: string, songTitle: string) => {
@@ -183,46 +246,32 @@ export default function Songs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-neutral via-white to-gray-100">
-      {/* Header with integrated navigation */}
+      {/* Header with band switcher */}
       <header className="bg-white shadow-sm border-b-4 border-brand-accent">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="grid grid-cols-3 items-center">
-            {/* Left: Clickable band name */}
+            {/* Left: Menu toggle */}
             <div className="justify-self-start text-left">
               <button 
                 onClick={() => setIsNavigationOpen(!isNavigationOpen)}
                 className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
+                data-testid="button-menu-toggle"
               >
-                <div className="text-xl text-left">The</div>
-                <div className="text-xl text-left">Torrists</div>
+                <div className="text-xl text-left">Bndy</div>
               </button>
             </div>
             
-            {/* Center: User badge */}
-            <div className="justify-self-center">
-              <div className="flex items-center space-x-2 bg-brand-neutral rounded-full px-4 py-2">
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: currentUser.color }}
-                >
-                  <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
-                </div>
-                <span className="font-serif text-brand-primary font-semibold">{currentUser.name}</span>
-              </div>
+            {/* Center: Band switcher */}
+            <div className="justify-self-center max-w-xs w-full">
+              <BandSwitcher 
+                currentBandId={bandId} 
+                currentMembership={membership} 
+              />
             </div>
             
-            {/* Right: Logout button */}
+            {/* Right: Practice List text */}
             <div className="justify-self-end">
-              <button 
-                onClick={() => {
-                  logout();
-                  setLocation("/");
-                }}
-                className="text-brand-primary hover:text-brand-primary-dark"
-                title="Switch user"
-              >
-                <i className="fas fa-sign-out-alt text-lg"></i>
-              </button>
+              <span className="text-brand-primary font-serif font-semibold">Practice List</span>
             </div>
           </div>
         </div>
@@ -231,13 +280,11 @@ export default function Songs() {
       {/* Navigation drawer */}
       {isNavigationOpen && (
         <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black bg-opacity-50" 
             onClick={() => setIsNavigationOpen(false)}
           />
           
-          {/* Drawer */}
           <div className="absolute left-0 top-0 h-full w-60 bg-brand-primary shadow-xl">
             <div className="p-4">
               <div className="flex items-center justify-between mb-6">
@@ -245,6 +292,7 @@ export default function Songs() {
                 <button 
                   onClick={() => setIsNavigationOpen(false)}
                   className="text-white hover:text-gray-200"
+                  data-testid="button-close-menu"
                 >
                   <i className="fas fa-times text-xl"></i>
                 </button>
@@ -255,6 +303,7 @@ export default function Songs() {
                   href="/calendar" 
                   className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
                   onClick={() => setIsNavigationOpen(false)}
+                  data-testid="link-calendar"
                 >
                   <i className="fas fa-calendar w-5"></i>
                   <span className="font-serif text-lg">Calendar</span>
@@ -263,6 +312,7 @@ export default function Songs() {
                   href="/songs" 
                   className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
                   onClick={() => setIsNavigationOpen(false)}
+                  data-testid="link-songs"
                 >
                   <i className="fas fa-music w-5"></i>
                   <span className="font-serif text-lg">Practice List</span>
@@ -271,9 +321,10 @@ export default function Songs() {
                   href="/admin" 
                   className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
                   onClick={() => setIsNavigationOpen(false)}
+                  data-testid="link-admin"
                 >
                   <i className="fas fa-users-cog w-5"></i>
-                  <span className="font-serif text-lg">Manage Band</span>
+                  <span className="font-serif text-lg">Band Settings</span>
                 </Link>
               </nav>
             </div>
@@ -290,6 +341,7 @@ export default function Songs() {
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-brand-accent hover:bg-brand-accent-light text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-serif font-semibold shadow-lg flex items-center space-x-2 text-sm sm:text-base"
+              data-testid="button-add-song"
             >
               <i className="fas fa-plus"></i>
               <span>Add Song</span>
@@ -305,6 +357,7 @@ export default function Songs() {
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm bg-green-50 hover:bg-green-100 px-3 py-1 rounded-full transition-colors"
                 title="Open practice playlist in Spotify"
+                data-testid="link-spotify-playlist"
               >
                 <i className="fab fa-spotify"></i>
                 <span>Open in Spotify</span>
@@ -327,6 +380,7 @@ export default function Songs() {
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-brand-accent hover:bg-brand-accent-light text-white px-6 py-3 rounded-xl font-serif font-semibold"
+              data-testid="button-add-first-song"
             >
               Add Your First Song
             </button>
@@ -346,6 +400,7 @@ export default function Songs() {
                   className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
                   }`}
+                  data-testid={`song-card-${song.id}`}
                 >
                   {/* Main song card */}
                   <div className="px-4 py-3 flex items-center space-x-3">
@@ -366,35 +421,35 @@ export default function Songs() {
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-medium text-gray-900 truncate" data-testid={`song-title-${song.id}`}>
                         {song.title}
                       </h3>
-                      <p className="text-sm text-gray-600 truncate">{song.artist}</p>
+                      <p className="text-sm text-gray-600 truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
                     {/* Readiness summary */}
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center space-x-1">
                         {readinessCounts.green > 0 && (
-                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-green-${song.id}`}>
                             {readinessCounts.green}🟢
                           </span>
                         )}
                         {readinessCounts.amber > 0 && (
-                          <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
+                          <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-amber-${song.id}`}>
                             {readinessCounts.amber}🟡
                           </span>
                         )}
                         {readinessCounts.red > 0 && (
-                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-red-${song.id}`}>
                             {readinessCounts.red}🔴
                           </span>
                         )}
                       </div>
                       
-                      {/* Poo indicators */}
+                      {/* Veto indicators */}
                       {song.vetos.length > 0 && (
-                        <span className="text-xl">
+                        <span className="text-xl" data-testid={`vetos-${song.id}`}>
                           {"💩".repeat(Math.min(song.vetos.length, 3))}
                         </span>
                       )}
@@ -403,6 +458,7 @@ export default function Songs() {
                       <button
                         onClick={() => toggleExpanded(song.id)}
                         className="p-2 hover:bg-gray-100 rounded-lg"
+                        data-testid={`button-expand-${song.id}`}
                       >
                         <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400`}></i>
                       </button>
@@ -431,6 +487,7 @@ export default function Songs() {
                                       : "hover:bg-gray-100"
                                   }`}
                                   disabled={updateReadinessMutation.isPending}
+                                  data-testid={`button-readiness-${status}-${song.id}`}
                                 >
                                   {status === "green" ? "🟢 Ready" 
                                    : status === "amber" ? "🟡 Working" 
@@ -439,7 +496,7 @@ export default function Songs() {
                               ))}
                             </div>
                             
-                            {/* Poo button */}
+                            {/* Veto button */}
                             <button
                               onClick={() => toggleVetoMutation.mutate({ songId: song.id, hasVeto: userVeto })}
                               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
@@ -448,6 +505,7 @@ export default function Songs() {
                                   : "bg-gray-100 hover:bg-gray-200"
                               }`}
                               disabled={toggleVetoMutation.isPending}
+                              data-testid={`button-veto-${song.id}`}
                             >
                               💩
                             </button>
@@ -459,18 +517,18 @@ export default function Songs() {
                           <span className="font-sans font-semibold text-gray-700 block mb-2">Band readiness:</span>
                           <div className="grid grid-cols-2 gap-2">
                             {bandMembers.map((member) => {
-                              const memberReadiness = song.readiness.find(r => r.memberId === member.id);
-                              const memberVeto = song.vetos.find(v => v.memberId === member.id);
+                              const memberReadiness = song.readiness.find(r => r.membershipId === member.id);
+                              const memberVeto = song.vetos.find(v => v.membershipId === member.id);
                               
                               return (
-                                <div key={member.id} className="flex items-center space-x-2">
+                                <div key={member.id} className="flex items-center space-x-2" data-testid={`member-status-${member.id}-${song.id}`}>
                                   <div 
                                     className="w-6 h-6 rounded-full flex items-center justify-center"
                                     style={{ backgroundColor: member.color }}
                                   >
                                     <i className={`fas ${member.icon} text-white text-xs`}></i>
                                   </div>
-                                  <span className="text-sm font-medium">{member.name}</span>
+                                  <span className="text-sm font-medium">{member.displayName}</span>
                                   <div className="flex items-center space-x-1">
                                     {memberReadiness && (
                                       <span className="text-sm">
@@ -494,6 +552,7 @@ export default function Songs() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold"
+                            data-testid={`link-spotify-${song.id}`}
                           >
                             <i className="fab fa-spotify"></i>
                             <span>Open in Spotify</span>
@@ -503,6 +562,7 @@ export default function Songs() {
                             onClick={() => handleDeleteSong(song.id, song.spotifyId, song.title)}
                             className="text-red-600 hover:text-red-700 font-semibold"
                             disabled={deleteSongMutation.isPending}
+                            data-testid={`button-delete-${song.id}`}
                           >
                             <i className="fas fa-trash mr-1"></i>
                             Remove
@@ -522,6 +582,8 @@ export default function Songs() {
       <AddSongModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+        bandId={bandId}
+        membership={membership}
       />
     </div>
   );
