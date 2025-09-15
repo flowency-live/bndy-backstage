@@ -76,6 +76,15 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                   <i className="fas fa-users-cog w-5"></i>
                   <span className="font-serif text-lg">Manage Band</span>
                 </button>
+                
+                <button 
+                  onClick={() => navigateTo("/profile")}
+                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  data-testid="button-profile"
+                >
+                  <i className="fas fa-user w-5"></i>
+                  <span className="font-serif text-lg">Profile</span>
+                </button>
               </nav>
             </div>
           </div>
