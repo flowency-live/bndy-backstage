@@ -144,7 +144,7 @@ export default function ProfileForm({
             {mode === "create" && (
               <div className="text-center">
                 <h2 className="text-xl font-serif text-brand-primary">Complete Your Profile</h2>
-                <p className="text-brand-neutral text-sm">Help your bandmates get to know you</p>
+                <p className="text-muted-foreground text-sm">Help your bandmates get to know you</p>
               </div>
             )}
           </div>
@@ -157,12 +157,11 @@ export default function ProfileForm({
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-brand-primary font-medium">First Name *</FormLabel>
+                    <FormLabel className="text-foreground font-medium">First Name *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="John"
-                        className="bg-white border-brand-neutral-light focus:border-brand-primary"
                         data-testid="input-first-name"
                       />
                     </FormControl>
@@ -176,12 +175,11 @@ export default function ProfileForm({
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-brand-primary font-medium">Last Name *</FormLabel>
+                    <FormLabel className="text-foreground font-medium">Last Name *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Smith"
-                        className="bg-white border-brand-neutral-light focus:border-brand-primary"
                         data-testid="input-last-name"
                       />
                     </FormControl>
@@ -196,12 +194,11 @@ export default function ProfileForm({
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-brand-primary font-medium">Display Name *</FormLabel>
+                  <FormLabel className="text-foreground font-medium">Display Name *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="How you'd like to be known"
-                      className="bg-white border-brand-neutral-light focus:border-brand-primary"
                       data-testid="input-display-name"
                     />
                   </FormControl>
@@ -213,15 +210,15 @@ export default function ProfileForm({
 
           {/* Optional Fields */}
           <div className="space-y-4">
-            <div className="border-t border-brand-neutral-light pt-4">
-              <h3 className="text-lg font-serif text-brand-primary mb-3">Optional Information</h3>
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-serif text-foreground mb-3">Optional Information</h3>
               
               <FormField
                 control={form.control}
                 name="hometown"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-brand-primary font-medium">
+                    <FormLabel className="text-foreground font-medium">
                       Hometown
                       {placesLoaded && <span className="text-brand-secondary text-xs ml-2">(Start typing for suggestions)</span>}
                     </FormLabel>
@@ -230,12 +227,11 @@ export default function ProfileForm({
                         {...field}
                         ref={hometownInputRef}
                         placeholder="London, Manchester, Birmingham..."
-                        className="bg-white border-brand-neutral-light focus:border-brand-primary"
                         data-testid="input-hometown"
                       />
                     </FormControl>
                     {placesError && (
-                      <p className="text-brand-unavailable text-xs mt-1">
+                      <p className="text-destructive text-xs mt-1">
                         {placesError} - You can still type your hometown manually
                       </p>
                     )}
@@ -249,11 +245,10 @@ export default function ProfileForm({
                 name="instrument"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-brand-primary font-medium">Primary Instrument</FormLabel>
+                    <FormLabel className="text-foreground font-medium">Primary Instrument</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger 
-                          className="bg-white border-brand-neutral-light focus:border-brand-primary"
                           data-testid="select-instrument"
                         >
                           <SelectValue placeholder="Choose your main instrument" />
@@ -293,7 +288,7 @@ export default function ProfileForm({
 
           {/* Help Text */}
           {mode === "create" && (
-            <p className="text-center text-brand-neutral text-sm">
+            <p className="text-center text-muted-foreground text-sm">
               Fields marked with * are required to get started
             </p>
           )}
