@@ -306,20 +306,20 @@ export default function Admin() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-torrist-cream-light p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-neutral-light p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-torrist-green mx-auto mb-4"></div>
-          <p className="text-torrist-green font-sans">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+          <p className="text-brand-primary font-sans">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-torrist-cream-light p-4">
+    <div className="min-h-screen bg-brand-neutral-light p-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="bg-torrist-green text-white p-6">
+          <div className="bg-brand-primary text-white p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-serif">Band Management</h2>
               <button 
@@ -336,8 +336,8 @@ export default function Admin() {
                 onClick={() => setActiveTab('members')}
                 className={`px-4 py-2 rounded-lg font-serif transition-colors ${
                   activeTab === 'members' 
-                    ? 'bg-white text-torrist-green' 
-                    : 'text-white hover:bg-torrist-green-light'
+                    ? 'bg-white text-brand-primary' 
+                    : 'text-white hover:bg-brand-primary-light'
                 }`}
               >
                 <i className="fas fa-users mr-2"></i>
@@ -347,8 +347,8 @@ export default function Admin() {
                 onClick={() => setActiveTab('spotify')}
                 className={`px-4 py-2 rounded-lg font-serif transition-colors ${
                   activeTab === 'spotify' 
-                    ? 'bg-white text-torrist-green' 
-                    : 'text-white hover:bg-torrist-green-light'
+                    ? 'bg-white text-brand-primary' 
+                    : 'text-white hover:bg-brand-primary-light'
                 }`}
               >
                 <i className="fab fa-spotify mr-2"></i>
@@ -363,10 +363,10 @@ export default function Admin() {
               <div>
                 {/* Current Members */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Current Members</h3>
+                  <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Current Members</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {bandMembers.map((member) => (
-                  <div key={member.id} className="bg-torrist-cream rounded-xl p-4 flex items-center justify-between">
+                  <div key={member.id} className="bg-brand-neutral rounded-xl p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div 
                         className="w-12 h-12 rounded-full flex items-center justify-center"
@@ -375,7 +375,7 @@ export default function Admin() {
                         <i className={`fas ${member.icon} text-white`}></i>
                       </div>
                       <div>
-                        <h4 className="font-sans font-semibold text-torrist-green">{member.name}</h4>
+                        <h4 className="font-sans font-semibold text-brand-primary">{member.name}</h4>
                         <p className="text-sm text-gray-600">{member.role}</p>
                       </div>
                     </div>
@@ -410,7 +410,7 @@ export default function Admin() {
             
             {/* Add New Member */}
             <div className="border-t pt-6">
-              <h3 className="text-xl font-sans font-semibold text-torrist-green mb-4">Add New Member</h3>
+              <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Add New Member</h3>
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -420,7 +420,7 @@ export default function Admin() {
                       placeholder="Member name"
                       value={newMember.name}
                       onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
-                      className="focus:border-torrist-green focus:ring-torrist-green"
+                      className="focus:border-brand-primary focus:ring-brand-primary"
                     />
                   </div>
                   <div>
@@ -429,7 +429,7 @@ export default function Admin() {
                       value={newMember.role} 
                       onValueChange={(value) => setNewMember(prev => ({ ...prev, role: value }))}
                     >
-                      <SelectTrigger className="focus:border-torrist-green focus:ring-torrist-green">
+                      <SelectTrigger className="focus:border-brand-primary focus:ring-brand-primary">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
@@ -457,7 +457,7 @@ export default function Admin() {
                         onClick={() => selectIcon(icon, color)}
                         className={`w-12 h-12 rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform ${
                           newMember.icon === icon && newMember.color === color 
-                            ? "ring-2 ring-torrist-green ring-offset-2" 
+                            ? "ring-2 ring-brand-primary ring-offset-2" 
                             : ""
                         }`}
                         style={{ backgroundColor: color }}
@@ -472,7 +472,7 @@ export default function Admin() {
                 <Button 
                   type="submit"
                   disabled={createMemberMutation.isPending}
-                  className="bg-torrist-green hover:bg-torrist-green-dark"
+                  className="bg-brand-primary hover:bg-brand-primary-dark"
                 >
                   {createMemberMutation.isPending ? (
                     <>
@@ -494,7 +494,7 @@ export default function Admin() {
             {activeTab === 'spotify' && (
               <div className="space-y-6">
                 <div className="text-center">
-                  <h3 className="text-2xl font-serif font-bold text-torrist-green mb-2">
+                  <h3 className="text-2xl font-serif font-bold text-brand-primary mb-2">
                     <i className="fab fa-spotify mr-2"></i>
                     Spotify Integration
                   </h3>

@@ -244,7 +244,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-          <div className="bg-torrist-green text-white p-6 rounded-t-2xl">
+          <div className="bg-brand-primary text-white p-6 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-serif">{isEditing ? "Edit Event" : "Add New Event"}</h3>
               <button onClick={onClose} className="text-white hover:text-gray-200">
@@ -263,8 +263,8 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   onClick={() => selectEventType("unavailable")}
                   className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
                     formData.type === "unavailable"
-                      ? "border-torrist-unavailable bg-pink-50"
-                      : "border-gray-200 hover:border-torrist-unavailable hover:bg-pink-50"
+                      ? "border-brand-unavailable bg-pink-50"
+                      : "border-gray-200 hover:border-brand-unavailable hover:bg-pink-50"
                   }`}
                 >
                   <i className={`fas fa-ban text-2xl mb-2 ${
@@ -280,8 +280,8 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   onClick={() => selectEventType("practice")}
                   className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
                     formData.type === "practice"
-                      ? "border-torrist-green bg-torrist-green text-white"
-                      : "border-gray-200 hover:border-torrist-green hover:bg-green-50"
+                      ? "border-brand-primary bg-brand-primary text-white"
+                      : "border-gray-200 hover:border-brand-primary hover:bg-green-50"
                   }`}
                 >
                   <i className={`fas fa-music text-2xl mb-2 ${
@@ -297,15 +297,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   onClick={() => selectEventType("gig")}
                   className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
                     formData.type === "gig"
-                      ? "border-torrist-orange bg-orange-50"
-                      : "border-gray-200 hover:border-torrist-orange hover:bg-orange-50"
+                      ? "border-brand-accent bg-orange-50"
+                      : "border-gray-200 hover:border-brand-accent hover:bg-orange-50"
                   }`}
                 >
                   <i className={`fas fa-star text-2xl mb-2 ${
-                    formData.type === "gig" ? "text-torrist-orange" : "text-gray-400"
+                    formData.type === "gig" ? "text-brand-accent" : "text-gray-400"
                   }`}></i>
                   <div className={`text-sm font-sans font-semibold ${
-                    formData.type === "gig" ? "text-torrist-orange" : "text-gray-700"
+                    formData.type === "gig" ? "text-brand-accent" : "text-gray-700"
                   }`}>Gig</div>
                 </button>
               </div>
@@ -320,7 +320,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   placeholder={`${formData.type === "gig" ? "Gig" : "Practice"} title`}
                   value={formData.title || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="focus:border-torrist-green focus:ring-torrist-green"
+                  className="focus:border-brand-primary focus:ring-brand-primary"
                 />
               </div>
             )}
@@ -339,7 +339,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                     setShowDatePicker(true);
                   }
                 }}
-                className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
+                className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
               >
                 <span>
                   {formData.type === "unavailable" ? (
@@ -368,7 +368,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                         setTimePickerType("start");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
+                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
                     >
                       <span>{formData.startTime ? formatTime(formData.startTime) : "Select time"}</span>
                       <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -382,7 +382,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                         setTimePickerType("end");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-torrist-green focus:border-torrist-green focus:ring-2 focus:ring-torrist-green focus:ring-opacity-20 relative"
+                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
                     >
                       <span>{formData.endTime ? formatTime(formData.endTime) : "Select time"}</span>
                       <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -401,7 +401,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   placeholder="Enter location"
                   value={formData.location || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  className="focus:border-torrist-green focus:ring-torrist-green"
+                  className="focus:border-brand-primary focus:ring-brand-primary"
                 />
               </div>
             )}
@@ -414,7 +414,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                 rows={3}
                 value={formData.notes || ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                className="focus:border-torrist-green focus:ring-torrist-green"
+                className="focus:border-brand-primary focus:ring-brand-primary"
               />
             </div>
 
@@ -503,7 +503,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               <Button
                 type="submit"
                 disabled={createEventMutation.isPending || updateEventMutation.isPending}
-                className="flex-1 bg-torrist-green hover:bg-torrist-green-dark"
+                className="flex-1 bg-brand-primary hover:bg-brand-primary-dark"
               >
                 {(createEventMutation.isPending || updateEventMutation.isPending) ? (
                   <>

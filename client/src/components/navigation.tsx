@@ -22,10 +22,9 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
       {/* Header with clickable logo */}
       <button 
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-        className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight"
+        className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight"
       >
-        <div className="text-xl">The</div>
-        <div className="text-xl">Torrists</div>
+        <div className="text-xl">Bndy</div>
       </button>
 
       {/* Only render drawer elements when open */}
@@ -38,7 +37,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-screen w-60 bg-torrist-green shadow-2xl z-50">
+          <div className="fixed top-0 left-0 h-screen w-60 bg-brand-primary shadow-2xl z-50">
             <div className="p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">

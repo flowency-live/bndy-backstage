@@ -134,7 +134,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-torrist-green text-white p-6 flex items-center justify-between">
+        <div className="bg-brand-primary text-white p-6 flex items-center justify-between">
           <h2 className="text-xl font-serif font-bold">Add Song to Practice List</h2>
           <button 
             onClick={onClose}
@@ -152,12 +152,12 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Start typing to search for songs or artists..."
-              className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-torrist-green text-lg"
+              className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary text-lg"
               autoFocus
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               {isSearching ? (
-                <i className="fas fa-spinner fa-spin text-torrist-green"></i>
+                <i className="fas fa-spinner fa-spin text-brand-primary"></i>
               ) : (
                 <i className="fas fa-search text-gray-400"></i>
               )}
@@ -204,7 +204,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
             <div className="relative">
               {isSearching && (
                 <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-                  <div className="flex items-center space-x-2 text-torrist-green">
+                  <div className="flex items-center space-x-2 text-brand-primary">
                     <i className="fas fa-spinner fa-spin"></i>
                     <span>Updating results...</span>
                   </div>
@@ -230,7 +230,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
 
                   {/* Song info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-torrist-green truncate">{track.name}</h3>
+                    <h3 className="font-semibold text-brand-primary truncate">{track.name}</h3>
                     <p className="text-sm text-gray-600 truncate">{track.artists.map(a => a.name).join(", ")}</p>
                     <p className="text-xs text-gray-500 truncate">{track.album.name}</p>
                   </div>
@@ -242,7 +242,7 @@ export default function AddSongModal({ isOpen, onClose }: AddSongModalProps) {
                       handleAddSong(track);
                     }}
                     disabled={addSongMutation.isPending}
-                    className="px-4 py-2 bg-torrist-orange text-white rounded-lg hover:bg-torrist-orange-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    className="px-4 py-2 bg-brand-accent text-white rounded-lg hover:bg-brand-accent-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                   >
                     <i className="fas fa-plus"></i>
                     <span className="hidden sm:inline">Add</span>

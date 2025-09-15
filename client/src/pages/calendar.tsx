@@ -175,32 +175,31 @@ export default function Calendar() {
   };
 
   return (
-    <div className="min-h-screen bg-torrist-cream-light">
+    <div className="min-h-screen bg-brand-neutral-light">
       {/* Header with integrated navigation */}
-      <header className="bg-white shadow-sm border-b-4 border-torrist-orange">
+      <header className="bg-white shadow-sm border-b-4 border-brand-accent">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="grid grid-cols-3 items-center">
             {/* Left: Clickable band name */}
             <div className="justify-self-start text-left">
               <button 
                 onClick={() => setIsNavigationOpen(!isNavigationOpen)}
-                className="font-serif text-torrist-green hover:text-torrist-green-dark transition-colors leading-tight text-left"
+                className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
               >
-                <div className="text-xl text-left">The</div>
-                <div className="text-xl text-left">Torrists</div>
+                <div className="text-xl text-left">Bndy</div>
               </button>
             </div>
             
             {/* Center: User badge */}
             <div className="justify-self-center">
-              <div className="flex items-center space-x-2 bg-torrist-cream rounded-full px-4 py-2">
+              <div className="flex items-center space-x-2 bg-brand-neutral rounded-full px-4 py-2">
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: currentUser.color }}
                 >
                   <i className={`fas ${currentUser.icon} text-white text-sm`}></i>
                 </div>
-                <span className="font-serif text-torrist-green font-semibold">{currentUser.name}</span>
+                <span className="font-serif text-brand-primary font-semibold">{currentUser.name}</span>
               </div>
             </div>
             
@@ -211,7 +210,7 @@ export default function Calendar() {
                   logout();
                   setLocation("/");
                 }}
-                className="text-torrist-green hover:text-torrist-green-dark"
+                className="text-brand-primary hover:text-brand-primary-dark"
                 title="Switch user"
               >
                 <i className="fas fa-sign-out-alt text-lg"></i>
@@ -231,7 +230,7 @@ export default function Calendar() {
           />
           
           {/* Drawer */}
-          <div className="absolute left-0 top-0 h-full w-60 bg-torrist-green shadow-xl">
+          <div className="absolute left-0 top-0 h-full w-60 bg-brand-primary shadow-xl">
             <div className="p-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-white font-serif text-lg">Menu</h2>
@@ -277,14 +276,14 @@ export default function Calendar() {
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-torrist-orange">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-torrist-orange rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-brand-accent rounded-full flex items-center justify-center">
                   <i className={`fas ${nextEvent.type === "gig" ? "fa-star" : "fa-music"} text-white text-xl`}></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-sans font-semibold text-torrist-green">
+                  <h3 className="text-xl font-sans font-semibold text-brand-primary">
                     Next Up: {nextEvent.title || (nextEvent.type === "gig" ? "Gig" : "Band Practice")}
                   </h3>
                   <p className="text-gray-700">
@@ -309,13 +308,13 @@ export default function Calendar() {
 
       {/* Mobile View Toggle */}
       <div className="md:hidden max-w-7xl mx-auto px-4 py-2">
-        <div className="flex bg-torrist-cream rounded-full p-1">
+        <div className="flex bg-brand-neutral rounded-full p-1">
           <button 
             onClick={() => setViewMode("calendar")}
             className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
               viewMode === "calendar" 
-                ? "bg-torrist-green text-white" 
-                : "text-torrist-green"
+                ? "bg-brand-primary text-white" 
+                : "text-brand-primary"
             }`}
           >
             <i className="fas fa-calendar mr-1"></i>Calendar
@@ -324,8 +323,8 @@ export default function Calendar() {
             onClick={() => setViewMode("agenda")}
             className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
               viewMode === "agenda" 
-                ? "bg-torrist-green text-white" 
-                : "text-torrist-green"
+                ? "bg-brand-primary text-white" 
+                : "text-brand-primary"
             }`}
           >
             <i className="fas fa-list mr-1"></i>Agenda
@@ -335,7 +334,7 @@ export default function Calendar() {
 
       {/* Calendar Navigation */}
       <div className="bg-white">
-        <div className="bg-torrist-green-light px-4 py-3">
+        <div className="bg-brand-primary-light px-4 py-3">
           <div className="flex items-center justify-between">
             <button 
               onClick={navigateToPreviousMonth}
@@ -410,7 +409,7 @@ export default function Calendar() {
                     <div className="space-y-0.5 relative">
                       {/* Band events that start today - with spanning */}
                       {bandEvents.slice(0, 3).map((event, idx) => {
-                        const eventColor = event.type === "gig" ? "bg-torrist-orange" : "bg-torrist-green";
+                        const eventColor = event.type === "gig" ? "bg-brand-accent" : "bg-brand-primary";
                         const timeStr = event.startTime ? event.startTime.substring(0, 5) : "";
                         const spanDays = getEventSpanDays(event);
                         const cellsAvailable = getRemainingDaysInWeek(dayIndex);
@@ -565,9 +564,9 @@ export default function Calendar() {
                     const eventMember = bandMembers.find(member => member.id === event.memberId);
                     return (
                       <div key={event.id} className="bg-gray-50 rounded-xl p-4 border-l-4" style={{
-                        borderLeftColor: event.type === "gig" ? "var(--torrist-orange)" : 
-                                        event.type === "practice" ? "var(--torrist-green)" : 
-                                        "var(--torrist-unavailable)"
+                        borderLeftColor: event.type === "gig" ? "var(--brand-accent)" : 
+                                        event.type === "practice" ? "var(--brand-primary)" : 
+                                        "var(--brand-unavailable)"
                       }}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -575,9 +574,9 @@ export default function Calendar() {
                               <div 
                                 className="w-8 h-8 rounded-full flex items-center justify-center"
                                 style={{ 
-                                  backgroundColor: event.type === "gig" ? "var(--torrist-orange)" : 
-                                                 event.type === "practice" ? "var(--torrist-green)" : 
-                                                 "var(--torrist-unavailable)"
+                                  backgroundColor: event.type === "gig" ? "var(--brand-accent)" : 
+                                                 event.type === "practice" ? "var(--brand-primary)" : 
+                                                 "var(--brand-unavailable)"
                                 }}
                               >
                                 <i className={`fas ${
@@ -650,7 +649,7 @@ export default function Calendar() {
             className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-left"
           >
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-torrist-unavailable rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-brand-unavailable rounded-full flex items-center justify-center">
                 <i className="fas fa-ban text-gray-600 text-xl"></i>
               </div>
               <div>
@@ -665,7 +664,7 @@ export default function Calendar() {
             className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-left"
           >
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-torrist-green rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center">
                 <i className="fas fa-music text-white text-xl"></i>
               </div>
               <div>
@@ -680,7 +679,7 @@ export default function Calendar() {
             className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-left"
           >
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-torrist-orange rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-brand-accent rounded-full flex items-center justify-center">
                 <i className="fas fa-star text-white text-xl"></i>
               </div>
               <div>

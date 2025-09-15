@@ -92,7 +92,7 @@ export default function DateRangePickerModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-torrist-green font-serif">
+          <DialogTitle className="text-brand-primary font-serif">
             Select Unavailable Dates
           </DialogTitle>
         </DialogHeader>
@@ -126,10 +126,10 @@ export default function DateRangePickerModal({
               }
             }}
             modifiersStyles={{
-              selected: { backgroundColor: "var(--torrist-unavailable)", color: "white" },
-              range_start: { backgroundColor: "var(--torrist-unavailable)", color: "white", borderRadius: "6px 0 0 6px" },
-              range_end: { backgroundColor: "var(--torrist-unavailable)", color: "white", borderRadius: "0 6px 6px 0" },
-              range_middle: { backgroundColor: "var(--torrist-unavailable-light)", color: "var(--torrist-unavailable)" }
+              selected: { backgroundColor: "var(--brand-unavailable)", color: "white" },
+              range_start: { backgroundColor: "var(--brand-unavailable)", color: "white", borderRadius: "6px 0 0 6px" },
+              range_end: { backgroundColor: "var(--brand-unavailable)", color: "white", borderRadius: "0 6px 6px 0" },
+              range_middle: { backgroundColor: "var(--brand-unavailable-light)", color: "var(--brand-unavailable)" }
             }}
             className="rounded-md border"
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
@@ -142,7 +142,7 @@ export default function DateRangePickerModal({
             <Button 
               onClick={handleConfirm}
               disabled={!startDate}
-              className="bg-torrist-unavailable hover:bg-torrist-unavailable-dark text-white"
+              className="bg-brand-unavailable hover:bg-brand-unavailable-dark text-white"
             >
               Confirm Dates
             </Button>

@@ -103,7 +103,7 @@ export default function Login() {
       if (import.meta.env.DEV && otp === '123456') {
         toast({
           title: "Signed in successfully!",
-          description: "Welcome to The Torrists app",
+          description: "Welcome to Bndy",
           variant: "default"
         })
         setLocation('/welcome')
@@ -118,7 +118,7 @@ export default function Login() {
 
       toast({
         title: "Signed in successfully!",
-        description: "Welcome to The Torrists app",
+        description: "Welcome to Bndy",
         variant: "default"
       })
       setLocation('/welcome')
@@ -139,13 +139,13 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-torrist-green to-torrist-green-light p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
         {/* Band logo */}
         <div className="mb-8">
           <img 
             src={torristsLogoPath} 
-            alt="The Torrists Band Logo" 
+            alt="Bndy Platform Logo" 
             className="w-48 h-48 md:w-56 md:h-56 object-cover rounded-2xl shadow-2xl mx-auto"
           />
         </div>
@@ -154,7 +154,7 @@ export default function Login() {
         <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
           {step === 'phone' ? (
             <>
-              <h2 className="text-2xl font-serif text-torrist-green mb-2">Welcome Back</h2>
+              <h2 className="text-2xl font-serif text-brand-primary mb-2">Welcome Back</h2>
               <p className="text-gray-600 font-sans mb-6">Enter your phone number to sign in</p>
               
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
@@ -173,7 +173,7 @@ export default function Login() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-torrist-orange hover:bg-torrist-orange-light text-white font-sans py-3"
+                  className="w-full bg-brand-accent hover:bg-brand-accent-light text-white font-sans py-3"
                   disabled={loading}
                   data-testid="button-send-code"
                 >
@@ -190,7 +190,7 @@ export default function Login() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-serif text-torrist-green mb-2">Enter Code</h2>
+              <h2 className="text-2xl font-serif text-brand-primary mb-2">Enter Code</h2>
               <p className="text-gray-600 font-sans mb-6">
                 We sent a code to {phone}
               </p>
@@ -211,7 +211,7 @@ export default function Login() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-torrist-orange hover:bg-torrist-orange-light text-white font-sans py-3"
+                  className="w-full bg-brand-accent hover:bg-brand-accent-light text-white font-sans py-3"
                   disabled={loading}
                   data-testid="button-verify-code"
                 >
@@ -229,7 +229,7 @@ export default function Login() {
                   type="button" 
                   variant="ghost" 
                   onClick={handleBack}
-                  className="w-full text-torrist-green hover:text-torrist-green-dark font-sans"
+                  className="w-full text-brand-primary hover:text-brand-primary-dark font-sans"
                   disabled={loading}
                   data-testid="button-back"
                 >

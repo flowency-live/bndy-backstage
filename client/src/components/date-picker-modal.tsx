@@ -50,7 +50,7 @@ export default function DatePickerModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-sm w-full animate-slide-up">
-        <div className="bg-torrist-green-light text-white p-4 rounded-t-2xl">
+        <div className="bg-brand-primary-light text-white p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-serif">{title}</h3>
             <button onClick={onClose} className="text-white hover:text-gray-200">
@@ -65,16 +65,16 @@ export default function DatePickerModal({
             <div className="flex items-center justify-between mb-4">
               <button 
                 onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="p-2 text-torrist-green hover:bg-torrist-cream rounded"
+                className="p-2 text-brand-primary hover:bg-brand-neutral rounded"
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <span className="text-lg font-sans font-semibold text-torrist-green">
+              <span className="text-lg font-sans font-semibold text-brand-primary">
                 {format(currentDate, "MMMM yyyy")}
               </span>
               <button 
                 onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                className="p-2 text-torrist-green hover:bg-torrist-cream rounded"
+                className="p-2 text-brand-primary hover:bg-brand-neutral rounded"
               >
                 <i className="fas fa-chevron-right"></i>
               </button>
@@ -100,12 +100,12 @@ export default function DatePickerModal({
                 const isTodayDate = isToday(day);
                 const isSelected = tempSelectedDate === dateStr;
 
-                let buttonClasses = "p-2 text-sm rounded hover:bg-torrist-cream transition-colors ";
+                let buttonClasses = "p-2 text-sm rounded hover:bg-brand-neutral transition-colors ";
                 
                 if (!isCurrentMonth) {
                   buttonClasses += "text-gray-300 ";
                 } else if (isSelected) {
-                  buttonClasses += "bg-torrist-green text-white ";
+                  buttonClasses += "bg-brand-primary text-white ";
                 } else if (isTodayDate) {
                   buttonClasses += "bg-blue-100 text-blue-700 font-semibold ";
                 } else {
@@ -138,7 +138,7 @@ export default function DatePickerModal({
             <Button 
               onClick={handleConfirm} 
               disabled={!tempSelectedDate}
-              className="flex-1 bg-torrist-green hover:bg-torrist-green-dark"
+              className="flex-1 bg-brand-primary hover:bg-brand-primary-dark"
             >
               Select
             </Button>

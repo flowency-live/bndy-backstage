@@ -354,7 +354,7 @@ export default function SpotifySettings({ isOpen, onClose }: SpotifySettingsProp
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={importFromPlaylist}
-                  className="flex-1 px-4 py-2 bg-torrist-green text-white rounded-lg hover:bg-torrist-green-dark font-serif flex items-center justify-center space-x-2"
+                  className="flex-1 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark font-serif flex items-center justify-center space-x-2"
                 >
                   <i className="fas fa-download"></i>
                   <span>Import from "{selectedPlaylist.name}"</span>

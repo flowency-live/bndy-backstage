@@ -20,7 +20,7 @@ export default function Welcome() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-torrist-green to-torrist-green-light p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white font-sans">Loading band members...</p>
@@ -30,13 +30,13 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-torrist-green to-torrist-green-light p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in">
         {/* Band logo */}
         <div className="mb-8">
           <img 
             src={torristsLogoPath} 
-            alt="The Torrists Band Logo" 
+            alt="Bndy Platform Logo" 
             className="w-72 h-72 md:w-80 md:h-80 object-cover rounded-2xl shadow-2xl mx-auto"
           />
         </div>
@@ -57,7 +57,7 @@ export default function Welcome() {
                   <i className={`fas ${member.icon} text-white text-sm`}></i>
                 </div>
                 <div className="text-left min-w-0 flex-1">
-                  <h3 className="text-sm font-sans font-semibold text-torrist-green leading-tight">{member.name}</h3>
+                  <h3 className="text-sm font-sans font-semibold text-brand-primary leading-tight">{member.name}</h3>
                   <p className="text-xs text-gray-600 leading-tight">{member.role}</p>
                 </div>
               </div>

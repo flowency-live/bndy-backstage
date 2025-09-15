@@ -22,20 +22,20 @@ export default function PersonaSelection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-torrist-cream to-torrist-cream-light p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-neutral to-brand-neutral-light p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-torrist-green mx-auto mb-4"></div>
-          <p className="text-torrist-green font-sans">Loading band members...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+          <p className="text-brand-primary font-sans">Loading band members...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-torrist-cream to-torrist-cream-light p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-brand-neutral to-brand-neutral-light p-4 flex flex-col">
       <div className="max-w-2xl mx-auto flex-1 flex flex-col justify-center">
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-serif text-torrist-green mb-2">Who's checking in?</h2>
+          <h2 className="text-3xl font-serif text-brand-primary mb-2">Who's checking in?</h2>
           <p className="text-gray-600 font-sans">Select your band member profile</p>
         </div>
 
@@ -53,7 +53,7 @@ export default function PersonaSelection() {
                 >
                   <i className={`fas ${member.icon} text-white text-lg`}></i>
                 </div>
-                <h3 className="text-lg font-sans font-semibold text-torrist-green mb-1">{member.name}</h3>
+                <h3 className="text-lg font-sans font-semibold text-brand-primary mb-1">{member.name}</h3>
                 <p className="text-sm text-gray-600">{member.role}</p>
                 <div className="mt-2 flex justify-center">
                   <div 
@@ -69,7 +69,7 @@ export default function PersonaSelection() {
         <div className="text-center">
           <button 
             onClick={() => setLocation("/admin")}
-            className="text-torrist-green hover:text-torrist-green-dark font-sans underline text-sm"
+            className="text-brand-primary hover:text-brand-primary-dark font-sans underline text-sm"
           >
             Admin: Manage Band Members
           </button>
