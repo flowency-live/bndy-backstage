@@ -124,7 +124,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="mb-4" data-testid="logo-container">
@@ -137,37 +137,38 @@ export default function Onboarding() {
             </div>
           </div>
           <h1 className="text-3xl font-serif text-white mb-2">Create Your Band</h1>
-          <p className="text-white/80">Set up your band and get started organising</p>
+          <p className="text-white/90 text-base">Set up your band and get started organising gigs, rehearsals & music</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-card/80 backdrop-blur-sm rounded-xl p-6 shadow-lg space-y-6">
-          {/* Band Information */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Band Information</h2>
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl border-0">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Band Information */}
+          <div className="space-y-5">
+            <h2 className="text-xl font-semibold text-brand-primary mb-1">Band Information</h2>
             
             <div>
-              <Label htmlFor="bandName" className="text-foreground">Band Name *</Label>
+              <Label htmlFor="bandName" className="text-brand-primary font-medium mb-1 block">Band Name *</Label>
               <Input
                 id="bandName"
                 type="text"
                 value={formData.bandName}
                 onChange={(e) => setFormData(prev => ({ ...prev, bandName: e.target.value }))}
                 placeholder="Enter your band name"
-                className="mt-1"
+                className="mt-2 bg-gray-50 border-gray-200 focus:border-brand-accent focus:ring-brand-accent text-gray-900"
                 data-testid="input-band-name"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="bandDescription" className="text-foreground">Description (Optional)</Label>
+              <Label htmlFor="bandDescription" className="text-brand-primary font-medium mb-1 block">Description (Optional)</Label>
               <Textarea
                 id="bandDescription"
                 value={formData.bandDescription}
                 onChange={(e) => setFormData(prev => ({ ...prev, bandDescription: e.target.value }))}
                 placeholder="Tell us about your band..."
-                className="mt-1"
+                className="mt-2 bg-gray-50 border-gray-200 focus:border-brand-accent focus:ring-brand-accent resize-none text-gray-900"
                 data-testid="input-band-description"
                 rows={3}
               />
@@ -175,49 +176,49 @@ export default function Onboarding() {
           </div>
 
           {/* Your Profile in the Band */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Your Profile</h2>
+          <div className="space-y-5">
+            <h2 className="text-xl font-semibold text-brand-primary mb-1">Your Profile</h2>
             
             <div>
-              <Label htmlFor="displayName" className="text-foreground">Display Name *</Label>
+              <Label htmlFor="displayName" className="text-brand-primary font-medium mb-1 block">Display Name *</Label>
               <Input
                 id="displayName"
                 type="text"
                 value={formData.displayName}
                 onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
                 placeholder="How you'll appear in the band"
-                className="mt-1"
+                className="mt-2 bg-gray-50 border-gray-200 focus:border-brand-accent focus:ring-brand-accent text-gray-900"
                 data-testid="input-display-name"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="role" className="text-foreground">Role</Label>
+              <Label htmlFor="role" className="text-brand-primary font-medium mb-1 block">Role</Label>
               <Input
                 id="role"
                 type="text"
                 value={formData.role}
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
                 placeholder="e.g., Lead Vocalist, Guitarist"
-                className="mt-1"
+                className="mt-2 bg-gray-50 border-gray-200 focus:border-brand-accent focus:ring-brand-accent text-gray-900"
                 data-testid="input-role"
               />
             </div>
 
             {/* Icon Selection */}
             <div>
-              <Label className="text-foreground">Choose Your Icon</Label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
+              <Label className="text-brand-primary font-medium mb-2 block">Choose Your Icon</Label>
+              <div className="grid grid-cols-4 gap-3 mt-3">
                 {ICONS.map((iconData) => (
                   <button
                     key={iconData.icon}
                     type="button"
                     onClick={() => handleIconSelect(iconData)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
+                    className={`p-3 rounded-lg border-2 transition-all hover:shadow-md hover:scale-105 ${
                       formData.icon === iconData.icon
-                        ? 'border-brand-primary bg-brand-primary/10'
-                        : 'border-border hover:border-border'
+                        ? 'border-brand-accent bg-brand-accent/10 shadow-md scale-105'
+                        : 'border-gray-200 hover:border-brand-accent/50 hover:bg-gray-50'
                     }`}
                     data-testid={`button-icon-${iconData.icon}`}
                   >
@@ -227,7 +228,7 @@ export default function Onboarding() {
                     >
                       <i className={`fas ${iconData.icon} text-white text-sm`}></i>
                     </div>
-                    <p className="text-xs mt-1 text-muted-foreground">{iconData.label}</p>
+                    <p className="text-xs mt-1 text-brand-neutral truncate">{iconData.label}</p>
                   </button>
                 ))}
               </div>
@@ -235,44 +236,46 @@ export default function Onboarding() {
 
             {/* Color Preview */}
             <div className="flex items-center gap-3">
-              <Label className="text-foreground">Your Color:</Label>
+              <Label className="text-brand-primary font-medium">Your Color:</Label>
               <div 
-                className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                className="w-8 h-8 rounded-full border-2 border-gray-200 shadow-sm"
                 style={{ backgroundColor: formData.color }}
               ></div>
-              <span className="text-sm text-muted-foreground">{formData.color}</span>
+              <span className="text-sm text-brand-neutral font-mono">{formData.color}</span>
             </div>
           </div>
 
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90"
+            className="w-full bg-brand-accent hover:bg-brand-accent-light text-white py-3 text-base font-medium shadow-sm"
             disabled={createBandMutation.isPending}
             data-testid="button-create-band"
           >
             {createBandMutation.isPending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Creating Band...
+                Creating Your Band...
               </>
             ) : (
-              "Create Band"
+              "Create Band & Continue"
             )}
           </Button>
 
+          </form>
+
           {/* Back Link */}
-          <div className="text-center">
+          <div className="text-center mt-6">
             <button
               type="button"
               onClick={() => setLocation("/")}
-              className="text-muted-foreground hover:text-foreground text-sm underline"
+              className="text-brand-neutral hover:text-brand-primary text-sm underline transition-colors font-medium"
               data-testid="button-back"
             >
-              Back to Band Selection
+              ← Back to Band Selection
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
