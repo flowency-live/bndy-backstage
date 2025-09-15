@@ -148,7 +148,6 @@ export default function Login() {
           <div className="w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
             <BndyLogo 
               className="w-32 h-32 md:w-40 md:h-40"
-              color="white"
               holeColor="rgb(51 65 85)" 
             />
           </div>
@@ -165,7 +164,7 @@ export default function Login() {
                 <div>
                   <Input
                     type="tel"
-                    placeholder="(555) 123-4567"
+                    placeholder="07123 456789"
                     value={phone}
                     onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
                     maxLength={14}
