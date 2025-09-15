@@ -1,8 +1,8 @@
-# The Torrists Band Calendar
+# bndy - Multi-Tenant Band Calendar Platform
 
 ## Overview
 
-The Torrists Band Calendar is a comprehensive web application designed for managing band practices, gigs, member availability, and song practice lists. It provides a mobile-optimized interface where band members can select their persona, view schedules, manage events with conflict detection capabilities, and collaborate on song practice with readiness tracking. The application features a vintage rock band aesthetic with custom branding, swipe gesture navigation for mobile devices, Spotify API integration for song search, and is built as a full-stack React application with Express backend and PostgreSQL database.
+bndy is a comprehensive multi-tenant web platform designed for band calendar management with real phone-based authentication and secure band-scoped data isolation. The platform enables individual bands to manage practices, gigs, member availability, and song practice lists through a mobile-optimized interface with shared calendar functionality, conflict detection capabilities, and collaborative song practice with readiness tracking. The application features a professional dark slate blue aesthetic with orange and cyan highlights, swipe gesture navigation for mobile devices, Spotify API integration for song search, and is built as a full-stack React application with Express backend and PostgreSQL database.
 
 ## User Preferences
 
@@ -44,12 +44,12 @@ The application uses a dual-approach data storage strategy:
 The schema includes band members (with roles, icons, and colors), events (practices, gigs, unavailable periods), songs (with Spotify integration), song readiness tracking (red/amber/green status per member), and song veto system with proper relationships and constraints.
 
 ### Authentication and Authorization
-Currently implements a simplified persona-based authentication system:
+Implements production-ready multi-tenant authentication system:
 
-- **Persona Selection**: Users select from predefined band member profiles
-- **Session Management**: Client-side user context management
-- **No Traditional Auth**: Simplified approach suitable for trusted band member usage
-- **Future Extensibility**: Architecture supports adding proper authentication mechanisms
+- **Supabase Authentication**: Phone-based OTP authentication with JWT tokens
+- **Band-Scoped Authorization**: All API endpoints enforce band membership verification
+- **Secure Session Management**: Server-side JWT validation with proper middleware
+- **Multi-Tenant Data Isolation**: Complete separation of band data with authorization checks
 
 ### External Dependencies
 The application integrates several key external services and libraries:
@@ -67,8 +67,16 @@ The application integrates several key external services and libraries:
 - **Song Management System**: Complete Spotify-integrated song practice list with search, add, and readiness tracking
 - **Readiness Tracking**: Red/Amber/Green status system for each band member per song
 - **Song Veto System**: Members can mark songs with poo emoji to indicate rejection
-- **Mobile Navigation**: Slide-out drawer navigation accessible via "The Torrists" logo click
+- **Mobile Navigation**: Slide-out drawer navigation accessible via bndy logo click
 - **Smart Song Sorting**: Practice list automatically sorts by readiness level and pushes vetoed songs to bottom
 - **Spotify Integration**: Real-time song search with album artwork, artist info, and direct Spotify links
 
-The application is designed to be mobile-first with responsive design patterns and uses CSS custom properties for consistent theming across the vintage rock band aesthetic.
+### Recent Major Features (September 2025)
+- **Complete Authentication System**: Supabase phone OTP authentication with real user accounts
+- **Multi-Tenant Architecture**: Secure band-scoped data isolation and authorization
+- **Band Creation & Management**: Complete onboarding flow with band switching capabilities
+- **Professional Branding**: Dark slate blue theme with orange/cyan highlights and bndy logo integration
+- **BandGate Routing**: Smart routing system for 0/1/multiple band scenarios
+- **Magic Link Invitations**: WhatsApp-shareable band invitations (in development)
+
+The application is designed to be mobile-first with responsive design patterns and uses CSS custom properties for consistent theming across the professional bndy platform aesthetic.
