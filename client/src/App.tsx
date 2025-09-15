@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth.tsx";
 import { UserProvider } from "@/lib/user-context";
 import BandGate from "@/components/band-gate";
+import Landing from "@/pages/landing";
+import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Admin from "@/pages/admin";
@@ -16,7 +18,9 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
+      <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
+      <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/calendar">
         <BandGate>
@@ -36,13 +40,6 @@ function Router() {
         <BandGate>
           {({ bandId, membership }) => (
             <Admin bandId={bandId} membership={membership} />
-          )}
-        </BandGate>
-      </Route>
-      <Route path="/">
-        <BandGate>
-          {({ bandId, membership }) => (
-            <Calendar bandId={bandId} membership={membership} />
           )}
         </BandGate>
       </Route>

@@ -1,4 +1,4 @@
-// Spotify sync utility for real-time bidirectional synchronization
+// Spotify sync utility for real-time bidirectional synchronisation
 interface SpotifySettings {
   playlistId: string | null;
   accessToken: string | null;

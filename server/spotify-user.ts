@@ -56,6 +56,24 @@ interface SpotifyTokens {
   scope: string;
 }
 
+// Temporary storage for OAuth states (in production, use Redis or similar)
+interface OAuthState {
+  timestamp: number;
+  userId?: string; // Optional - can associate with user if needed
+}
+
+const oauthStates = new Map<string, OAuthState>();
+
+// Clean up expired states every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [state, data] of oauthStates.entries()) {
+    if (now - data.timestamp > 600000) { // 10 minutes
+      oauthStates.delete(state);
+    }
+  }
+}, 600000);
+
 interface SpotifyUser {
   id: string;
   display_name: string;
@@ -101,7 +119,7 @@ class SpotifyUserService {
   }
 
   // Generate authorization URL for user login
-  getAuthorizationUrl(): string {
+  getAuthorizationUrl(userId?: string): string {
     const scopes = [
       'user-read-private',
       'user-read-email',
@@ -111,15 +129,42 @@ class SpotifyUserService {
       'playlist-modify-private'
     ].join(' ');
 
+    // Generate cryptographically secure random state
+    const state = require('crypto').randomBytes(32).toString('hex');
+    
+    // Store state with timestamp for validation
+    oauthStates.set(state, {
+      timestamp: Date.now(),
+      userId: userId
+    });
+
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.clientId,
       scope: scopes,
       redirect_uri: this.redirectUri,
-      state: 'torrists-band-app' // CSRF protection
+      state: state // CSRF protection with random state
     });
 
     return `https://accounts.spotify.com/authorize?${params}`;
+  }
+
+  // Validate OAuth state parameter
+  validateState(state: string): boolean {
+    const stateData = oauthStates.get(state);
+    if (!stateData) {
+      return false;
+    }
+
+    // Check if state is expired (10 minutes)
+    if (Date.now() - stateData.timestamp > 600000) {
+      oauthStates.delete(state);
+      return false;
+    }
+
+    // State is valid - remove it to prevent reuse
+    oauthStates.delete(state);
+    return true;
   }
 
   // Exchange authorization code for access token

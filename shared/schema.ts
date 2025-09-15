@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
+  platformAdmin: boolean("platform_admin").default(false), // Platform administrator role
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });

@@ -601,7 +601,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                     Spotify Integration
                   </h3>
                   <p className="text-gray-600">
-                    Connect your Spotify account for real-time playlist synchronization
+                    Connect your Spotify account for real-time playlist synchronisation
                   </p>
                 </div>
               
@@ -698,7 +698,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                           <span className="font-medium">Not connected to Spotify</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          Connect your Spotify account for real-time playlist synchronization with your practice list.
+                          Connect your Spotify account for real-time playlist synchronisation with your practice list.
                         </p>
                       </div>
                       <button

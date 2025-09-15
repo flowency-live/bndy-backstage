@@ -11,7 +11,7 @@ import {
   users, userBands, bands
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 
 export interface IStorage {
   // Users - no band scoping needed
@@ -28,6 +28,7 @@ export interface IStorage {
   getBand(bandId: string): Promise<Band | undefined>;
   updateBand(bandId: string, updates: Partial<InsertBand>): Promise<Band | undefined>;
   deleteBand(bandId: string): Promise<boolean>;
+  getTotalBandsCount(): Promise<number>;
   
   // Band membership management
   addUserToBand(userId: string, bandId: string, membership: Omit<InsertUserBand, 'userId' | 'bandId'>): Promise<UserBand>;
@@ -90,6 +91,10 @@ export interface IStorage {
   getSongVetos(bandId: string, songId: string): Promise<SongVeto[]>;
   addSongVeto(bandId: string, data: Omit<InsertSongVeto, 'membershipId'> & { membershipId: string }): Promise<SongVeto>;
   removeSongVeto(bandId: string, songId: string, membershipId: string): Promise<boolean>;
+  
+  // Invite token validation
+  validateInviteToken(token: string): Promise<{ isValid: boolean; invitation?: any; error?: string }>;
+  acceptInviteToken(token: string, userId: string, userDisplayName: string): Promise<{ success: boolean; bandId?: string; error?: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -801,6 +806,12 @@ export class DatabaseStorage implements IStorage {
         eq(songVetos.membershipId, membershipId)
       ));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Platform Admin Methods
+  async getTotalBandsCount(): Promise<number> {
+    const [{ count: totalBands }] = await db.select({ count: count() }).from(bands);
+    return totalBands;
   }
 
 }

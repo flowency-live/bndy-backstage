@@ -76,14 +76,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { name, description } = req.body;
-      const band = await storage.createBand({
-        name,
-        description,
-      }, req.user.dbUser.id);
+      // Check if band creation is allowed
+      const totalBandsCount = await storage.getTotalBandsCount();
+      const isPlatformAdmin = req.user.dbUser.platformAdmin === true;
       
-      res.status(201).json(band);
+      // Enforce invite-only concept: only platform admins can create bands until we have 10 bands
+      if (totalBandsCount >= 10 || isPlatformAdmin) {
+        // Band creation allowed
+        const { name, description } = req.body;
+        const band = await storage.createBand({
+          name,
+          description,
+        }, req.user.dbUser.id);
+        
+        res.status(201).json(band);
+      } else {
+        return res.status(403).json({ 
+          message: "Band creation is currently restricted. Please contact an administrator or use an invite link to join an existing band.",
+          reason: "invite_only_period"
+        });
+      }
     } catch (error) {
+      console.error("Failed to create band:", error);
       res.status(500).json({ message: "Failed to create band" });
     }
   });
@@ -265,8 +279,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Authorization code required" });
       }
 
-      if (state !== 'torrists-band-app') {
-        return res.status(400).json({ message: "Invalid state parameter" });
+      if (!state || !spotifyUserService.validateState(state as string)) {
+        return res.status(400).json({ message: "Invalid or expired state parameter" });
       }
 
       const tokens = await spotifyUserService.getAccessToken(code as string);

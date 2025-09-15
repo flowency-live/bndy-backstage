@@ -133,7 +133,7 @@ export default function Onboarding() {
             </div>
           </div>
           <h1 className="text-3xl font-serif text-white mb-2">Create Your Band</h1>
-          <p className="text-white/80">Set up your band and get started organizing</p>
+          <p className="text-white/80">Set up your band and get started organising</p>
         </div>
 
         {/* Form */}
