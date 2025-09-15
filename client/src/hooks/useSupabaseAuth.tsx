@@ -37,24 +37,94 @@ function useSupabaseAuthHook() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Check for development tokens and create mock sessions
+  const checkDevSession = () => {
+    if (import.meta.env.DEV) {
+      const devToken = localStorage.getItem('dev-auth-token')
+      if (devToken) {
+        // Create a mock session for development
+        const mockSession = {
+          access_token: devToken,
+          refresh_token: 'dev-refresh-token',
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user: {
+            id: devToken.includes('GOD_MODE') ? 'dev-god-mode-user' : `dev-user-${Date.now()}`,
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            phone: devToken.includes('GOD_MODE') ? '+447758240770' : '+44000000000',
+            email: undefined,
+            app_metadata: { provider: 'phone', providers: ['phone'] },
+            user_metadata: { phone: devToken.includes('GOD_MODE') ? '+447758240770' : '+44000000000' }
+          }
+        } as Session
+        
+        return { session: mockSession, user: mockSession.user }
+      }
+    }
+    return null
+  }
+
   useEffect(() => {
-    // Get initial session
-    authHelpers.getSession().then(({ session }) => {
+    const initAuth = async () => {
+      // First check for dev session
+      const devSession = checkDevSession()
+      if (devSession) {
+        setSession(devSession.session)
+        setUser(devSession.user)
+        setLoading(false)
+        return
+      }
+
+      // Otherwise get regular Supabase session
+      const { session } = await authHelpers.getSession()
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
-    })
+    }
+
+    initAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = authHelpers.onAuthStateChange(
       (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
+        // Check for dev session first
+        const devSession = checkDevSession()
+        if (devSession) {
+          setSession(devSession.session)
+          setUser(devSession.user)
+        } else {
+          setSession(session)
+          setUser(session?.user ?? null)
+        }
         setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Listen for dev token changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dev-auth-token') {
+        const devSession = checkDevSession()
+        if (devSession) {
+          setSession(devSession.session)
+          setUser(devSession.user)
+        } else if (!e.newValue) {
+          // Dev token removed, check regular auth
+          authHelpers.getSession().then(({ session }) => {
+            setSession(session)
+            setUser(session?.user ?? null)
+          })
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const sendOTP = async (phone: string) => {
