@@ -184,24 +184,24 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-slate-900 p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
         {/* Band logo */}
         <div className="mb-8" data-testid="logo-container">
           <div className="w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
             <BndyLogo 
               className="w-32 h-32 md:w-40 md:h-40"
-              holeColor="rgb(51 65 85)" 
+              holeColor="rgb(30 41 59)" 
             />
           </div>
         </div>
 
         {/* Auth form */}
-        <div className="bg-brand-primary/20 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/10">
+        <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-600">
           {step === 'phone' ? (
             <>
               <h2 className="text-2xl font-serif text-white mb-2">Welcome Back</h2>
-              <p className="text-white/80 font-sans mb-6">Enter your phone number to sign in</p>
+              <p className="text-slate-400 font-sans mb-6">Enter your phone number to sign in</p>
               
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
                 <div>
@@ -237,7 +237,7 @@ export default function Login() {
           ) : (
             <>
               <h2 className="text-2xl font-serif text-white mb-2">Enter Code</h2>
-              <p className="text-white/80 font-sans mb-6">
+              <p className="text-slate-400 font-sans mb-6">
                 We sent a code to {phone}
               </p>
               
@@ -275,7 +275,7 @@ export default function Login() {
                   type="button" 
                   variant="ghost" 
                   onClick={handleBack}
-                  className="w-full text-white/90 hover:text-white font-sans"
+                  className="w-full text-slate-400 hover:text-white font-sans"
                   disabled={loading}
                   data-testid="button-back"
                 >
@@ -288,7 +288,7 @@ export default function Login() {
 
         {/* Development info */}
         {import.meta.env.DEV && (
-          <div className="mt-4 text-xs text-white/80 bg-white/10 rounded p-2">
+          <div className="mt-4 text-xs text-slate-400 bg-slate-800 rounded p-2">
             Development mode: Use code <strong>123456</strong> to sign in
           </div>
         )}
