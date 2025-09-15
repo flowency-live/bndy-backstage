@@ -26,20 +26,20 @@ export default function Landing() {
         {/* Strapline - Responsive Layout */}
         <div className="max-w-2xl mx-auto mb-12">
           {/* Desktop: Single line */}
-          <h1 className="hidden sm:block text-4xl lg:text-6xl font-bold mb-6 leading-tight" data-testid="strapline-desktop">
+          <h1 className="hidden md:block text-4xl lg:text-6xl font-bold mb-6 leading-tight" data-testid="strapline-desktop">
             <span className="text-white">Keeping </span>
             <span className="text-cyan-400">LIVE </span>
             <span className="text-white">Music </span>
             <span className="text-orange-500">ALIVE</span>
           </h1>
           
-          {/* Mobile: Two lines with perfect LIVE/ALIVE alignment */}
-          <div className="block sm:hidden font-bold mb-6 text-3xl leading-tight" data-testid="strapline-mobile">
-            <div className="grid grid-cols-[max-content_max-content] gap-x-3 justify-center mb-1">
+          {/* Mobile/Narrow: Two lines with right-aligned E endings */}
+          <div className="block md:hidden font-bold mb-6 text-3xl leading-tight" data-testid="strapline-mobile">
+            <div className="flex justify-between items-center mb-1">
               <span className="text-white">Keeping</span>
               <span className="text-cyan-400">LIVE</span>
             </div>
-            <div className="grid grid-cols-[max-content_max-content] gap-x-3 justify-center">
+            <div className="flex justify-between items-center">
               <span className="text-white">Music</span>
               <span className="text-orange-500">ALIVE</span>
             </div>
