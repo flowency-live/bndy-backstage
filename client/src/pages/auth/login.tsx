@@ -53,7 +53,7 @@ export default function Login() {
       
       if (error) {
         // Development mode - skip SMS and go to verify step
-        if (error.message?.includes('SMS') || process.env.NODE_ENV === 'development') {
+        if (error.message?.includes('SMS') || import.meta.env.DEV) {
           toast({
             title: "Development Mode",
             description: "SMS not configured. Use code: 123456",
@@ -100,13 +100,13 @@ export default function Login() {
     
     try {
       // Development mode - accept 123456 as valid code
-      if (process.env.NODE_ENV === 'development' && otp === '123456') {
+      if (import.meta.env.DEV && otp === '123456') {
         toast({
           title: "Signed in successfully!",
           description: "Welcome to The Torrists app",
           variant: "default"
         })
-        setLocation('/bands')
+        setLocation('/welcome')
         return
       }
 
@@ -121,7 +121,7 @@ export default function Login() {
         description: "Welcome to The Torrists app",
         variant: "default"
       })
-      setLocation('/bands')
+      setLocation('/welcome')
     } catch (error: any) {
       toast({
         title: "Invalid code",
@@ -241,7 +241,7 @@ export default function Login() {
         </div>
 
         {/* Development info */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <div className="mt-4 text-xs text-white/80 bg-white/10 rounded p-2">
             Development mode: Use code <strong>123456</strong> to sign in
           </div>
