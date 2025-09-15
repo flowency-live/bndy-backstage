@@ -33,14 +33,12 @@ export default function Landing() {
             <span className="text-orange-500">ALIVE</span>
           </h1>
           
-          {/* Mobile: Two lines with LIVE/ALIVE right-aligned */}
+          {/* Mobile: K/M left-aligned, E's right-aligned, whole block centered */}
           <div className="block md:hidden font-bold mb-6 text-3xl leading-tight" data-testid="strapline-mobile">
-            <div className="grid grid-cols-[1fr_auto] gap-x-2 mb-1">
-              <span className="text-white">Keeping</span>
+            <div className="grid grid-cols-[max-content_max-content] gap-x-4 justify-center items-center">
+              <span className="text-white text-left">Keeping</span>
               <span className="text-cyan-400 text-right">LIVE</span>
-            </div>
-            <div className="grid grid-cols-[1fr_auto] gap-x-2">
-              <span className="text-white">Music</span>
+              <span className="text-white text-left">Music</span>
               <span className="text-orange-500 text-right">ALIVE</span>
             </div>
           </div>
