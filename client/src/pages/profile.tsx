@@ -107,7 +107,7 @@ export default function Profile() {
   // Loading state
   if (isLoadingProfile) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-24 h-24 flex items-center justify-center mx-auto mb-4">
             <BndyLogo className="w-16 h-16" color="white" holeColor="#0f172a" />
@@ -122,7 +122,7 @@ export default function Profile() {
   // Error state
   if (profileError) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-slate-800 border-slate-700">
           <CardHeader className="text-center">
             <BndyLogo className="w-16 h-16 mx-auto mb-4" color="#f97316" holeColor="#0f172a" />
@@ -156,7 +156,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
       <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-10">
         <div className="px-4 py-3">

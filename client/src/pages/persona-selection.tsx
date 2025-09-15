@@ -16,7 +16,7 @@ export default function PersonaSelection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white font-sans">Loading bands...</p>
@@ -26,7 +26,7 @@ export default function PersonaSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col">
       <div className="max-w-2xl mx-auto flex-1 flex flex-col justify-center">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-serif text-white mb-2">Which band are you here for?</h2>

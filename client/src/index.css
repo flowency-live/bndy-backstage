@@ -412,6 +412,11 @@
     animation: slideUp 0.3s ease-out;
   }
 
+  /* Subtle gradient background - light to dark from top-left to bottom-right */
+  .bg-gradient-subtle {
+    background: linear-gradient(135deg, hsl(215, 25%, 27%) 0%, hsl(222, 47%, 11%) 100%);
+  }
+
   /* Touch-friendly interactions */
   .touch-swipe-area {
     -webkit-touch-callout: none;

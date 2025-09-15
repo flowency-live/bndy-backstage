@@ -202,7 +202,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-subtle">
       {/* Page Header */}
       <PageHeader title="Calendar">
         <div className="flex items-center gap-3">

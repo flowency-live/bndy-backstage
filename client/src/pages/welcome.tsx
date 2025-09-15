@@ -13,7 +13,7 @@ export default function Welcome() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white font-sans">Loading bands...</p>
@@ -23,7 +23,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in">
         {/* Band logo */}
         <div className="mb-8" data-testid="logo-container">

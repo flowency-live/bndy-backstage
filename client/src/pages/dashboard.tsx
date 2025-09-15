@@ -154,7 +154,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   // Removed getSongReadinessColor function as songs don't have direct readiness property
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-subtle">
       {/* Page Header */}
       <PageHeader title={`${membership.band.name} Dashboard`}>
         <div className="flex items-center gap-3">

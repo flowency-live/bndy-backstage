@@ -184,7 +184,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
         {/* Band logo */}
         <div className="mb-8" data-testid="logo-container">

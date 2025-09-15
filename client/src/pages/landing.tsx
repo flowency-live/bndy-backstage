@@ -14,7 +14,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gradient-subtle">
       {/* Hero Section */}
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
         {/* Logo */}

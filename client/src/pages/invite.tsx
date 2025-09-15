@@ -17,7 +17,7 @@ export default function Invite() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
       <div className="max-w-md w-full text-center">
         {/* Logo */}
         <div className="mb-8" data-testid="logo-container">
