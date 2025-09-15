@@ -9,9 +9,19 @@ async function throwIfResNotOk(res: Response) {
 }
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data: { session } } = await supabase.auth.getSession();
   const headers: HeadersInit = {};
   
+  // Check for development token first
+  if (import.meta.env.DEV) {
+    const devToken = localStorage.getItem('dev-auth-token');
+    if (devToken) {
+      headers['Authorization'] = `Bearer ${devToken}`;
+      return headers;
+    }
+  }
+  
+  // Otherwise use regular Supabase session
+  const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
   }

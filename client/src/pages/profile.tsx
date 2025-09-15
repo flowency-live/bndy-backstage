@@ -165,7 +165,7 @@ export default function Profile() {
               <i className="fas fa-arrow-left"></i>
             </button>
             
-            <BndyLogo className="h-8 w-auto" color="white" holeColor="rgb(51 65 85)" />
+            <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="rgb(51 65 85)" />
             
             <div className="w-10"> {/* Spacer for centering */}</div>
           </div>
@@ -177,9 +177,16 @@ export default function Profile() {
         <div className="w-full max-w-md">
           {/* Title Section */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-serif text-white mb-2">
-              {mode === "create" ? "Welcome to Bndy!" : "Your Profile"}
-            </h1>
+            <div className="mb-4">
+              {mode === "create" && (
+                <div className="flex justify-center mb-2">
+                  <BndyLogo className="w-16 h-16" color="#f97316" holeColor="rgb(51 65 85)" />
+                </div>
+              )}
+              <h1 className="text-3xl font-serif text-white mb-2">
+                {mode === "create" ? "Complete Your Profile" : "Your Profile"}
+              </h1>
+            </div>
             <p className="text-white/80">
               {mode === "create" 
                 ? "Let's set up your profile to get started" 

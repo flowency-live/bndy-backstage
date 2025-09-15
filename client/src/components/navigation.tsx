@@ -25,7 +25,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight"
       >
-        <BndyLogo className="h-8 w-auto" />
+        <BndyLogo className="h-8 w-auto" color="#f97316" />
       </button>
 
       {/* Only render drawer elements when open */}
