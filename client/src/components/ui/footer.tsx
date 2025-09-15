@@ -21,19 +21,21 @@ const Footer = () => {
             {/* Strapline - responsive layout */}
             <div className="text-sm">
               {/* Desktop: single line */}
-              <div className="hidden md:block" data-testid="strapline-desktop">
+              <div className="hidden sm:block" data-testid="strapline-desktop">
                 <span className="text-white">Keeping </span>
                 <span className="text-cyan-400 font-bold">LIVE</span>
                 <span className="text-white"> Music </span>
                 <span className="text-orange-500 font-bold">ALIVE</span>
               </div>
               
-              {/* Mobile: two lines with perfect vertical alignment of "LIVE"/"ALIVE" */}
-              <div className="block md:hidden grid grid-cols-[max-content_auto] gap-x-2 font-bold" data-testid="strapline-mobile">
-                <span className="col-start-1 row-start-1 text-white">Keeping</span>
-                <span className="col-start-2 row-start-1 text-cyan-400">LIVE</span>
-                <span className="col-start-1 row-start-2 text-white">Music</span>
-                <span className="col-start-2 row-start-2 text-orange-500">ALIVE</span>
+              {/* Mobile: two lines - words next to each other, LIVE/ALIVE aligned */}
+              <div className="block sm:hidden font-bold" data-testid="strapline-mobile">
+                <div className="mb-0">
+                  <span className="text-white">Keeping </span><span className="text-cyan-400">LIVE</span>
+                </div>
+                <div>
+                  <span className="text-white">Music </span><span className="text-orange-500">ALIVE</span>
+                </div>
               </div>
             </div>
 
