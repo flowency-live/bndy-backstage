@@ -3,78 +3,79 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(44, 30%, 97%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(44, 20%, 90%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(26, 71%, 46%);
-  --primary-foreground: hsl(60, 9.1%, 97.8%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --background: hsl(222, 47%, 11%); /* slate-900 */
+  --foreground: hsl(0, 0%, 100%); /* white */
+  --muted: hsl(215, 25%, 27%); /* slate-700 */
+  --muted-foreground: hsl(214, 15%, 66%); /* slate-400 */
+  --popover: hsl(216, 34%, 17%); /* slate-800 */
+  --popover-foreground: hsl(0, 0%, 100%); /* white */
+  --card: hsl(216, 34%, 17%); /* slate-800 */
+  --card-foreground: hsl(0, 0%, 100%); /* white */
+  --border: hsl(215, 19%, 35%); /* slate-600 */
+  --input: hsl(216, 34%, 17%); /* slate-800 */
+  --primary: hsl(24, 95%, 53%); /* orange-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --secondary: hsl(215, 25%, 27%); /* slate-700 */
+  --secondary-foreground: hsl(0, 0%, 100%); /* white */
+  --accent: hsl(215, 25%, 27%); /* slate-700 */
+  --accent-foreground: hsl(0, 0%, 100%); /* white */
+  --destructive: hsl(0, 84%, 60%); /* red-500 */
+  --destructive-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
   
-  /* Generic Brand Colors - Dark Slate Blue with Orange/Cyan highlights */
+  /* Brand Colors - Updated for slate theme */
   --brand-accent: hsl(24, 95%, 53%); /* Orange 500 */
-  --brand-accent-light: hsl(24, 95%, 63%);
-  --brand-primary: hsl(215, 28%, 17%); /* Dark Slate Blue */
-  --brand-primary-light: hsl(215, 28%, 27%);
-  --brand-primary-dark: hsl(215, 28%, 12%);
+  --brand-accent-light: hsl(21, 90%, 48%); /* Orange 600 */
+  --brand-accent-dark: hsl(16, 84%, 40%); /* Orange 700 */
+  --brand-primary: hsl(222, 47%, 11%); /* Slate 900 */
+  --brand-primary-light: hsl(216, 34%, 17%); /* Slate 800 */
+  --brand-primary-dark: hsl(215, 25%, 27%); /* Slate 700 */
   --brand-secondary: hsl(199, 89%, 48%); /* Cyan 500 */
   --brand-secondary-light: hsl(199, 89%, 58%);
   --brand-secondary-dark: hsl(199, 89%, 38%);
-  --brand-neutral: hsl(215, 16%, 47%);
-  --brand-neutral-light: hsl(215, 20%, 65%);
-  --brand-unavailable: hsl(345, 82%, 58%);
-  --brand-unavailable-light: hsl(345, 100%, 86%);
-  --brand-unavailable-dark: hsl(345, 82%, 48%);
+  --brand-neutral: hsl(215, 19%, 35%); /* Slate 600 */
+  --brand-neutral-light: hsl(214, 15%, 66%); /* Slate 400 */
+  --brand-unavailable: hsl(0, 84%, 60%); /* Red 500 */
+  --brand-unavailable-light: hsl(0, 84%, 70%);
+  --brand-unavailable-dark: hsl(0, 84%, 50%);
 }
 
 .dark {
-  /* Use brand-primary background to match landing page */
-  --background: var(--brand-primary);
-  --foreground: hsl(0, 0%, 95%);
+  /* Consistent slate-900 background */
+  --background: hsl(222, 47%, 11%); /* slate-900 */
+  --foreground: hsl(0, 0%, 100%); /* white */
   
-  /* Glass effect for cards and popovers - matches landing page */
-  --card: hsl(0, 0%, 100%, 0.08);
-  --card-foreground: hsl(0, 0%, 95%);
-  --popover: hsl(0, 0%, 100%, 0.08);
-  --popover-foreground: hsl(0, 0%, 95%);
+  /* slate-800 for cards and popovers */
+  --card: hsl(216, 34%, 17%); /* slate-800 */
+  --card-foreground: hsl(0, 0%, 100%); /* white */
+  --popover: hsl(216, 34%, 17%); /* slate-800 */
+  --popover-foreground: hsl(0, 0%, 100%); /* white */
   
-  /* Dark form fields with proper contrast */
-  --border: hsl(0, 0%, 100%, 0.15);
-  --input: hsl(215, 20%, 8%); /* Much darker input background */
+  /* slate-600 borders, slate-800 inputs */
+  --border: hsl(215, 19%, 35%); /* slate-600 */
+  --input: hsl(216, 34%, 17%); /* slate-800 */
   
-  /* Muted elements with glass effect */
-  --muted: hsl(0, 0%, 100%, 0.05);
-  --muted-foreground: hsl(0, 0%, 60%); /* More muted for better contrast */
+  /* slate-700 for muted areas, slate-400 for muted text */
+  --muted: hsl(215, 25%, 27%); /* slate-700 */
+  --muted-foreground: hsl(214, 15%, 66%); /* slate-400 */
   
-  /* Secondary and accent using glass effect */
-  --secondary: hsl(0, 0%, 100%, 0.08);
-  --secondary-foreground: hsl(0, 0%, 95%);
-  --accent: hsl(0, 0%, 100%, 0.08);
-  --accent-foreground: hsl(0, 0%, 95%);
+  /* slate-700 secondary and accent */
+  --secondary: hsl(215, 25%, 27%); /* slate-700 */
+  --secondary-foreground: hsl(0, 0%, 100%); /* white */
+  --accent: hsl(215, 25%, 27%); /* slate-700 */
+  --accent-foreground: hsl(0, 0%, 100%); /* white */
   
-  /* Keep brand orange for primary actions */
-  --primary: hsl(24, 95%, 53%);
-  --primary-foreground: hsl(0, 0%, 100%);
+  /* orange-500 for primary actions */
+  --primary: hsl(24, 95%, 53%); /* orange-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
   
-  /* Destructive with slight transparency */
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
+  /* red-500 for destructive actions */
+  --destructive: hsl(0, 84%, 60%); /* red-500 */
+  --destructive-foreground: hsl(0, 0%, 100%); /* white */
   
-  /* Ring for focus states - use brand orange */
-  --ring: hsl(24, 95%, 53%);
+  /* orange-500 for focus ring */
+  --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
 }
 
@@ -449,7 +450,7 @@
     @apply ring-2 ring-brand-secondary ring-opacity-50 border-brand-secondary;
   }
   
-  /* Enhanced input styling */
+  /* Enhanced input styling with precise slate colors */
   .dark input[type="text"],
   .dark input[type="email"],
   .dark input[type="password"],
@@ -458,9 +459,9 @@
   .dark input[type="url"],
   .dark input[type="search"],
   .dark textarea {
-    background-color: var(--input) !important;
-    color: hsl(0, 0%, 95%) !important;
-    border-color: hsl(0, 0%, 100%, 0.15) !important;
+    background-color: hsl(216, 34%, 17%) !important; /* slate-800 */
+    color: hsl(0, 0%, 100%) !important; /* white */
+    border-color: hsl(215, 19%, 35%) !important; /* slate-600 */
   }
   
   .dark input[type="text"]:hover,
@@ -471,8 +472,7 @@
   .dark input[type="url"]:hover,
   .dark input[type="search"]:hover,
   .dark textarea:hover {
-    border-color: var(--brand-accent) !important;
-    border-opacity: 0.6;
+    border-color: hsl(24, 95%, 53%) !important; /* orange-500 */
   }
   
   .dark input[type="text"]:focus,
@@ -483,16 +483,22 @@
   .dark input[type="url"]:focus,
   .dark input[type="search"]:focus,
   .dark textarea:focus {
-    border-color: var(--brand-accent) !important;
-    ring-color: var(--brand-accent) !important;
-    box-shadow: 0 0 0 2px var(--brand-accent) !important;
-    box-shadow-opacity: 0.5;
+    border-color: hsl(24, 95%, 53%) !important; /* orange-500 */
+    ring-color: hsl(24, 95%, 53%) !important;
+    box-shadow: 0 0 0 2px hsl(24, 95%, 53%) !important;
     outline: none !important;
   }
   
   .dark input::placeholder,
   .dark textarea::placeholder {
-    color: hsl(0, 0%, 50%) !important;
+    color: hsl(214, 15%, 66%) !important; /* slate-400 */
+  }
+  
+  .dark input:disabled,
+  .dark textarea:disabled {
+    background-color: hsl(215, 25%, 27%) !important; /* slate-700 */
+    color: hsl(214, 15%, 66%) !important; /* slate-400 */
+    cursor: not-allowed;
   }
   
   /* Alternative cyan focus state class */
