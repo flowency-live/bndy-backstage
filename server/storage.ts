@@ -4,12 +4,25 @@ import {
   type Song, type InsertSong,
   type SongReadiness, type InsertSongReadiness,
   type SongVeto, type InsertSongVeto,
-  bandMembers, events, songs, songReadiness, songVetos 
+  type User, type InsertUser,
+  type UserBand, type InsertUserBand,
+  type Band, type InsertBand,
+  bandMembers, events, songs, songReadiness, songVetos,
+  users, userBands, bands
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
+  // Users
+  getUserBySupabaseId(supabaseId: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  createOrGetUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
+  getUserBands(userId: string): Promise<(UserBand & { band: Band })[]>;
+  getUserBandsBySupabaseId(supabaseId: string): Promise<(UserBand & { band: Band })[]>;
+  
   // Band Members
   getBandMembers(): Promise<BandMember[]>;
   getBandMember(id: string): Promise<BandMember | undefined>;
@@ -47,15 +60,104 @@ export interface IStorage {
   // Song Readiness
   getSongReadiness(songId: string): Promise<SongReadiness[]>;
   setSongReadiness(data: InsertSongReadiness): Promise<SongReadiness>;
-  removeSongReadiness(songId: string, memberId: string): Promise<boolean>;
+  removeSongReadiness(songId: string, membershipId: string): Promise<boolean>;
   
   // Song Vetos
   getSongVetos(songId: string): Promise<SongVeto[]>;
   addSongVeto(data: InsertSongVeto): Promise<SongVeto>;
-  removeSongVeto(songId: string, memberId: string): Promise<boolean>;
+  removeSongVeto(songId: string, membershipId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Users
+  async getUserBySupabaseId(supabaseId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId));
+    return user || undefined;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async createOrGetUser(insertUser: InsertUser): Promise<User> {
+    // First, try to get existing user by supabaseId
+    const existingUser = await this.getUserBySupabaseId(insertUser.supabaseId);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    try {
+      // Try to create the user
+      return await this.createUser(insertUser);
+    } catch (error: any) {
+      // If it's a unique constraint violation, fetch the existing user
+      if (error?.code === '23505' || error?.constraint?.includes('supabase_id')) {
+        const user = await this.getUserBySupabaseId(insertUser.supabaseId);
+        if (user) {
+          return user;
+        }
+      }
+      // Re-throw the error if it's not a unique constraint violation
+      throw error;
+    }
+  }
+
+  async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updatedUser || undefined;
+  }
+
+  async getUserBands(userId: string): Promise<(UserBand & { band: Band })[]> {
+    const result = await db
+      .select({
+        id: userBands.id,
+        userId: userBands.userId,
+        bandId: userBands.bandId,
+        role: userBands.role,
+        displayName: userBands.displayName,
+        icon: userBands.icon,
+        color: userBands.color,
+        joinedAt: userBands.joinedAt,
+        band: {
+          id: bands.id,
+          name: bands.name,
+          slug: bands.slug,
+          description: bands.description,
+          avatarUrl: bands.avatarUrl,
+          createdBy: bands.createdBy,
+          createdAt: bands.createdAt,
+          updatedAt: bands.updatedAt,
+        }
+      })
+      .from(userBands)
+      .innerJoin(bands, eq(userBands.bandId, bands.id))
+      .where(eq(userBands.userId, userId));
+    
+    return result;
+  }
+
+  async getUserBandsBySupabaseId(supabaseId: string): Promise<(UserBand & { band: Band })[]> {
+    const user = await this.getUserBySupabaseId(supabaseId);
+    if (!user) {
+      return [];
+    }
+    return this.getUserBands(user.id);
+  }
+
   // Band Members
   async getBandMembers(): Promise<BandMember[]> {
     return await db.select().from(bandMembers);
@@ -234,7 +336,7 @@ export class DatabaseStorage implements IStorage {
       .from(songReadiness)
       .where(and(
         eq(songReadiness.songId, data.songId),
-        eq(songReadiness.memberId, data.memberId)
+        eq(songReadiness.membershipId, data.membershipId)
       ));
 
     if (existing) {
@@ -253,12 +355,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async removeSongReadiness(songId: string, memberId: string): Promise<boolean> {
+  async removeSongReadiness(songId: string, membershipId: string): Promise<boolean> {
     const result = await db
       .delete(songReadiness)
       .where(and(
         eq(songReadiness.songId, songId),
-        eq(songReadiness.memberId, memberId)
+        eq(songReadiness.membershipId, membershipId)
       ));
     return (result.rowCount ?? 0) > 0;
   }
@@ -276,12 +378,12 @@ export class DatabaseStorage implements IStorage {
     return veto;
   }
 
-  async removeSongVeto(songId: string, memberId: string): Promise<boolean> {
+  async removeSongVeto(songId: string, membershipId: string): Promise<boolean> {
     const result = await db
       .delete(songVetos)
       .where(and(
         eq(songVetos.songId, songId),
-        eq(songVetos.memberId, memberId)
+        eq(songVetos.membershipId, membershipId)
       ));
     return (result.rowCount ?? 0) > 0;
   }

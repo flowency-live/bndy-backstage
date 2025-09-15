@@ -4,9 +4,58 @@ import { storage } from "./storage";
 import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
+import { authenticateSupabaseJWT, type AuthenticatedRequest } from "./auth-middleware";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication endpoint
+  app.get("/api/me", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Get or create user in our database
+      let dbUser = req.user.dbUser;
+      
+      if (!dbUser) {
+        // User doesn't exist in our database yet, create them
+        try {
+          dbUser = await storage.createOrGetUser({
+            supabaseId: req.user.supabaseId,
+            email: req.user.email || null,
+            phone: req.user.phone || null,
+            displayName: req.user.email || req.user.phone || null,
+          });
+        } catch (error) {
+          console.error("Failed to create user in database:", error);
+          return res.status(500).json({ message: "Failed to create user profile" });
+        }
+      }
+
+      // Get user's band memberships
+      const bandMemberships = await storage.getUserBands(dbUser.id);
+
+      // Return user profile with band memberships
+      res.json({
+        user: {
+          id: dbUser.id,
+          supabaseId: dbUser.supabaseId,
+          email: dbUser.email,
+          phone: dbUser.phone,
+          displayName: dbUser.displayName,
+          avatarUrl: dbUser.avatarUrl,
+          createdAt: dbUser.createdAt,
+          updatedAt: dbUser.updatedAt,
+        },
+        bands: bandMemberships,
+      });
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
   // Band Members endpoints
   app.get("/api/band-members", async (req, res) => {
     try {
