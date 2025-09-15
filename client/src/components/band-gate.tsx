@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import BndyLogo from "@/components/ui/bndy-logo";
 import type { UserBand, Band } from "@shared/schema";
-import torristsLogoPath from "@assets/Screenshot_20250803_113321_WhatsApp_1754250527535.jpg";
 
 interface UserProfile {
   user: {
@@ -102,7 +102,7 @@ export default function BandGate({ children }: BandGateProps) {
   const handleLogout = async () => {
     // Clear localStorage
     localStorage.removeItem('bndy-selected-band-id');
-    localStorage.removeItem('torrists-current-user');
+    localStorage.removeItem('bndy-current-user');
     
     // Redirect to login
     setLocation('/login');
@@ -130,12 +130,14 @@ export default function BandGate({ children }: BandGateProps) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="mb-4">
-            <img 
-              src={torristsLogoPath} 
-              alt="Bndy Platform Logo" 
-              className="w-32 h-32 object-cover rounded-2xl shadow-2xl mx-auto mb-4"
-            />
+          <div className="mb-4" data-testid="logo-container">
+            <div className="w-32 h-32 flex items-center justify-center mx-auto mb-4">
+              <BndyLogo 
+                className="w-24 h-24"
+                color="white"
+                holeColor="rgb(51 65 85)" 
+              />
+            </div>
           </div>
           <h2 className="text-2xl font-serif text-white mb-4">Something went wrong</h2>
           <p className="text-white/80 mb-6">Failed to load your profile. Please try again.</p>
@@ -161,12 +163,14 @@ export default function BandGate({ children }: BandGateProps) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center max-w-md w-full">
-          <div className="mb-8">
-            <img 
-              src={torristsLogoPath} 
-              alt="Bndy Platform Logo" 
-              className="w-48 h-48 object-cover rounded-2xl shadow-2xl mx-auto"
-            />
+          <div className="mb-8" data-testid="logo-container">
+            <div className="w-48 h-48 flex items-center justify-center mx-auto">
+              <BndyLogo 
+                className="w-32 h-32"
+                color="white"
+                holeColor="rgb(51 65 85)" 
+              />
+            </div>
           </div>
           
           <h2 className="text-2xl font-serif text-white mb-6">Select Your Band</h2>

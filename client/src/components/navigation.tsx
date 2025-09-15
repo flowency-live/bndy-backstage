@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import BndyLogo from "@/components/ui/bndy-logo";
 
 interface NavigationProps {
   currentUser: any;
@@ -24,7 +25,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight"
       >
-        <div className="text-xl">Bndy</div>
+        <BndyLogo className="h-8 w-auto" />
       </button>
 
       {/* Only render drawer elements when open */}

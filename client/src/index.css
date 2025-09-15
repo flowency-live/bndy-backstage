@@ -24,14 +24,17 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
   
-  /* Generic Brand Colors */
-  --brand-accent: hsl(26, 71%, 46%);
-  --brand-accent-light: hsl(30, 44%, 56%);
-  --brand-primary: hsl(162, 45%, 35%);
-  --brand-primary-light: hsl(162, 35%, 45%);
-  --brand-primary-dark: hsl(162, 55%, 25%);
-  --brand-neutral: hsl(44, 30%, 92%);
-  --brand-neutral-light: hsl(60, 29%, 96%);
+  /* Generic Brand Colors - Dark Slate Blue with Orange/Cyan highlights */
+  --brand-accent: hsl(24, 95%, 53%); /* Orange 500 */
+  --brand-accent-light: hsl(24, 95%, 63%);
+  --brand-primary: hsl(215, 28%, 17%); /* Dark Slate Blue */
+  --brand-primary-light: hsl(215, 28%, 27%);
+  --brand-primary-dark: hsl(215, 28%, 12%);
+  --brand-secondary: hsl(199, 89%, 48%); /* Cyan 500 */
+  --brand-secondary-light: hsl(199, 89%, 58%);
+  --brand-secondary-dark: hsl(199, 89%, 38%);
+  --brand-neutral: hsl(215, 16%, 47%);
+  --brand-neutral-light: hsl(215, 20%, 65%);
   --brand-unavailable: hsl(345, 82%, 58%);
   --brand-unavailable-light: hsl(345, 100%, 86%);
   --brand-unavailable-dark: hsl(345, 82%, 48%);
@@ -122,6 +125,18 @@
     background-color: var(--brand-unavailable-dark);
   }
   
+  .bg-brand-secondary {
+    background-color: var(--brand-secondary);
+  }
+  
+  .bg-brand-secondary-light {
+    background-color: var(--brand-secondary-light);
+  }
+  
+  .bg-brand-secondary-dark {
+    background-color: var(--brand-secondary-dark);
+  }
+  
   .text-brand-accent {
     color: var(--brand-accent);
   }
@@ -142,6 +157,18 @@
     color: var(--brand-primary-dark);
   }
   
+  .text-brand-secondary {
+    color: var(--brand-secondary);
+  }
+  
+  .text-brand-secondary-light {
+    color: var(--brand-secondary-light);
+  }
+  
+  .text-brand-secondary-dark {
+    color: var(--brand-secondary-dark);
+  }
+  
   .border-brand-accent {
     border-color: var(--brand-accent);
   }
@@ -152,6 +179,10 @@
   
   .border-brand-unavailable {
     border-color: var(--brand-unavailable);
+  }
+  
+  .border-brand-secondary {
+    border-color: var(--brand-secondary);
   }
   
   .hover\:bg-brand-accent-light:hover {
@@ -177,6 +208,18 @@
   
   .hover\:bg-brand-unavailable-dark:hover {
     background-color: var(--brand-unavailable-dark);
+  }
+  
+  .hover\:bg-brand-secondary:hover {
+    background-color: var(--brand-secondary);
+  }
+  
+  .hover\:bg-brand-secondary-light:hover {
+    background-color: var(--brand-secondary-light);
+  }
+  
+  .hover\:bg-brand-secondary-dark:hover {
+    background-color: var(--brand-secondary-dark);
   }
   
   /* Missing hover:border-* utilities */
@@ -266,6 +309,24 @@
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   }
   
+  .from-brand-secondary {
+    --tw-gradient-from: var(--brand-secondary) var(--tw-gradient-from-position);
+    --tw-gradient-to: transparent var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .from-brand-secondary-light {
+    --tw-gradient-from: var(--brand-secondary-light) var(--tw-gradient-from-position);
+    --tw-gradient-to: transparent var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .from-brand-secondary-dark {
+    --tw-gradient-from: var(--brand-secondary-dark) var(--tw-gradient-from-position);
+    --tw-gradient-to: transparent var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
   /* Gradient utilities - to-* classes */
   .to-brand-accent {
     --tw-gradient-to: var(--brand-accent) var(--tw-gradient-to-position);
@@ -305,6 +366,18 @@
   
   .to-brand-unavailable-dark {
     --tw-gradient-to: var(--brand-unavailable-dark) var(--tw-gradient-to-position);
+  }
+  
+  .to-brand-secondary {
+    --tw-gradient-to: var(--brand-secondary) var(--tw-gradient-to-position);
+  }
+  
+  .to-brand-secondary-light {
+    --tw-gradient-to: var(--brand-secondary-light) var(--tw-gradient-to-position);
+  }
+  
+  .to-brand-secondary-dark {
+    --tw-gradient-to: var(--brand-secondary-dark) var(--tw-gradient-to-position);
   }
   
   .vintage-shadow {

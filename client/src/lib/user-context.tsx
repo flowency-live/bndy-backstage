@@ -97,7 +97,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     clearBandSelection();
-    localStorage.removeItem('torrists-current-user'); // Legacy cleanup
+    localStorage.removeItem('bndy-current-user'); // Legacy cleanup
     await signOut();
   };
 

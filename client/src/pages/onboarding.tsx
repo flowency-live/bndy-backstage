@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import torristsLogoPath from "@assets/Screenshot_20250803_113321_WhatsApp_1754250527535.jpg";
+import BndyLogo from "@/components/ui/bndy-logo";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Vocalist" },
@@ -123,11 +123,15 @@ export default function Onboarding() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img 
-            src={torristsLogoPath} 
-            alt="Bndy Platform Logo" 
-            className="w-32 h-32 object-cover rounded-2xl shadow-2xl mx-auto mb-4"
-          />
+          <div className="mb-4" data-testid="logo-container">
+            <div className="w-32 h-32 flex items-center justify-center mx-auto">
+              <BndyLogo 
+                className="w-24 h-24"
+                color="white"
+                holeColor="rgb(51 65 85)" 
+              />
+            </div>
+          </div>
           <h1 className="text-3xl font-serif text-white mb-2">Create Your Band</h1>
           <p className="text-white/80">Set up your band and get started organizing</p>
         </div>

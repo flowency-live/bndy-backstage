@@ -4,7 +4,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import torristsLogoPath from "@assets/Screenshot_20250803_113321_WhatsApp_1754250527535.jpg"
+import BndyLogo from "@/components/ui/bndy-logo"
 
 type AuthStep = 'phone' | 'verify'
 
@@ -103,7 +103,7 @@ export default function Login() {
       if (import.meta.env.DEV && otp === '123456') {
         toast({
           title: "Signed in successfully!",
-          description: "Welcome to Bndy",
+          description: "Welcome to bndy",
           variant: "default"
         })
         setLocation('/welcome')
@@ -118,7 +118,7 @@ export default function Login() {
 
       toast({
         title: "Signed in successfully!",
-        description: "Welcome to Bndy",
+        description: "Welcome to bndy",
         variant: "default"
       })
       setLocation('/welcome')
@@ -142,12 +142,14 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
         {/* Band logo */}
-        <div className="mb-8">
-          <img 
-            src={torristsLogoPath} 
-            alt="Bndy Platform Logo" 
-            className="w-48 h-48 md:w-56 md:h-56 object-cover rounded-2xl shadow-2xl mx-auto"
-          />
+        <div className="mb-8" data-testid="logo-container">
+          <div className="w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
+            <BndyLogo 
+              className="w-32 h-32 md:w-40 md:h-40"
+              color="white"
+              holeColor="rgb(51 65 85)" 
+            />
+          </div>
         </div>
 
         {/* Auth form */}

@@ -72,7 +72,7 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
 
   const handleSignOut = async () => {
     localStorage.removeItem('bndy-selected-band-id');
-    localStorage.removeItem('torrists-current-user');
+    localStorage.removeItem('bndy-current-user');
     await signOut();
     setLocation('/login');
   };

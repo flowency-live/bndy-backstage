@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
 import type { BandMember } from "@shared/schema";
-import torristsLogoPath from "@assets/Screenshot_20250803_113321_WhatsApp_1754250527535.jpg";
+import BndyLogo from "@/components/ui/bndy-logo";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -33,12 +33,14 @@ export default function Welcome() {
     <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in">
         {/* Band logo */}
-        <div className="mb-8">
-          <img 
-            src={torristsLogoPath} 
-            alt="Bndy Platform Logo" 
-            className="w-72 h-72 md:w-80 md:h-80 object-cover rounded-2xl shadow-2xl mx-auto"
-          />
+        <div className="mb-8" data-testid="logo-container">
+          <div className="w-72 h-72 md:w-80 md:h-80 flex items-center justify-center mx-auto">
+            <BndyLogo 
+              className="w-48 h-48 md:w-56 md:h-56"
+              color="white"
+              holeColor="rgb(51 65 85)" 
+            />
+          </div>
         </div>
         
         {/* User selection boxes - 2x2 grid with horizontal layout */}

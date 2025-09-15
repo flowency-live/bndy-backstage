@@ -7,6 +7,7 @@ import AddSongModal from "@/components/add-song-modal";
 import BandSwitcher from "@/components/band-switcher";
 import { spotifySync } from "@/lib/spotify-sync";
 import type { UserBand, Band } from "@shared/schema";
+import BndyLogo from "@/components/ui/bndy-logo";
 
 interface SongWithDetails {
   id: string;
@@ -257,7 +258,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
                 className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
                 data-testid="button-menu-toggle"
               >
-                <div className="text-xl text-left">Bndy</div>
+                <BndyLogo className="w-6 h-6" color="currentColor" />
               </button>
             </div>
             

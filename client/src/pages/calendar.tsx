@@ -8,6 +8,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import type { Event, UserBand, Band } from "@shared/schema";
 import EventModal from "@/components/event-modal";
 import BandSwitcher from "@/components/band-switcher";
+import BndyLogo from "@/components/ui/bndy-logo";
 
 interface CalendarProps {
   bandId: string;
@@ -215,7 +216,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight text-left"
                 data-testid="button-menu-toggle"
               >
-                <div className="text-xl text-left">Bndy</div>
+                <BndyLogo className="w-6 h-6" color="currentColor" />
               </button>
             </div>
             
