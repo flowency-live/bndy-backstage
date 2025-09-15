@@ -11,8 +11,14 @@ interface UserProfile {
     supabaseId: string;
     email: string | null;
     phone: string | null;
+    firstName: string | null;
+    lastName: string | null;
     displayName: string | null;
+    hometown: string | null;
+    instrument: string | null;
     avatarUrl: string | null;
+    platformAdmin: boolean;
+    profileCompleted: boolean;
     createdAt: string;
     updatedAt: string;
   };
@@ -78,9 +84,17 @@ export default function BandGate({ children }: BandGateProps) {
     }
   }, [authLoading, profileLoading, isAuthenticated, setLocation]);
 
+  // Handle profile completion redirect
+  useEffect(() => {
+    if (userProfile && !userProfile.user.profileCompleted) {
+      setIsRedirecting(true);
+      setLocation('/profile');
+    }
+  }, [userProfile, setLocation]);
+
   // Handle onboarding redirect
   useEffect(() => {
-    if (userProfile && userProfile.bands.length === 0) {
+    if (userProfile && userProfile.user.profileCompleted && userProfile.bands.length === 0) {
       setIsRedirecting(true);
       setLocation('/onboarding');
     }

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema } from "@shared/schema";
+import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
 import { authenticateSupabaseJWT, requireMembership, type AuthenticatedRequest } from "./auth-middleware";
@@ -43,8 +43,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           supabaseId: dbUser.supabaseId,
           email: dbUser.email,
           phone: dbUser.phone,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
           displayName: dbUser.displayName,
+          hometown: dbUser.hometown,
+          instrument: dbUser.instrument,
           avatarUrl: dbUser.avatarUrl,
+          platformAdmin: dbUser.platformAdmin,
+          profileCompleted: dbUser.profileCompleted,
           createdAt: dbUser.createdAt,
           updatedAt: dbUser.updatedAt,
         },
@@ -53,6 +59,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
       res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  // User Profile Update endpoint
+  app.put("/api/me", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const validatedData = updateUserProfileSchema.parse(req.body);
+      
+      // Update the profile completion status if all required fields are provided
+      let profileCompleted = req.user.dbUser.profileCompleted;
+      if (validatedData.firstName && validatedData.lastName && validatedData.displayName) {
+        profileCompleted = true;
+      }
+
+      const updatedUser = await storage.updateUser(req.user.dbUser.id, {
+        ...validatedData,
+        profileCompleted,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        user: {
+          id: updatedUser.id,
+          supabaseId: updatedUser.supabaseId,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          displayName: updatedUser.displayName,
+          hometown: updatedUser.hometown,
+          instrument: updatedUser.instrument,
+          avatarUrl: updatedUser.avatarUrl,
+          profileCompleted: updatedUser.profileCompleted,
+          createdAt: updatedUser.createdAt,
+          updatedAt: updatedUser.updatedAt,
+        },
+        message: "Profile updated successfully"
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Failed to update user profile:", error);
+      res.status(500).json({ message: "Failed to update user profile" });
     }
   });
 

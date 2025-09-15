@@ -103,6 +103,36 @@ export default function Login() {
     try {
       // God mode for development - specific phone number with any 6-digit code
       if (import.meta.env.DEV && phone.replace(/\D/g, '') === '07758240770' && otp.length === 6) {
+        // Create a mock session for god mode that works with our backend
+        const mockSession = {
+          access_token: 'DEV_GOD_MODE_TOKEN',
+          refresh_token: 'dev-refresh-token',
+          expires_in: 3600,
+          expires_at: Date.now() / 1000 + 3600,
+          token_type: 'bearer',
+          user: {
+            id: 'dev-god-mode-user',
+            phone: e164Phone,
+            app_metadata: { provider: 'phone', providers: ['phone'] },
+            user_metadata: { phone: e164Phone }
+          }
+        };
+
+        // Store the mock session in localStorage to persist it
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          currentSession: mockSession,
+          expiresAt: mockSession.expires_at
+        }));
+
+        // Trigger a storage event to notify the useSupabaseAuth hook
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'supabase.auth.token',
+          newValue: JSON.stringify({
+            currentSession: mockSession,
+            expiresAt: mockSession.expires_at
+          })
+        }));
+
         toast({
           title: "🚀 GOD MODE ACCESS",
           description: "Development admin access granted",
@@ -114,6 +144,37 @@ export default function Login() {
 
       // Development mode - accept 123456 as valid code for any phone
       if (import.meta.env.DEV && otp === '123456') {
+        // Create a mock session for regular dev users
+        const phoneDigits = phone.replace(/\D/g, '');
+        const mockSession = {
+          access_token: `DEV_USER_${phoneDigits}`,
+          refresh_token: 'dev-refresh-token',
+          expires_in: 3600,
+          expires_at: Date.now() / 1000 + 3600,
+          token_type: 'bearer',
+          user: {
+            id: `dev-user-${phoneDigits}`,
+            phone: e164Phone,
+            app_metadata: { provider: 'phone', providers: ['phone'] },
+            user_metadata: { phone: e164Phone }
+          }
+        };
+
+        // Store the mock session in localStorage to persist it
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          currentSession: mockSession,
+          expiresAt: mockSession.expires_at
+        }));
+
+        // Trigger a storage event to notify the useSupabaseAuth hook
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'supabase.auth.token',
+          newValue: JSON.stringify({
+            currentSession: mockSession,
+            expiresAt: mockSession.expires_at
+          })
+        }));
+
         toast({
           title: "Signed in successfully!",
           description: "Welcome to bndy",

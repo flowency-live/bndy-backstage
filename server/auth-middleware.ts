@@ -54,11 +54,91 @@ export async function authenticateSupabaseJWT(
 
     const token = authHeader.replace('Bearer ', '');
     
-    // Get Supabase JWT secret and URL from environment
+    // Development mode bypass for god mode authentication
+    if (process.env.NODE_ENV === 'development' && token === 'DEV_GOD_MODE_TOKEN') {
+      console.log('🚀 DEV MODE: God mode authentication bypassed');
+      
+      // Create a development user for god mode
+      const devSupabaseId = 'dev-god-mode-user';
+      let dbUser;
+      
+      try {
+        dbUser = await storage.getUserBySupabaseId(devSupabaseId);
+        if (!dbUser) {
+          // Create the god mode user in our database
+          dbUser = await storage.createOrGetUser({
+            supabaseId: devSupabaseId,
+            phone: '+447758240770',
+            email: null,
+            displayName: 'God Mode Dev User',
+          });
+          
+          // Make them a platform admin
+          dbUser = await storage.updateUser(dbUser.id, { 
+            platformAdmin: true,
+            displayName: 'God Mode Dev User'
+          }) || dbUser;
+        }
+      } catch (error) {
+        console.error('Failed to create/get god mode user:', error);
+      }
+      
+      req.user = {
+        supabaseId: devSupabaseId,
+        phone: '+447758240770',
+        email: undefined,
+        dbUser: dbUser,
+      };
+      
+      return next();
+    }
+    
+    // Development mode bypass for general dev users
+    if (process.env.NODE_ENV === 'development' && token.startsWith('DEV_USER_')) {
+      const phone = token.replace('DEV_USER_', '');
+      const devSupabaseId = `dev-user-${phone}`;
+      
+      console.log(`🛠️ DEV MODE: Development authentication bypassed for phone ${phone}`);
+      
+      let dbUser;
+      try {
+        dbUser = await storage.getUserBySupabaseId(devSupabaseId);
+        if (!dbUser) {
+          // Create the dev user in our database
+          dbUser = await storage.createOrGetUser({
+            supabaseId: devSupabaseId,
+            phone: `+44${phone}`,
+            email: null,
+            displayName: null,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to create/get dev user for ${phone}:`, error);
+      }
+      
+      req.user = {
+        supabaseId: devSupabaseId,
+        phone: `+44${phone}`,
+        email: undefined,
+        dbUser: dbUser,
+      };
+      
+      return next();
+    }
+    
+    // Get Supabase JWT secret and URL from environment for production
     const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
     const supabaseUrl = process.env.SUPABASE_URL;
     
     if (!supabaseJwtSecret) {
+      // In development, if no Supabase config, return helpful error
+      if (process.env.NODE_ENV === 'development') {
+        return res.status(500).json({ 
+          message: "Development authentication not configured",
+          details: "Use DEV_GOD_MODE_TOKEN for god mode or set up Supabase environment variables"
+        });
+      }
+      
       console.error("SUPABASE_JWT_SECRET not found in environment variables");
       console.error("To fix this:");
       console.error("1. Go to your Supabase project dashboard");
