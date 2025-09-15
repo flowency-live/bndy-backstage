@@ -10,9 +10,16 @@ export const users = pgTable("users", {
   supabaseId: text("supabase_id").notNull().unique(),
   phone: text("phone").unique(),
   email: text("email").unique(),
+  // Profile fields - mandatory after authentication
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   displayName: text("display_name"),
+  hometown: text("hometown"), // Optional - UK Google Places autocomplete
   avatarUrl: text("avatar_url"),
+  instrument: text("instrument"), // Optional - from predefined list
+  // System fields
   platformAdmin: boolean("platform_admin").default(false), // Platform administrator role
+  profileCompleted: boolean("profile_completed").default(false), // Track if mandatory profile fields are set
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -313,9 +320,45 @@ export const insertSongVetoSchema = createInsertSchema(songVetos).omit({
   membershipId: z.string(),
 });
 
+// Constants for profile fields
+export const INSTRUMENT_OPTIONS = [
+  'Lead Guitar',
+  'Bass Guitar', 
+  'Rhythm Guitar',
+  'Guitar',
+  'Keys',
+  'Vocals',
+  'Drums',
+  'Saxophone',
+  'Trumpet',
+  'Violin',
+  'Flute',
+  'Other'
+] as const;
+
+// User profile schemas
+export const insertUserProfileSchema = createInsertSchema(users).omit({
+  id: true,
+  supabaseId: true,
+  platformAdmin: true,
+  profileCompleted: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"), 
+  displayName: z.string().min(1, "Display name is required"),
+  hometown: z.string().optional(),
+  instrument: z.enum(INSTRUMENT_OPTIONS).optional(),
+});
+
+export const updateUserProfileSchema = insertUserProfileSchema.partial();
+
 // New multi-tenant types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 export type InsertBand = z.infer<typeof insertBandSchema>;
 export type Band = typeof bands.$inferSelect;
 export type InsertUserBand = z.infer<typeof insertUserBandSchema>;
