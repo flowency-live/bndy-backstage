@@ -30,7 +30,7 @@ const Footer = () => {
               
               {/* Mobile: K/M left-aligned, E's right-aligned, whole block left-aligned in footer */}
               <div className="block md:hidden font-bold" data-testid="strapline-mobile">
-                <div className="grid grid-cols-[max-content_max-content] gap-x-3 items-center">
+                <div className="grid grid-cols-[max-content_max-content] gap-x-1 items-center">
                   <span className="text-white text-left">Keeping</span>
                   <span className="text-cyan-400 text-right">LIVE</span>
                   <span className="text-white text-left">Music</span>
