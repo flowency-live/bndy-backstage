@@ -197,11 +197,11 @@ export default function Login() {
         </div>
 
         {/* Auth form */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+        <div className="bg-brand-primary/20 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/10">
           {step === 'phone' ? (
             <>
-              <h2 className="text-2xl font-serif text-brand-primary mb-2">Welcome Back</h2>
-              <p className="text-gray-600 font-sans mb-6">Enter your phone number to sign in</p>
+              <h2 className="text-2xl font-serif text-white mb-2">Welcome Back</h2>
+              <p className="text-white/80 font-sans mb-6">Enter your phone number to sign in</p>
               
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
                 <div>
@@ -236,8 +236,8 @@ export default function Login() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-serif text-brand-primary mb-2">Enter Code</h2>
-              <p className="text-gray-600 font-sans mb-6">
+              <h2 className="text-2xl font-serif text-white mb-2">Enter Code</h2>
+              <p className="text-white/80 font-sans mb-6">
                 We sent a code to {phone}
               </p>
               
@@ -275,7 +275,7 @@ export default function Login() {
                   type="button" 
                   variant="ghost" 
                   onClick={handleBack}
-                  className="w-full text-brand-primary hover:text-brand-primary-dark font-sans"
+                  className="w-full text-white/90 hover:text-white font-sans"
                   disabled={loading}
                   data-testid="button-back"
                 >
