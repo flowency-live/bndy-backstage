@@ -18,7 +18,7 @@ export default function Landing() {
           <div className="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center mx-auto">
             <BndyLogo 
               className="w-48 h-48 md:w-64 md:h-64"
-              holeColor="rgb(51 65 85)" 
+              holeColor="#1e293b" 
             />
           </div>
         </div>
@@ -33,13 +33,15 @@ export default function Landing() {
             <span className="text-orange-500">ALIVE</span>
           </h1>
           
-          {/* Mobile: Two lines - words next to each other, LIVE/ALIVE aligned */}
+          {/* Mobile: Two lines with perfect LIVE/ALIVE alignment */}
           <div className="block sm:hidden font-bold mb-6 text-3xl leading-tight" data-testid="strapline-mobile">
-            <div className="mb-1">
-              <span className="text-white">Keeping </span><span className="text-cyan-400">LIVE</span>
+            <div className="grid grid-cols-[max-content_max-content] gap-x-3 justify-center mb-1">
+              <span className="text-white">Keeping</span>
+              <span className="text-cyan-400">LIVE</span>
             </div>
-            <div>
-              <span className="text-white">Music </span><span className="text-orange-500">ALIVE</span>
+            <div className="grid grid-cols-[max-content_max-content] gap-x-3 justify-center">
+              <span className="text-white">Music</span>
+              <span className="text-orange-500">ALIVE</span>
             </div>
           </div>
           

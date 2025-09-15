@@ -28,13 +28,15 @@ const Footer = () => {
                 <span className="text-orange-500 font-bold">ALIVE</span>
               </div>
               
-              {/* Mobile: two lines - words next to each other, LIVE/ALIVE aligned */}
+              {/* Mobile: two lines with perfect LIVE/ALIVE alignment */}
               <div className="block sm:hidden font-bold" data-testid="strapline-mobile">
-                <div className="mb-0">
-                  <span className="text-white">Keeping </span><span className="text-cyan-400">LIVE</span>
+                <div className="grid grid-cols-[max-content_max-content] gap-x-2 mb-0">
+                  <span className="text-white">Keeping</span>
+                  <span className="text-cyan-400">LIVE</span>
                 </div>
-                <div>
-                  <span className="text-white">Music </span><span className="text-orange-500">ALIVE</span>
+                <div className="grid grid-cols-[max-content_max-content] gap-x-2">
+                  <span className="text-white">Music</span>
+                  <span className="text-orange-500">ALIVE</span>
                 </div>
               </div>
             </div>
