@@ -24,24 +24,24 @@ export default function Landing() {
         </div>
 
         {/* Strapline - Responsive Layout */}
-        <div className="max-w-2xl mx-auto mb-12">
-          {/* Desktop: Single line */}
-          <h1 className="hidden md:block text-4xl lg:text-6xl font-bold mb-6 leading-tight" data-testid="strapline-desktop">
+        <div className="max-w-2xl md:max-w-none mx-auto mb-12">
+          {/* Desktop: Single line - force no wrap */}
+          <h1 className="hidden md:block text-4xl lg:text-6xl font-bold mb-6 leading-tight md:whitespace-nowrap" data-testid="strapline-desktop">
             <span className="text-white">Keeping </span>
             <span className="text-cyan-400">LIVE </span>
             <span className="text-white">Music </span>
             <span className="text-orange-500">ALIVE</span>
           </h1>
           
-          {/* Mobile/Narrow: Two lines with right-aligned E endings */}
+          {/* Mobile: Two lines with LIVE/ALIVE right-aligned */}
           <div className="block md:hidden font-bold mb-6 text-3xl leading-tight" data-testid="strapline-mobile">
-            <div className="flex justify-between items-center mb-1">
+            <div className="grid grid-cols-[1fr_auto] gap-x-2 mb-1">
               <span className="text-white">Keeping</span>
-              <span className="text-cyan-400">LIVE</span>
+              <span className="text-cyan-400 text-right">LIVE</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="grid grid-cols-[1fr_auto] gap-x-2">
               <span className="text-white">Music</span>
-              <span className="text-orange-500">ALIVE</span>
+              <span className="text-orange-500 text-right">ALIVE</span>
             </div>
           </div>
           

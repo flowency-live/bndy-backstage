@@ -11,7 +11,7 @@ const Footer = () => {
           <BndyBadge size="large" className="flex-shrink-0" />
 
           {/* Copyright and Strapline - vertically stacked, left-aligned */}
-          <div className="flex flex-col text-left leading-tight">
+          <div className="flex flex-col text-left leading-tight flex-1 min-w-0">
             
             {/* Copyright */}
             <span className="text-slate-400 text-sm mb-1" data-testid="copyright">
@@ -20,23 +20,23 @@ const Footer = () => {
 
             {/* Strapline - responsive layout */}
             <div className="text-sm">
-              {/* Desktop: single line */}
-              <div className="hidden md:block" data-testid="strapline-desktop">
+              {/* Desktop: single line - force no wrap */}
+              <div className="hidden md:block whitespace-nowrap" data-testid="strapline-desktop">
                 <span className="text-white">Keeping </span>
                 <span className="text-cyan-400 font-bold">LIVE</span>
                 <span className="text-white"> Music </span>
                 <span className="text-orange-500 font-bold">ALIVE</span>
               </div>
               
-              {/* Mobile/Narrow: two lines with right-aligned E endings */}
+              {/* Mobile: two lines with LIVE/ALIVE right-aligned */}
               <div className="block md:hidden font-bold" data-testid="strapline-mobile">
-                <div className="flex justify-between items-center mb-0">
+                <div className="grid grid-cols-[1fr_auto] gap-x-2 mb-0">
                   <span className="text-white">Keeping</span>
-                  <span className="text-cyan-400">LIVE</span>
+                  <span className="text-cyan-400 text-right">LIVE</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-[1fr_auto] gap-x-2">
                   <span className="text-white">Music</span>
-                  <span className="text-orange-500">ALIVE</span>
+                  <span className="text-orange-500 text-right">ALIVE</span>
                 </div>
               </div>
             </div>
