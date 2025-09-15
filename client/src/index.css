@@ -41,25 +41,40 @@
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(26, 71%, 46%);
-  --primary-foreground: hsl(60, 9.1%, 97.8%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
+  /* Use brand-primary background to match landing page */
+  --background: var(--brand-primary);
+  --foreground: hsl(0, 0%, 95%);
+  
+  /* Glass effect for cards and popovers - matches landing page */
+  --card: hsl(0, 0%, 100%, 0.08);
+  --card-foreground: hsl(0, 0%, 95%);
+  --popover: hsl(0, 0%, 100%, 0.08);
+  --popover-foreground: hsl(0, 0%, 95%);
+  
+  /* Glass borders and inputs */
+  --border: hsl(0, 0%, 100%, 0.20);
+  --input: hsl(0, 0%, 100%, 0.08);
+  
+  /* Muted elements with glass effect */
+  --muted: hsl(0, 0%, 100%, 0.05);
+  --muted-foreground: hsl(0, 0%, 70%);
+  
+  /* Secondary and accent using glass effect */
+  --secondary: hsl(0, 0%, 100%, 0.08);
+  --secondary-foreground: hsl(0, 0%, 95%);
+  --accent: hsl(0, 0%, 100%, 0.08);
+  --accent-foreground: hsl(0, 0%, 95%);
+  
+  /* Keep brand orange for primary actions */
+  --primary: hsl(24, 95%, 53%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  
+  /* Destructive with slight transparency */
+  --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  
+  /* Ring for focus states */
+  --ring: hsl(0, 0%, 100%, 0.30);
   --radius: 0.5rem;
 }
 
