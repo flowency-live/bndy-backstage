@@ -272,7 +272,7 @@ export default function ProfileForm({
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 text-base"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 text-base"
             disabled={isLoading}
             data-testid="button-save-profile"
           >

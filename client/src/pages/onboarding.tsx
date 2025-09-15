@@ -144,7 +144,7 @@ export default function Onboarding() {
         <form onSubmit={handleSubmit} className="bg-card/80 backdrop-blur-sm rounded-xl p-6 shadow-lg space-y-6">
           {/* Band Information */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-brand-primary">Band Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Band Information</h2>
             
             <div>
               <Label htmlFor="bandName" className="text-foreground">Band Name *</Label>
@@ -176,7 +176,7 @@ export default function Onboarding() {
 
           {/* Your Profile in the Band */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-brand-primary">Your Profile</h2>
+            <h2 className="text-lg font-semibold text-foreground">Your Profile</h2>
             
             <div>
               <Label htmlFor="displayName" className="text-foreground">Display Name *</Label>
