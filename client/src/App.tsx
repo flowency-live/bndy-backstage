@@ -7,6 +7,7 @@ import { SupabaseAuthProvider } from "@/hooks/useSupabaseAuth.tsx";
 import { UserProvider } from "@/lib/user-context";
 import BandGate from "@/components/band-gate";
 import Landing from "@/pages/landing";
+import Dashboard from "@/pages/dashboard";
 import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
@@ -23,6 +24,13 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/dashboard">
+        <BandGate>
+          {({ bandId, membership }) => (
+            <Dashboard bandId={bandId} membership={membership} />
+          )}
+        </BandGate>
+      </Route>
       <Route path="/calendar">
         <BandGate>
           {({ bandId, membership }) => (

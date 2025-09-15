@@ -108,7 +108,7 @@ export default function Login() {
           description: "Welcome to bndy",
           variant: "default"
         })
-        setLocation('/welcome')
+        setLocation('/dashboard')
         return
       }
 
@@ -123,7 +123,7 @@ export default function Login() {
         description: "Welcome to bndy",
         variant: "default"
       })
-      setLocation('/welcome')
+      setLocation('/dashboard')
     } catch (error: any) {
       toast({
         title: "Invalid code",
