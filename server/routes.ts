@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
-import { authenticateSupabaseJWT, type AuthenticatedRequest } from "./auth-middleware";
+import { authenticateSupabaseJWT, requireMembership, type AuthenticatedRequest } from "./auth-middleware";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -56,68 +56,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Band Members endpoints
-  app.get("/api/band-members", async (req, res) => {
+  // Band Management endpoints
+  app.get("/api/bands", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
     try {
-      const members = await storage.getBandMembers();
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const bands = await storage.getUserBands(req.user.dbUser.id);
+      res.json(bands);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bands" });
+    }
+  });
+
+  app.post("/api/bands", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { name, description } = req.body;
+      const band = await storage.createBand({
+        name,
+        description,
+      }, req.user.dbUser.id);
+      
+      res.status(201).json(band);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create band" });
+    }
+  });
+
+  app.get("/api/bands/:bandId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const band = await storage.getBand(req.params.bandId);
+      res.json(band);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch band" });
+    }
+  });
+
+  // Band Members endpoints (band-scoped)
+  app.get("/api/bands/:bandId/members", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const members = await storage.getBandMembers(req.params.bandId);
       res.json(members);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch band members" });
     }
   });
 
-  app.get("/api/band-members/:id", async (req, res) => {
-    try {
-      const member = await storage.getBandMember(req.params.id);
-      if (!member) {
-        return res.status(404).json({ message: "Band member not found" });
-      }
-      res.json(member);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch band member" });
-    }
-  });
+  // SECURITY: Legacy endpoints removed - they allowed unauthenticated access to all band data
+  // Use /api/bands/:bandId/members endpoints instead, which require proper authentication and band membership
 
-  app.post("/api/band-members", async (req, res) => {
+  // Events endpoints (band-scoped)
+  app.get("/api/bands/:bandId/events", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertBandMemberSchema.parse(req.body);
-      const member = await storage.createBandMember(validatedData);
-      res.status(201).json(member);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create band member" });
-    }
-  });
-
-  app.delete("/api/band-members/:id", async (req, res) => {
-    try {
-      const success = await storage.deleteBandMember(req.params.id);
-      if (!success) {
-        return res.status(404).json({ message: "Band member not found" });
-      }
-      res.json({ message: "Band member deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete band member" });
-    }
-  });
-
-  // Events endpoints
-  app.get("/api/events", async (req, res) => {
-    try {
-      const { startDate, endDate, memberId } = req.query;
+      const { startDate, endDate } = req.query;
       
       let events;
       if (startDate && endDate) {
         events = await storage.getEventsByDateRange(
+          req.params.bandId,
           startDate as string, 
           endDate as string
         );
-      } else if (memberId) {
-        events = await storage.getEventsByMember(memberId as string);
       } else {
-        events = await storage.getEvents();
+        events = await storage.getEvents(req.params.bandId);
       }
       
       res.json(events);
@@ -126,9 +132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id", async (req, res) => {
+  app.get("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const event = await storage.getEvent(req.params.id);
+      const event = await storage.getEvent(req.params.bandId, req.params.id);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
@@ -138,10 +144,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/bands/:bandId/events", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertEventSchema.parse(req.body);
-      const event = await storage.createEvent(validatedData);
+      const validatedData = insertEventSchema.parse({
+        ...req.body,
+        bandId: req.params.bandId
+      });
+      const event = await storage.createEvent(req.params.bandId, validatedData);
       res.status(201).json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -151,10 +160,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/events/:id", async (req, res) => {
+  app.patch("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertEventSchema.partial().parse(req.body);
-      const event = await storage.updateEvent(req.params.id, validatedData);
+      const event = await storage.updateEvent(req.params.bandId, req.params.id, validatedData);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
@@ -167,9 +176,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/events/:id", async (req, res) => {
+  app.delete("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const success = await storage.deleteEvent(req.params.id);
+      const success = await storage.deleteEvent(req.params.bandId, req.params.id);
       if (!success) {
         return res.status(404).json({ message: "Event not found" });
       }
@@ -179,11 +188,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check for conflicts
-  app.post("/api/events/check-conflicts", async (req, res) => {
+  // Check for conflicts (band-scoped)
+  app.post("/api/bands/:bandId/events/check-conflicts", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { date, endDate, type, memberId, excludeEventId } = req.body;
-      const result = await storage.checkConflicts({ 
+      const result = await storage.checkConflicts(req.params.bandId, { 
         date, 
         endDate, 
         type, 
@@ -195,6 +204,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to check conflicts" });
     }
   });
+
+  // SECURITY: Legacy Events endpoints PERMANENTLY REMOVED - they allowed cross-band data access
+  // Use /api/bands/:bandId/events endpoints instead, which require proper authentication and band membership
 
   // Spotify search endpoint
   app.get("/api/spotify/search", async (req, res) => {
@@ -360,16 +372,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sync practice list to Spotify playlist
-  app.post("/api/spotify/playlists/:id/sync", async (req, res) => {
+  // Sync practice list to Spotify playlist (requires bandId in request body)
+  app.post("/api/spotify/playlists/:id/sync", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: "Access token required" });
       }
 
+      const { bandId } = req.body;
+      if (!bandId) {
+        return res.status(400).json({ message: "Band ID is required" });
+      }
+
+      // Verify user has access to this band
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const userBands = await storage.getUserBands(req.user.dbUser.id);
+      const hasAccess = userBands.some(band => band.bandId === bandId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied to band" });
+      }
+
       const accessToken = authHeader.replace('Bearer ', '');
-      const songs = await storage.getSongs();
+      const songs = await storage.getSongs(bandId);
       
       await spotifyUserService.syncToPlaylist(req.params.id, songs, accessToken);
       res.json({ message: "Successfully synced practice list to Spotify playlist" });
@@ -419,17 +447,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Songs endpoints
-  app.get("/api/songs", async (req, res) => {
+  // Songs endpoints (band-scoped)
+  app.get("/api/bands/:bandId/songs", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const songs = await storage.getSongs();
+      const songs = await storage.getSongs(req.params.bandId);
       
       // Get readiness and vetos for each song
       const songsWithDetails = await Promise.all(
         songs.map(async (song) => {
           const [readiness, vetos] = await Promise.all([
-            storage.getSongReadiness(song.id),
-            storage.getSongVetos(song.id),
+            storage.getSongReadiness(req.params.bandId, song.id),
+            storage.getSongVetos(req.params.bandId, song.id),
           ]);
           return { ...song, readiness, vetos };
         })
@@ -441,17 +469,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/songs", async (req, res) => {
+  app.post("/api/bands/:bandId/songs", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertSongSchema.parse(req.body);
+      const validatedData = insertSongSchema.parse({
+        ...req.body,
+        bandId: req.params.bandId
+      });
       
-      // Check if song already exists
-      const existingSong = await storage.getSongBySpotifyId(validatedData.spotifyId);
+      // Check if song already exists in this band
+      const existingSong = await storage.getSongBySpotifyId(req.params.bandId, validatedData.spotifyId);
       if (existingSong) {
         return res.status(400).json({ message: "Song already exists in practice list" });
       }
       
-      const song = await storage.createSong(validatedData);
+      const song = await storage.createSong(req.params.bandId, validatedData);
       res.status(201).json(song);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -461,9 +492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/songs/:id", async (req, res) => {
+  app.delete("/api/bands/:bandId/songs/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const success = await storage.deleteSong(req.params.id);
+      const success = await storage.deleteSong(req.params.bandId, req.params.id);
       if (!success) {
         return res.status(404).json({ message: "Song not found" });
       }
@@ -473,8 +504,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Song readiness endpoints
-  app.post("/api/songs/:id/readiness", async (req, res) => {
+  // Song readiness endpoints (band-scoped)
+  app.post("/api/bands/:bandId/songs/:id/readiness", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const songId = req.params.id;
       const validatedData = insertSongReadinessSchema.parse({
@@ -482,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         songId,
       });
       
-      const readiness = await storage.setSongReadiness(validatedData);
+      const readiness = await storage.setSongReadiness(req.params.bandId, validatedData);
       res.json(readiness);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -492,10 +523,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/songs/:id/readiness/:memberId", async (req, res) => {
+  app.delete("/api/bands/:bandId/songs/:id/readiness/:memberId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { id: songId, memberId } = req.params;
-      const success = await storage.removeSongReadiness(songId, memberId);
+      const success = await storage.removeSongReadiness(req.params.bandId, songId, memberId);
       if (!success) {
         return res.status(404).json({ message: "Readiness status not found" });
       }
@@ -505,8 +536,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Song veto endpoints
-  app.post("/api/songs/:id/veto", async (req, res) => {
+  // Song veto endpoints (band-scoped)
+  app.post("/api/bands/:bandId/songs/:id/veto", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const songId = req.params.id;
       const validatedData = insertSongVetoSchema.parse({
@@ -514,7 +545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         songId,
       });
       
-      const veto = await storage.addSongVeto(validatedData);
+      const veto = await storage.addSongVeto(req.params.bandId, validatedData);
       res.json(veto);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -524,10 +555,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/songs/:id/veto/:memberId", async (req, res) => {
+  app.delete("/api/bands/:bandId/songs/:id/veto/:memberId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { id: songId, memberId } = req.params;
-      const success = await storage.removeSongVeto(songId, memberId);
+      const success = await storage.removeSongVeto(req.params.bandId, songId, memberId);
       if (!success) {
         return res.status(404).json({ message: "Song veto not found" });
       }
@@ -536,6 +567,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to remove song veto" });
     }
   });
+
+  // SECURITY: Legacy Songs endpoints PERMANENTLY REMOVED - they had no authentication at all
+  // Use /api/bands/:bandId/songs endpoints instead, which require proper authentication and band membership
 
   const httpServer = createServer(app);
   return httpServer;
