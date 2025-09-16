@@ -41,10 +41,15 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
     
-    // Don't apply theme changes to landing/auth pages - they should stay dark
+    // Force dark mode on landing/auth pages - they must always be dark
     const isLandingOrAuthPage = ["/", "/login", "/onboarding"].includes(location) || location.startsWith("/invite/")
     
-    if (!isLandingOrAuthPage) {
+    if (isLandingOrAuthPage) {
+      // Explicitly force dark mode for landing/auth pages
+      root.classList.remove('light', 'dark')
+      root.classList.add('dark')
+    } else {
+      // Apply user's theme preference for app pages
       root.classList.remove('light', 'dark')
       root.classList.add(theme)
     }
@@ -70,7 +75,7 @@ export function ThemeProvider({
   )
 }
 
-export const useTheme = () => {
+export function useTheme() {
   const context = useContext(ThemeProviderContext)
 
   if (context === undefined)

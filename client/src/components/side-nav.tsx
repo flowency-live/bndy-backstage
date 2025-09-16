@@ -121,7 +121,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
-              <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="#0f172a" />
+              <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" holeColor="hsl(var(--background))" />
               <button 
                 onClick={onClose}
                 className="text-foreground hover:text-muted-foreground lg:hidden"
@@ -279,13 +279,13 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-white/10 space-y-3">
+          <div className="p-4 border-t border-border space-y-3">
             {/* Theme Toggle */}
             <div className="flex justify-center">
               <ThemeToggle 
                 variant="ghost" 
                 size="sm" 
-                className="text-white hover:bg-white/20"
+                className="text-foreground hover:bg-muted"
               />
             </div>
 
@@ -294,21 +294,21 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
               <DropdownMenu open={isUserDropdownOpen} onOpenChange={setIsUserDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-full flex items-center gap-2 text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-2 text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
                     data-testid="button-user-menu"
                   >
-                    <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
-                      <User className="h-4 w-4" />
+                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <div className="text-sm font-medium truncate">
                         {userProfile.user.displayName || userProfile.user.email}
                       </div>
-                      <div className="text-xs text-white/70 truncate">
+                      <div className="text-xs text-muted-foreground truncate">
                         {userProfile.user.email}
                       </div>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-white/70" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 
@@ -326,7 +326,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                   
                   <DropdownMenuItem 
                     onClick={handleSignOut} 
-                    className="cursor-pointer text-gray-600 hover:text-red-600 hover:bg-red-50"
+                    className="cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     data-testid="button-logout"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
@@ -352,7 +352,7 @@ export function BurgerMenuButton({ onClick, className = "" }: BurgerMenuButtonPr
   return (
     <button
       onClick={onClick}
-      className={`p-3 text-white hover:text-white/80 transition-colors lg:hidden ${className}`}
+      className={`p-3 text-foreground hover:text-muted-foreground transition-colors lg:hidden ${className}`}
       data-testid="button-burger-menu"
       aria-label="Open navigation menu"
     >

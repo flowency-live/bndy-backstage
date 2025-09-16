@@ -60,21 +60,21 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
             {icon}
           </div>
           
-          {/* Content - Mobile responsive padding */}
+          {/* Content - Mobile responsive padding - Always white text on colored backgrounds */}
           <div className="relative p-3 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
             <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
-              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-1">{title}</h3>
+              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-1 text-white drop-shadow-sm">{title}</h3>
               {subtitle && (
-                <p className="text-white/80 text-xs sm:text-sm">{subtitle}</p>
+                <p className="text-white/90 text-xs sm:text-sm drop-shadow-sm">{subtitle}</p>
               )}
             </div>
             
             <div className="flex items-center justify-between">
               {count !== undefined && (
-                <div className="text-lg sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft">{count}</div>
+                <div className="text-lg sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft text-white drop-shadow-sm">{count}</div>
               )}
               {actionLabel && (
-                <div className="text-xs sm:text-sm bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300">
+                <div className="text-xs sm:text-sm bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300 text-white drop-shadow-sm">
                   {actionLabel}
                 </div>
               )}
@@ -197,9 +197,9 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             {/* Top Row: Avatar and Band Info */}
             <div className="flex items-center gap-3 sm:gap-4 flex-1">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 border-2 border-orange-500 flex-shrink-0">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 border-2 border-primary flex-shrink-0">
                 <AvatarImage src={membership.band.avatarUrl || ''} alt={membership.band.name} />
-                <AvatarFallback className="bg-orange-500 text-white text-lg sm:text-xl lg:text-2xl font-serif">
+                <AvatarFallback className="bg-primary text-primary-foreground text-lg sm:text-xl lg:text-2xl font-serif">
                   {membership.band.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -257,7 +257,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
             </div>
             <Button 
               onClick={() => setLocation("/songs")}
-              className="bg-orange-500 hover:bg-orange-600 text-white self-start sm:self-auto"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
               size="sm"
               data-testid="button-add-song"
             >
@@ -311,7 +311,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
             </div>
             <Button 
               onClick={() => setLocation("/calendar")}
-              className="bg-orange-500 hover:bg-orange-600 text-white self-start sm:self-auto"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
               size="sm"
               data-testid="button-add-event"
             >
@@ -356,7 +356,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
               </div>
               <Button 
                 onClick={() => setLocation("/admin")}
-                className="bg-orange-500 hover:bg-orange-600 text-white self-start sm:self-auto"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
                 size="sm"
                 data-testid="button-invite-member"
               >
@@ -402,7 +402,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         <div className="fixed bottom-6 right-4 sm:right-6 md:hidden">
           <Button 
             size="lg"
-            className="rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-orange-500 hover:bg-orange-600 text-white shadow-lg animate-float hover-lift hover-glow-orange transition-all duration-300 group"
+            className="rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg animate-float hover-lift hover-glow-orange transition-all duration-300 group"
             onClick={() => setLocation("/songs")}
             data-testid="fab-add"
           >
