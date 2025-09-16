@@ -40,7 +40,7 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
         <div 
           className="h-full rounded-lg relative overflow-hidden transition-all duration-300 group-hover:scale-105"
           style={{ 
-            background: `linear-gradient(135deg, ${color} 0%, ${color}80 50%, ${color}CC 100%)`,
+            background: `linear-gradient(135deg, ${color} 0%, color-mix(in hsl, ${color} 80%, transparent 20%) 50%, color-mix(in hsl, ${color} 90%, transparent 10%) 100%)`,
             backgroundSize: '200% 200%',
             backgroundPosition: '0% 0%'
           }}
@@ -49,7 +49,7 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
           <div 
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ 
-              background: `linear-gradient(135deg, ${color}CC 0%, ${color} 50%, ${color}80 100%)`,
+              background: `linear-gradient(135deg, color-mix(in hsl, ${color} 90%, transparent 10%) 0%, ${color} 50%, color-mix(in hsl, ${color} 80%, transparent 20%) 100%)`,
               backgroundSize: '200% 200%',
               backgroundPosition: '100% 100%'
             }}
@@ -60,21 +60,21 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
             {icon}
           </div>
           
-          {/* Content - Mobile responsive padding - Always white text on colored backgrounds */}
+          {/* Content - Mobile responsive padding - High contrast white text */}
           <div className="relative p-3 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
             <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
-              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-1 text-white drop-shadow-sm">{title}</h3>
+              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-1 text-white drop-shadow-lg">{title}</h3>
               {subtitle && (
-                <p className="text-white/90 text-xs sm:text-sm drop-shadow-sm">{subtitle}</p>
+                <p className="text-white/90 text-xs sm:text-sm drop-shadow-md">{subtitle}</p>
               )}
             </div>
             
             <div className="flex items-center justify-between">
               {count !== undefined && (
-                <div className="text-lg sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft text-white drop-shadow-sm">{count}</div>
+                <div className="text-lg sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft text-white drop-shadow-lg">{count}</div>
               )}
               {actionLabel && (
-                <div className="text-xs sm:text-sm bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300 text-white drop-shadow-sm">
+                <div className="text-xs sm:text-sm bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300 text-white drop-shadow-md">
                   {actionLabel}
                 </div>
               )}
