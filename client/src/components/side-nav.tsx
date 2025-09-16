@@ -253,8 +253,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           {/* Bottom Section */}
           <div className="p-6 border-t border-white/10 space-y-4">
             {/* Theme Toggle */}
-            <div className="flex items-center justify-between">
-              <span className="text-white font-medium">Theme</span>
+            <div className="flex justify-center">
               <ThemeToggle 
                 variant="ghost" 
                 size="sm" 
