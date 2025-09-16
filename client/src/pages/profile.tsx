@@ -22,8 +22,7 @@ export default function Profile() {
   const { toast } = useToast();
   const [mode, setMode] = useState<"create" | "edit">("create");
 
-  // Force dark mode for profile creation (branding consistency)
-  useConditionalDarkMode(mode === "create");
+  // Profile page now respects theme system - no forced dark mode
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -110,10 +109,10 @@ export default function Profile() {
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-24 h-24 flex items-center justify-center mx-auto mb-4">
-            <BndyLogo className="w-16 h-16" color="white" holeColor="#0f172a" />
+            <BndyLogo className="w-16 h-16" color="hsl(var(--foreground))" holeColor="hsl(var(--background))" />
           </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading your profile...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
@@ -123,13 +122,13 @@ export default function Profile() {
   if (profileError) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+        <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <BndyLogo className="w-16 h-16 mx-auto mb-4" color="#f97316" holeColor="#0f172a" />
-            <CardTitle className="text-white">Profile Error</CardTitle>
+            <BndyLogo className="w-16 h-16 mx-auto mb-4" color="#f97316" holeColor="hsl(var(--background))" />
+            <CardTitle>Profile Error</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-center text-slate-400">
+            <p className="text-center text-muted-foreground">
               Failed to load your profile. Please try again.
             </p>
             <div className="flex gap-2">
@@ -143,7 +142,7 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 onClick={handleCancel}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                className="flex-1"
                 data-testid="button-back"
               >
                 Back
@@ -158,18 +157,18 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
-      <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-10">
+      <div className="bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-10">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={handleCancel}
-              className="p-2 text-white hover:text-slate-300 transition-colors"
+              className="p-2 text-foreground hover:text-muted-foreground transition-colors"
               data-testid="button-back-header"
             >
               <i className="fas fa-arrow-left"></i>
             </button>
             
-            <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="#0f172a" />
+            <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="hsl(var(--background))" />
             
             <div className="w-10"> {/* Spacer for centering */}</div>
           </div>
@@ -184,14 +183,14 @@ export default function Profile() {
             <div className="mb-4">
               {mode === "create" && (
                 <div className="flex justify-center mb-2">
-                  <BndyLogo className="w-16 h-16" color="#f97316" holeColor="#0f172a" />
+                  <BndyLogo className="w-16 h-16" color="#f97316" holeColor="hsl(var(--background))" />
                 </div>
               )}
-              <h1 className="text-3xl font-serif text-white mb-2">
+              <h1 className="text-3xl font-serif text-foreground mb-2">
                 {mode === "create" ? "Complete Your Profile" : "Your Profile"}
               </h1>
             </div>
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               {mode === "create" 
                 ? "Let's set up your profile to get started" 
                 : "Update your profile information"
@@ -200,7 +199,7 @@ export default function Profile() {
           </div>
 
           {/* Profile Form Card */}
-          <Card className="bg-slate-800 border-slate-700 shadow-xl">
+          <Card className="shadow-xl">
             <CardContent className="p-6">
               <ProfileForm
                 initialData={userProfile?.user ? {
@@ -223,7 +222,7 @@ export default function Profile() {
               <Button
                 variant="ghost"
                 onClick={handleCancel}
-                className="text-slate-400 hover:text-white hover:bg-slate-800"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted"
                 data-testid="button-cancel-profile"
               >
                 Cancel Changes
