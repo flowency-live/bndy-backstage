@@ -36,6 +36,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user's band memberships
       const bandMemberships = await storage.getUserBands(dbUser.id);
 
+      // Compute profileCompleted dynamically based on required fields
+      const profileCompleted = !!(dbUser.firstName && dbUser.lastName && dbUser.displayName && dbUser.hometown && dbUser.instrument);
+
       // Return user profile with band memberships
       res.json({
         user: {
@@ -50,7 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           instrument: dbUser.instrument,
           avatarUrl: dbUser.avatarUrl,
           platformAdmin: dbUser.platformAdmin,
-          profileCompleted: dbUser.profileCompleted,
+          profileCompleted: profileCompleted,
           createdAt: dbUser.createdAt,
           updatedAt: dbUser.updatedAt,
         },
@@ -71,11 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validatedData = updateUserProfileSchema.parse(req.body);
       
-      // Update the profile completion status if all required fields are provided
-      let profileCompleted = req.user.dbUser.profileCompleted;
-      if (validatedData.firstName && validatedData.lastName && validatedData.displayName && validatedData.hometown && validatedData.instrument) {
-        profileCompleted = true;
-      }
+      // Compute the profile completion status dynamically based on current data + updates
+      const mergedData = { ...req.user.dbUser, ...validatedData };
+      const profileCompleted = !!(mergedData.firstName && mergedData.lastName && mergedData.displayName && mergedData.hometown && mergedData.instrument);
 
       const updatedUser = await storage.updateUser(req.user.dbUser.id, {
         ...validatedData,

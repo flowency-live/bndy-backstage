@@ -65,7 +65,7 @@ export async function authenticateSupabaseJWT(
       try {
         dbUser = await storage.getUserBySupabaseId(devSupabaseId);
         if (!dbUser) {
-          // Create the god mode user in our database
+          // Create the god mode user in our database with complete profile
           dbUser = await storage.createOrGetUser({
             supabaseId: devSupabaseId,
             phone: '+447758240770',
@@ -73,10 +73,15 @@ export async function authenticateSupabaseJWT(
             displayName: 'God Mode Dev User',
           });
           
-          // Make them a platform admin
+          // Make them a platform admin with complete profile
           dbUser = await storage.updateUser(dbUser.id, { 
             platformAdmin: true,
-            displayName: 'God Mode Dev User'
+            displayName: 'God Mode Dev User',
+            firstName: 'God',
+            lastName: 'Mode',
+            hometown: 'London',
+            instrument: 'All Instruments',
+            profileCompleted: true
           }) || dbUser;
         }
       } catch (error) {
