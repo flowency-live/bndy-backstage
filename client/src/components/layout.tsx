@@ -66,7 +66,7 @@ export function AppLayout({ children, bandId, membership }: AppLayoutProps) {
       />
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-80">
+      <div className="flex-1 lg:ml-64">
         {children}
       </div>
     </div>

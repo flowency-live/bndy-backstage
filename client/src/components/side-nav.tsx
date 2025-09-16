@@ -41,6 +41,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
   const [location] = useLocation();
   const { session, signOut } = useSupabaseAuth();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   // Get user profile and all bands
   const { data: userProfile } = useQuery<UserProfile>({
@@ -112,14 +113,14 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
 
       {/* Side Navigation */}
       <div className={`
-        fixed top-0 left-0 h-screen w-80 bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-screen w-64 bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:shadow-none
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-white/10">
-            <div className="flex items-center justify-between mb-6">
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between mb-4">
               <BndyLogo className="h-8 w-auto" color="#f97316" />
               <button 
                 onClick={onClose}
@@ -136,12 +137,12 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-between bg-white/10 hover:bg-white/20 text-white border-white/20 p-3"
+                    className="w-full justify-between bg-white/10 hover:bg-white/20 text-white border-white/20 p-2"
                     data-testid="button-band-switcher"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: currentMembership.color }}
                       >
                         <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
@@ -155,7 +156,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                   </Button>
                 </DropdownMenuTrigger>
                 
-                <DropdownMenuContent className="w-72" align="start">
+                <DropdownMenuContent className="w-60" align="start">
                   {/* Current Band */}
                   <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
                     Current Band
@@ -223,8 +224,8 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           </div>
 
           {/* Navigation Items */}
-          <nav className="flex-1 p-6">
-            <div className="space-y-2">
+          <nav className="flex-1 p-4">
+            <div className="space-y-1">
               {navigationItems.map((item) => {
                 const isActive = location === item.path;
                 const IconComponent = item.icon;
@@ -234,7 +235,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                     key={item.path}
                     onClick={() => navigateTo(item.path)}
                     className={`
-                      w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors
+                      w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
                       ${isActive 
                         ? 'bg-orange-500 text-white' 
                         : 'text-white hover:bg-white/10'
@@ -251,7 +252,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-6 border-t border-white/10 space-y-4">
+          <div className="p-4 border-t border-white/10 space-y-3">
             {/* Theme Toggle */}
             <div className="flex justify-center">
               <ThemeToggle 
@@ -261,32 +262,51 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
               />
             </div>
 
-            {/* User Profile & Logout */}
+            {/* User Profile Dropdown */}
             {userProfile && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-white">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                    <User className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
-                      {userProfile.user.displayName || userProfile.user.email}
+              <DropdownMenu open={isUserDropdownOpen} onOpenChange={setIsUserDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className="w-full flex items-center gap-2 text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    data-testid="button-user-menu"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
+                      <User className="h-4 w-4" />
                     </div>
-                    <div className="text-xs text-white/70 truncate">
-                      {userProfile.user.email}
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="text-sm font-medium truncate">
+                        {userProfile.user.displayName || userProfile.user.email}
+                      </div>
+                      <div className="text-xs text-white/70 truncate">
+                        {userProfile.user.email}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                    <ChevronDown className="h-4 w-4 text-white/70" />
+                  </button>
+                </DropdownMenuTrigger>
                 
-                <button 
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:bg-red-500/20 transition-colors"
-                  data-testid="button-logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Sign Out</span>
-                </button>
-              </div>
+                <DropdownMenuContent className="w-56" align="start" side="top">
+                  <DropdownMenuItem 
+                    onClick={() => navigateTo('/profile')} 
+                    className="cursor-pointer"
+                    data-testid="button-view-profile"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    View Profile
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem 
+                    onClick={handleSignOut} 
+                    className="cursor-pointer text-gray-600 hover:text-red-600 hover:bg-red-50"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
