@@ -4,16 +4,16 @@
 
 :root {
   /* Light mode theme */
-  --background: hsl(0, 0%, 100%); /* white */
+  --background: hsl(210, 20%, 98%); /* Very light blue-grey background */
   --foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
-  --muted: hsl(210, 40%, 96%); /* slate-100 */
+  --muted: hsl(210, 40%, 94%); /* Slightly darker muted areas */
   --muted-foreground: hsl(215.4, 16.3%, 46.9%); /* slate-500 */
-  --popover: hsl(0, 0%, 100%); /* white */
+  --popover: hsl(0, 0%, 100%); /* Pure white for popovers to stand out */
   --popover-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
-  --card: hsl(0, 0%, 100%); /* white */
+  --card: hsl(0, 0%, 100%); /* Pure white cards for strong contrast */
   --card-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
-  --border: hsl(214.3, 31.8%, 91.4%); /* slate-200 */
-  --input: hsl(214.3, 31.8%, 91.4%); /* slate-200 */
+  --border: hsl(214.3, 31.8%, 88%); /* Slightly stronger borders */
+  --input: hsl(0, 0%, 100%); /* Pure white inputs for clarity */
   --primary: hsl(24, 95%, 53%); /* orange-500 */
   --primary-foreground: hsl(0, 0%, 100%); /* white */
   --secondary: hsl(210, 40%, 96%); /* slate-100 */
@@ -78,6 +78,141 @@
   /* orange-500 for focus ring */
   --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
+  
+  /* Chart colors */
+  --chart-1: hsl(12, 76%, 61%);
+  --chart-2: hsl(173, 58%, 39%);
+  --chart-3: hsl(197, 37%, 24%);
+  --chart-4: hsl(43, 74%, 66%);
+  --chart-5: hsl(27, 87%, 67%);
+}
+
+/* Section-based theme classes */
+
+/* Band/User Management Theme - Grey */
+.theme-band {
+  --primary: hsl(220, 13%, 51%); /* slate-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(220, 13%, 51%); /* slate-500 */
+  --chart-1: hsl(220, 13%, 51%);
+  --chart-2: hsl(220, 9%, 46%);
+  --chart-3: hsl(220, 9%, 40%);
+  --chart-4: hsl(220, 13%, 55%);
+  --chart-5: hsl(220, 13%, 60%);
+}
+
+.theme-user {
+  --primary: hsl(220, 13%, 51%); /* slate-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(220, 13%, 51%); /* slate-500 */
+  --chart-1: hsl(220, 13%, 51%);
+  --chart-2: hsl(220, 9%, 46%);
+  --chart-3: hsl(220, 9%, 40%);
+  --chart-4: hsl(220, 13%, 55%);
+  --chart-5: hsl(220, 13%, 60%);
+}
+
+/* Gigs Theme - Orange */
+.theme-gigs {
+  --primary: hsl(24, 95%, 53%); /* orange-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(24, 95%, 53%); /* orange-500 */
+  --chart-1: hsl(24, 95%, 53%);
+  --chart-2: hsl(21, 90%, 48%);
+  --chart-3: hsl(16, 84%, 40%);
+  --chart-4: hsl(33, 100%, 52%);
+  --chart-5: hsl(31, 100%, 57%);
+}
+
+/* Calendar Theme - Purple */
+.theme-calendar {
+  --primary: hsl(271, 91%, 65%); /* purple-400 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(271, 91%, 65%); /* purple-400 */
+  --chart-1: hsl(271, 91%, 65%);
+  --chart-2: hsl(270, 95%, 75%);
+  --chart-3: hsl(269, 95%, 85%);
+  --chart-4: hsl(273, 87%, 55%);
+  --chart-5: hsl(274, 83%, 45%);
+}
+
+/* Playbook Theme - Blue */
+.theme-playbook {
+  --primary: hsl(221, 83%, 53%); /* blue-500 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(221, 83%, 53%); /* blue-500 */
+  --chart-1: hsl(221, 83%, 53%);
+  --chart-2: hsl(217, 91%, 60%);
+  --chart-3: hsl(212, 92%, 65%);
+  --chart-4: hsl(213, 93%, 67%);
+  --chart-5: hsl(210, 98%, 78%);
+}
+
+/* Setlist Theme - Green */
+.theme-setlist {
+  --primary: hsl(142, 76%, 36%); /* green-600 */
+  --primary-foreground: hsl(0, 0%, 100%); /* white */
+  --ring: hsl(142, 76%, 36%); /* green-600 */
+  --chart-1: hsl(142, 76%, 36%);
+  --chart-2: hsl(142, 71%, 45%);
+  --chart-3: hsl(141, 69%, 58%);
+  --chart-4: hsl(140, 65%, 70%);
+  --chart-5: hsl(138, 62%, 80%);
+}
+
+/* Songs Theme - Yellow */
+.theme-songs {
+  --primary: hsl(48, 96%, 53%); /* yellow-400 */
+  --primary-foreground: hsl(45, 93%, 5%); /* dark text for yellow */
+  --ring: hsl(48, 96%, 53%); /* yellow-400 */
+  --chart-1: hsl(48, 96%, 53%);
+  --chart-2: hsl(54, 91%, 60%);
+  --chart-3: hsl(60, 87%, 67%);
+  --chart-4: hsl(52, 98%, 47%);
+  --chart-5: hsl(45, 93%, 42%);
+}
+
+/* Dark mode variants for section themes */
+.dark.theme-band {
+  --primary: hsl(215, 20%, 65%); /* slate-400 - lighter for dark mode */
+  --primary-foreground: hsl(222, 47%, 11%); /* dark text */
+  --ring: hsl(215, 20%, 65%);
+}
+
+.dark.theme-user {
+  --primary: hsl(215, 20%, 65%); /* slate-400 - lighter for dark mode */
+  --primary-foreground: hsl(222, 47%, 11%); /* dark text */
+  --ring: hsl(215, 20%, 65%);
+}
+
+.dark.theme-gigs {
+  --primary: hsl(24, 95%, 53%); /* same orange-500 works well in dark */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(24, 95%, 53%);
+}
+
+.dark.theme-calendar {
+  --primary: hsl(271, 91%, 70%); /* lighter purple for dark mode */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(271, 91%, 70%);
+}
+
+.dark.theme-playbook {
+  --primary: hsl(221, 83%, 60%); /* lighter blue for dark mode */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(221, 83%, 60%);
+}
+
+.dark.theme-setlist {
+  --primary: hsl(142, 76%, 45%); /* lighter green for dark mode */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(142, 76%, 45%);
+}
+
+.dark.theme-songs {
+  --primary: hsl(48, 96%, 60%); /* lighter yellow for dark mode */
+  --primary-foreground: hsl(45, 93%, 5%); /* dark text */
+  --ring: hsl(48, 96%, 60%);
 }
 
 @layer base {

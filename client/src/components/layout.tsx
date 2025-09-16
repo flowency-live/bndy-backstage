@@ -100,7 +100,7 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
             {showBurgerMenu && (
               <BurgerMenuButton onClick={toggleNav} />
             )}
-            <BndyLogo className="h-8 w-auto" color="#f97316" />
+            <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" />
           </div>
 
           {/* Center: Title */}

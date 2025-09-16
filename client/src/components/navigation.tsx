@@ -26,7 +26,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
         onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         className="font-serif text-brand-primary hover:text-brand-primary-dark transition-colors leading-tight"
       >
-        <BndyLogo className="h-8 w-auto" color="#f97316" />
+        <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" />
       </button>
 
       {/* Only render drawer elements when open */}
@@ -104,7 +104,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 {/* Logout Button */}
                 <button 
                   onClick={onLogout}
-                  className="w-full text-left py-3 px-4 rounded-lg text-red-300 hover:bg-red-500/20 transition-colors flex items-center space-x-3"
+                  className="w-full text-left py-3 px-4 rounded-lg text-destructive hover:bg-destructive/20 transition-colors flex items-center space-x-3"
                   data-testid="button-logout"
                 >
                   <i className="fas fa-sign-out-alt w-5"></i>

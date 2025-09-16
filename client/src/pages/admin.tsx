@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSectionTheme } from "@/hooks/use-section-theme";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { UserBand, Band } from "@shared/schema";
@@ -31,6 +32,9 @@ interface AdminProps {
 }
 
 export default function Admin({ bandId, membership }: AdminProps) {
+  // Apply band theme for admin/management pages
+  useSectionTheme('band');
+  
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
   const { toast } = useToast();

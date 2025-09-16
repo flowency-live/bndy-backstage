@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
@@ -40,6 +41,9 @@ interface SongsProps {
 }
 
 export default function Songs({ bandId, membership }: SongsProps) {
+  // Apply songs theme
+  useSectionTheme('songs');
+  
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
   const { toast } = useToast();
