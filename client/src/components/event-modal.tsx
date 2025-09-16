@@ -268,12 +268,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-          <div className="bg-brand-primary text-white p-6 rounded-t-2xl">
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-card rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+          <div className="bg-primary text-primary-foreground p-6 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-serif">{isEditing ? "Edit Event" : "Add New Event"}</h3>
-              <button onClick={onClose} className="text-white hover:text-gray-200">
+              <button onClick={onClose} className="text-primary-foreground hover:text-primary-foreground/80">
                 <i className="fas fa-times text-xl"></i>
               </button>
             </div>
@@ -282,7 +282,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
           <form onSubmit={handleSubmit} className="p-6">
             {/* Event Type Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-sans font-semibold text-gray-700 mb-3">Event Type</label>
+              <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Event Type</label>
               <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
                 {EVENT_TYPES.map((type) => {
                   const config = EVENT_TYPE_CONFIG[type];
@@ -296,7 +296,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                       className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
                         isSelected
                           ? `border-2 shadow-md`
-                          : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                          : "border-border hover:border-border/80 hover:shadow-sm"
                       }`}
                       style={{
                         borderColor: isSelected ? config.color : undefined,
@@ -306,7 +306,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                     >
                       <div className="text-xl mb-1">{config.icon}</div>
                       <div className={`text-xs font-sans font-semibold ${
-                        isSelected ? "text-gray-800" : "text-gray-600"
+                        isSelected ? "text-card-foreground" : "text-muted-foreground"
                       }`} style={{
                         color: isSelected ? config.color : undefined,
                       }}>{config.label}</div>

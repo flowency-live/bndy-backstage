@@ -139,19 +139,19 @@ export default function Onboarding() {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-serif text-white mb-2">Create Your Band</h1>
-          <p className="text-slate-400 text-base">Set up your band and get started organising gigs, rehearsals & music</p>
+          <h1 className="text-3xl font-serif text-foreground mb-2">Create Your Band</h1>
+          <p className="text-muted-foreground text-base">Set up your band and get started organising gigs, rehearsals & music</p>
         </div>
 
         {/* Form */}
-        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-600">
+        <div className="bg-card rounded-xl p-6 shadow-xl border border-border">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Band Information */}
           <div className="space-y-5">
-            <h2 className="text-xl font-semibold text-white mb-1">Band Information</h2>
+            <h2 className="text-xl font-semibold text-card-foreground mb-1">Band Information</h2>
             
             <div>
-              <Label htmlFor="bandName" className="text-slate-200 font-medium mb-1 block">Band Name *</Label>
+              <Label htmlFor="bandName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
               <Input
                 id="bandName"
                 type="text"
@@ -165,7 +165,7 @@ export default function Onboarding() {
             </div>
 
             <div>
-              <Label htmlFor="bandDescription" className="text-slate-200 font-medium mb-1 block">Description (Optional)</Label>
+              <Label htmlFor="bandDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
               <Textarea
                 id="bandDescription"
                 value={formData.bandDescription}
@@ -180,10 +180,10 @@ export default function Onboarding() {
 
           {/* Your Profile in the Band */}
           <div className="space-y-5">
-            <h2 className="text-xl font-semibold text-white mb-1">Your Profile</h2>
+            <h2 className="text-xl font-semibold text-card-foreground mb-1">Your Profile</h2>
             
             <div>
-              <Label htmlFor="displayName" className="text-slate-200 font-medium mb-1 block">Display Name *</Label>
+              <Label htmlFor="displayName" className="text-card-foreground font-medium mb-1 block">Display Name *</Label>
               <Input
                 id="displayName"
                 type="text"
@@ -197,7 +197,7 @@ export default function Onboarding() {
             </div>
 
             <div>
-              <Label htmlFor="role" className="text-slate-200 font-medium mb-1 block">Role</Label>
+              <Label htmlFor="role" className="text-card-foreground font-medium mb-1 block">Role</Label>
               <Input
                 id="role"
                 type="text"
@@ -211,8 +211,8 @@ export default function Onboarding() {
 
             {/* Band Avatar Upload */}
             <div>
-              <Label className="text-slate-200 font-medium mb-2 block">Band Avatar (Optional)</Label>
-              <p className="text-sm text-slate-400 mb-3">Upload a logo or image for your band</p>
+              <Label className="text-card-foreground font-medium mb-2 block">Band Avatar (Optional)</Label>
+              <p className="text-sm text-muted-foreground mb-3">Upload a logo or image for your band</p>
               <div className="flex justify-center">
                 <ImageUpload
                   value={formData.bandAvatar || undefined}
@@ -226,8 +226,8 @@ export default function Onboarding() {
 
             {/* Member Icon Selection (for user profile) */}
             <div>
-              <Label className="text-slate-200 font-medium mb-2 block">Choose Your Icon</Label>
-              <p className="text-sm text-slate-400 mb-3">This represents you within the band</p>
+              <Label className="text-card-foreground font-medium mb-2 block">Choose Your Icon</Label>
+              <p className="text-sm text-muted-foreground mb-3">This represents you within the band</p>
               <div className="grid grid-cols-4 gap-3 mt-3">
                 {ICONS.map((iconData) => (
                   <button
@@ -237,7 +237,7 @@ export default function Onboarding() {
                     className={`p-3 rounded-lg border-2 transition-all hover:shadow-md hover:scale-105 ${
                       formData.icon === iconData.icon
                         ? 'border-orange-500 bg-orange-500/10 shadow-md scale-105'
-                        : 'border-slate-600 hover:border-orange-500/50 hover:bg-slate-700'
+                        : 'border-border hover:border-orange-500/50 hover:bg-muted'
                     }`}
                     data-testid={`button-icon-${iconData.icon}`}
                   >
@@ -245,9 +245,9 @@ export default function Onboarding() {
                       className="w-8 h-8 rounded-full flex items-center justify-center mx-auto"
                       style={{ backgroundColor: iconData.color }}
                     >
-                      <i className={`fas ${iconData.icon} text-white text-sm`}></i>
+                      <i className={`fas ${iconData.icon} text-primary-foreground text-sm`}></i>
                     </div>
-                    <p className="text-xs mt-1 text-slate-400 truncate">{iconData.label}</p>
+                    <p className="text-xs mt-1 text-muted-foreground truncate">{iconData.label}</p>
                   </button>
                 ))}
               </div>
@@ -255,19 +255,19 @@ export default function Onboarding() {
 
             {/* Color Preview */}
             <div className="flex items-center gap-3">
-              <Label className="text-slate-200 font-medium">Your Color:</Label>
+              <Label className="text-card-foreground font-medium">Your Color:</Label>
               <div 
-                className="w-8 h-8 rounded-full border-2 border-slate-600 shadow-sm"
+                className="w-8 h-8 rounded-full border-2 border-border shadow-sm"
                 style={{ backgroundColor: formData.color }}
               ></div>
-              <span className="text-sm text-slate-400 font-mono">{formData.color}</span>
+              <span className="text-sm text-muted-foreground font-mono">{formData.color}</span>
             </div>
           </div>
 
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-base font-medium shadow-sm"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base font-medium shadow-sm"
             disabled={createBandMutation.isPending}
             data-testid="button-create-band"
           >
@@ -288,7 +288,7 @@ export default function Onboarding() {
             <button
               type="button"
               onClick={() => setLocation("/")}
-              className="text-slate-400 hover:text-white text-sm underline transition-colors font-medium"
+              className="text-muted-foreground hover:text-foreground text-sm underline transition-colors font-medium"
               data-testid="button-back"
             >
               ← Back to Band Selection

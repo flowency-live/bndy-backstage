@@ -105,7 +105,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
       {/* Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
           data-testid="sidenav-overlay"
         />

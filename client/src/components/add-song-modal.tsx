@@ -141,14 +141,14 @@ export default function AddSongModal({ isOpen, onClose, bandId, membership }: Ad
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-brand-primary text-white p-6 flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground p-6 flex items-center justify-between">
           <h2 className="text-xl font-serif font-bold">Add Song to Practice List</h2>
           <button 
             onClick={onClose}
-            className="text-white hover:text-gray-200"
+            className="text-primary-foreground hover:text-primary-foreground/80"
           >
             <i className="fas fa-times text-xl"></i>
           </button>

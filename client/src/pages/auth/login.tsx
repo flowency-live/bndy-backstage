@@ -237,7 +237,7 @@ export default function Login() {
           ) : (
             <>
               <h2 className="text-2xl font-serif text-foreground mb-2">Enter Code</h2>
-              <p className="text-slate-400 font-sans mb-6">
+              <p className="text-muted-foreground font-sans mb-6">
                 We sent a code to {phone}
               </p>
               

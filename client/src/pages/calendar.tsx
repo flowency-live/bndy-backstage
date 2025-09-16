@@ -213,8 +213,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
               onClick={() => setViewMode("calendar")}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 viewMode === "calendar" 
-                  ? "bg-white text-slate-900" 
-                  : "text-white hover:bg-white/10"
+                  ? "bg-primary-foreground text-primary" 
+                  : "text-primary-foreground hover:bg-white/10"
               }`}
               data-testid="button-calendar-view"
             >
@@ -224,8 +224,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
               onClick={() => setViewMode("agenda")}
               className={`px-3 py-1 text-sm font-medium transition-colors ${
                 viewMode === "agenda" 
-                  ? "bg-white text-slate-900" 
-                  : "text-white hover:bg-white/10"
+                  ? "bg-primary-foreground text-primary" 
+                  : "text-primary-foreground hover:bg-white/10"
               }`}
               data-testid="button-agenda-view"
             >
@@ -238,28 +238,28 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
         <div className="max-w-7xl mx-auto px-4 py-4 animate-fade-in-up">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent animate-pulse-soft hover-lift-subtle">
+          <div className="bg-card rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent animate-pulse-soft hover-lift-subtle">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-brand-accent rounded-full flex items-center justify-center">
-                  <i className={`fas ${nextEvent.type === "gig" ? "fa-star" : "fa-music"} text-white text-xl`}></i>
+                  <i className={`fas ${nextEvent.type === "gig" ? "fa-star" : "fa-music"} text-primary-foreground text-xl`}></i>
                 </div>
                 <div>
-                  <h3 className="text-xl font-sans font-semibold text-brand-primary">
+                  <h3 className="text-xl font-sans font-semibold text-card-foreground">
                     Next Up: {nextEvent.title || (nextEvent.type === "gig" ? "Gig" : "Band Practice")}
                   </h3>
-                  <p className="text-gray-700">
+                  <p className="text-card-foreground">
                     {format(new Date(nextEvent.date + 'T00:00:00'), "EEEE, MMMM do")}
                     {nextEvent.startTime && ` at ${nextEvent.startTime}`}
                   </p>
                   {nextEvent.location && (
-                    <p className="text-gray-600 text-sm">{nextEvent.location}</p>
+                    <p className="text-muted-foreground text-sm">{nextEvent.location}</p>
                   )}
                 </div>
               </div>
               <button 
                 onClick={() => setDismissedHighlight(true)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground"
                 data-testid="button-dismiss-highlight"
               >
                 <i className="fas fa-times text-lg"></i>
@@ -276,8 +276,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
             onClick={() => setViewMode("calendar")}
             className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
               viewMode === "calendar" 
-                ? "bg-brand-primary text-white" 
-                : "text-brand-primary"
+                ? "bg-primary text-primary-foreground" 
+                : "text-primary"
             }`}
             data-testid="button-calendar-view"
           >
@@ -287,8 +287,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
             onClick={() => setViewMode("agenda")}
             className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
               viewMode === "agenda" 
-                ? "bg-brand-primary text-white" 
-                : "text-brand-primary"
+                ? "bg-primary text-primary-foreground" 
+                : "text-primary"
             }`}
             data-testid="button-agenda-view"
           >
@@ -298,7 +298,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       </div>
 
       {/* Calendar Navigation */}
-      <div className="bg-white">
+      <div className="bg-background">
         <div className="bg-brand-primary-light px-4 py-3">
           <div className="flex items-center justify-between">
             <button 
@@ -309,7 +309,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
               <i className="fas fa-chevron-left text-xl"></i>
             </button>
             <div className="flex items-center space-x-2">
-              <div className="hidden md:block text-xs text-white opacity-75">
+              <div className="hidden md:block text-xs text-primary-foreground opacity-75">
                 <i className="fas fa-hand-point-left mr-1"></i>
                 Swipe to navigate
               </div>
@@ -498,35 +498,35 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           <div className="p-4 space-y-4">
             {getAgendaEvents().length === 0 ? (
               <div className="text-center py-8">
-                <div className="text-gray-400 mb-4">
+                <div className="text-muted-foreground mb-4">
                   <i className="fas fa-calendar-times text-4xl"></i>
                 </div>
-                <h3 className="text-lg font-sans font-semibold text-gray-600 mb-2">No events this month</h3>
-                <p className="text-gray-500">Add some practices or gigs to get started</p>
+                <h3 className="text-lg font-sans font-semibold text-muted-foreground mb-2">No events this month</h3>
+                <p className="text-muted-foreground">Add some practices or gigs to get started</p>
               </div>
             ) : (
               getAgendaEvents().map((event) => (
                 <div
                   key={event.id}
-                  className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-card rounded-lg p-4 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => openEditEventModal(event)}
                   data-testid={`agenda-event-${event.id}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground"
                          style={{ backgroundColor: EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color }}>
                       <span className="text-xl">{EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-sans font-semibold text-brand-primary">
+                      <h4 className="font-sans font-semibold text-card-foreground">
                         {event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}
                       </h4>
-                      <p className="text-gray-600">
+                      <p className="text-muted-foreground">
                         {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}
                         {event.startTime && ` • ${formatEventTime(event)}`}
                       </p>
                       {(event.venue || event.location) && (
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-muted-foreground text-sm">
                           {event.isPublic ? `📍 ${event.venue}` : `🏠 ${event.location}`}
                         </p>
                       )}

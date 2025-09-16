@@ -34,19 +34,19 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
         <>
           {/* Overlay */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black/50 z-40"
             onClick={closeDrawer}
           />
 
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-screen w-60 bg-brand-primary shadow-2xl z-50 animate-slide-in-left">
+          <div className="fixed top-0 left-0 h-screen w-60 bg-primary shadow-2xl z-50 animate-slide-in-left">
             <div className="p-4 animate-fade-in-up">
               {/* Header */}
               <div className="flex items-center justify-between mb-6 animate-fade-in-up-delayed">
-                <h2 className="text-white font-serif text-lg">Menu</h2>
+                <h2 className="text-primary-foreground font-serif text-lg">Menu</h2>
                 <button 
                   onClick={closeDrawer}
-                  className="text-white hover:text-gray-200 hover-scale-105 transition-transform duration-200"
+                  className="text-primary-foreground hover:text-primary-foreground/80 hover-scale-105 transition-transform duration-200"
                 >
                   <i className="fas fa-times text-xl"></i>
                 </button>
@@ -56,7 +56,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
               <nav className="space-y-4">
                 <button 
                   onClick={() => navigateTo("/calendar")}
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  className="w-full text-left py-3 px-4 rounded-lg text-primary-foreground hover:bg-white/20 transition-colors flex items-center space-x-3"
                 >
                   <i className="fas fa-calendar w-5"></i>
                   <span className="font-serif text-lg">Calendar</span>
@@ -64,7 +64,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 
                 <button 
                   onClick={() => navigateTo("/songs")}
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  className="w-full text-left py-3 px-4 rounded-lg text-primary-foreground hover:bg-white/20 transition-colors flex items-center space-x-3"
                 >
                   <i className="fas fa-music w-5"></i>
                   <span className="font-serif text-lg">Practice List</span>
@@ -72,7 +72,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 
                 <button 
                   onClick={() => navigateTo("/admin")}
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  className="w-full text-left py-3 px-4 rounded-lg text-primary-foreground hover:bg-white/20 transition-colors flex items-center space-x-3"
                 >
                   <i className="fas fa-users-cog w-5"></i>
                   <span className="font-serif text-lg">Manage Band</span>
@@ -80,7 +80,7 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 
                 <button 
                   onClick={() => navigateTo("/profile")}
-                  className="w-full text-left py-3 px-4 rounded-lg text-white hover:bg-white/20 transition-colors flex items-center space-x-3"
+                  className="w-full text-left py-3 px-4 rounded-lg text-primary-foreground hover:bg-white/20 transition-colors flex items-center space-x-3"
                   data-testid="button-profile"
                 >
                   <i className="fas fa-user w-5"></i>
@@ -91,11 +91,11 @@ export default function Navigation({ currentUser, onLogout }: NavigationProps) {
                 
                 {/* Theme Toggle */}
                 <div className="flex items-center justify-between py-3 px-4">
-                  <span className="font-serif text-lg text-white">Theme</span>
+                  <span className="font-serif text-lg text-primary-foreground">Theme</span>
                   <ThemeToggle 
                     variant="ghost" 
                     size="sm" 
-                    className="text-white hover:bg-white/20"
+                    className="text-primary-foreground hover:bg-white/20"
                   />
                 </div>
                 

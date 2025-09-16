@@ -2,7 +2,7 @@ import BndyBadge from './bndy-badge';
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-800 dark:bg-slate-900 border-t border-slate-700 py-6" data-testid="footer">
+    <footer className="bg-card border-t border-border py-6" data-testid="footer">
       <div className="container mx-auto px-4">
         {/* Horizontal layout: Badge on left, copyright + strapline stacked on right */}
         <div className="flex items-center gap-4 md:gap-6">
@@ -14,7 +14,7 @@ const Footer = () => {
           <div className="flex flex-col text-left leading-tight flex-1 min-w-0">
             
             {/* Copyright */}
-            <span className="text-slate-400 text-sm mb-1" data-testid="copyright">
+            <span className="text-muted-foreground text-sm mb-1" data-testid="copyright">
               © 2025 bndy
             </span>
 
@@ -22,18 +22,18 @@ const Footer = () => {
             <div className="text-sm">
               {/* Desktop: single line - force no wrap */}
               <div className="hidden md:block whitespace-nowrap" data-testid="strapline-desktop">
-                <span className="text-white">Keeping </span>
+                <span className="text-foreground">Keeping </span>
                 <span className="text-cyan-400 font-bold">LIVE</span>
-                <span className="text-white"> Music </span>
+                <span className="text-foreground"> Music </span>
                 <span className="text-orange-500 font-bold">ALIVE</span>
               </div>
               
               {/* Mobile: K/M left-aligned, E's right-aligned, whole block left-aligned in footer */}
               <div className="block md:hidden font-bold" data-testid="strapline-mobile">
                 <div className="grid grid-cols-[max-content_max-content] gap-x-1 items-center">
-                  <span className="text-white text-left">Keeping</span>
+                  <span className="text-foreground text-left">Keeping</span>
                   <span className="text-cyan-400 text-right">LIVE</span>
-                  <span className="text-white text-left">Music</span>
+                  <span className="text-foreground text-left">Music</span>
                   <span className="text-orange-500 text-right">ALIVE</span>
                 </div>
               </div>

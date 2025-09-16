@@ -127,8 +127,8 @@ export default function BandGate({ children }: BandGateProps) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white font-sans">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-foreground mx-auto mb-4"></div>
+          <p className="text-primary-foreground font-sans">Loading...</p>
         </div>
       </div>
     );
@@ -153,11 +153,11 @@ export default function BandGate({ children }: BandGateProps) {
               />
             </div>
           </div>
-          <h2 className="text-2xl font-serif text-white mb-4">Something went wrong</h2>
-          <p className="text-white/80 mb-6">Failed to load your profile. Please try again.</p>
+          <h2 className="text-2xl font-serif text-primary-foreground mb-4">Something went wrong</h2>
+          <p className="text-primary-foreground/80 mb-6">Failed to load your profile. Please try again.</p>
           <button 
             onClick={handleLogout}
-            className="bg-white/20 hover:bg-white/30 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-6 py-2 rounded-lg transition-colors"
             data-testid="button-logout"
           >
             Try Again

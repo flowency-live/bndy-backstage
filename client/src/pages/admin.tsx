@@ -443,8 +443,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
             onClick={() => setActiveTab('band')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'band' 
-                ? 'bg-white text-slate-900' 
-                : 'text-white hover:bg-white/10'
+                ? 'bg-card text-card-foreground' 
+                : 'text-primary-foreground hover:bg-white/10'
             }`}
             data-testid="tab-band"
           >
@@ -455,8 +455,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
             onClick={() => setActiveTab('members')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'members' 
-                ? 'bg-white text-slate-900' 
-                : 'text-white hover:bg-white/10'
+                ? 'bg-card text-card-foreground' 
+                : 'text-primary-foreground hover:bg-white/10'
             }`}
             data-testid="tab-members"
           >
@@ -467,8 +467,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
             onClick={() => setActiveTab('spotify')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'spotify' 
-                ? 'bg-white text-slate-900' 
-                : 'text-white hover:bg-white/10'
+                ? 'bg-card text-card-foreground' 
+                : 'text-primary-foreground hover:bg-white/10'
             }`}
             data-testid="tab-spotify"
           >
@@ -485,12 +485,12 @@ export default function Admin({ bandId, membership }: AdminProps) {
       
       <div className="p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
             <div className="p-6">
             {/* Band Settings Tab */}
             {activeTab === 'band' && (
               <div>
-                <h3 className="text-xl font-sans font-semibold text-brand-primary mb-6">Band Settings</h3>
+                <h3 className="text-xl font-sans font-semibold text-card-foreground mb-6">Band Settings</h3>
                 
                 <form onSubmit={(e) => {
                   e.preventDefault();
@@ -499,8 +499,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
                   
                   {/* Band Avatar */}
                   <div>
-                    <Label className="text-gray-700 font-semibold mb-3 block">Band Avatar</Label>
-                    <p className="text-sm text-gray-500 mb-4">Upload a logo or image for your band</p>
+                    <Label className="text-card-foreground font-semibold mb-3 block">Band Avatar</Label>
+                    <p className="text-sm text-muted-foreground mb-4">Upload a logo or image for your band</p>
                     <div className="flex justify-center">
                       <ImageUpload
                         value={bandSettings.avatar || undefined}
@@ -514,7 +514,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
 
                   {/* Band Name */}
                   <div>
-                    <Label htmlFor="bandName" className="text-gray-700 font-semibold mb-2 block">Band Name *</Label>
+                    <Label htmlFor="bandName" className="text-card-foreground font-semibold mb-2 block">Band Name *</Label>
                     <Input
                       id="bandName"
                       type="text"
@@ -529,7 +529,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
 
                   {/* Band Description */}
                   <div>
-                    <Label htmlFor="bandDescription" className="text-gray-700 font-semibold mb-2 block">Description</Label>
+                    <Label htmlFor="bandDescription" className="text-card-foreground font-semibold mb-2 block">Description</Label>
                     <Textarea
                       id="bandDescription"
                       value={bandSettings.description}
@@ -568,10 +568,10 @@ export default function Admin({ bandId, membership }: AdminProps) {
               <div>
                 {/* Current Members */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Current Members</h3>
+                  <h3 className="text-xl font-sans font-semibold text-card-foreground mb-4">Current Members</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {bandMembers.map((member) => (
-                      <div key={member.id} className="bg-brand-neutral rounded-xl p-4 flex items-center justify-between" data-testid={`member-card-${member.id}`}>
+                      <div key={member.id} className="bg-muted rounded-xl p-4 flex items-center justify-between" data-testid={`member-card-${member.id}`}>
                         <div className="flex items-center space-x-4">
                           <div 
                             className="w-12 h-12 rounded-full flex items-center justify-center"
@@ -580,10 +580,10 @@ export default function Admin({ bandId, membership }: AdminProps) {
                             <i className={`fas ${member.icon} text-white`}></i>
                           </div>
                           <div>
-                            <h4 className="font-sans font-semibold text-brand-primary" data-testid={`member-name-${member.id}`}>{member.displayName}</h4>
-                            <p className="text-sm text-gray-600" data-testid={`member-role-${member.id}`}>{member.role}</p>
+                            <h4 className="font-sans font-semibold text-card-foreground" data-testid={`member-name-${member.id}`}>{member.displayName}</h4>
+                            <p className="text-sm text-muted-foreground" data-testid={`member-role-${member.id}`}>{member.role}</p>
                             {member.user?.email && (
-                              <p className="text-xs text-gray-500">{member.user.email}</p>
+                              <p className="text-xs text-muted-foreground">{member.user.email}</p>
                             )}
                           </div>
                         </div>
