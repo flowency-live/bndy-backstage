@@ -107,9 +107,6 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-24 h-24 flex items-center justify-center mx-auto mb-4">
-            <BndyLogo className="w-16 h-16" color="hsl(var(--foreground))" holeColor="hsl(var(--background))" />
-          </div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your profile...</p>
         </div>
@@ -123,7 +120,6 @@ export default function Profile() {
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <BndyLogo className="w-16 h-16 mx-auto mb-4" color="#f97316" holeColor="hsl(var(--background))" />
             <CardTitle>Profile Error</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
