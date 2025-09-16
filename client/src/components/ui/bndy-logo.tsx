@@ -64,13 +64,15 @@ const BndyLogo: React.FC<BndyLogoProps> = ({
         cx="28.5" 
         cy="17.8" 
         r="1.8" 
-        fill={holeColor || detectedHoleColor}
+        fill={holeColor || 'hsl(var(--background))'}
+        className="fill-background"
       />
       <circle 
         cx="42.5" 
         cy="17.8" 
         r="1.8" 
-        fill={holeColor || detectedHoleColor}
+        fill={holeColor || 'hsl(var(--background))'}
+        className="fill-background"
       />
     </svg>
   );
