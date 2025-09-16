@@ -5,7 +5,6 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProfileForm from "@/components/ui/profile-form";
-import BndyLogo from "@/components/ui/bndy-logo";
 import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,7 +167,6 @@ export default function Profile() {
               <i className="fas fa-arrow-left"></i>
             </button>
             
-            <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="hsl(var(--background))" />
             
             <div className="w-10"> {/* Spacer for centering */}</div>
           </div>
@@ -181,11 +179,6 @@ export default function Profile() {
           {/* Title Section */}
           <div className="text-center mb-8">
             <div className="mb-4">
-              {mode === "create" && (
-                <div className="flex justify-center mb-2">
-                  <BndyLogo className="w-16 h-16" color="#f97316" holeColor="hsl(var(--background))" />
-                </div>
-              )}
               <h1 className="text-3xl font-serif text-foreground mb-2">
                 {mode === "create" ? "Complete Your Profile" : "Your Profile"}
               </h1>
