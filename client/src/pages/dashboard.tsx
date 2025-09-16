@@ -192,7 +192,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
       
       {/* Band Profile Header - Mobile Optimized */}
       <div className="bg-slate-900 border-b border-slate-700">
-        <div className="px-2 sm:px-4 lg:px-6 lg:max-w-7xl lg:mx-auto py-3 sm:py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4">
           {/* Mobile Layout */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             {/* Top Row: Avatar and Band Info */}
@@ -245,7 +245,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
       </div>
 
       {/* Main Content Container - Edge to Edge on Mobile */}
-      <div className="px-2 sm:px-4 lg:px-6 lg:max-w-7xl lg:mx-auto pt-3 sm:pt-4 pb-6">
+      <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
         {/* Gig Alert Banner */}
         <GigAlertBanner bandId={bandId} className="mb-3 sm:mb-4" />
         {/* Song Management Section */}
