@@ -189,60 +189,6 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       {/* Page Header */}
       <PageHeader title="Dashboard" />
-      
-      {/* Band Profile Header - Mobile Optimized */}
-      <div className="bg-card border-b border-border">
-        <div className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4">
-          {/* Mobile Layout */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            {/* Top Row: Avatar and Band Info */}
-            <div className="flex items-center gap-3 sm:gap-4 flex-1">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 border-2 border-primary flex-shrink-0">
-                <AvatarImage src={membership.band.avatarUrl || ''} alt={membership.band.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg sm:text-xl lg:text-2xl font-serif">
-                  {membership.band.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Band Info */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground mb-1 sm:mb-2 truncate">
-                  {membership.band.name}
-                </h1>
-                {/* Mobile Stats - Compact */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 text-muted-foreground text-xs sm:text-sm">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                    {bandMembers.length} members
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Music className="h-3 w-3 sm:h-4 sm:w-4" />
-                    {totalSongs} songs
-                  </span>
-                  <span className="flex items-center gap-1 hidden sm:flex">
-                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                    {upcomingGigs} gigs
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* User Role - Right Aligned on Desktop, Below on Mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 self-start sm:self-center">
-              <div 
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: membership.color }}
-              >
-                <i className={`fas ${membership.icon} text-white text-sm`}></i>
-              </div>
-              <div className="text-left sm:text-right">
-                <div className="text-foreground font-semibold text-sm sm:text-base">{membership.displayName}</div>
-                <div className="text-muted-foreground text-xs sm:text-sm capitalize">{membership.role}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
