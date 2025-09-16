@@ -197,11 +197,11 @@ export default function Login() {
         </div>
 
         {/* Auth form */}
-        <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-600">
+        <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
           {step === 'phone' ? (
             <>
-              <h2 className="text-2xl font-serif text-white mb-2">Welcome Back</h2>
-              <p className="text-slate-400 font-sans mb-6">Enter your phone number to sign in</p>
+              <h2 className="text-2xl font-serif text-foreground mb-2">Welcome Back</h2>
+              <p className="text-muted-foreground font-sans mb-6">Enter your phone number to sign in</p>
               
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
                 <div>
@@ -236,7 +236,7 @@ export default function Login() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-serif text-white mb-2">Enter Code</h2>
+              <h2 className="text-2xl font-serif text-foreground mb-2">Enter Code</h2>
               <p className="text-slate-400 font-sans mb-6">
                 We sent a code to {phone}
               </p>
@@ -275,7 +275,7 @@ export default function Login() {
                   type="button" 
                   variant="ghost" 
                   onClick={handleBack}
-                  className="w-full text-slate-400 hover:text-white font-sans"
+                  className="w-full text-muted-foreground hover:text-foreground font-sans"
                   disabled={loading}
                   data-testid="button-back"
                 >
@@ -288,7 +288,7 @@ export default function Login() {
 
         {/* Development info */}
         {import.meta.env.DEV && (
-          <div className="mt-4 text-xs text-slate-400 bg-slate-800 rounded p-2">
+          <div className="mt-4 text-xs text-muted-foreground bg-card border border-border rounded p-2">
             Development mode: Use code <strong>123456</strong> to sign in
           </div>
         )}

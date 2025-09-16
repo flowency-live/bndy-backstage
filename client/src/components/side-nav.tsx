@@ -167,7 +167,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                 
                 <DropdownMenuContent className="w-60" align="start">
                   {/* Current Band */}
-                  <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
+                  <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
                     Current Band
                   </div>
                   <DropdownMenuItem disabled className="py-3">
@@ -189,7 +189,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                       )}
                       <div className="text-left min-w-0 flex-1">
                         <div className="font-medium text-sm truncate">{currentMembership.band.name}</div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-muted-foreground truncate">
                           {currentMembership.displayName} • {currentMembership.role}
                         </div>
                       </div>
@@ -200,7 +200,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                   {otherBands.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
+                      <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
                         Switch to
                       </div>
                       {otherBands.map((band) => (
@@ -228,7 +228,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                             )}
                             <div className="text-left min-w-0 flex-1">
                               <div className="font-medium text-sm truncate">{band.band.name}</div>
-                              <div className="text-xs text-gray-500 truncate">
+                              <div className="text-xs text-muted-foreground truncate">
                                 {band.displayName} • {band.role}
                               </div>
                             </div>
