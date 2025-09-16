@@ -860,11 +860,3 @@
   }
 }
 
-/* BNDY Logo Override - Force Orange Color */
-[data-bndy-logo="true"] path {
-  fill: var(--bndy-fill, #f97316) !important;
-}
-
-[data-bndy-logo="true"] circle {
-  fill: hsl(var(--background)) !important;
-}
