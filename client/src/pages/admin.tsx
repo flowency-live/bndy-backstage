@@ -541,17 +541,32 @@ export default function Admin({ bandId, membership }: AdminProps) {
                     />
                   </div>
 
-                  {/* Save Button */}
-                  <div className="flex justify-end pt-4">
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setBandSettings({
+                          name: membership.band.name,
+                          description: membership.band.description || '',
+                          avatar: membership.band.avatarUrl || null,
+                        });
+                      }}
+                      className="px-6"
+                      data-testid="button-cancel-band"
+                    >
+                      Cancel
+                    </Button>
                     <Button
                       type="submit"
                       disabled={updateBandMutation.isPending}
-                      className="bg-brand-primary hover:bg-brand-primary/90 text-white px-6"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
                       data-testid="button-save-band"
                     >
                       {updateBandMutation.isPending ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                           Saving...
                         </>
                       ) : (
