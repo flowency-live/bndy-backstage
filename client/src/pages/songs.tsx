@@ -282,13 +282,13 @@ export default function Songs({ bandId, membership }: SongsProps) {
               <i className="fas fa-spinner fa-spin text-4xl text-brand-primary mb-4 animate-pulse-soft"></i>
               <div className="absolute inset-0 animate-pulse-orange"></div>
             </div>
-            <p className="text-gray-600 animate-shimmer">Loading practice list...</p>
+            <p className="text-muted-foreground animate-shimmer">Loading practice list...</p>
           </div>
         ) : sortedSongs.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
-            <i className="fas fa-music text-6xl text-gray-300 mb-6"></i>
-            <h3 className="text-xl font-serif font-semibold text-gray-600 mb-2">No songs yet</h3>
-            <p className="text-gray-500 mb-6">Start building your practice list by adding some songs</p>
+          <div className="text-center py-12 bg-card rounded-2xl shadow-lg">
+            <i className="fas fa-music text-6xl text-muted-foreground mb-6"></i>
+            <h3 className="text-xl font-serif font-semibold text-muted-foreground mb-2">No songs yet</h3>
+            <p className="text-muted-foreground mb-6">Start building your practice list by adding some songs</p>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-brand-accent hover:bg-brand-accent-light text-white px-6 py-3 rounded-xl font-serif font-semibold"
@@ -309,7 +309,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
               return (
                 <div 
                   key={song.id} 
-                  className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-all duration-200 ${
+                  className={`bg-card rounded-lg shadow-sm border border-border hover:bg-muted/50 transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
                   }`}
                   data-testid={`song-card-${song.id}`}
@@ -317,7 +317,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
                   {/* Main song card */}
                   <div className="px-4 py-3 flex items-center space-x-3">
                     {/* Album artwork */}
-                    <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                    <div className="w-12 h-12 bg-muted rounded flex-shrink-0 overflow-hidden">
                       {song.imageUrl ? (
                         <img 
                           src={song.imageUrl} 
@@ -326,17 +326,17 @@ export default function Songs({ bandId, membership }: SongsProps) {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <i className="fas fa-music text-gray-400 text-xl"></i>
+                          <i className="fas fa-music text-muted-foreground text-xl"></i>
                         </div>
                       )}
                     </div>
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate" data-testid={`song-title-${song.id}`}>
+                      <h3 className="font-medium text-foreground truncate" data-testid={`song-title-${song.id}`}>
                         {song.title}
                       </h3>
-                      <p className="text-sm text-gray-600 truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
+                      <p className="text-sm text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
                     {/* Readiness summary */}
@@ -369,24 +369,24 @@ export default function Songs({ bandId, membership }: SongsProps) {
                       {/* Expand button */}
                       <button
                         onClick={() => toggleExpanded(song.id)}
-                        className="p-2 hover:bg-gray-100 rounded-lg"
+                        className="p-2 hover:bg-muted rounded-lg"
                         data-testid={`button-expand-${song.id}`}
                       >
-                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400`}></i>
+                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-muted-foreground`}></i>
                       </button>
                     </div>
                   </div>
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t bg-gray-50 animate-expand overflow-hidden">
+                    <div className="px-4 pb-4 border-t bg-muted/50 animate-expand overflow-hidden">
                       <div className="pt-4 space-y-4 animate-fade-in-up">
                         {/* Current user controls */}
                         <div className="flex items-center justify-between">
-                          <span className="font-sans font-semibold text-gray-700">Your status:</span>
+                          <span className="font-sans font-semibold text-foreground">Your status:</span>
                           <div className="flex items-center space-x-2">
                             {/* Readiness buttons */}
-                            <div className="flex bg-white rounded-lg overflow-hidden border">
+                            <div className="flex bg-background rounded-lg overflow-hidden border border-border">
                               {["red", "amber", "green"].map((status) => (
                                 <button
                                   key={status}
@@ -396,7 +396,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
                                       ? status === "green" ? "bg-green-500 text-white" 
                                         : status === "amber" ? "bg-yellow-500 text-white"
                                         : "bg-red-500 text-white"
-                                      : "hover:bg-gray-100"
+                                      : "hover:bg-muted"
                                   }`}
                                   disabled={updateReadinessMutation.isPending}
                                   data-testid={`button-readiness-${status}-${song.id}`}
@@ -414,7 +414,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
                               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
                                 userVeto 
                                   ? "bg-red-100 text-red-700 hover:bg-red-200" 
-                                  : "bg-gray-100 hover:bg-gray-200"
+                                  : "bg-muted hover:bg-muted/80"
                               }`}
                               disabled={toggleVetoMutation.isPending}
                               data-testid={`button-veto-${song.id}`}
@@ -426,7 +426,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
                         {/* All member statuses */}
                         <div>
-                          <span className="font-sans font-semibold text-gray-700 block mb-2">Band readiness:</span>
+                          <span className="font-sans font-semibold text-foreground block mb-2">Band readiness:</span>
                           <div className="grid grid-cols-2 gap-2">
                             {bandMembers.map((member) => {
                               const memberReadiness = song.readiness.find(r => r.membershipId === member.id);

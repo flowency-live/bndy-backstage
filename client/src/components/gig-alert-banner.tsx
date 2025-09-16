@@ -56,7 +56,7 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
       <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 opacity-30 animate-pulse-cyan"></div>
       
       {/* Main banner content - Mobile optimized */}
-      <div className="relative bg-gradient-to-r from-orange-400 to-orange-500 text-white p-2 sm:p-3 lg:p-4 rounded-xl shadow-lg border-2 border-orange-300 animate-pulse-orange">
+      <div className="relative bg-gradient-to-r from-orange-400 to-orange-500 text-primary-foreground p-2 sm:p-3 lg:p-4 rounded-xl shadow-lg border-2 border-orange-300 animate-pulse-orange">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {/* Mobile: Top row with icon and title */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -64,7 +64,7 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
             <div className="flex-shrink-0">
               <div className="relative animate-float">
                 <div className="absolute inset-0 bg-blue-400 rounded-full blur-md opacity-80 animate-pulse-cyan"></div>
-                <div className="relative bg-white text-orange-500 rounded-full p-1 sm:p-2 text-base sm:text-xl font-bold animate-bounce-soft">
+                <div className="relative bg-background text-orange-500 rounded-full p-1 sm:p-2 text-base sm:text-xl font-bold animate-bounce-soft">
                   🎭
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
             <div className="flex-shrink-0 sm:hidden">
               <button
                 onClick={() => window.location.href = '/calendar'}
-                className="bg-white text-orange-500 hover:bg-orange-50 px-2 py-1 text-xs rounded-md font-semibold transition-colors duration-200 shadow-md"
+                className="bg-background text-orange-500 hover:bg-muted px-2 py-1 text-xs rounded-md font-semibold transition-colors duration-200 shadow-md"
                 data-testid="button-view-calendar"
               >
                 Details
@@ -100,7 +100,7 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
           <div className="hidden sm:block flex-shrink-0">
             <button
               onClick={() => window.location.href = '/calendar'}
-              className="bg-white text-orange-500 hover:bg-orange-50 px-4 py-2 rounded-lg font-semibold transition-colors duration-200 shadow-md"
+              className="bg-background text-orange-500 hover:bg-muted px-4 py-2 rounded-lg font-semibold transition-colors duration-200 shadow-md"
               data-testid="button-view-calendar"
             >
               View Details

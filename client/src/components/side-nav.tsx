@@ -113,18 +113,18 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
 
       {/* Side Navigation */}
       <div className={`
-        fixed top-0 left-0 h-screen w-64 bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-screen w-64 bg-card shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:shadow-none
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
               <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="#0f172a" />
               <button 
                 onClick={onClose}
-                className="text-white hover:text-gray-300 lg:hidden"
+                className="text-foreground hover:text-muted-foreground lg:hidden"
                 data-testid="button-close-sidenav"
               >
                 <X className="h-6 w-6" />
@@ -137,7 +137,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-between bg-white/10 hover:bg-white/20 text-white border-white/20 p-2"
+                    className="w-full justify-between bg-muted hover:bg-muted/80 text-foreground border-border p-2"
                     data-testid="button-band-switcher"
                   >
                     <div className="flex items-center gap-2">
@@ -157,11 +157,11 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                         </div>
                       )}
                       <div className="text-left min-w-0 flex-1">
-                        <div className="font-medium text-sm truncate text-white">{currentMembership.band.name}</div>
-                        <div className="text-xs text-white/70 truncate">{currentMembership.displayName}</div>
+                        <div className="font-medium text-sm truncate text-foreground">{currentMembership.band.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{currentMembership.displayName}</div>
                       </div>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-white/70" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 
@@ -264,8 +264,8 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                     className={`
                       w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
                       ${isActive 
-                        ? 'bg-orange-500 text-white' 
-                        : 'text-white hover:bg-white/10'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-foreground hover:bg-muted'
                       }
                     `}
                     data-testid={`nav-${item.path.slice(1)}`}

@@ -32,7 +32,7 @@ interface TileProps {
 function DashboardTile({ title, subtitle, icon, color, onClick, className = "", count, actionLabel }: TileProps) {
   return (
     <Card 
-      className={`h-32 sm:h-36 lg:h-40 cursor-pointer hover-lift-subtle group border border-slate-700 animate-fade-in-up ${className}`}
+      className={`h-32 sm:h-36 lg:h-40 cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
       onClick={onClick}
       data-testid={`tile-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
@@ -191,7 +191,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
       <PageHeader title="Dashboard" />
       
       {/* Band Profile Header - Mobile Optimized */}
-      <div className="bg-slate-900 border-b border-slate-700">
+      <div className="bg-card border-b border-border">
         <div className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4">
           {/* Mobile Layout */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
@@ -206,11 +206,11 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
 
               {/* Band Info */}
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-white mb-1 sm:mb-2 truncate">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground mb-1 sm:mb-2 truncate">
                   {membership.band.name}
                 </h1>
                 {/* Mobile Stats - Compact */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 text-slate-300 text-xs sm:text-sm">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 text-muted-foreground text-xs sm:text-sm">
                   <span className="flex items-center gap-1">
                     <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                     {bandMembers.length} members
@@ -236,8 +236,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
                 <i className={`fas ${membership.icon} text-white text-sm`}></i>
               </div>
               <div className="text-left sm:text-right">
-                <div className="text-white font-semibold text-sm sm:text-base">{membership.displayName}</div>
-                <div className="text-slate-400 text-xs sm:text-sm capitalize">{membership.role}</div>
+                <div className="text-foreground font-semibold text-sm sm:text-base">{membership.displayName}</div>
+                <div className="text-muted-foreground text-xs sm:text-sm capitalize">{membership.role}</div>
               </div>
             </div>
           </div>
@@ -252,8 +252,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1 sm:mb-2">Song Management</h2>
-              <p className="text-slate-400 text-sm sm:text-base">Organize your repertoire and setlists</p>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Management</h2>
+              <p className="text-muted-foreground text-sm sm:text-base">Organize your repertoire and setlists</p>
             </div>
             <Button 
               onClick={() => setLocation("/songs")}
@@ -306,8 +306,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1 sm:mb-2">Calendar & Gigs</h2>
-              <p className="text-slate-400 text-sm sm:text-base">Schedule and manage your events</p>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
+              <p className="text-muted-foreground text-sm sm:text-base">Schedule and manage your events</p>
             </div>
             <Button 
               onClick={() => setLocation("/calendar")}
@@ -351,8 +351,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1 sm:mb-2">Members</h2>
-                <p className="text-slate-400 text-sm sm:text-base">Band member management</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Members</h2>
+                <p className="text-muted-foreground text-sm sm:text-base">Band member management</p>
               </div>
               <Button 
                 onClick={() => setLocation("/admin")}
@@ -381,8 +381,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1 sm:mb-2">Settings</h2>
-                <p className="text-slate-400 text-sm sm:text-base">Band configuration</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Settings</h2>
+                <p className="text-muted-foreground text-sm sm:text-base">Band configuration</p>
               </div>
             </div>
 

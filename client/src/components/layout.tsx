@@ -92,7 +92,7 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-30 lg:hidden">
+    <div className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-30 lg:hidden">
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Left side: Burger Menu Button and Logo */}
@@ -105,7 +105,7 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
 
           {/* Center: Title */}
           {title && (
-            <h1 className="text-white font-serif font-semibold text-xl">{title}</h1>
+            <h1 className="text-foreground font-serif font-semibold text-xl">{title}</h1>
           )}
 
           {/* Right side: Additional content */}
