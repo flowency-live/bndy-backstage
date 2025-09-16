@@ -121,7 +121,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           {/* Header */}
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between mb-4">
-              <BndyLogo className="h-8 w-auto" color="#f97316" />
+              <BndyLogo className="h-8 w-auto" color="#f97316" holeColor="#0f172a" />
               <button 
                 onClick={onClose}
                 className="text-white hover:text-gray-300 lg:hidden"

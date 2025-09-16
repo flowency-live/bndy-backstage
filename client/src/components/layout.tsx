@@ -92,7 +92,7 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-30">
+    <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-30 lg:hidden">
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Left side: Burger Menu Button and Logo */}
@@ -100,7 +100,7 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
             {showBurgerMenu && (
               <BurgerMenuButton onClick={toggleNav} />
             )}
-            <BndyLogo className="h-8 w-auto" color="#f97316" />
+            <BndyLogo className="h-8 w-auto" color="#f97316" forceDarkMode={true} />
           </div>
 
           {/* Center: Title */}

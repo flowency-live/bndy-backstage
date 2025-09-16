@@ -3,39 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(222, 47%, 11%); /* slate-900 */
-  --foreground: hsl(0, 0%, 100%); /* white */
-  --muted: hsl(215, 25%, 27%); /* slate-700 */
-  --muted-foreground: hsl(214, 15%, 66%); /* slate-400 */
-  --popover: hsl(216, 34%, 17%); /* slate-800 */
-  --popover-foreground: hsl(0, 0%, 100%); /* white */
-  --card: hsl(216, 34%, 17%); /* slate-800 */
-  --card-foreground: hsl(0, 0%, 100%); /* white */
-  --border: hsl(215, 19%, 35%); /* slate-600 */
-  --input: hsl(216, 34%, 17%); /* slate-800 */
+  /* Light mode theme */
+  --background: hsl(0, 0%, 100%); /* white */
+  --foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
+  --muted: hsl(210, 40%, 96%); /* slate-100 */
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%); /* slate-500 */
+  --popover: hsl(0, 0%, 100%); /* white */
+  --popover-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
+  --card: hsl(0, 0%, 100%); /* white */
+  --card-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
+  --border: hsl(214.3, 31.8%, 91.4%); /* slate-200 */
+  --input: hsl(214.3, 31.8%, 91.4%); /* slate-200 */
   --primary: hsl(24, 95%, 53%); /* orange-500 */
   --primary-foreground: hsl(0, 0%, 100%); /* white */
-  --secondary: hsl(215, 25%, 27%); /* slate-700 */
-  --secondary-foreground: hsl(0, 0%, 100%); /* white */
-  --accent: hsl(215, 25%, 27%); /* slate-700 */
-  --accent-foreground: hsl(0, 0%, 100%); /* white */
+  --secondary: hsl(210, 40%, 96%); /* slate-100 */
+  --secondary-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
+  --accent: hsl(210, 40%, 96%); /* slate-100 */
+  --accent-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
   --destructive: hsl(0, 84%, 60%); /* red-500 */
   --destructive-foreground: hsl(0, 0%, 100%); /* white */
   --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
   
-  /* Brand Colors - Updated for slate theme */
+  /* Brand Colors - Light mode */
   --brand-accent: hsl(24, 95%, 53%); /* Orange 500 */
   --brand-accent-light: hsl(21, 90%, 48%); /* Orange 600 */
   --brand-accent-dark: hsl(16, 84%, 40%); /* Orange 700 */
-  --brand-primary: hsl(222, 47%, 11%); /* Slate 900 */
-  --brand-primary-light: hsl(216, 34%, 17%); /* Slate 800 */
-  --brand-primary-dark: hsl(215, 25%, 27%); /* Slate 700 */
+  --brand-primary: hsl(0, 0%, 100%); /* White */
+  --brand-primary-light: hsl(210, 40%, 96%); /* Slate 100 */
+  --brand-primary-dark: hsl(214.3, 31.8%, 91.4%); /* Slate 200 */
   --brand-secondary: hsl(199, 89%, 48%); /* Cyan 500 */
   --brand-secondary-light: hsl(199, 89%, 58%);
   --brand-secondary-dark: hsl(199, 89%, 38%);
-  --brand-neutral: hsl(215, 19%, 35%); /* Slate 600 */
-  --brand-neutral-light: hsl(214, 15%, 66%); /* Slate 400 */
+  --brand-neutral: hsl(215.4, 16.3%, 46.9%); /* Slate 500 */
+  --brand-neutral-light: hsl(214.3, 31.8%, 91.4%); /* Slate 200 */
   --brand-unavailable: hsl(0, 84%, 60%); /* Red 500 */
   --brand-unavailable-light: hsl(0, 84%, 70%);
   --brand-unavailable-dark: hsl(0, 84%, 50%);
@@ -103,6 +104,59 @@
   
   .font-display {
     font-family: 'Inter', sans-serif;
+  }
+
+  /* Mobile Edge-to-Edge Design Utilities */
+  .mobile-edge-to-edge {
+    @apply px-2 sm:px-4 lg:px-6 lg:max-w-7xl lg:mx-auto;
+  }
+  
+  .mobile-safe-padding {
+    @apply px-2 sm:px-4;
+  }
+  
+  .mobile-minimal-gap {
+    @apply gap-2 sm:gap-3 lg:gap-4;
+  }
+  
+  .mobile-tight-spacing {
+    @apply space-y-3 sm:space-y-4 lg:space-y-6;
+  }
+  
+  /* Prevent horizontal overflow */
+  .no-horizontal-overflow {
+    @apply overflow-x-hidden max-w-full;
+  }
+  
+  /* Mobile responsive text sizing */
+  .mobile-heading {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  .mobile-subheading {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .mobile-body {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-caption {
+    @apply text-xs sm:text-sm;
+  }
+  
+  /* Mobile touch-friendly sizing */
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Progressive enhancement for different screen sizes */
+  .mobile-compact {
+    @apply h-32 sm:h-36 lg:h-40;
+  }
+  
+  .mobile-responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4;
   }
   
   .bg-brand-accent {
@@ -570,7 +624,58 @@
     @apply ring-2 ring-brand-secondary ring-opacity-50 border-brand-secondary;
   }
   
-  /* Enhanced input styling with precise slate colors */
+  /* Enhanced input styling with precise slate colors - Light mode */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea {
+    background-color: hsl(0, 0%, 100%) !important; /* white */
+    color: hsl(222.2, 84%, 4.9%) !important; /* slate-950 */
+    border-color: hsl(214.3, 31.8%, 91.4%) !important; /* slate-200 */
+  }
+  
+  input[type="text"]:hover,
+  input[type="email"]:hover,
+  input[type="password"]:hover,
+  input[type="number"]:hover,
+  input[type="tel"]:hover,
+  input[type="url"]:hover,
+  input[type="search"]:hover,
+  textarea:hover {
+    border-color: hsl(24, 95%, 53%) !important; /* orange-500 */
+  }
+  
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="search"]:focus,
+  textarea:focus {
+    border-color: hsl(24, 95%, 53%) !important; /* orange-500 */
+    ring-color: hsl(24, 95%, 53%) !important;
+    box-shadow: 0 0 0 2px hsl(24, 95%, 53%) !important;
+    outline: none !important;
+  }
+  
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(215.4, 16.3%, 46.9%) !important; /* slate-500 */
+  }
+  
+  input:disabled,
+  textarea:disabled {
+    background-color: hsl(210, 40%, 96%) !important; /* slate-100 */
+    color: hsl(215.4, 16.3%, 46.9%) !important; /* slate-500 */
+    cursor: not-allowed;
+  }
+
+  /* Enhanced input styling with precise slate colors - Dark mode */
   .dark input[type="text"],
   .dark input[type="email"],
   .dark input[type="password"],
