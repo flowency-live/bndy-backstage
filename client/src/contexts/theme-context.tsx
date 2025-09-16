@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useLocation } from 'wouter'
 
 type Theme = 'dark' | 'light'
 
@@ -28,6 +29,7 @@ export function ThemeProvider({
   storageKey = 'bndy-ui-theme',
   ...props
 }: ThemeProviderProps) {
+  const [location] = useLocation()
   const [theme, setTheme] = useState<Theme>(() => {
     // Only access localStorage in browser environment
     if (typeof window !== 'undefined') {
@@ -39,9 +41,14 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
     
-    root.classList.remove('light', 'dark')
-    root.classList.add(theme)
-  }, [theme])
+    // Don't apply theme changes to landing/auth pages - they should stay dark
+    const isLandingOrAuthPage = ["/", "/login", "/onboarding"].includes(location) || location.startsWith("/invite/")
+    
+    if (!isLandingOrAuthPage) {
+      root.classList.remove('light', 'dark')
+      root.classList.add(theme)
+    }
+  }, [theme, location])
 
   const value = {
     theme,
