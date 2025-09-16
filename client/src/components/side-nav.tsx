@@ -141,12 +141,21 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                     data-testid="button-band-switcher"
                   >
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: currentMembership.color }}
-                      >
-                        <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
-                      </div>
+                      {currentMembership.band.avatarUrl ? (
+                        <img
+                          src={currentMembership.band.avatarUrl}
+                          alt={`${currentMembership.band.name} avatar`}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          data-testid="band-avatar-image"
+                        />
+                      ) : (
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: currentMembership.color }}
+                        >
+                          <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
+                        </div>
+                      )}
                       <div className="text-left min-w-0 flex-1">
                         <div className="font-medium text-sm truncate text-white">{currentMembership.band.name}</div>
                         <div className="text-xs text-white/70 truncate">{currentMembership.displayName}</div>
@@ -163,12 +172,21 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                   </div>
                   <DropdownMenuItem disabled className="py-3">
                     <div className="flex items-center gap-3 w-full">
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: currentMembership.color }}
-                      >
-                        <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
-                      </div>
+                      {currentMembership.band.avatarUrl ? (
+                        <img
+                          src={currentMembership.band.avatarUrl}
+                          alt={`${currentMembership.band.name} avatar`}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          data-testid="band-avatar-image-dropdown"
+                        />
+                      ) : (
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: currentMembership.color }}
+                        >
+                          <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
+                        </div>
+                      )}
                       <div className="text-left min-w-0 flex-1">
                         <div className="font-medium text-sm truncate">{currentMembership.band.name}</div>
                         <div className="text-xs text-gray-500 truncate">
@@ -193,12 +211,21 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                           data-testid={`button-switch-to-band-${band.bandId}`}
                         >
                           <div className="flex items-center gap-3 w-full">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                              style={{ backgroundColor: band.color }}
-                            >
-                              <i className={`fas ${band.icon} text-white text-sm`}></i>
-                            </div>
+                            {band.band.avatarUrl ? (
+                              <img
+                                src={band.band.avatarUrl}
+                                alt={`${band.band.name} avatar`}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                data-testid={`band-avatar-image-${band.bandId}`}
+                              />
+                            ) : (
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: band.color }}
+                              >
+                                <i className={`fas ${band.icon} text-white text-sm`}></i>
+                              </div>
+                            )}
                             <div className="text-left min-w-0 flex-1">
                               <div className="font-medium text-sm truncate">{band.band.name}</div>
                               <div className="text-xs text-gray-500 truncate">

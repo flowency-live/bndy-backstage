@@ -8,10 +8,13 @@ import { apiRequest } from "@/lib/queryClient";
 import type { UserBand, Band } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/layout";
 import GigAlertBanner from "@/components/gig-alert-banner";
+import ImageUpload from "@/components/ui/image-upload";
 
 const ICONS = [
   { icon: "fa-microphone", color: "#D2691E", label: "Microphone" },
@@ -45,7 +48,12 @@ export default function Admin({ bandId, membership }: AdminProps) {
     icon: "fa-music",
     color: "#708090",
   });
-  const [activeTab, setActiveTab] = useState<'members' | 'spotify'>('members');
+  const [activeTab, setActiveTab] = useState<'band' | 'members' | 'spotify'>('band');
+  const [bandSettings, setBandSettings] = useState({
+    name: membership.band.name,
+    description: membership.band.description || '',
+    avatar: membership.band.avatarUrl || null,
+  });
 
   // Get band members using new band-scoped API
   const { data: bandMembers = [], isLoading } = useQuery<(UserBand & { user: any })[]>({
@@ -198,6 +206,50 @@ export default function Admin({ bandId, membership }: AdminProps) {
       toast({
         title: "Error",
         description: error.message || "Failed to remove band member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Band settings mutation
+  const updateBandMutation = useMutation({
+    mutationFn: async (settings: typeof bandSettings) => {
+      if (!session?.access_token) {
+        throw new Error("No access token");
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: settings.name,
+          description: settings.description,
+          avatarUrl: settings.avatar,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update band");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId] });
+      toast({
+        title: "Success",
+        description: "Band settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update band settings",
         variant: "destructive",
       });
     },
@@ -388,6 +440,18 @@ export default function Admin({ bandId, membership }: AdminProps) {
       <PageHeader title="Band Settings">
         <div className="flex space-x-3">
           <button
+            onClick={() => setActiveTab('band')}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'band' 
+                ? 'bg-white text-slate-900' 
+                : 'text-white hover:bg-white/10'
+            }`}
+            data-testid="tab-band"
+          >
+            <i className="fas fa-cog mr-2"></i>
+            Band
+          </button>
+          <button
             onClick={() => setActiveTab('members')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'members' 
@@ -423,6 +487,82 @@ export default function Admin({ bandId, membership }: AdminProps) {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-6">
+            {/* Band Settings Tab */}
+            {activeTab === 'band' && (
+              <div>
+                <h3 className="text-xl font-sans font-semibold text-brand-primary mb-6">Band Settings</h3>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  updateBandMutation.mutate(bandSettings);
+                }} className="space-y-6">
+                  
+                  {/* Band Avatar */}
+                  <div>
+                    <Label className="text-gray-700 font-semibold mb-3 block">Band Avatar</Label>
+                    <p className="text-sm text-gray-500 mb-4">Upload a logo or image for your band</p>
+                    <div className="flex justify-center">
+                      <ImageUpload
+                        value={bandSettings.avatar || undefined}
+                        onChange={(value) => setBandSettings(prev => ({ ...prev, avatar: value }))}
+                        placeholder="Upload band logo"
+                        size="lg"
+                        data-testid="band-avatar-upload"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Band Name */}
+                  <div>
+                    <Label htmlFor="bandName" className="text-gray-700 font-semibold mb-2 block">Band Name *</Label>
+                    <Input
+                      id="bandName"
+                      type="text"
+                      value={bandSettings.name}
+                      onChange={(e) => setBandSettings(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter band name"
+                      className="focus:border-brand-primary focus:ring-brand-primary"
+                      data-testid="input-band-name"
+                      required
+                    />
+                  </div>
+
+                  {/* Band Description */}
+                  <div>
+                    <Label htmlFor="bandDescription" className="text-gray-700 font-semibold mb-2 block">Description</Label>
+                    <Textarea
+                      id="bandDescription"
+                      value={bandSettings.description}
+                      onChange={(e) => setBandSettings(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Tell us about your band..."
+                      className="focus:border-brand-primary focus:ring-brand-primary resize-none"
+                      data-testid="input-band-description"
+                      rows={4}
+                    />
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end pt-4">
+                    <Button
+                      type="submit"
+                      disabled={updateBandMutation.isPending}
+                      className="bg-brand-primary hover:bg-brand-primary/90 text-white px-6"
+                      data-testid="button-save-band"
+                    >
+                      {updateBandMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {/* Members Tab */}
             {activeTab === 'members' && (
               <div>

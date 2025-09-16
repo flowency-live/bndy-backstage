@@ -1,6 +1,7 @@
 import { useState, createContext, useContext } from "react";
 import { useLocation } from "wouter";
 import SideNav, { BurgerMenuButton } from "@/components/side-nav";
+import BndyLogo from "@/components/ui/bndy-logo";
 import type { UserBand, Band } from "@shared/schema";
 
 interface NavigationContextType {
@@ -94,17 +95,20 @@ export function PageHeader({ title, children, showBurgerMenu = true }: PageHeade
     <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-30">
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Burger Menu Button */}
-          {showBurgerMenu && (
-            <BurgerMenuButton onClick={toggleNav} />
-          )}
+          {/* Left side: Burger Menu Button and Logo */}
+          <div className="flex items-center gap-3">
+            {showBurgerMenu && (
+              <BurgerMenuButton onClick={toggleNav} />
+            )}
+            <BndyLogo className="h-8 w-auto" color="#f97316" />
+          </div>
 
-          {/* Title */}
+          {/* Center: Title */}
           {title && (
             <h1 className="text-white font-serif font-semibold text-xl">{title}</h1>
           )}
 
-          {/* Additional content */}
+          {/* Right side: Additional content */}
           <div className="flex items-center gap-3">
             {children}
           </div>

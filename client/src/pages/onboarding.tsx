@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import BndyLogo from "@/components/ui/bndy-logo";
+import ImageUpload from "@/components/ui/image-upload";
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
 
 const ICONS = [
@@ -33,6 +34,7 @@ export default function Onboarding() {
   const [formData, setFormData] = useState({
     bandName: "",
     bandDescription: "",
+    bandAvatar: null as string | null,
     displayName: "",
     role: "",
     icon: "fa-music",
@@ -55,6 +57,7 @@ export default function Onboarding() {
         body: JSON.stringify({
           name: data.bandName,
           description: data.bandDescription,
+          avatarUrl: data.bandAvatar,
         }),
       });
 
@@ -206,9 +209,25 @@ export default function Onboarding() {
               />
             </div>
 
-            {/* Icon Selection */}
+            {/* Band Avatar Upload */}
+            <div>
+              <Label className="text-slate-200 font-medium mb-2 block">Band Avatar (Optional)</Label>
+              <p className="text-sm text-slate-400 mb-3">Upload a logo or image for your band</p>
+              <div className="flex justify-center">
+                <ImageUpload
+                  value={formData.bandAvatar || undefined}
+                  onChange={(value) => setFormData(prev => ({ ...prev, bandAvatar: value }))}
+                  placeholder="Upload band logo"
+                  size="lg"
+                  data-testid="band-avatar-upload"
+                />
+              </div>
+            </div>
+
+            {/* Member Icon Selection (for user profile) */}
             <div>
               <Label className="text-slate-200 font-medium mb-2 block">Choose Your Icon</Label>
+              <p className="text-sm text-slate-400 mb-3">This represents you within the band</p>
               <div className="grid grid-cols-4 gap-3 mt-3">
                 {ICONS.map((iconData) => (
                   <button

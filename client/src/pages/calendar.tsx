@@ -5,7 +5,8 @@ import { useUser } from "@/lib/user-context";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
-import type { Event, UserBand, Band, EVENT_TYPES, EVENT_TYPE_CONFIG } from "@shared/schema";
+import type { Event, UserBand, Band, EVENT_TYPES } from "@shared/schema";
+import { EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
 import { PageHeader } from "@/components/layout";
 
@@ -370,7 +371,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     <div className="space-y-1">
                       {/* Starting events */}
                       {startingEvents.map((event, eventIndex) => {
-                        const config = EVENT_TYPE_CONFIG[event.type] || EVENT_TYPE_CONFIG.practice;
+                        const config = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice;
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
                         
                         return (
@@ -403,7 +404,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
                       {/* Extending events */}
                       {extendingEvents.map((event, eventIndex) => {
-                        const config = EVENT_TYPE_CONFIG[event.type] || EVENT_TYPE_CONFIG.practice;
+                        const config = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice;
                         const remainingDays = getRemainingDaysInWeek(index);
                         const eventEndDate = new Date(event.endDate + 'T00:00:00');
                         const currentWeekEnd = new Date(day.getTime() + (remainingDays - 1) * 24 * 60 * 60 * 1000);
@@ -469,7 +470,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                             <i className="fas fa-music"></i>
                           </button>
                           <button
-                            onClick={() => openEventModal(dateStr, "gig")}
+                            onClick={() => openEventModal(dateStr, "public_gig")}
                             className="w-6 h-6 bg-yellow-500 hover:bg-yellow-600 rounded-full flex items-center justify-center text-white text-xs"
                             title="Add gig"
                             data-testid={`button-add-gig-${dateStr}`}
@@ -513,12 +514,12 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                         style={{ backgroundColor: EVENT_TYPE_CONFIG[event.type]?.color || EVENT_TYPE_CONFIG.practice.color }}>
-                      <span className="text-xl">{EVENT_TYPE_CONFIG[event.type]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
+                         style={{ backgroundColor: EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color }}>
+                      <span className="text-xl">{EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
                     </div>
                     <div className="flex-1">
                       <h4 className="font-sans font-semibold text-brand-primary">
-                        {event.title || EVENT_TYPE_CONFIG[event.type]?.label || "Event"}
+                        {event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}
                       </h4>
                       <p className="text-gray-600">
                         {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}

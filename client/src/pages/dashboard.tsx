@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock } from "lucide-react";
 import type { Event, Song, UserBand, Band } from "@shared/schema";
 import GigAlertBanner from "@/components/gig-alert-banner";
+import { PageHeader } from "@/components/layout";
 
 // All icons verified as valid lucide-react exports
 
@@ -186,6 +187,9 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+      {/* Page Header */}
+      <PageHeader title="Dashboard" />
+      
       {/* Band Profile Header */}
       <div className="bg-slate-900 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-8">

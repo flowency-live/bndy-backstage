@@ -140,13 +140,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enforce invite-only concept: only platform admins can create bands until we have 10 bands
       if (totalBandsCount >= 10 || isPlatformAdmin) {
         // Band creation allowed
-        const { name, description } = req.body;
+        const { name, description, avatarUrl } = req.body;
         // Generate slug from name (simple version - replace spaces with hyphens and lowercase)
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         const band = await storage.createBand({
           name,
           slug,
           description,
+          avatarUrl: avatarUrl || null,
           createdBy: req.user.dbUser.id,
         }, req.user.dbUser.id);
         
@@ -169,6 +170,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(band);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch band" });
+    }
+  });
+
+  app.patch("/api/bands/:bandId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user is admin or owner of the band
+      const userMembership = await storage.getBandMembers(req.params.bandId);
+      const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
+      
+      if (!currentUserMembership || (currentUserMembership.role !== 'admin' && currentUserMembership.role !== 'owner')) {
+        return res.status(403).json({ message: "Only band admins and owners can update band settings" });
+      }
+
+      const { name, description, avatarUrl } = req.body;
+      const updates: any = {};
+      
+      if (name !== undefined) {
+        updates.name = name;
+        // Update slug if name changes
+        updates.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      if (description !== undefined) updates.description = description;
+      if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+
+      const updatedBand = await storage.updateBand(req.params.bandId, updates);
+      
+      if (!updatedBand) {
+        return res.status(404).json({ message: "Band not found" });
+      }
+
+      res.json(updatedBand);
+    } catch (error) {
+      console.error("Failed to update band:", error);
+      res.status(500).json({ message: "Failed to update band" });
     }
   });
 
