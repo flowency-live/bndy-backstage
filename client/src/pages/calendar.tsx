@@ -208,10 +208,13 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const getAgendaEvents = () => {
     return events
       .filter(event => {
-        if (event.type === "unavailable") return false;
-        
         const eventDate = new Date(event.date + 'T00:00:00');
-        return eventDate >= monthStart && eventDate <= monthEnd;
+        const eventEndDate = event.endDate ? new Date(event.endDate + 'T00:00:00') : eventDate;
+        
+        // Include events that start, end, or span within the current month
+        return (eventDate >= monthStart && eventDate <= monthEnd) ||
+               (eventEndDate >= monthStart && eventEndDate <= monthEnd) ||
+               (eventDate <= monthStart && eventEndDate >= monthEnd);
       })
       .sort((a, b) => {
         const dateA = new Date(a.date + 'T00:00:00');
@@ -669,7 +672,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-sans font-semibold text-card-foreground">
-                        {event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}
+                        {getEventDisplayName(event)}
                       </h4>
                       <p className="text-muted-foreground">
                         {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}
