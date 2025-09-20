@@ -33,39 +33,48 @@ function Router() {
         </AppLayout>
       </Route>
       <Route path="/dashboard">
-        <BandGate>
-          {({ bandId, membership }) => (
+        <BandGate allowNoBandForDashboard={true}>
+          {({ bandId, membership, userProfile }) => (
             <AppLayout bandId={bandId} membership={membership}>
-              <Dashboard bandId={bandId} membership={membership} />
+              <Dashboard bandId={bandId} membership={membership} userProfile={userProfile} />
             </AppLayout>
           )}
         </BandGate>
       </Route>
       <Route path="/calendar">
         <BandGate>
-          {({ bandId, membership }) => (
-            <AppLayout bandId={bandId} membership={membership}>
-              <Calendar bandId={bandId} membership={membership} />
-            </AppLayout>
-          )}
+          {({ bandId, membership }) => {
+            if (!bandId || !membership) return null;
+            return (
+              <AppLayout bandId={bandId} membership={membership}>
+                <Calendar bandId={bandId} membership={membership} />
+              </AppLayout>
+            );
+          }}
         </BandGate>
       </Route>
       <Route path="/songs">
         <BandGate>
-          {({ bandId, membership }) => (
-            <AppLayout bandId={bandId} membership={membership}>
-              <Songs bandId={bandId} membership={membership} />
-            </AppLayout>
-          )}
+          {({ bandId, membership }) => {
+            if (!bandId || !membership) return null;
+            return (
+              <AppLayout bandId={bandId} membership={membership}>
+                <Songs bandId={bandId} membership={membership} />
+              </AppLayout>
+            );
+          }}
         </BandGate>
       </Route>
       <Route path="/admin">
         <BandGate>
-          {({ bandId, membership }) => (
-            <AppLayout bandId={bandId} membership={membership}>
-              <Admin bandId={bandId} membership={membership} />
-            </AppLayout>
-          )}
+          {({ bandId, membership }) => {
+            if (!bandId || !membership) return null;
+            return (
+              <AppLayout bandId={bandId} membership={membership}>
+                <Admin bandId={bandId} membership={membership} />
+              </AppLayout>
+            );
+          }}
         </BandGate>
       </Route>
       <Route component={NotFound} />

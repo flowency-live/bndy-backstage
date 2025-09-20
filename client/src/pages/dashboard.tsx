@@ -1,21 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useUser } from "@/lib/user-context";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock } from "lucide-react";
-import type { Event, Song, UserBand, Band } from "@shared/schema";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight } from "lucide-react";
+import type { Event, Song, UserBand, Band, User } from "@shared/schema";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 
 // All icons verified as valid lucide-react exports
 
+interface UserProfile {
+  user: User;
+  bands: (UserBand & { band: Band })[];
+}
+
 interface DashboardProps {
-  bandId: string;
-  membership: UserBand & { band: Band };
+  bandId: string | null;
+  membership: (UserBand & { band: Band }) | null;
+  userProfile: UserProfile | null;
 }
 
 interface TileProps {
@@ -86,9 +93,96 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
   );
 }
 
-export default function Dashboard({ bandId, membership }: DashboardProps) {
+function BandTile({ band, membership, onClick }: { 
+  band: Band, 
+  membership: UserBand & { band: Band },
+  onClick: () => void 
+}) {
+  return (
+    <Card 
+      className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up"
+      onClick={onClick}
+      data-testid={`band-tile-${band.id}`}
+    >
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4">
+          {band.avatarUrl ? (
+            <img
+              src={band.avatarUrl}
+              alt={`${band.name} avatar`}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: membership.color }}
+            >
+              <i className={`fas ${membership.icon} text-white text-lg`}></i>
+            </div>
+          )}
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-foreground">{band.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {membership.displayName} • {membership.role}
+            </p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function Dashboard({ bandId, membership, userProfile }: DashboardProps) {
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
+  const { selectBand } = useUser();
+
+  // Handle no band selected case - show band tiles
+  if (!bandId || !membership || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+        <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
+                Select Your Band
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Choose a band to access your dashboard, calendar, and practice lists
+              </p>
+            </div>
+            
+            <div className="grid gap-4 max-w-2xl mx-auto">
+              {userProfile?.bands.map((bandMembership) => (
+                <BandTile
+                  key={bandMembership.bandId}
+                  band={bandMembership.band}
+                  membership={bandMembership}
+                  onClick={() => {
+                    selectBand(bandMembership.bandId);
+                    // The page will automatically reload due to band selection
+                  }}
+                />
+              ))}
+            </div>
+            
+            <div className="text-center mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setLocation('/onboarding')}
+                className="mr-4"
+                data-testid="button-create-new-band"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Band
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Get upcoming events for this band  
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({

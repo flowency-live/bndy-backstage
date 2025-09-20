@@ -26,10 +26,15 @@ interface UserProfile {
 }
 
 interface BandGateProps {
-  children: ({ bandId, membership }: { bandId: string, membership: UserBand & { band: Band } }) => React.ReactNode;
+  children: ({ bandId, membership, userProfile }: { 
+    bandId: string | null, 
+    membership: (UserBand & { band: Band }) | null,
+    userProfile: UserProfile | null
+  }) => React.ReactNode;
+  allowNoBandForDashboard?: boolean;
 }
 
-export default function BandGate({ children }: BandGateProps) {
+export default function BandGate({ children, allowNoBandForDashboard = false }: BandGateProps) {
   const [, setLocation] = useLocation();
   const { user, loading: authLoading, isAuthenticated, session } = useSupabaseAuth();
   const [selectedBandId, setSelectedBandId] = useState<string | null>(null);
@@ -172,8 +177,8 @@ export default function BandGate({ children }: BandGateProps) {
     return null;
   }
 
-  // Multiple bands but none selected - show band selector
-  if (userProfile && userProfile.bands.length > 1 && !selectedBandId) {
+  // Multiple bands but none selected - show band selector unless dashboard allows no band
+  if (userProfile && userProfile.bands.length > 1 && !selectedBandId && !allowNoBandForDashboard) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center max-w-md w-full">
@@ -235,17 +240,24 @@ export default function BandGate({ children }: BandGateProps) {
   }
 
   // Find the selected band membership
-  const selectedMembership = userProfile?.bands.find(b => b.bandId === selectedBandId);
+  const selectedMembership = selectedBandId 
+    ? userProfile?.bands.find(b => b.bandId === selectedBandId) || null
+    : null;
   
-  if (!selectedMembership) {
+  // If no band selected but we have a selectedBandId, handle the error
+  if (selectedBandId && !selectedMembership) {
     // Band not found, will be handled by useEffect
     return null;
   }
 
-  // Render children with selected band context
+  // Render children with band context (could be null for dashboard)
   return (
     <>
-      {children({ bandId: selectedBandId!, membership: selectedMembership })}
+      {children({ 
+        bandId: selectedBandId, 
+        membership: selectedMembership, 
+        userProfile: userProfile || null 
+      })}
     </>
   );
 }
