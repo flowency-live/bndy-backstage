@@ -7,12 +7,12 @@
   --background: hsl(210, 20%, 96%); /* Slightly darker background for better contrast */
   --foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
   --muted: hsl(210, 40%, 91%); /* More contrast in muted areas */
-  --muted-foreground: hsl(215.4, 16.3%, 42%); /* slate-600 - darker for better contrast */
+  --muted-foreground: hsl(215.4, 16.3%, 35%); /* slate-700 - even darker for better contrast */
   --popover: hsl(0, 0%, 100%); /* Pure white for popovers to stand out */
   --popover-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
   --card: hsl(0, 0%, 100%); /* Pure white cards for strong contrast */
   --card-foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
-  --border: hsl(214.3, 31.8%, 82%); /* Darker borders for better visibility */
+  --border: hsl(214.3, 31.8%, 75%); /* Much darker borders for better visibility */
   --input: hsl(0, 0%, 100%); /* Pure white inputs for clarity */
   --primary: hsl(24, 95%, 53%); /* orange-500 */
   --primary-foreground: hsl(0, 0%, 100%); /* white */
@@ -24,6 +24,11 @@
   --destructive-foreground: hsl(0, 0%, 100%); /* white */
   --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
+
+  /* Action button colors - always orange regardless of theme */
+  --action: hsl(24, 95%, 53%); /* orange-500 */
+  --action-foreground: hsl(0, 0%, 100%); /* white */
+  --action-light: hsl(21, 90%, 48%); /* orange-600 for hover */
   
   /* Brand Colors - Light mode - improved contrast */
   --brand-accent: hsl(24, 95%, 53%); /* Orange 500 */
@@ -78,6 +83,11 @@
   /* orange-500 for focus ring */
   --ring: hsl(24, 95%, 53%); /* orange-500 */
   --radius: 0.5rem;
+
+  /* Action button colors - always orange regardless of theme */
+  --action: hsl(24, 95%, 53%); /* orange-500 */
+  --action-foreground: hsl(0, 0%, 100%); /* white */
+  --action-light: hsl(21, 90%, 48%); /* orange-600 for hover */
   
   /* Chart colors */
   --chart-1: hsl(12, 76%, 61%);
