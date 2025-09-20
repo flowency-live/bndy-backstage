@@ -128,14 +128,23 @@ export class DatabaseStorage implements IStorage {
       // Try to create the user
       return await this.createUser(insertUser);
     } catch (error: any) {
-      // If it's a unique constraint violation, fetch the existing user
-      if (error?.code === '23505' || error?.constraint?.includes('supabase_id')) {
-        const user = await this.getUserBySupabaseId(insertUser.supabaseId);
-        if (user) {
-          return user;
+      // If it's a unique constraint violation, try to fetch the existing user
+      if (error?.code === '23505') {
+        // Handle both supabase_id and phone unique constraints
+        if (error?.constraint?.includes('supabase_id')) {
+          const user = await this.getUserBySupabaseId(insertUser.supabaseId);
+          if (user) {
+            return user;
+          }
+        } else if (error?.constraint?.includes('phone') && insertUser.phone) {
+          // Try to find user by phone
+          const [userByPhone] = await db.select().from(users).where(eq(users.phone, insertUser.phone));
+          if (userByPhone) {
+            return userByPhone;
+          }
         }
       }
-      // Re-throw the error if it's not a unique constraint violation
+      // Re-throw the error if it's not a unique constraint violation or user not found
       throw error;
     }
   }
