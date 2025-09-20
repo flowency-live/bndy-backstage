@@ -285,7 +285,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             <div className="mb-6">
               <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Event Type</label>
               <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
-                {(currentUser.band.allowedEventTypes || ['practice', 'public_gig']).map((type) => {
+                {(() => {
+                  // Always include 'unavailable' regardless of band settings since it's a personal action
+                  const bandEventTypes = currentUser.band.allowedEventTypes || ['practice', 'public_gig'];
+                  const allAvailableTypes = [...bandEventTypes];
+                  if (!allAvailableTypes.includes('unavailable')) {
+                    allAvailableTypes.push('unavailable');
+                  }
+                  return allAvailableTypes;
+                })().map((type) => {
                   const config = EVENT_TYPE_CONFIG[type as keyof typeof EVENT_TYPE_CONFIG];
                   const isSelected = formData.type === type;
                   
