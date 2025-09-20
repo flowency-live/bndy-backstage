@@ -576,8 +576,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               </Button>
               <Button
                 type="submit"
+                variant="action"
                 disabled={createEventMutation.isPending || updateEventMutation.isPending}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                className="flex-1"
               >
                 {(createEventMutation.isPending || updateEventMutation.isPending) ? (
                   <>

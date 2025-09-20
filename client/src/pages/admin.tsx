@@ -622,8 +622,9 @@ export default function Admin({ bandId, membership }: AdminProps) {
                     </Button>
                     <Button
                       type="submit"
+                      variant="action"
                       disabled={updateBandMutation.isPending}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
+                      className="px-6"
                       data-testid="button-save-band"
                     >
                       {updateBandMutation.isPending ? (
