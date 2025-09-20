@@ -12,6 +12,7 @@ import { insertUserProfileSchema, updateUserProfileSchema, INSTRUMENT_OPTIONS, t
 import { cn } from "@/lib/utils";
 import { User, Camera, MapPin, Music } from "lucide-react";
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
+import ImageUpload from "@/components/ui/image-upload";
 
 interface ProfileFormProps {
   initialData?: Partial<UpdateUserProfile>;
@@ -34,6 +35,7 @@ export default function ProfileForm({
   const { toast } = useToast();
   const [placesLoaded, setPlacesLoaded] = useState(false);
   const [placesError, setPlacesError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialData?.avatarUrl || null);
   const hometownInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -110,7 +112,9 @@ export default function ProfileForm({
 
   const handleSubmit = async (data: InsertUserProfile | UpdateUserProfile) => {
     try {
-      await onSubmit(data);
+      // Include avatar URL in the submission data
+      const submitData = { ...data, avatarUrl };
+      await onSubmit(submitData);
     } catch (error) {
       toast({
         title: "Error",
@@ -125,24 +129,16 @@ export default function ProfileForm({
       {/* Profile Header */}
       <div className="text-center mb-6">
         {/* Avatar Section */}
-        <div className="relative mb-4">
-          <div className="w-20 h-20 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center shadow-lg mx-auto">
-            <User className="text-slate-400 w-7 h-7" />
+        <div className="mb-4">
+          <div className="flex justify-center">
+            <ImageUpload
+              value={avatarUrl || undefined}
+              onChange={(value) => setAvatarUrl(value)}
+              placeholder="Upload your profile picture"
+              size="lg"
+              data-testid="profile-avatar-upload"
+            />
           </div>
-          {/* Placeholder for future avatar upload */}
-          <button
-            type="button"
-            className="absolute bottom-0 right-1/2 translate-x-5 w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 hover:scale-105"
-            data-testid="button-avatar-upload"
-            onClick={() => {
-              toast({
-                title: "Coming Soon",
-                description: "Avatar upload will be available soon!",
-              });
-            }}
-          >
-            <Camera className="w-3 h-3" />
-          </button>
         </div>
         
         {mode === "create" && (
