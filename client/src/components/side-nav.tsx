@@ -134,8 +134,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           <Calendar className="h-4 w-4 text-primary" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">Personal Calendar</div>
-                          <div className="text-xs text-muted-foreground truncate">All your events</div>
+                          <div className="font-medium text-sm truncate text-foreground">All Bands (Personal)</div>
+                          <div className="text-xs text-muted-foreground truncate">All bands + personal</div>
                         </div>
                       </>
                     ) : currentMembership ? (
@@ -245,8 +245,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           <Calendar className="h-4 w-4 text-primary" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">Personal Calendar</div>
-                          <div className="text-xs text-muted-foreground truncate">All your events</div>
+                          <div className="font-medium text-sm truncate">All Bands (Personal)</div>
+                          <div className="text-xs text-muted-foreground truncate">All bands + personal</div>
                         </div>
                       </div>
                     </DropdownMenuItem>

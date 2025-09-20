@@ -553,11 +553,14 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
       {/* Band Filter Controls - Personal Mode Only */}
       {isInPersonalMode && userProfile?.bands && userProfile.bands.length > 1 && (
-        <div className="bg-slate-50 dark:bg-slate-800 px-4 py-3 border-b">
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold mr-2 flex items-center">
-              Filter bands:
-            </span>
+        <div className="bg-brand-primary-light px-4 py-3 border-t">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center mr-3">
+              <i className="fas fa-filter text-slate-600 dark:text-slate-400 mr-2"></i>
+              <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
+                Show events from:
+              </span>
+            </div>
             {userProfile.bands.map((bandMembership) => {
               const isEnabled = enabledBands.has(bandMembership.bandId);
               return (
@@ -573,22 +576,29 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     setEnabledBands(newEnabledBands);
                   }}
                   className={`
-                    px-3 py-1 rounded-full text-sm font-medium border transition-colors
+                    px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
                     ${isEnabled 
-                      ? 'bg-brand-accent text-white border-brand-accent' 
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
+                      ? 'bg-brand-accent text-white border-brand-accent shadow-md' 
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
                     }
                   `}
                   data-testid={`toggle-band-${bandMembership.bandId}`}
                 >
                   <span 
-                    className="inline-block w-2 h-2 rounded-full mr-2"
+                    className="inline-block w-2.5 h-2.5 rounded-full mr-2"
                     style={{ backgroundColor: bandMembership.color }}
                   />
                   {bandMembership.band.name}
+                  {isEnabled && (
+                    <i className="fas fa-check ml-2 text-xs"></i>
+                  )}
                 </button>
               );
             })}
+          </div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <i className="fas fa-info-circle mr-1"></i>
+            Click to show/hide events from each band in your personal view
           </div>
         </div>
       )}
@@ -609,9 +619,33 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 <i className="fas fa-hand-point-left mr-1"></i>
                 Swipe to navigate
               </div>
-              <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
-                {format(currentDate, "MMMM yyyy")}
-              </h1>
+              <div className="flex flex-col items-center">
+                <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
+                  {format(currentDate, "MMMM yyyy")}
+                </h1>
+                {/* Context indicator */}
+                <div className="flex items-center mt-1">
+                  {isInPersonalMode ? (
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <span className="px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 rounded-full font-medium">
+                        All Bands (Personal)
+                      </span>
+                      <span className="ml-1 text-slate-500 dark:text-slate-400">
+                        All bands + personal
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full font-medium">
+                        Band Calendar
+                      </span>
+                      <span className="ml-1 text-slate-500 dark:text-slate-400">
+                        {effectiveMembership?.band?.name || 'Unknown Band'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <button 
               onClick={navigateToNextMonth}
