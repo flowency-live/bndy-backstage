@@ -182,12 +182,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      // Check if user is admin or owner of the band
+      // Check if user is a member of the band (any member can update basic band info)
       const userMembership = await storage.getBandMembers(req.params.bandId);
       const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
       
-      if (!currentUserMembership || (currentUserMembership.role !== 'admin' && currentUserMembership.role !== 'owner')) {
-        return res.status(403).json({ message: "Only band admins and owners can update band settings" });
+      if (!currentUserMembership) {
+        return res.status(403).json({ message: "You must be a member of this band to update its settings" });
       }
 
       // Validate request body

@@ -498,6 +498,10 @@ export default function Admin({ bandId, membership }: AdminProps) {
             {/* Band Settings Tab */}
             {activeTab === 'band' && (
               <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-serif font-bold text-brand-primary mb-2">Band Information</h2>
+                  <p className="text-muted-foreground">Any band member can edit these details to keep your band's profile up to date.</p>
+                </div>
                 
                 <form onSubmit={(e) => {
                   e.preventDefault();
@@ -645,9 +649,14 @@ export default function Admin({ bandId, membership }: AdminProps) {
             {/* Members Tab */}
             {activeTab === 'members' && (
               <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-serif font-bold text-brand-primary mb-2">Member Management</h2>
+                  <p className="text-muted-foreground">View and manage your band members. {membership.role === 'admin' ? 'As an admin, you can invite new members and remove existing ones.' : 'Contact an admin to invite new members.'}</p>
+                </div>
+
                 {/* Current Members */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-sans font-semibold text-card-foreground mb-4">Current Members</h3>
+                  <h3 className="text-xl font-sans font-semibold text-card-foreground mb-4">Current Members ({bandMembers.length})</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {bandMembers.map((member) => (
                       <div key={member.id} className="bg-muted rounded-xl p-4 flex items-center justify-between" data-testid={`member-card-${member.id}`}>
