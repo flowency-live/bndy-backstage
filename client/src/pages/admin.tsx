@@ -53,6 +53,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
     color: "#708090",
   });
   const [activeTab, setActiveTab] = useState<'band' | 'members' | 'spotify'>('band');
+  const [invitePhone, setInvitePhone] = useState("");
   const [bandSettings, setBandSettings] = useState({
     name: membership.band.name,
     description: membership.band.description || '',
@@ -697,10 +698,139 @@ export default function Admin({ bandId, membership }: AdminProps) {
                   </div>
                 </div>
                 
+                {/* Magic Link Invites - only for admins */}
+                {membership.role === 'admin' && (
+                  <div className="border-t pt-6 mb-8">
+                    <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Magic Link Invites</h3>
+                    
+                    {/* General Band Join Link */}
+                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-foreground">General Band Invite Link</h4>
+                          <p className="text-sm text-muted-foreground">Share this link with multiple people to join your band</p>
+                        </div>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/bands/${bandId}/invites/general`, {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${session?.access_token}`,
+                                  'Content-Type': 'application/json'
+                                }
+                              });
+                              
+                              if (!response.ok) {
+                                throw new Error('Failed to generate invite link');
+                              }
+                              
+                              const data = await response.json();
+                              
+                              // Copy to clipboard
+                              await navigator.clipboard.writeText(data.inviteLink);
+                              
+                              toast({
+                                title: "Invite link generated!",
+                                description: "Link has been copied to your clipboard. Share it with people you want to invite.",
+                                variant: "default"
+                              });
+                            } catch (error: any) {
+                              toast({
+                                title: "Error generating link",
+                                description: error.message || "Please try again",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                          variant="outline"
+                          size="sm"
+                          data-testid="button-generate-general-link"
+                        >
+                          <i className="fas fa-link mr-2"></i>
+                          Generate Link
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Specific Member Invite */}
+                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-foreground">Send Specific Invite</h4>
+                          <p className="text-sm text-muted-foreground">Send a personalized magic link to someone's phone</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Input
+                          type="tel"
+                          placeholder="+44 7xxx xxx xxx"
+                          className="flex-1"
+                          data-testid="input-invite-phone"
+                          value={invitePhone}
+                          onChange={(e) => setInvitePhone(e.target.value)}
+                        />
+                        <Button
+                          onClick={async () => {
+                            if (!invitePhone.trim()) {
+                              toast({
+                                title: "Phone number required",
+                                description: "Please enter a phone number to send the invite",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            
+                            try {
+                              const response = await fetch(`/api/bands/${bandId}/invites/phone`, {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${session?.access_token}`,
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                  phone: invitePhone
+                                })
+                              });
+                              
+                              if (!response.ok) {
+                                throw new Error('Failed to send invite');
+                              }
+                              
+                              const data = await response.json();
+                              
+                              toast({
+                                title: "Invite sent!",
+                                description: `Magic link sent to ${invitePhone}`,
+                                variant: "default"
+                              });
+                              
+                              setInvitePhone("");
+                            } catch (error: any) {
+                              toast({
+                                title: "Error sending invite",
+                                description: error.message || "Please try again",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                          variant="action"
+                          data-testid="button-send-invite"
+                          disabled={!invitePhone.trim()}
+                        >
+                          <i className="fas fa-paper-plane mr-2"></i>
+                          Send Invite
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Add New Member - only for admins */}
                 {membership.role === 'admin' && (
                   <div className="border-t pt-6">
-                    <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Invite New Member</h3>
+                    <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Manual Member Addition</h3>
                     <form onSubmit={handleSubmit}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>

@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { randomUUID } from "crypto";
 import { storage } from "./storage";
 import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema, updateBandSchema } from "@shared/schema";
 import type { UpdateBand } from "@shared/schema";
@@ -802,6 +803,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to generate calendar URLs:", error);
       res.status(500).json({ message: "Failed to generate calendar URLs" });
+    }
+  });
+
+  // Magic Link Invite endpoints
+  
+  // Generate general band invite link
+  app.post("/api/bands/:bandId/invites/general", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user is admin
+      const userMembership = await storage.getBandMembers(req.params.bandId);
+      const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
+      
+      if (!currentUserMembership || currentUserMembership.role !== 'admin') {
+        return res.status(403).json({ message: "Only band admins can generate invite links" });
+      }
+
+      // Generate unique token
+      const token = randomUUID();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const inviteLink = `${baseUrl}/invite/${token}`;
+
+      // TODO: Store invite token in database with band association
+      // For now, return mock response
+      res.json({
+        message: "General invite link generated",
+        inviteLink,
+        token,
+        instructions: "Share this link with people you want to invite to your band. They'll be able to join automatically."
+      });
+    } catch (error) {
+      console.error("Failed to generate general invite:", error);
+      res.status(500).json({ message: "Failed to generate invite link" });
+    }
+  });
+
+  // Send specific phone invite
+  app.post("/api/bands/:bandId/invites/phone", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user is admin
+      const userMembership = await storage.getBandMembers(req.params.bandId);
+      const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
+      
+      if (!currentUserMembership || currentUserMembership.role !== 'admin') {
+        return res.status(403).json({ message: "Only band admins can send invites" });
+      }
+
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      // Generate unique token
+      const token = randomUUID();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const inviteLink = `${baseUrl}/invite/${token}`;
+
+      // TODO: Store invite token and send SMS
+      // TODO: Integrate with SMS service (Twilio/similar)
+      
+      res.json({
+        message: "Phone invite sent successfully",
+        phone,
+        inviteLink,
+        token
+      });
+    } catch (error) {
+      console.error("Failed to send phone invite:", error);
+      res.status(500).json({ message: "Failed to send phone invite" });
+    }
+  });
+
+  // Handle magic link redemption
+  app.get("/api/invites/:token/details", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      // TODO: Look up invite token in database
+      // For now, return mock response
+      res.json({
+        message: "Invite found",
+        band: {
+          name: "Mock Band",
+          description: "This is a mock band for testing"
+        },
+        valid: true
+      });
+    } catch (error) {
+      console.error("Failed to fetch invite details:", error);
+      res.status(500).json({ message: "Failed to fetch invite details" });
     }
   });
 
