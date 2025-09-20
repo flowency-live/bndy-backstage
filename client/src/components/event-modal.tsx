@@ -320,15 +320,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             {/* Public/Private Toggle (for non-unavailable events) */}
             {formData.type !== "unavailable" && (
               <div className="mb-6">
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-3">Visibility</label>
+                <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Visibility</label>
                 <div className="flex space-x-4">
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, isPublic: false, venue: undefined }))}
                     className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
                       !formData.isPublic
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-gray-200 hover:border-gray-300 text-gray-600"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
                     }`}
                     data-testid="button-private-event"
                   >
@@ -344,8 +344,8 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                     onClick={() => setFormData(prev => ({ ...prev, isPublic: true, location: undefined }))}
                     className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
                       formData.isPublic
-                        ? "border-orange-500 bg-orange-50 text-orange-700"
-                        : "border-gray-200 hover:border-gray-300 text-gray-600"
+                        ? "border-brand-accent bg-brand-accent/10 text-brand-accent dark:text-brand-accent"
+                        : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
                     }`}
                     data-testid="button-public-event"
                   >
@@ -362,7 +362,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             {/* Title (for most event types) */}
             {formData.type !== "unavailable" && (
               <div className="mb-6">
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Title (Optional)</label>
+                <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">Title (Optional)</label>
                 <Input
                   type="text"
                   placeholder={`${EVENT_TYPE_CONFIG[formData.type as EventType]?.label || "Event"} title`}
@@ -376,7 +376,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
             {/* Date Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">
                 {formData.type === "unavailable" ? "Dates" : "Date"}
               </label>
               <button
@@ -388,7 +388,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                     setShowDatePicker(true);
                   }
                 }}
-                className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
+                className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 relative"
               >
                 <span>
                   {formData.type === "unavailable" ? (
@@ -401,7 +401,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                     formData.date ? new Date(formData.date + 'T00:00:00').toLocaleDateString() : "Select date"
                   )}
                 </span>
-                <i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
               </button>
             </div>
 
@@ -410,31 +410,31 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               <div className="mb-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Start Time</label>
+                    <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">Start Time</label>
                     <button
                       type="button"
                       onClick={() => {
                         setTimePickerType("start");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
+                      className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 relative"
                     >
                       <span>{formData.startTime ? formatTime(formData.startTime) : "Select time"}</span>
-                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
                     </button>
                   </div>
                   <div>
-                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">End Time</label>
+                    <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">End Time</label>
                     <button
                       type="button"
                       onClick={() => {
                         setTimePickerType("end");
                         setShowTimePicker(true);
                       }}
-                      className="w-full p-3 border border-gray-300 rounded-xl text-left bg-white hover:border-brand-primary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-opacity-20 relative"
+                      className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 relative"
                     >
                       <span>{formData.endTime ? formatTime(formData.endTime) : "Select time"}</span>
-                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                      <i className="fas fa-clock absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
                     </button>
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               <div className="mb-6">
                 {formData.isPublic ? (
                   <>
-                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Venue *</label>
+                    <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">Venue *</label>
                     <Input
                       type="text"
                       placeholder="Enter public venue name"
@@ -458,7 +458,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                   </>
                 ) : (
                   <>
-                    <label className="block text-sm font-sans font-semibold text-gray-700 mb-2">Location *</label>
+                    <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">Location *</label>
                     <Input
                       type="text"
                       placeholder="Enter private location"

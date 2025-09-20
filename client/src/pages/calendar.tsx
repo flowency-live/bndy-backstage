@@ -616,7 +616,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                           </div>
                         ))}
                         {unavailableMembers.length > 3 && (
-                          <div className="w-4 h-4 rounded-full bg-gray-500 border border-white flex items-center justify-center text-white text-xs">
+                          <div className="w-4 h-4 rounded-full bg-muted border border-foreground flex items-center justify-center text-foreground text-xs">
                             +{unavailableMembers.length - 3}
                           </div>
                         )}
