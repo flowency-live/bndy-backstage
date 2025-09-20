@@ -53,8 +53,8 @@ export default function TimePickerModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-sm w-full animate-slide-up">
-        <div className="bg-brand-accent text-white p-4 rounded-t-2xl">
+      <div className="bg-card rounded-2xl max-w-sm w-full animate-slide-up">
+        <div className="bg-orange-500 text-white p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-serif">{title}</h3>
             <button onClick={onClose} className="text-white hover:text-gray-200">
@@ -66,7 +66,7 @@ export default function TimePickerModal({
         <div className="p-6">
           {/* Digital time display */}
           <div className="text-center mb-6">
-            <div className="text-3xl font-sans font-bold text-brand-primary mb-2">
+            <div className="text-3xl font-sans font-bold text-card-foreground mb-2">
               {formatTime12(hour, minute)}
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function TimePickerModal({
             <div className="grid grid-cols-2 gap-4">
               {/* Hour Selection */}
               <div>
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-2 text-center">Hour</label>
+                <label className="block text-sm font-sans font-semibold text-card-foreground mb-2 text-center">Hour</label>
                 <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto">
                   {Array.from({ length: 24 }, (_, i) => (
                     <button
@@ -84,8 +84,8 @@ export default function TimePickerModal({
                       onClick={() => handleHourClick(i)}
                       className={`p-2 text-sm rounded transition-colors ${
                         hour === i
-                          ? "bg-brand-accent text-white"
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          ? "bg-orange-500 text-white"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-card-foreground"
                       }`}
                     >
                       {i === 0 ? 12 : i > 12 ? i - 12 : i}
@@ -97,7 +97,7 @@ export default function TimePickerModal({
 
               {/* Minute Selection */}
               <div>
-                <label className="block text-sm font-sans font-semibold text-gray-700 mb-2 text-center">Minute</label>
+                <label className="block text-sm font-sans font-semibold text-card-foreground mb-2 text-center">Minute</label>
                 <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto">
                   {Array.from({ length: 12 }, (_, i) => {
                     const min = i * 5;
@@ -107,8 +107,8 @@ export default function TimePickerModal({
                         onClick={() => handleMinuteClick(min)}
                         className={`p-2 text-sm rounded transition-colors ${
                           minute === min
-                            ? "bg-brand-accent text-white"
-                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                            ? "bg-orange-500 text-white"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-card-foreground"
                         }`}
                       >
                         {min.toString().padStart(2, "0")}
@@ -126,7 +126,7 @@ export default function TimePickerModal({
             </Button>
             <Button 
               onClick={handleConfirm}
-              className="flex-1 bg-brand-accent hover:bg-brand-accent-light"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
             >
               Select
             </Button>

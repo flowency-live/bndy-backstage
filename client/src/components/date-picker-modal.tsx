@@ -49,8 +49,8 @@ export default function DatePickerModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-sm w-full animate-slide-up">
-        <div className="bg-brand-primary-light text-white p-4 rounded-t-2xl">
+      <div className="bg-card rounded-2xl max-w-sm w-full animate-slide-up">
+        <div className="bg-orange-500 text-white p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-serif">{title}</h3>
             <button onClick={onClose} className="text-white hover:text-gray-200">
@@ -65,23 +65,23 @@ export default function DatePickerModal({
             <div className="flex items-center justify-between mb-4">
               <button 
                 onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="p-2 text-brand-primary hover:bg-brand-neutral rounded"
+                className="p-2 text-orange-500 hover:bg-muted rounded"
               >
                 <i className="fas fa-chevron-left"></i>
               </button>
-              <span className="text-lg font-sans font-semibold text-brand-primary">
+              <span className="text-lg font-sans font-semibold text-card-foreground">
                 {format(currentDate, "MMMM yyyy")}
               </span>
               <button 
                 onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                className="p-2 text-brand-primary hover:bg-brand-neutral rounded"
+                className="p-2 text-orange-500 hover:bg-muted rounded"
               >
                 <i className="fas fa-chevron-right"></i>
               </button>
             </div>
             
             {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-1 text-xs text-gray-600 mb-2">
+            <div className="grid grid-cols-7 gap-1 text-xs text-muted-foreground mb-2">
               {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
                 <div key={`day-header-${index}`} className="p-2">{day}</div>
               ))}
@@ -100,16 +100,16 @@ export default function DatePickerModal({
                 const isTodayDate = isToday(day);
                 const isSelected = tempSelectedDate === dateStr;
 
-                let buttonClasses = "p-2 text-sm rounded hover:bg-brand-neutral transition-colors ";
+                let buttonClasses = "p-2 text-sm rounded hover:bg-muted transition-colors ";
                 
                 if (!isCurrentMonth) {
-                  buttonClasses += "text-gray-300 ";
+                  buttonClasses += "text-muted-foreground/50 ";
                 } else if (isSelected) {
-                  buttonClasses += "bg-brand-primary text-white ";
+                  buttonClasses += "bg-orange-500 text-white ";
                 } else if (isTodayDate) {
-                  buttonClasses += "bg-blue-100 text-blue-700 font-semibold ";
+                  buttonClasses += "bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 font-semibold ";
                 } else {
-                  buttonClasses += "text-gray-700 ";
+                  buttonClasses += "text-card-foreground ";
                 }
 
                 return (
@@ -138,7 +138,7 @@ export default function DatePickerModal({
             <Button 
               onClick={handleConfirm} 
               disabled={!tempSelectedDate}
-              className="flex-1 bg-brand-primary hover:bg-brand-primary-dark"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
             >
               Select
             </Button>
