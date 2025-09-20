@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
+import { useUser } from "@/lib/user-context";
 import { 
   Menu, 
   Home, 
@@ -14,7 +15,8 @@ import {
   Settings, 
   User,
   X,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from "lucide-react";
 import type { UserBand, Band } from "@shared/schema";
 
@@ -66,6 +68,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { clearBandSelection } = useUser();
+
+  const handleExitBand = () => {
+    clearBandSelection();
+    setLocation('/dashboard');
+    setIsOpen(false);
+  };
 
   // Don't show header on auth pages
   const hideHeader = ["/", "/login", "/onboarding"].includes(location) || location.startsWith("/invite/");
@@ -181,7 +190,18 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                 </nav>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-border">
+                <div className="p-6 border-t border-border space-y-4">
+                  {currentMembership && (
+                    <Button
+                      variant="ghost"
+                      onClick={handleExitBand}
+                      className="w-full justify-start text-muted-foreground hover:text-foreground"
+                      data-testid="button-exit-band"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Exit Band
+                    </Button>
+                  )}
                   <div className="text-center text-xs text-muted-foreground">
                     bndy • Band Management Platform
                   </div>

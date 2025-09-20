@@ -109,7 +109,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isAuthenticated,
     isLoading: authLoading || profileLoading,
     user: userProfile?.user || null,
-    userProfile,
+    userProfile: userProfile || null,
     currentBandId,
     currentMembership,
     selectBand,

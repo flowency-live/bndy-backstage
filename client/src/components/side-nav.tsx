@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useUser } from "@/lib/user-context";
 import { ChevronDown, Plus, Settings, Menu, X, Home, Calendar, Music, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -40,8 +41,15 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const { session, signOut } = useSupabaseAuth();
+  const { clearBandSelection } = useUser();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  const handleExitBand = () => {
+    clearBandSelection();
+    setLocation('/dashboard');
+    onClose();
+  };
 
   // Get user profile and all bands
   const { data: userProfile } = useQuery<UserProfile>({
@@ -321,6 +329,17 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                     <User className="h-4 w-4 mr-2" />
                     View Profile
                   </DropdownMenuItem>
+                  
+                  {currentMembership && (
+                    <DropdownMenuItem 
+                      onClick={handleExitBand} 
+                      className="cursor-pointer text-muted-foreground hover:text-foreground"
+                      data-testid="button-exit-band"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Exit Band
+                    </DropdownMenuItem>
+                  )}
                   
                   <DropdownMenuSeparator />
                   
