@@ -345,7 +345,7 @@ export const EVENT_TYPE_CONFIG = {
   meeting: { label: 'Meeting', icon: '👥', color: 'hsl(220, 13%, 69%)', theme: 'neutral' },
   recording: { label: 'Recording', icon: '🎙️', color: 'hsl(0, 84%, 60%)', theme: 'red' },
   private_booking: { label: 'Private Booking', icon: '🔒', color: 'hsl(215, 28%, 17%)', theme: 'secure' },
-  public_gig: { label: 'Public Gig', icon: '🎭', color: 'hsl(24, 95%, 53%)', theme: 'orange' },
+  public_gig: { label: 'Gig', icon: '🎸', color: 'hsl(24, 95%, 53%)', theme: 'orange' },
   festival: { label: 'Festival', icon: '🎪', color: 'hsl(142, 76%, 36%)', theme: 'bright' },
   unavailable: { label: 'Unavailable', icon: '🚫', color: 'hsl(0, 0%, 50%)', theme: 'gray' }
 } as const;
