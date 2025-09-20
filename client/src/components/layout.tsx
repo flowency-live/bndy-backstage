@@ -1,6 +1,7 @@
 import { useState, createContext, useContext } from "react";
 import { useLocation } from "wouter";
 import SideNav, { BurgerMenuButton } from "@/components/side-nav";
+import { MobileNavHeader } from "@/components/mobile-nav";
 import BndyLogo from "@/components/ui/bndy-logo";
 import type { UserBand, Band } from "@shared/schema";
 
@@ -43,9 +44,10 @@ interface AppLayoutProps {
   children: React.ReactNode;
   bandId?: string;
   membership?: UserBand & { band: Band };
+  isLoading?: boolean;
 }
 
-export function AppLayout({ children, bandId, membership }: AppLayoutProps) {
+export function AppLayout({ children, bandId, membership, isLoading = false }: AppLayoutProps) {
   const { isNavOpen, closeNav } = useNavigation();
   const [location] = useLocation();
 
@@ -57,19 +59,28 @@ export function AppLayout({ children, bandId, membership }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Side Navigation */}
-      <SideNav
-        currentBandId={bandId}
-        currentMembership={membership}
-        isOpen={isNavOpen}
-        onClose={closeNav}
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Mobile Navigation Header */}
+      <MobileNavHeader 
+        currentBandId={bandId} 
+        currentMembership={membership} 
+        isLoading={isLoading}
       />
 
-      {/* Main Content */}
-      <div className="flex-1">
-        {children}
+      {/* Desktop Side Navigation - Hidden on mobile */}
+      <div className="hidden lg:block">
+        <SideNav
+          currentBandId={bandId}
+          currentMembership={membership}
+          isOpen={isNavOpen}
+          onClose={closeNav}
+        />
       </div>
+
+      {/* Main Content - Mobile first with bottom padding for nav */}
+      <main className="flex-1 min-h-0 pb-20 lg:pb-0">
+        {children}
+      </main>
     </div>
   );
 }

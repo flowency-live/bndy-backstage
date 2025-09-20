@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock } from "lucide-react";
 import type { Event, Song, UserBand, Band } from "@shared/schema";
 import GigAlertBanner from "@/components/gig-alert-banner";
-import { PageHeader } from "@/components/layout";
+import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 
 // All icons verified as valid lucide-react exports
 
@@ -90,8 +90,8 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
 
-  // Get upcoming events for this band
-  const { data: upcomingEvents = [] } = useQuery<Event[]>({
+  // Get upcoming events for this band  
+  const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/bands", bandId, "events", "upcoming"],
     queryFn: async () => {
       if (!session?.access_token) {
@@ -134,7 +134,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   });
 
   // Get songs for this band
-  const { data: songs = [] } = useQuery<Song[]>({
+  const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
     queryKey: ["/api/bands", bandId, "songs"],
     queryFn: async () => {
       if (!session?.access_token) {
@@ -158,7 +158,7 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   });
 
   // Get band members
-  const { data: bandMembers = [] } = useQuery<any[]>({
+  const { data: bandMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/bands", bandId, "members"],
     queryFn: async () => {
       if (!session?.access_token) {
@@ -185,10 +185,15 @@ export default function Dashboard({ bandId, membership }: DashboardProps) {
   const upcomingGigs = upcomingEvents.filter(e => e.type === 'gig').length;
   const totalSongs = songs.length;
 
+  // Loading state - check if any queries are still loading
+  const isLoading = !session?.access_token || eventsLoading || songsLoading || membersLoading;
+
+  if (isLoading) {
+    return <BndySpinnerOverlay message="Loading your band dashboard..." />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      {/* Page Header */}
-      <PageHeader title="Dashboard" />
+    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">{/* Mobile-first layout - header is now handled by MobileNavHeader */}
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
