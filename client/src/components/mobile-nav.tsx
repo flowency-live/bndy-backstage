@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { 
@@ -203,8 +204,9 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             )}
           </div>
 
-          {/* Right: Action Badge */}
-          <div className="w-10 flex justify-end">
+          {/* Right: Theme Toggle & Action Badge */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle size="sm" />
             {currentMembership && (
               <Badge 
                 variant="secondary" 

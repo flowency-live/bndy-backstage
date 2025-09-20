@@ -322,23 +322,23 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      {/* Page Header */}
-      <PageHeader title="Calendar">
-        <div className="flex items-center gap-3">
-          {/* Calendar Export Menu */}
+      {/* Calendar Controls */}
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
+        <div className="flex items-center justify-between">
+          {/* Export Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="bg-white/20 border-white/30 text-primary-foreground hover:bg-white/30"
+                className="gap-2"
                 data-testid="button-calendar-export"
               >
-                <i className="fas fa-download mr-2"></i>
+                <i className="fas fa-download text-sm"></i>
                 Export
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuContent className="w-56" align="start">
               <DropdownMenuItem 
                 onClick={() => handleExportCalendar(false, false)}
                 data-testid="menu-export-all-public"
@@ -372,32 +372,34 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           </DropdownMenu>
 
           {/* View Mode Toggle */}
-          <div className="flex bg-white/20 rounded-lg overflow-hidden">
+          <div className="flex bg-muted rounded-lg p-1">
             <button
               onClick={() => setViewMode("calendar")}
-              className={`px-3 py-1 text-sm font-medium transition-colors ${
+              className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
                 viewMode === "calendar" 
-                  ? "bg-primary-foreground text-primary" 
-                  : "text-primary-foreground hover:bg-white/10"
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               data-testid="button-calendar-view"
             >
+              <i className="fas fa-calendar mr-2"></i>
               Calendar
             </button>
             <button
               onClick={() => setViewMode("agenda")}
-              className={`px-3 py-1 text-sm font-medium transition-colors ${
+              className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
                 viewMode === "agenda" 
-                  ? "bg-primary-foreground text-primary" 
-                  : "text-primary-foreground hover:bg-white/10"
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               data-testid="button-agenda-view"
             >
+              <i className="fas fa-list mr-2"></i>
               Agenda
             </button>
           </div>
         </div>
-      </PageHeader>
+      </div>
 
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
@@ -495,9 +497,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         {viewMode === "calendar" ? (
           <div ref={swipeRef} className="select-none">
             {/* Week headers */}
-            <div className="grid grid-cols-7 bg-brand-neutral">
+            <div className="grid grid-cols-7 bg-brand-neutral dark:bg-gray-800">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div key={day} className="p-3 text-center text-sm font-sans font-semibold text-brand-primary">
+                <div key={day} className="p-3 text-center text-sm font-sans font-semibold text-brand-primary dark:text-gray-300">
                   {day}
                 </div>
               ))}
@@ -518,8 +520,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-24 border-r border-b border-gray-200 p-1 relative ${
-                      isCurrentMonth ? 'bg-white' : 'bg-gray-50'
+                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
+                      isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
                   >
                     {/* Date number */}
