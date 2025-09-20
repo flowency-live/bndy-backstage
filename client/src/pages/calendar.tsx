@@ -10,6 +10,15 @@ import type { Event, UserBand, Band, EVENT_TYPES } from "@shared/schema";
 import { EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
 import { PageHeader } from "@/components/layout";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface CalendarProps {
   bandId: string;
@@ -29,6 +38,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const [eventType, setEventType] = useState<typeof EVENT_TYPES[number]>("practice");
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
+  const { toast } = useToast();
 
   // Swipe handlers for month navigation
   const navigateToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -206,11 +216,161 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     return `${event.startTime}${endTime}`;
   };
 
+  // Calendar export functions
+  const handleExportCalendar = async (includePrivate: boolean = false, memberOnly: boolean = false) => {
+    try {
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to export calendar",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (includePrivate) params.append('includePrivate', 'true');
+      if (memberOnly) params.append('memberOnly', 'true');
+
+      const response = await fetch(`/api/bands/${bandId}/calendar/export/ical?${params.toString()}`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export calendar");
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Calendar exported",
+        description: `Downloaded ${filename}`,
+      });
+    } catch (error) {
+      console.error("Failed to export calendar:", error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export calendar. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGetCalendarUrls = async () => {
+    try {
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to get calendar URLs",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const response = await fetch(`/api/bands/${bandId}/calendar/url`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get calendar URLs");
+      }
+
+      const data = await response.json();
+      
+      // Copy the full calendar URL to clipboard
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(data.urls.full);
+        toast({
+          title: "Calendar URL copied",
+          description: "Paste this URL in your calendar app to subscribe to live updates",
+        });
+      } else {
+        toast({
+          title: "Calendar URLs",
+          description: "Check the console for calendar subscription URLs",
+        });
+        console.log("Calendar subscription URLs:", data.urls);
+      }
+    } catch (error) {
+      console.error("Failed to get calendar URLs:", error);
+      toast({
+        title: "Failed to get URLs",
+        description: "Failed to get calendar URLs. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       {/* Page Header */}
       <PageHeader title="Calendar">
         <div className="flex items-center gap-3">
+          {/* Calendar Export Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-white/20 border-white/30 text-primary-foreground hover:bg-white/30"
+                data-testid="button-calendar-export"
+              >
+                <i className="fas fa-download mr-2"></i>
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuItem 
+                onClick={() => handleExportCalendar(false, false)}
+                data-testid="menu-export-all-public"
+              >
+                <i className="fas fa-calendar mr-2 w-4 h-4"></i>
+                Export All Public Events
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportCalendar(true, true)}
+                data-testid="menu-export-personal-all"
+              >
+                <i className="fas fa-user mr-2 w-4 h-4"></i>
+                Export My Events (All)
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportCalendar(false, true)}
+                data-testid="menu-export-personal-public"
+              >
+                <i className="fas fa-user mr-2 w-4 h-4"></i>
+                Export My Public Events
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleGetCalendarUrls}
+                data-testid="menu-get-calendar-urls"
+              >
+                <i className="fas fa-link mr-2 w-4 h-4"></i>
+                Get Subscription URL
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* View Mode Toggle */}
           <div className="flex bg-white/20 rounded-lg overflow-hidden">
             <button

@@ -686,6 +686,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SECURITY: Legacy Songs endpoints PERMANENTLY REMOVED - they had no authentication at all
   // Use /api/bands/:bandId/songs endpoints instead, which require proper authentication and band membership
 
+  // Calendar Export endpoints
+  app.get("/api/bands/:bandId/calendar/export/ical", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { bandId } = req.params;
+      const { includePrivate = 'false', memberOnly = 'false' } = req.query;
+      
+      // Get band info
+      const band = await storage.getBand(bandId);
+      if (!band) {
+        return res.status(404).json({ message: "Band not found" });
+      }
+
+      // Get events for the band
+      const events = await storage.getEvents(bandId);
+      
+      // Import calendar utils
+      const { exportBandEventsToIcal, generateCalendarFileName } = await import('./calendar-utils');
+      
+      // Get current user's membership ID if needed
+      let membershipId = undefined;
+      if (memberOnly === 'true' && req.user?.dbUser?.id) {
+        const members = await storage.getBandMembers(bandId);
+        const currentUserMembership = members.find(m => m.userId === req.user!.dbUser!.id);
+        membershipId = currentUserMembership?.id;
+      }
+      
+      // Configure export options with privacy protection
+      const exportOptions = {
+        // For security: private events can only be included if exporting personal events only
+        includePrivateEvents: includePrivate === 'true' && memberOnly === 'true',
+        membershipId,
+      };
+
+      // Export to iCal
+      const icalContent = await exportBandEventsToIcal(events, band, exportOptions);
+      
+      // Generate filename
+      const filename = generateCalendarFileName(band.name, memberOnly === 'true' ? 'personal' : undefined);
+      
+      // Set response headers for download
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      res.send(icalContent);
+    } catch (error) {
+      console.error("Failed to export calendar:", error);
+      res.status(500).json({ message: "Failed to export calendar" });
+    }
+  });
+
+  // Calendar Export URL endpoint (for sharing)
+  app.get("/api/bands/:bandId/calendar/url", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { bandId } = req.params;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      
+      // Generate shareable URLs for different export types
+      const urls = {
+        full: `${baseUrl}/api/bands/${bandId}/calendar/export/ical`,
+        publicOnly: `${baseUrl}/api/bands/${bandId}/calendar/export/ical?includePrivate=false`,
+        personal: `${baseUrl}/api/bands/${bandId}/calendar/export/ical?memberOnly=true`,
+      };
+      
+      res.json({
+        message: "Calendar export URLs generated",
+        urls,
+        instructions: {
+          full: "All band events (requires authentication)",
+          publicOnly: "Public events only (requires authentication)", 
+          personal: "Your personal events only (requires authentication)",
+          usage: "Copy these URLs into your calendar app to subscribe to live updates"
+        }
+      });
+    } catch (error) {
+      console.error("Failed to generate calendar URLs:", error);
+      res.status(500).json({ message: "Failed to generate calendar URLs" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

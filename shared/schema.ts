@@ -125,11 +125,56 @@ export const songVetos = pgTable("song_vetos", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Calendar Integration tables
+export const calendarIntegrations = pgTable("calendar_integrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bandId: varchar("band_id").references(() => bands.id).notNull(),
+  provider: text("provider").notNull(), // 'google_calendar', 'outlook', 'apple_calendar'
+  calendarId: text("calendar_id").notNull(), // External calendar ID
+  calendarName: text("calendar_name").notNull(),
+  accessToken: text("access_token"), // Encrypted OAuth access token
+  refreshToken: text("refresh_token"), // Encrypted OAuth refresh token
+  tokenExpiresAt: timestamp("token_expires_at"),
+  syncEnabled: boolean("sync_enabled").default(true),
+  syncDirection: text("sync_direction").default('bidirectional'), // 'export_only', 'import_only', 'bidirectional'
+  lastSyncAt: timestamp("last_sync_at"),
+  syncErrors: text("sync_errors"), // JSON array of recent sync errors
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uniqueUserBandCalendar: uniqueIndex('calendar_integrations_user_band_calendar_unique').on(
+    table.userId, table.bandId, table.provider, table.calendarId
+  ),
+}));
+
+export const calendarSyncEvents = pgTable("calendar_sync_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  calendarIntegrationId: varchar("calendar_integration_id").references(() => calendarIntegrations.id).notNull(),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  externalEventId: text("external_event_id").notNull(), // Event ID in external calendar
+  externalEventEtag: text("external_event_etag"), // For change detection (Google Calendar)
+  lastSyncedAt: timestamp("last_synced_at").default(sql`CURRENT_TIMESTAMP`),
+  syncStatus: text("sync_status").default('synced'), // 'synced', 'pending', 'error', 'conflict'
+  syncError: text("sync_error"), // Error message if sync failed
+  conflictData: text("conflict_data"), // JSON data for conflict resolution
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uniqueCalendarEvent: uniqueIndex('calendar_sync_events_calendar_event_unique').on(
+    table.calendarIntegrationId, table.eventId
+  ),
+  uniqueExternalEvent: uniqueIndex('calendar_sync_events_external_event_unique').on(
+    table.calendarIntegrationId, table.externalEventId
+  ),
+}));
+
 // New multi-tenant relations
 export const usersRelations = relations(users, ({ many }) => ({
   bands: many(userBands),
   createdBands: many(bands),
   receivedInvitations: many(invitations, { relationName: "invitee" }),
+  calendarIntegrations: many(calendarIntegrations),
 }));
 
 export const bandsRelations = relations(bands, ({ one, many }) => ({
@@ -141,6 +186,7 @@ export const bandsRelations = relations(bands, ({ one, many }) => ({
   events: many(events),
   songs: many(songs),
   invitations: many(invitations),
+  calendarIntegrations: many(calendarIntegrations),
 }));
 
 export const userBandsRelations = relations(userBands, ({ one, many }) => ({
@@ -257,6 +303,30 @@ export const songVetosRelations = relations(songVetos, ({ one }) => ({
   }),
 }));
 
+// Calendar Integration relations
+export const calendarIntegrationsRelations = relations(calendarIntegrations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [calendarIntegrations.userId],
+    references: [users.id],
+  }),
+  band: one(bands, {
+    fields: [calendarIntegrations.bandId],
+    references: [bands.id],
+  }),
+  syncEvents: many(calendarSyncEvents),
+}));
+
+export const calendarSyncEventsRelations = relations(calendarSyncEvents, ({ one }) => ({
+  calendarIntegration: one(calendarIntegrations, {
+    fields: [calendarSyncEvents.calendarIntegrationId],
+    references: [calendarIntegrations.id],
+  }),
+  event: one(events, {
+    fields: [calendarSyncEvents.eventId],
+    references: [events.id],
+  }),
+}));
+
 // Constants for event types (must be defined before schemas that use them)
 export const EVENT_TYPES = [
   'practice',
@@ -348,6 +418,29 @@ export const insertSongVetoSchema = createInsertSchema(songVetos).omit({
   membershipId: z.string(),
 });
 
+// Calendar Integration schemas
+export const insertCalendarIntegrationSchema = createInsertSchema(calendarIntegrations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastSyncAt: true,
+}).extend({
+  provider: z.enum(['google_calendar', 'outlook', 'apple_calendar'], { 
+    errorMap: () => ({ message: "Please select a valid calendar provider" }) 
+  }),
+  syncDirection: z.enum(['export_only', 'import_only', 'bidirectional']).default('bidirectional'),
+  syncEnabled: z.boolean().default(true),
+});
+
+export const insertCalendarSyncEventSchema = createInsertSchema(calendarSyncEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastSyncedAt: true,
+}).extend({
+  syncStatus: z.enum(['synced', 'pending', 'error', 'conflict']).default('pending'),
+});
+
 // Constants for profile fields
 export const INSTRUMENT_OPTIONS = [
   'Lead Guitar',
@@ -403,6 +496,12 @@ export type InsertSongReadiness = z.infer<typeof insertSongReadinessSchema>;
 export type SongReadiness = typeof songReadiness.$inferSelect;
 export type InsertSongVeto = z.infer<typeof insertSongVetoSchema>;
 export type SongVeto = typeof songVetos.$inferSelect;
+
+// Calendar Integration types
+export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegrationSchema>;
+export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
+export type InsertCalendarSyncEvent = z.infer<typeof insertCalendarSyncEventSchema>;
+export type CalendarSyncEvent = typeof calendarSyncEvents.$inferSelect;
 
 // Legacy types (keep for migration)
 export type InsertBandMember = z.infer<typeof insertBandMemberSchema>;
