@@ -187,10 +187,10 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
         {/* Band logo */}
-        <div className="mb-8" data-testid="logo-container">
-          <div className="w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
+        <div className="mb-4 sm:mb-8" data-testid="logo-container">
+          <div className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
             <BndyLogo 
-              className="w-32 h-32 md:w-40 md:h-40"
+              className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40"
               holeColor="rgb(30 41 59)" 
             />
           </div>
