@@ -316,53 +316,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const { session } = useSupabaseAuth();
   const { selectBand } = useUser();
 
-  // Handle no band selected case - show band tiles
-  if (!bandId || !membership || !userProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-        <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
-                Select Your Band
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Choose a band to access your dashboard, calendar, and practice lists
-              </p>
-            </div>
-            
-            <div className="grid gap-4 max-w-2xl mx-auto">
-              {userProfile?.bands.map((bandMembership) => (
-                <BandTile
-                  key={bandMembership.bandId}
-                  band={bandMembership.band}
-                  membership={bandMembership}
-                  onClick={() => {
-                    selectBand(bandMembership.bandId);
-                    // The page will automatically reload due to band selection
-                  }}
-                />
-              ))}
-            </div>
-            
-            <div className="text-center mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setLocation('/onboarding')}
-                className="mr-4"
-                data-testid="button-create-new-band"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Band
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Get upcoming events for this band  
+  // Get upcoming events for this band - moved to top to avoid hooks violation
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/bands", bandId, "events", "upcoming"],
     queryFn: async () => {
@@ -457,6 +411,52 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const upcomingGigs = upcomingEvents.filter(e => e.type === 'gig').length;
   const totalSongs = songs.length;
   const nextUpEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
+
+  // Handle no band selected case - show band tiles (after hooks are called)
+  if (!bandId || !membership || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+        <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
+                Select Your Band
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Choose a band to access your dashboard, calendar, and practice lists
+              </p>
+            </div>
+            
+            <div className="grid gap-4 max-w-2xl mx-auto">
+              {userProfile?.bands.map((bandMembership) => (
+                <BandTile
+                  key={bandMembership.bandId}
+                  band={bandMembership.band}
+                  membership={bandMembership}
+                  onClick={() => {
+                    selectBand(bandMembership.bandId);
+                    // The page will automatically reload due to band selection
+                  }}
+                />
+              ))}
+            </div>
+            
+            <div className="text-center mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setLocation('/onboarding')}
+                className="mr-4"
+                data-testid="button-create-new-band"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Band
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state - check if any queries are still loading
   const isLoading = !session?.access_token || eventsLoading || songsLoading || membersLoading;
