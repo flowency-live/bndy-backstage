@@ -116,6 +116,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Personal calendar events endpoint - fetch events from all user's bands plus personal events
+  app.get("/api/me/events", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { startDate, endDate } = req.query;
+      const userId = req.user.dbUser.id;
+
+      // Get user's band memberships to know which bands they can see events from
+      const userBands = await storage.getUserBands(userId);
+      const bandIds = userBands.map(membership => membership.bandId);
+
+      let allEvents: any[] = [];
+
+      // Fetch events from all user's bands
+      for (const bandId of bandIds) {
+        let bandEvents;
+        if (startDate && endDate) {
+          bandEvents = await storage.getEventsByDateRange(
+            bandId,
+            startDate as string,
+            endDate as string
+          );
+        } else {
+          bandEvents = await storage.getEvents(bandId);
+        }
+        
+        // Add band info to each event for display purposes
+        const band = userBands.find(b => b.bandId === bandId)?.band;
+        const eventsWithBandInfo = bandEvents.map(event => ({
+          ...event,
+          bandName: band?.name || 'Unknown Band',
+          bandColor: userBands.find(b => b.bandId === bandId)?.color || '#6b7280'
+        }));
+        
+        allEvents.push(...eventsWithBandInfo);
+      }
+
+      // TODO: Fetch personal events (events with bandId = null)
+      // This will be implemented when we add personal event creation
+
+      // Apply privacy filtering for cross-band events
+      const currentUserMembership = new Set(bandIds);
+      const filteredEvents = allEvents.map(event => {
+        // If this event is from a band the user is not in, apply privacy filter
+        if (!currentUserMembership.has(event.bandId)) {
+          // This shouldn't happen since we only fetch from user's bands, but defensive programming
+          return {
+            ...event,
+            title: `${event.createdBy ? 'Member' : 'Unknown'} - Unavailable`,
+            description: null,
+            location: null,
+            venue: null,
+            isPublic: false
+          };
+        }
+        
+        return event;
+      });
+
+      res.json(filteredEvents);
+    } catch (error) {
+      console.error("Failed to fetch personal calendar events:", error);
+      res.status(500).json({ message: "Failed to fetch personal calendar events" });
+    }
+  });
+
   // Band Management endpoints
   app.get("/api/bands", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
     try {
