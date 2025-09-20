@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
+import { format } from "date-fns";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { UserBand, Band } from "@shared/schema";
@@ -14,6 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import ImageUpload from "@/components/ui/image-upload";
 
@@ -26,9 +29,222 @@ const ICONS = [
   { icon: "fa-music", color: "#708090", label: "Music" },
 ];
 
+interface MagicLink {
+  id: string;
+  token: string;
+  type: 'general' | 'phone';
+  createdAt: string;
+  expiresAt?: string;
+  usesRemaining?: number;
+  maxUses?: number;
+  targetPhone?: string;
+  createdBy: string;
+  status: 'active' | 'expired' | 'revoked';
+}
+
 interface AdminProps {
   bandId: string;
   membership: UserBand & { band: Band };
+}
+
+function ActiveMagicLinks({ bandId, session, toast }: {
+  bandId: string;
+  session: any;
+  toast: any;
+}) {
+  // Query for active magic links
+  const { data: magicLinks = [], isLoading: linksLoading, refetch: refetchLinks } = useQuery<MagicLink[]>({
+    queryKey: ['/api/bands', bandId, 'invites'],
+    queryFn: async () => {
+      if (!session?.access_token) {
+        throw new Error('No access token');
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/invites`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch magic links');
+      }
+      
+      return response.json();
+    },
+    enabled: !!session?.access_token && !!bandId
+  });
+  
+  // Mutation for revoking magic links
+  const revokeLinkMutation = useMutation({
+    mutationFn: async (linkId: string) => {
+      if (!session?.access_token) {
+        throw new Error('No access token');
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/invites/${linkId}/revoke`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to revoke magic link');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchLinks();
+      toast({
+        title: "Magic link revoked",
+        description: "The invite link has been successfully revoked",
+        variant: "default"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error revoking link",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  if (linksLoading) {
+    return (
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+        <div className="text-center text-muted-foreground">Loading active invites...</div>
+      </div>
+    );
+  }
+  
+  if (magicLinks.length === 0) {
+    return (
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+        <h4 className="font-semibold text-foreground mb-2">Active Magic Links</h4>
+        <p className="text-sm text-muted-foreground">No active invite links. Generate one above to get started.</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="mb-6">
+      <h4 className="font-semibold text-foreground mb-3">Active Magic Links ({magicLinks.length})</h4>
+      <div className="space-y-3">
+        {magicLinks.map((link) => {
+          const createdDate = new Date(link.createdAt);
+          const isExpired = link.expiresAt && new Date(link.expiresAt) < new Date();
+          
+          return (
+            <Card key={link.id} className="border border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge 
+                        variant={link.type === 'general' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {link.type === 'general' ? 'General Invite' : 'Phone Invite'}
+                      </Badge>
+                      <Badge 
+                        variant={isExpired ? 'destructive' : link.status === 'active' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {isExpired ? 'Expired' : link.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>Created: {createdDate.toLocaleDateString()} at {createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      {link.targetPhone && (
+                        <div>Phone: {link.targetPhone}</div>
+                      )}
+                      {link.maxUses && (
+                        <div>Uses: {(link.maxUses - (link.usesRemaining || 0))} / {link.maxUses}</div>
+                      )}
+                      {link.expiresAt && (
+                        <div>Expires: {new Date(link.expiresAt).toLocaleDateString()}</div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {link.status === 'active' && !isExpired && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const baseUrl = window.location.origin;
+                          const inviteUrl = `${baseUrl}/invite/${link.token}`;
+                          
+                          try {
+                            await navigator.clipboard.writeText(inviteUrl);
+                            toast({
+                              title: "Link copied!",
+                              description: "Magic link copied to clipboard",
+                              variant: "default"
+                            });
+                          } catch {
+                            toast({
+                              title: "Copy failed",
+                              description: "Unable to copy to clipboard",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                        data-testid={`button-copy-${link.id}`}
+                      >
+                        <i className="fas fa-copy mr-1 text-xs"></i>
+                        Copy
+                      </Button>
+                    )}
+                    
+                    {link.status === 'active' && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:bg-destructive/10"
+                            data-testid={`button-revoke-${link.id}`}
+                          >
+                            <i className="fas fa-ban mr-1 text-xs"></i>
+                            Revoke
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Revoke Magic Link</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to revoke this invite link? Anyone with this link will no longer be able to join the band. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => revokeLinkMutation.mutate(link.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Revoke Link
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function Admin({ bandId, membership }: AdminProps) {
@@ -833,6 +1049,13 @@ export default function Admin({ bandId, membership }: AdminProps) {
                         </Button>
                       </div>
                     </div>
+                    
+                    {/* Active Magic Links List */}
+                    <ActiveMagicLinks 
+                      bandId={bandId} 
+                      session={session} 
+                      toast={toast}
+                    />
                   </div>
                 )}
 
