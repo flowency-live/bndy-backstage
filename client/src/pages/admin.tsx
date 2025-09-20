@@ -575,17 +575,22 @@ export default function Admin({ bandId, membership }: AdminProps) {
                                 return { ...prev, allowedEventTypes: newTypes };
                               });
                             }}
-                            className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
+                            className={`p-3 rounded-lg border-2 text-center transition-all duration-200 relative ${
                               isSelected
-                                ? `border-2 shadow-md`
+                                ? `border-2 shadow-lg transform scale-[1.02]`
                                 : "border-border hover:border-border/80 hover:shadow-sm"
                             }`}
                             style={{
                               borderColor: isSelected ? config.color : undefined,
-                              backgroundColor: isSelected ? `${config.color}15` : undefined,
+                              backgroundColor: isSelected ? `${config.color}25` : undefined,
                             }}
                             data-testid={`button-event-type-${type}`}
                           >
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                <i className="fas fa-check text-xs" style={{ color: config.color }}></i>
+                              </div>
+                            )}
                             <div className="text-xl mb-1">{config.icon}</div>
                             <div className={`text-xs font-sans font-semibold ${
                               isSelected ? "text-card-foreground" : "text-muted-foreground"
