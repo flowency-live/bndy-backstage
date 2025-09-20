@@ -73,6 +73,13 @@ export default function Profile() {
         } else {
           setLocation("/onboarding");
         }
+      } else {
+        // If editing, go back to dashboard or previous page
+        if (userProfile?.bands && userProfile.bands.length > 0) {
+          setLocation("/dashboard");
+        } else {
+          setLocation("/");
+        }
       }
     },
     onError: (error: Error) => {
@@ -197,6 +204,7 @@ export default function Profile() {
                   displayName: userProfile.user.displayName || "",
                   hometown: userProfile.user.hometown || "",
                   instrument: userProfile.user.instrument as any || undefined,
+                  avatarUrl: userProfile.user.avatarUrl || null,
                 } : undefined}
                 onSubmit={handleProfileSubmit}
                 isLoading={updateProfileMutation.isPending}
