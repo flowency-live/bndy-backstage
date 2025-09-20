@@ -429,15 +429,12 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-sans font-semibold text-card-foreground">
-                    Next Up: {nextEvent.title || (nextEvent.type === "gig" ? "Gig" : "Band Practice")}
+                    Next Up - {EVENT_TYPE_CONFIG[nextEvent.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}{nextEvent.location ? ` - ${nextEvent.location}` : ''}
                   </h3>
                   <p className="text-card-foreground">
                     {format(new Date(nextEvent.date + 'T00:00:00'), "EEEE, MMMM do")}
                     {nextEvent.startTime && ` at ${nextEvent.startTime}`}
                   </p>
-                  {nextEvent.location && (
-                    <p className="text-muted-foreground text-sm">{nextEvent.location}</p>
-                  )}
                 </div>
               </div>
               <button 
