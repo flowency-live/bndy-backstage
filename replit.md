@@ -78,5 +78,7 @@ The application integrates several key external services and libraries:
 - **Professional Branding**: Dark slate blue theme with orange/cyan highlights and bndy logo integration
 - **BandGate Routing**: Smart routing system for 0/1/multiple band scenarios
 - **Magic Link Invitations**: WhatsApp-shareable band invitations (in development)
+- **Google Calendar-Style Modal System**: EventDetails component for read-only event viewing with edit/delete actions, FloatingActionButton for adding events, proper permission-based access control
+- **Enhanced UX**: Click events show details first (read-only), then allow editing based on permissions; FAB hidden during modal interactions for clean mobile UX
 
 The application is designed to be mobile-first with responsive design patterns and uses CSS custom properties for consistent theming across the professional bndy platform aesthetic.

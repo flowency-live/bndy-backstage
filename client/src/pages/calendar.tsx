@@ -9,6 +9,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import type { Event, UserBand, Band, EVENT_TYPES } from "@shared/schema";
 import { EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
+import EventDetails from "@/components/event-details";
 import { PageHeader } from "@/components/layout";
 import {
   DropdownMenu,
@@ -19,6 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import FloatingActionButton from "@/components/floating-action-button";
 
 interface CalendarProps {
   bandId: string;
@@ -33,9 +36,11 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const { session } = useSupabaseAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showEventDetails, setShowEventDetails] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventType, setEventType] = useState<typeof EVENT_TYPES[number]>("practice");
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
   const { toast } = useToast();
@@ -185,6 +190,17 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     return event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
   };
 
+  // Permission function to check if user can edit an event
+  const canEdit = (event: Event) => {
+    // For unavailability events, only the member who created it can edit
+    if (event.type === "unavailable") {
+      return event.membershipId === membership?.id;
+    }
+    
+    // For other events, all band members can edit (could be extended with role-based permissions later)
+    return true;
+  };
+
   const getBandEvents = (dateEvents: Event[]) => {
     return dateEvents.filter(e => e.type !== "unavailable");
   };
@@ -196,15 +212,54 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     setShowEventModal(true);
   };
 
-  const openEditEventModal = (event: Event) => {
-    // Check if user can edit this event
-    if (event.type === "unavailable" && event.membershipId !== membership.id) {
-      return; // Can't edit other members' unavailability
-    }
-    
+  // Show event details (read-only first)
+  const showEventDetailsModal = (event: Event) => {
+    setSelectedEvent(event);
+    setShowEventDetails(true);
+  };
+
+  // Handle edit from details modal
+  const handleEditFromDetails = (event: Event) => {
     setSelectedEvent(event);
     setSelectedDate(event.date);
     setEventType(event.type as typeof EVENT_TYPES[number]);
+    setIsEditingEvent(true);
+    setShowEventDetails(false);
+    setShowEventModal(true);
+  };
+
+  // Handle delete from details modal
+  const handleDeleteFromDetails = async (event: Event) => {
+    try {
+      await apiRequest("DELETE", `/api/bands/${bandId}/events/${event.id}`);
+      
+      // Refresh events data
+      queryClient.invalidateQueries({ queryKey: ['/api/bands', bandId, 'events'] });
+      
+      toast({
+        title: "Event deleted",
+        description: "The event has been removed from your calendar",
+        variant: "default"
+      });
+      
+      // Close the details modal
+      setShowEventDetails(false);
+      setSelectedEvent(null);
+    } catch (error: any) {
+      toast({
+        title: "Error deleting event", 
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openEditEventModal = (event: Event) => {
+    // Deprecated - keeping for backward compatibility during transition
+    setSelectedEvent(event);
+    setSelectedDate(event.date);
+    setEventType(event.type as typeof EVENT_TYPES[number]);
+    setIsEditingEvent(true);
     setShowEventModal(true);
   };
 
@@ -558,7 +613,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                               top: isMultiDayEvent(event) ? `${20 + (eventIndex * 16)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
                             }}
-                            onClick={() => openEditEventModal(event)}
+                            onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-${event.id}`}
                           >
                             {event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event)}
@@ -603,7 +658,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                               top: `${20 + (eventIndex * 16)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
                             }}
-                            onClick={() => openEditEventModal(event)}
+                            onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
                             {getEventDisplayName(event)}
@@ -685,7 +740,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 <div
                   key={event.id}
                   className="bg-card rounded-lg p-4 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => openEditEventModal(event)}
+                  onClick={() => showEventDetailsModal(event)}
                   data-testid={`agenda-event-${event.id}`}
                 >
                   <div className="flex items-center space-x-3">
@@ -719,14 +774,46 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       {showEventModal && (
         <EventModal
           isOpen={showEventModal}
-          onClose={() => setShowEventModal(false)}
+          onClose={() => {
+            setShowEventModal(false);
+            setIsEditingEvent(false);
+            setSelectedEvent(null);
+          }}
           selectedDate={selectedDate}
           selectedEvent={selectedEvent}
           eventType={eventType}
           currentUser={membership}
           bandId={bandId}
+          isEditing={isEditingEvent}
         />
       )}
+
+      {/* Event Details Modal */}
+      <EventDetails
+        event={selectedEvent}
+        open={showEventDetails}
+        onClose={() => {
+          setShowEventDetails(false);
+          setSelectedEvent(null);
+        }}
+        onEdit={handleEditFromDetails}
+        onDelete={handleDeleteFromDetails}
+        bandMembers={bandMembers}
+        currentMembershipId={membership?.id || null}
+        canEdit={canEdit}
+      />
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onClick={() => {
+          setSelectedDate(new Date().toISOString().split('T')[0]);
+          setSelectedEvent(null);
+          setEventType('practice');
+          setIsEditingEvent(false);
+          setShowEventModal(true);
+        }}
+        hidden={showEventModal || showEventDetails}
+      />
 
     </div>
   );
