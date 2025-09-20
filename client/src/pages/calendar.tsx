@@ -9,6 +9,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import type { Event, UserBand, Band, EVENT_TYPES } from "@shared/schema";
 import { EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
+import DayViewModal from "@/components/day-view-modal";
 import { PageHeader } from "@/components/layout";
 import {
   DropdownMenu,
@@ -33,6 +34,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const { session } = useSupabaseAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showDayViewModal, setShowDayViewModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventType, setEventType] = useState<typeof EVENT_TYPES[number]>("practice");
@@ -193,6 +195,22 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     setSelectedDate(event.date);
     setEventType(event.type as typeof EVENT_TYPES[number]);
     setShowEventModal(true);
+  };
+
+  // Day view modal handlers
+  const openDayViewModal = (date: string) => {
+    setSelectedDate(date);
+    setShowDayViewModal(true);
+  };
+
+  const handleCreateEventFromDayView = (eventType: string) => {
+    setShowDayViewModal(false);
+    openEventModal(selectedDate, eventType as typeof EVENT_TYPES[number]);
+  };
+
+  const handleEditEventFromDayView = (event: Event) => {
+    setShowDayViewModal(false);
+    openEditEventModal(event);
   };
 
   const getAgendaEvents = () => {
@@ -520,9 +538,11 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
-                      isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'
+                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative cursor-pointer ${
+                      isCurrentMonth ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
+                    onClick={() => openDayViewModal(dateStr)}
+                    data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number */}
                     <div className={`text-sm font-sans font-semibold mb-1 ${
@@ -715,6 +735,20 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           eventType={eventType}
           currentUser={membership}
           bandId={bandId}
+        />
+      )}
+
+      {/* Day View Modal */}
+      {showDayViewModal && (
+        <DayViewModal
+          isOpen={showDayViewModal}
+          onClose={() => setShowDayViewModal(false)}
+          selectedDate={selectedDate}
+          events={events}
+          members={bandMembers}
+          currentUser={membership}
+          onCreateEvent={handleCreateEventFromDayView}
+          onEditEvent={handleEditEventFromDayView}
         />
       )}
     </div>
