@@ -200,7 +200,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
       </header>
 
       {/* Bottom Navigation - Alternative mobile nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card/30 backdrop-blur-sm border-t border-border/30">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card/70 backdrop-blur-sm border-t border-border/50">
         <div className="flex items-center justify-around py-2">
           {navigationItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
