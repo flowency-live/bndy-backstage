@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight } from "lucide-react";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import type { Event, Song, UserBand, Band, User } from "@shared/schema";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
@@ -90,6 +91,114 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AgendaSection({ events, onEventClick, className = "" }: { 
+  events: Event[],
+  onEventClick: () => void,
+  className?: string 
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  const displayEvents = expanded ? events : events.slice(0, 3);
+  
+  const eventTypeConfig = {
+    practice: { 
+      icon: <Music className="h-4 w-4" />, 
+      color: 'hsl(199, 89%, 48%)',
+      label: 'Practice'
+    },
+    gig: { 
+      icon: <Mic className="h-4 w-4" />, 
+      color: 'hsl(24, 95%, 53%)',
+      label: 'Gig'
+    },
+    unavailable: { 
+      icon: <Clock className="h-4 w-4" />, 
+      color: 'hsl(220, 13%, 51%)',
+      label: 'Unavailable'
+    }
+  };
+  
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1">Upcoming Events</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {events.length} events scheduled
+          </p>
+        </div>
+        {events.length > 3 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setExpanded(!expanded)}
+            className="text-primary hover:text-primary/80"
+            data-testid="button-toggle-agenda"
+          >
+            {expanded ? (
+              <>
+                Show Less <ChevronUp className="h-4 w-4 ml-1" />
+              </>
+            ) : (
+              <>
+                Show All <ChevronDown className="h-4 w-4 ml-1" />
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+      
+      <Card>
+        <CardContent className="p-0">
+          {displayEvents.map((event, index) => {
+            const config = eventTypeConfig[event.type as keyof typeof eventTypeConfig] || eventTypeConfig.practice;
+            const eventDate = parseISO(event.date);
+            const formattedDate = isToday(eventDate) 
+              ? 'Today'
+              : isTomorrow(eventDate) 
+              ? 'Tomorrow'
+              : format(eventDate, 'EEE, MMM d');
+              
+            return (
+              <div 
+                key={event.id}
+                className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                  index !== displayEvents.length - 1 ? 'border-b border-border' : ''
+                }`}
+                onClick={onEventClick}
+                data-testid={`agenda-item-${event.id}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0"
+                    style={{ backgroundColor: config.color }}
+                  >
+                    {config.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-foreground truncate">
+                      {event.title || config.label}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <span className="font-medium">{formattedDate}</span>
+                      {event.startTime && (
+                        <span>{event.startTime}</span>
+                      )}
+                      {event.location && (
+                        <span className="truncate">• {event.location}</span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -372,6 +481,15 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
               onClick={() => setLocation('/calendar')} 
             />
           </div>
+        )}
+        
+        {/* Upcoming Events Agenda */}
+        {upcomingEvents.length > 1 && (
+          <AgendaSection 
+            events={upcomingEvents.slice(1, 6)} 
+            onEventClick={() => setLocation('/calendar')}
+            className="mb-6 sm:mb-8"
+          />
         )}
         {/* Song Management Section */}
         <div className="mb-6 sm:mb-8">
