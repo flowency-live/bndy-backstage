@@ -1204,12 +1204,11 @@ export default function Admin({ bandId, membership }: AdminProps) {
                       </div>
                     </div>
                     
-                    {/* Active Magic Links List */}
-                    <ActiveMagicLinks 
-                      bandId={bandId} 
-                      session={session} 
-                      toast={toast}
-                    />
+                    {/* TODO: Active Magic Links List - backend storage not implemented yet */}
+                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold text-foreground mb-2">Active Magic Links</h4>
+                      <p className="text-sm text-muted-foreground">Magic link management is in development. Generated links are temporary and not stored.</p>
+                    </div>
                   </div>
                 )}
 
