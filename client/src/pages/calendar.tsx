@@ -496,7 +496,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7">
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-300 dark:divide-slate-700 bg-white dark:bg-slate-900">
               {calendarDays.map((day, index) => {
                 const dateStr = format(day, "yyyy-MM-dd");
                 const dayEvents = getEventsForDate(day);
@@ -510,16 +510,18 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-28 sm:min-h-32 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
-                      isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'
-                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
+                    className={`min-h-28 p-1 relative ${
+                      isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
+                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number */}
-                    <div className={`text-sm sm:text-base font-sans font-semibold mb-1 ${
+                    <div className={`absolute top-1 right-1 text-xs font-medium ${
                       isCurrentMonth 
-                        ? isToday_ ? 'text-brand-accent' : 'text-brand-primary dark:text-white'
-                        : 'text-gray-400'
+                        ? isToday_ 
+                          ? 'bg-brand-accent text-white rounded px-1' 
+                          : 'text-slate-800 dark:text-slate-200'
+                        : 'text-slate-400 dark:text-slate-500'
                     }`}>
                       {format(day, 'd')}
                     </div>
@@ -528,68 +530,86 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                     <div className="space-y-1">
                       {/* Starting events */}
                       {startingEvents.map((event, eventIndex) => {
-                        const config = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice;
+                        const getEventColors = (eventType: string) => {
+                          switch (eventType) {
+                            case 'unavailable':
+                              return 'border-red-500 bg-red-50 text-red-800 dark:border-red-400 dark:bg-red-500/20 dark:text-red-200';
+                            case 'practice':
+                              return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
+                            case 'gig':
+                            case 'public_gig':
+                              return 'border-purple-500 bg-purple-50 text-purple-800 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200';
+                            case 'festival':
+                              return 'border-green-500 bg-green-50 text-green-800 dark:border-green-400 dark:bg-green-500/20 dark:text-green-200';
+                            default:
+                              return 'border-gray-500 bg-gray-50 text-gray-800 dark:border-gray-400 dark:bg-gray-500/20 dark:text-gray-200';
+                          }
+                        };
+                        
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
+                        const eventColors = getEventColors(event.type);
                         
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
-                            className="text-white text-xs sm:text-sm px-1.5 py-1 rounded-sm cursor-pointer relative overflow-hidden shadow-sm"
+                            className={`mt-1 w-full rounded-sm px-1 py-0.5 text-xs leading-tight truncate border-l-2 cursor-pointer ${eventColors}`}
                             style={{
-                              backgroundColor: config.color,
-                              gridColumn: isMultiDayEvent(event) ? `span ${spanDays}` : 'span 1',
                               position: isMultiDayEvent(event) ? 'absolute' : 'relative',
                               left: isMultiDayEvent(event) ? '4px' : 'auto',
                               right: isMultiDayEvent(event) ? spanDays < getRemainingDaysInWeek(index) ? 'auto' : '4px' : 'auto',
                               zIndex: 10 + eventIndex,
-                              top: isMultiDayEvent(event) ? `${28 + (eventIndex * 22)}px` : 'auto',
+                              top: isMultiDayEvent(event) ? `${24 + (eventIndex * 18)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
-                              minHeight: '20px',
                             }}
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-${event.id}`}
                           >
-                            <div className="font-medium truncate flex items-center text-xs sm:text-sm leading-tight">
-                              <span className="mr-1 text-xs">{config.icon}</span>
-                              <span className="truncate">{getEventDisplayName(event)}</span>
-                            </div>
-                            {event.startTime && (
-                              <div className="truncate opacity-90 text-xs leading-tight">{event.startTime}</div>
-                            )}
+                            {event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event)}
                           </div>
                         );
                       })}
 
                       {/* Extending events */}
                       {extendingEvents.map((event, eventIndex) => {
-                        const config = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice;
+                        const getEventColors = (eventType: string) => {
+                          switch (eventType) {
+                            case 'unavailable':
+                              return 'border-red-500 bg-red-50 text-red-800 dark:border-red-400 dark:bg-red-500/20 dark:text-red-200';
+                            case 'practice':
+                              return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
+                            case 'gig':
+                            case 'public_gig':
+                              return 'border-purple-500 bg-purple-50 text-purple-800 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200';
+                            case 'festival':
+                              return 'border-green-500 bg-green-50 text-green-800 dark:border-green-400 dark:bg-green-500/20 dark:text-green-200';
+                            default:
+                              return 'border-gray-500 bg-gray-50 text-gray-800 dark:border-gray-400 dark:bg-gray-500/20 dark:text-gray-200';
+                          }
+                        };
+                        
                         const remainingDays = getRemainingDaysInWeek(index);
                         const eventEndDate = new Date(event.endDate + 'T00:00:00');
                         const currentWeekEnd = new Date(day.getTime() + (remainingDays - 1) * 24 * 60 * 60 * 1000);
                         const spanDays = eventEndDate <= currentWeekEnd ? 
                           Math.ceil((eventEndDate.getTime() - day.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 
                           remainingDays;
+                        const eventColors = getEventColors(event.type);
                         
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
-                            className="text-white text-xs sm:text-sm px-1.5 py-1 rounded-sm cursor-pointer absolute overflow-hidden shadow-sm"
+                            className={`mt-1 rounded-sm px-1 py-0.5 text-xs leading-tight truncate border-l-2 cursor-pointer absolute ${eventColors}`}
                             style={{
-                              backgroundColor: config.color,
                               left: '4px',
                               right: spanDays < remainingDays ? 'auto' : '4px',
                               zIndex: 10 + eventIndex,
-                              top: `${28 + (eventIndex * 22)}px`,
+                              top: `${24 + (eventIndex * 18)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
-                              minHeight: '20px',
                             }}
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
-                            <div className="font-medium truncate flex items-center text-xs sm:text-sm leading-tight">
-                              <span className="mr-1 text-xs">{config.icon}</span>
-                              <span className="truncate">{getEventDisplayName(event)}</span>
-                            </div>
+                            {getEventDisplayName(event)}
                           </div>
                         );
                       })}
