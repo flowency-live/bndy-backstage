@@ -177,16 +177,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     if (event.type === "unavailable") {
       if (event.membershipId) {
         const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
-        console.log('Unavailable event debug:', {
-          eventId: event.id,
-          eventType: event.type,
-          eventTitle: event.title,
-          membershipId: event.membershipId,
-          foundMember: member,
-          displayName: member?.displayName,
-          bandMembersCount: bandMembers.length
-        });
-        return member?.displayName || "Unavailable";
+        // For unavailable events, prefer the user's display name over the membership display name
+        return member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
       }
       return "Unavailable";
     }
