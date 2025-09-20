@@ -172,6 +172,15 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     ).filter(Boolean);
   };
 
+  // Helper function to get display name for an event
+  const getEventDisplayName = (event: Event) => {
+    if (event.type === "unavailable" && event.membershipId) {
+      const member = bandMembers.find(member => member.id === event.membershipId);
+      return member?.displayName || "Unavailable";
+    }
+    return event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
+  };
+
   const getBandEvents = (dateEvents: Event[]) => {
     return dateEvents.filter(e => e.type !== "unavailable");
   };
@@ -534,7 +543,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                           >
                             <div className="font-semibold truncate flex items-center">
                               <span className="mr-1">{config.icon}</span>
-                              {event.title || config.label}
+                              {getEventDisplayName(event)}
                             </div>
                             {event.startTime && (
                               <div className="truncate opacity-90">{event.startTime}</div>
@@ -570,7 +579,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                           >
                             <div className="font-semibold truncate flex items-center">
                               <span className="mr-1">{config.icon}</span>
-                              {event.title || config.label}
+                              {getEventDisplayName(event)}
                             </div>
                           </div>
                         );
