@@ -30,6 +30,7 @@ export const bands = pgTable("bands", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   avatarUrl: text("avatar_url"),
+  allowedEventTypes: text("allowed_event_types").array().default(sql`'{"practice","public_gig"}'`),
   createdBy: varchar("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -360,6 +361,8 @@ export const insertBandSchema = createInsertSchema(bands).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  allowedEventTypes: z.array(z.enum(EVENT_TYPES)).default(['practice', 'public_gig']).optional(),
 });
 
 export const insertUserBandSchema = createInsertSchema(userBands).omit({
