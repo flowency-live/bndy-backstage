@@ -860,8 +860,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userMembership = await storage.getBandMembers(req.params.bandId);
       const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
       
-      if (!currentUserMembership || currentUserMembership.role !== 'admin') {
-        return res.status(403).json({ message: "Only band admins can generate invite links" });
+      if (!currentUserMembership || (currentUserMembership.role !== 'admin' && currentUserMembership.role !== 'owner')) {
+        return res.status(403).json({ message: "Only band admins and owners can generate invite links" });
       }
 
       // Generate unique token
@@ -894,8 +894,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userMembership = await storage.getBandMembers(req.params.bandId);
       const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
       
-      if (!currentUserMembership || currentUserMembership.role !== 'admin') {
-        return res.status(403).json({ message: "Only band admins can send invites" });
+      if (!currentUserMembership || (currentUserMembership.role !== 'admin' && currentUserMembership.role !== 'owner')) {
+        return res.status(403).json({ message: "Only band admins and owners can send invites" });
       }
 
       const { phone } = req.body;
