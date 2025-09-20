@@ -70,8 +70,6 @@ export function AppLayout({ children, bandId, membership, isLoading = false }: A
       {/* Desktop Side Navigation - Hidden on mobile */}
       <div className="hidden lg:block">
         <SideNav
-          currentBandId={bandId}
-          currentMembership={membership}
           isOpen={isNavOpen}
           onClose={closeNav}
         />
