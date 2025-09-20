@@ -44,6 +44,7 @@ export const userBands = pgTable("user_bands", {
   displayName: text("display_name").notNull(),
   icon: text("icon").notNull(),
   color: text("color").notNull(),
+  avatarUrl: text("avatar_url"), // Optional member avatar URL
   joinedAt: timestamp("joined_at").default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   uniqueUserBand: uniqueIndex('user_bands_user_band_unique').on(table.userId, table.bandId),

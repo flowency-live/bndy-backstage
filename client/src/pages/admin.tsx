@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { UserBand, Band } from "@shared/schema";
@@ -45,6 +46,144 @@ interface MagicLink {
 interface AdminProps {
   bandId: string;
   membership: UserBand & { band: Band };
+}
+
+function AvatarUploadModal({ membershipId, member, bandId, session, onClose, onSuccess }: {
+  membershipId: string;
+  member: any;
+  bandId: string;
+  session: any;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(member?.avatarUrl || null);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  const saveMutation = useMutation({
+    mutationFn: async (newAvatarUrl: string | null) => {
+      if (!session?.access_token) {
+        throw new Error('No access token');
+      }
+      
+      const response = await fetch(`/api/bands/${bandId}/members/${membershipId}/avatar`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ avatarUrl: newAvatarUrl })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update avatar');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating avatar",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveMutation.mutateAsync(avatarUrl);
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const handleRemoveAvatar = () => {
+    setAvatarUrl(null);
+  };
+  
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Avatar</DialogTitle>
+          <DialogDescription>
+            Update {member?.displayName || 'member'}'s avatar image
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex flex-col items-center space-y-4">
+            {/* Current Avatar Preview */}
+            <div className="w-24 h-24">
+              {avatarUrl ? (
+                <img 
+                  src={avatarUrl} 
+                  alt={`${member?.displayName} avatar`}
+                  className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                />
+              ) : (
+                <div 
+                  className="w-24 h-24 rounded-full flex items-center justify-center border-2 border-border"
+                  style={{ backgroundColor: member?.color || '#708090' }}
+                >
+                  <i className={`fas ${member?.icon || 'fa-user'} text-white text-2xl`}></i>
+                </div>
+              )}
+            </div>
+            
+            {/* Upload Component */}
+            <ImageUpload
+              value={avatarUrl ?? undefined}
+              onChange={(url) => setAvatarUrl(url)}
+              size="md"
+              placeholder="Upload new avatar"
+            />
+            
+            {/* Remove Avatar Button */}
+            {avatarUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRemoveAvatar}
+                className="text-destructive hover:text-destructive"
+              >
+                <i className="fas fa-trash mr-2"></i>
+                Remove Avatar
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button 
+            variant="action" 
+            onClick={handleSave} 
+            disabled={saving || saveMutation.isPending}
+          >
+            {saving || saveMutation.isPending ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save mr-2"></i>
+                Save Avatar
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function ActiveMagicLinks({ bandId, session, toast }: {
@@ -270,6 +409,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
   });
   const [activeTab, setActiveTab] = useState<'band' | 'members' | 'spotify'>('band');
   const [invitePhone, setInvitePhone] = useState("");
+  const [editingMemberAvatar, setEditingMemberAvatar] = useState<string | null>(null);
   const [bandSettings, setBandSettings] = useState({
     name: membership.band.name,
     description: membership.band.description || '',
@@ -877,11 +1017,31 @@ export default function Admin({ bandId, membership }: AdminProps) {
                     {bandMembers.map((member) => (
                       <div key={member.id} className="bg-muted rounded-xl p-4 flex items-center justify-between" data-testid={`member-card-${member.id}`}>
                         <div className="flex items-center space-x-4">
-                          <div 
-                            className="w-12 h-12 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: member.color }}
-                          >
-                            <i className={`fas ${member.icon} text-white`}></i>
+                          <div className="relative group">
+                            {member.avatarUrl ? (
+                              <img 
+                                src={member.avatarUrl} 
+                                alt={`${member.displayName} avatar`}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div 
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: member.color }}
+                              >
+                                <i className={`fas ${member.icon} text-white`}></i>
+                              </div>
+                            )}
+                            {/* Edit avatar overlay - only for current user or admins */}
+                            {(member.id === membership.id || membership.role === 'admin') && (
+                              <button
+                                onClick={() => setEditingMemberAvatar(member.id)}
+                                className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
+                                data-testid={`button-edit-avatar-${member.id}`}
+                              >
+                                <i className="fas fa-camera"></i>
+                              </button>
+                            )}
                           </div>
                           <div>
                             <h4 className="font-sans font-semibold text-card-foreground" data-testid={`member-name-${member.id}`}>{member.displayName}</h4>
@@ -891,8 +1051,22 @@ export default function Admin({ bandId, membership }: AdminProps) {
                             )}
                           </div>
                         </div>
-                        {/* Only allow removal if not the current user and user is admin */}
-                        {member.id !== membership.id && membership.role === 'admin' && (
+                        <div className="flex items-center gap-2">
+                          {/* Edit avatar button for self or admin */}
+                          {(member.id === membership.id || membership.role === 'admin') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingMemberAvatar(member.id)}
+                              data-testid={`button-edit-avatar-${member.id}`}
+                            >
+                              <i className="fas fa-camera mr-1 text-xs"></i>
+                              Avatar
+                            </Button>
+                          )}
+                        
+                          {/* Only allow removal if not the current user and user is admin */}
+                          {member.id !== membership.id && membership.role === 'admin' && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <button className="text-red-500 hover:text-red-700 p-2" data-testid={`button-remove-${member.id}`}>
@@ -917,11 +1091,32 @@ export default function Admin({ bandId, membership }: AdminProps) {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        )}
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+                
+                {/* Avatar Upload Modal */}
+                {editingMemberAvatar && (
+                  <AvatarUploadModal
+                    membershipId={editingMemberAvatar}
+                    member={bandMembers.find(m => m.id === editingMemberAvatar)}
+                    bandId={bandId}
+                    session={session}
+                    onClose={() => setEditingMemberAvatar(null)}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "members"] });
+                      setEditingMemberAvatar(null);
+                      toast({
+                        title: "Avatar updated",
+                        description: "Member avatar has been successfully updated",
+                        variant: "default"
+                      });
+                    }}
+                  />
+                )}
                 
                 {/* Magic Link Invites - only for admins */}
                 {membership.role === 'admin' && (

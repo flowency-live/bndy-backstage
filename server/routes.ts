@@ -234,6 +234,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/bands/:bandId/members/:membershipId/avatar", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { membershipId, bandId } = req.params;
+      const { avatarUrl } = req.body;
+
+      if (!req.user?.dbUser?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user is a member of the band and has permission
+      const userMembership = await storage.getBandMembers(bandId);
+      const currentUserMembership = userMembership.find(m => m.userId === req.user!.dbUser!.id);
+      const targetMembership = userMembership.find(m => m.id === membershipId);
+      
+      if (!currentUserMembership) {
+        return res.status(403).json({ message: "You must be a member of this band to update member avatars" });
+      }
+
+      if (!targetMembership) {
+        return res.status(404).json({ message: "Member not found in this band" });
+      }
+
+      // Only allow users to edit their own avatar or admins to edit any avatar
+      if (currentUserMembership.id !== membershipId && currentUserMembership.role !== 'admin') {
+        return res.status(403).json({ message: "You can only update your own avatar unless you are an admin" });
+      }
+
+      // Update the member avatar
+      const updatedMembership = await storage.updateMemberAvatar(membershipId, avatarUrl || null);
+      
+      if (!updatedMembership) {
+        return res.status(404).json({ message: "Failed to update member avatar" });
+      }
+
+      res.json(updatedMembership);
+    } catch (error) {
+      console.error("Failed to update member avatar:", error);
+      res.status(500).json({ message: "Failed to update member avatar" });
+    }
+  });
+
   // SECURITY: Legacy endpoints removed - they allowed unauthenticated access to all band data
   // Use /api/bands/:bandId/members endpoints instead, which require proper authentication and band membership
 

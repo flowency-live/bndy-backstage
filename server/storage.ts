@@ -34,6 +34,7 @@ export interface IStorage {
   addUserToBand(userId: string, bandId: string, membership: Omit<InsertUserBand, 'userId' | 'bandId'>): Promise<UserBand>;
   removeUserFromBand(userId: string, bandId: string): Promise<boolean>;
   updateUserBandRole(userId: string, bandId: string, role: string): Promise<UserBand | undefined>;
+  updateMemberAvatar(membershipId: string, avatarUrl: string | null): Promise<UserBand | undefined>;
   getBandMembers(bandId: string): Promise<(UserBand & { user: User })[]>;
   
   // Legacy Band Members - keep during migration
@@ -169,6 +170,7 @@ export class DatabaseStorage implements IStorage {
         displayName: userBands.displayName,
         icon: userBands.icon,
         color: userBands.color,
+        avatarUrl: userBands.avatarUrl,
         joinedAt: userBands.joinedAt,
         band: {
           id: bands.id,
@@ -176,6 +178,7 @@ export class DatabaseStorage implements IStorage {
           slug: bands.slug,
           description: bands.description,
           avatarUrl: bands.avatarUrl,
+          allowedEventTypes: bands.allowedEventTypes,
           createdBy: bands.createdBy,
           createdAt: bands.createdAt,
           updatedAt: bands.updatedAt,
@@ -527,6 +530,16 @@ export class DatabaseStorage implements IStorage {
     return updatedMembership || undefined;
   }
 
+  async updateMemberAvatar(membershipId: string, avatarUrl: string | null): Promise<UserBand | undefined> {
+    const [updatedMembership] = await db
+      .update(userBands)
+      .set({ avatarUrl })
+      .where(eq(userBands.id, membershipId))
+      .returning();
+    
+    return updatedMembership || undefined;
+  }
+
   async getBandMembers(bandId: string): Promise<(UserBand & { user: User })[]> {
     const result = await db
       .select({
@@ -537,6 +550,7 @@ export class DatabaseStorage implements IStorage {
         displayName: userBands.displayName,
         icon: userBands.icon,
         color: userBands.color,
+        avatarUrl: userBands.avatarUrl,
         joinedAt: userBands.joinedAt,
         user: {
           id: users.id,
