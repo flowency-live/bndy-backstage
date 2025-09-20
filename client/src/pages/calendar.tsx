@@ -510,7 +510,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-28 p-1 relative ${
+                    className={`min-h-20 p-1 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
                     data-testid={`calendar-day-${dateStr}`}
@@ -552,13 +552,13 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
-                            className={`mt-1 w-full rounded-sm px-1 py-0.5 text-xs leading-tight truncate border-l-2 cursor-pointer ${eventColors}`}
+                            className={`mt-0.5 w-full rounded-sm px-1 py-0.5 text-[10px] leading-tight truncate border-l-2 cursor-pointer ${eventColors}`}
                             style={{
                               position: isMultiDayEvent(event) ? 'absolute' : 'relative',
                               left: isMultiDayEvent(event) ? '4px' : 'auto',
                               right: isMultiDayEvent(event) ? spanDays < getRemainingDaysInWeek(index) ? 'auto' : '4px' : 'auto',
                               zIndex: 10 + eventIndex,
-                              top: isMultiDayEvent(event) ? `${24 + (eventIndex * 18)}px` : 'auto',
+                              top: isMultiDayEvent(event) ? `${20 + (eventIndex * 16)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
                             }}
                             onClick={() => openEditEventModal(event)}
@@ -598,12 +598,12 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
-                            className={`mt-1 rounded-sm px-1 py-0.5 text-xs leading-tight truncate border-l-2 cursor-pointer absolute ${eventColors}`}
+                            className={`mt-0.5 rounded-sm px-1 py-0.5 text-[10px] leading-tight truncate border-l-2 cursor-pointer absolute ${eventColors}`}
                             style={{
                               left: '4px',
                               right: spanDays < remainingDays ? 'auto' : '4px',
                               zIndex: 10 + eventIndex,
-                              top: `${24 + (eventIndex * 18)}px`,
+                              top: `${20 + (eventIndex * 16)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
                             }}
                             onClick={() => openEditEventModal(event)}
