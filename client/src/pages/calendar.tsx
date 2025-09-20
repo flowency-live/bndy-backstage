@@ -784,7 +784,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           eventType={eventType}
           currentUser={membership}
           bandId={bandId}
-          isEditing={isEditingEvent}
         />
       )}
 

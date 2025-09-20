@@ -71,7 +71,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   useEffect(() => {
     if (selectedEvent) {
-      // Editing existing event
+      // Editing existing event - populate with event data
       setIsEditing(true);
       setFormData({
         type: selectedEvent.type as typeof EVENT_TYPES[number],
@@ -87,7 +87,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         isPublic: selectedEvent.isPublic || false,
       });
     } else {
-      // Creating new event
+      // Creating new event - use defaults
       setIsEditing(false);
       setFormData({
         type: eventType,
@@ -102,6 +102,19 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         endDate: undefined,
         isPublic: false,
       });
+    }
+  }, [selectedEvent]); // Only depend on selectedEvent to avoid race conditions
+
+  // Separate useEffect for updating form when creating new events
+  useEffect(() => {
+    if (!selectedEvent) {
+      // Only update if we're creating a new event, not editing
+      setFormData(prev => ({
+        ...prev,
+        type: eventType,
+        date: selectedDate,
+        membershipId: eventType === "unavailable" ? currentUser.id : undefined,
+      }));
     }
   }, [selectedDate, eventType, currentUser.id, selectedEvent]);
 
