@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { ChevronDown, Plus, Settings, Menu, X, Calendar, Music, Users, User, LogOut } from "lucide-react";
+import { ChevronDown, Plus, Settings, Menu, X, Home, Calendar, Music, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -93,7 +93,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
   const otherBands = userProfile?.bands.filter(band => band.bandId !== currentBandId) || [];
 
   const navigationItems = [
-    { path: "/dashboard", icon: Calendar, label: "Dashboard" },
+    { path: "/dashboard", icon: Home, label: "Dashboard" },
     { path: "/calendar", icon: Calendar, label: "Calendar" },
     { path: "/songs", icon: Music, label: "Practice List" },
     { path: "/admin", icon: Settings, label: "Manage Band" },
@@ -254,7 +254,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           <nav className="flex-1 p-4">
             <div className="space-y-1">
               {navigationItems.map((item) => {
-                const isActive = location === item.path;
+                const isActive = location.startsWith(item.path);
                 const IconComponent = item.icon;
                 
                 return (

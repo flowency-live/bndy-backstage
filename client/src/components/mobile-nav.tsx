@@ -11,8 +11,8 @@ import {
   Home, 
   Calendar, 
   Music, 
-  Users, 
   Settings, 
+  User,
   X,
   ChevronRight
 } from "lucide-react";
@@ -41,24 +41,24 @@ const navigationItems = [
   },
   { 
     icon: Music, 
-    label: "Songs", 
+    label: "Practice List", 
     href: "/songs", 
     color: "hsl(45, 93%, 47%)",
     description: "Repertoire & setlists"
   },
   { 
-    icon: Users, 
-    label: "Members", 
+    icon: Settings, 
+    label: "Manage Band", 
     href: "/admin", 
     color: "hsl(220, 13%, 51%)",
-    description: "Band management"
+    description: "Band management & settings"
   },
   { 
-    icon: Settings, 
-    label: "Settings", 
-    href: "/admin", 
+    icon: User, 
+    label: "Profile", 
+    href: "/profile", 
     color: "hsl(220, 13%, 51%)",
-    description: "Band configuration"
+    description: "Personal settings"
   }
 ];
 
