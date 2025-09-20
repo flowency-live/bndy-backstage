@@ -489,7 +489,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
             {/* Week headers */}
             <div className="grid grid-cols-7 bg-brand-neutral dark:bg-gray-800">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div key={day} className="p-3 text-center text-sm font-sans font-semibold text-brand-primary dark:text-gray-300">
+                <div key={day} className="p-2 sm:p-3 text-center text-sm sm:text-base font-sans font-semibold text-brand-primary dark:text-gray-300">
                   {day}
                 </div>
               ))}
@@ -510,15 +510,15 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
+                    className={`min-h-28 sm:min-h-32 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number */}
-                    <div className={`text-sm font-sans font-semibold mb-1 ${
+                    <div className={`text-sm sm:text-base font-sans font-semibold mb-1 ${
                       isCurrentMonth 
-                        ? isToday_ ? 'text-brand-accent' : 'text-brand-primary'
+                        ? isToday_ ? 'text-brand-accent' : 'text-brand-primary dark:text-white'
                         : 'text-gray-400'
                     }`}>
                       {format(day, 'd')}
@@ -534,7 +534,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
-                            className="text-white text-xs p-1 rounded cursor-pointer relative overflow-hidden"
+                            className="text-white text-xs sm:text-sm px-1.5 py-1 rounded-sm cursor-pointer relative overflow-hidden shadow-sm"
                             style={{
                               backgroundColor: config.color,
                               gridColumn: isMultiDayEvent(event) ? `span ${spanDays}` : 'span 1',
@@ -542,18 +542,19 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                               left: isMultiDayEvent(event) ? '4px' : 'auto',
                               right: isMultiDayEvent(event) ? spanDays < getRemainingDaysInWeek(index) ? 'auto' : '4px' : 'auto',
                               zIndex: 10 + eventIndex,
-                              top: isMultiDayEvent(event) ? `${24 + (eventIndex * 20)}px` : 'auto',
+                              top: isMultiDayEvent(event) ? `${28 + (eventIndex * 22)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
+                              minHeight: '20px',
                             }}
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-${event.id}`}
                           >
-                            <div className="font-semibold truncate flex items-center">
-                              <span className="mr-1">{config.icon}</span>
-                              {getEventDisplayName(event)}
+                            <div className="font-medium truncate flex items-center text-xs sm:text-sm leading-tight">
+                              <span className="mr-1 text-xs">{config.icon}</span>
+                              <span className="truncate">{getEventDisplayName(event)}</span>
                             </div>
                             {event.startTime && (
-                              <div className="truncate opacity-90">{event.startTime}</div>
+                              <div className="truncate opacity-90 text-xs leading-tight">{event.startTime}</div>
                             )}
                           </div>
                         );
@@ -572,21 +573,22 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
-                            className="text-white text-xs p-1 rounded cursor-pointer absolute overflow-hidden"
+                            className="text-white text-xs sm:text-sm px-1.5 py-1 rounded-sm cursor-pointer absolute overflow-hidden shadow-sm"
                             style={{
                               backgroundColor: config.color,
                               left: '4px',
                               right: spanDays < remainingDays ? 'auto' : '4px',
                               zIndex: 10 + eventIndex,
-                              top: `${24 + (eventIndex * 20)}px`,
+                              top: `${28 + (eventIndex * 22)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
+                              minHeight: '20px',
                             }}
                             onClick={() => openEditEventModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
-                            <div className="font-semibold truncate flex items-center">
-                              <span className="mr-1">{config.icon}</span>
-                              {getEventDisplayName(event)}
+                            <div className="font-medium truncate flex items-center text-xs sm:text-sm leading-tight">
+                              <span className="mr-1 text-xs">{config.icon}</span>
+                              <span className="truncate">{getEventDisplayName(event)}</span>
                             </div>
                           </div>
                         );
@@ -595,11 +597,11 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
                     {/* Unavailable members indicator */}
                     {unavailableMembers.length > 0 && (
-                      <div className="absolute bottom-1 right-1 flex -space-x-1">
+                      <div className="absolute bottom-1 right-1 flex -space-x-0.5">
                         {unavailableMembers.slice(0, 3).map((member, i) => (
                           <div
                             key={`unavailable-${member?.id}-${i}`}
-                            className="w-4 h-4 rounded-full border border-white flex items-center justify-center"
+                            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white flex items-center justify-center shadow-sm"
                             style={{ backgroundColor: member?.color }}
                             title={`${member?.displayName} unavailable`}
                           >
@@ -607,7 +609,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                           </div>
                         ))}
                         {unavailableMembers.length > 3 && (
-                          <div className="w-4 h-4 rounded-full bg-muted border border-foreground flex items-center justify-center text-foreground text-xs">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted border border-foreground flex items-center justify-center text-foreground text-xs font-medium shadow-sm">
                             +{unavailableMembers.length - 3}
                           </div>
                         )}
