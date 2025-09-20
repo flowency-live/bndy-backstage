@@ -93,6 +93,75 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
   );
 }
 
+function NextUpCard({ event, onClick }: { event: Event, onClick: () => void }) {
+  const eventDate = parseISO(event.date);
+  const formattedDate = isToday(eventDate) 
+    ? 'Today'
+    : isTomorrow(eventDate) 
+    ? 'Tomorrow'
+    : format(eventDate, 'EEEE, MMM d');
+  
+  const eventTypeConfig = {
+    practice: { 
+      icon: <Music className="h-6 w-6" />, 
+      color: 'hsl(199, 89%, 48%)',
+      label: 'Practice'
+    },
+    gig: { 
+      icon: <Mic className="h-6 w-6" />, 
+      color: 'hsl(24, 95%, 53%)',
+      label: 'Gig'
+    },
+    unavailable: { 
+      icon: <Clock className="h-6 w-6" />, 
+      color: 'hsl(220, 13%, 51%)',
+      label: 'Unavailable'
+    }
+  };
+  
+  const config = eventTypeConfig[event.type as keyof typeof eventTypeConfig] || eventTypeConfig.practice;
+  
+  return (
+    <Card 
+      className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10"
+      onClick={onClick}
+      data-testid="next-up-card"
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-primary">
+          <Clock className="h-4 w-4" />
+          Next Up
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex items-center gap-4">
+          <div 
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white"
+            style={{ backgroundColor: config.color }}
+          >
+            {config.icon}
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-foreground mb-1">
+              {event.title || config.label}
+            </h3>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="font-medium">{formattedDate}</span>
+              {event.startTime && (
+                <span>{event.startTime}</span>
+              )}
+              {event.location && (
+                <span>• {event.location}</span>
+              )}
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function BandTile({ band, membership, onClick }: { 
   band: Band, 
   membership: UserBand & { band: Band },
@@ -278,6 +347,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   // Calculate some stats
   const upcomingGigs = upcomingEvents.filter(e => e.type === 'gig').length;
   const totalSongs = songs.length;
+  const nextUpEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
 
   // Loading state - check if any queries are still loading
   const isLoading = !session?.access_token || eventsLoading || songsLoading || membersLoading;
@@ -293,6 +363,16 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
         {/* Gig Alert Banner */}
         <GigAlertBanner bandId={bandId} className="mb-3 sm:mb-4" />
+        
+        {/* Next Up Card */}
+        {nextUpEvent && (
+          <div className="mb-6 sm:mb-8">
+            <NextUpCard 
+              event={nextUpEvent} 
+              onClick={() => setLocation('/calendar')} 
+            />
+          </div>
+        )}
         {/* Song Management Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
