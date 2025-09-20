@@ -9,7 +9,6 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import type { Event, UserBand, Band, EVENT_TYPES } from "@shared/schema";
 import { EVENT_TYPE_CONFIG } from "@shared/schema";
 import EventModal from "@/components/event-modal";
-import DayViewModal from "@/components/day-view-modal";
 import { PageHeader } from "@/components/layout";
 import {
   DropdownMenu,
@@ -34,7 +33,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const { session } = useSupabaseAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
-  const [showDayViewModal, setShowDayViewModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventType, setEventType] = useState<typeof EVENT_TYPES[number]>("practice");
@@ -197,21 +195,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     setShowEventModal(true);
   };
 
-  // Day view modal handlers
-  const openDayViewModal = (date: string) => {
-    setSelectedDate(date);
-    setShowDayViewModal(true);
-  };
-
-  const handleCreateEventFromDayView = (eventType: string) => {
-    setShowDayViewModal(false);
-    openEventModal(selectedDate, eventType as typeof EVENT_TYPES[number]);
-  };
-
-  const handleEditEventFromDayView = (event: Event) => {
-    setShowDayViewModal(false);
-    openEditEventModal(event);
-  };
 
   const getAgendaEvents = () => {
     return events
@@ -453,33 +436,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         </div>
       )}
 
-      {/* Mobile View Toggle */}
-      <div className="md:hidden max-w-7xl mx-auto px-4 py-2">
-        <div className="flex bg-brand-neutral rounded-full p-1">
-          <button 
-            onClick={() => setViewMode("calendar")}
-            className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
-              viewMode === "calendar" 
-                ? "bg-primary text-primary-foreground" 
-                : "text-primary"
-            }`}
-            data-testid="button-calendar-view"
-          >
-            <i className="fas fa-calendar mr-1"></i>Calendar
-          </button>
-          <button 
-            onClick={() => setViewMode("agenda")}
-            className={`flex-1 py-2 rounded-full text-sm font-sans font-semibold transition-colors ${
-              viewMode === "agenda" 
-                ? "bg-primary text-primary-foreground" 
-                : "text-primary"
-            }`}
-            data-testid="button-agenda-view"
-          >
-            <i className="fas fa-list mr-1"></i>Agenda
-          </button>
-        </div>
-      </div>
 
       {/* Calendar Navigation */}
       <div className="bg-background">
@@ -538,10 +494,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative cursor-pointer ${
-                      isCurrentMonth ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800'
+                    className={`min-h-24 border-r border-b border-gray-200 dark:border-gray-700 p-1 relative ${
+                      isCurrentMonth ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset animate-glow-today' : ''}`}
-                    onClick={() => openDayViewModal(dateStr)}
                     data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number */}
@@ -738,19 +693,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         />
       )}
 
-      {/* Day View Modal */}
-      {showDayViewModal && (
-        <DayViewModal
-          isOpen={showDayViewModal}
-          onClose={() => setShowDayViewModal(false)}
-          selectedDate={selectedDate}
-          events={events}
-          members={bandMembers}
-          currentUser={membership}
-          onCreateEvent={handleCreateEventFromDayView}
-          onEditEvent={handleEditEventFromDayView}
-        />
-      )}
     </div>
   );
 }
