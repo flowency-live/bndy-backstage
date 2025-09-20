@@ -175,7 +175,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   // Helper function to get display name for an event
   const getEventDisplayName = (event: Event) => {
     if (event.type === "unavailable" && event.membershipId) {
-      const member = bandMembers.find(member => member.id === event.membershipId);
+      const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
       return member?.displayName || "Unavailable";
     }
     return event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
