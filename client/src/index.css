@@ -85,6 +85,22 @@
   --chart-3: hsl(197, 37%, 24%);
   --chart-4: hsl(43, 74%, 66%);
   --chart-5: hsl(27, 87%, 67%);
+
+  /* Brand Colors - Dark mode */
+  --brand-accent: hsl(24, 95%, 53%); /* Orange 500 - same as light mode */
+  --brand-accent-light: hsl(21, 90%, 58%); /* Slightly lighter for dark mode */
+  --brand-accent-dark: hsl(16, 84%, 40%); /* Orange 700 */
+  --brand-primary: hsl(216, 34%, 17%); /* slate-800 - dark equivalent */
+  --brand-primary-light: hsl(215, 25%, 27%); /* slate-700 */
+  --brand-primary-dark: hsl(215, 19%, 35%); /* slate-600 */
+  --brand-secondary: hsl(199, 89%, 48%); /* Cyan 500 - same as light mode */
+  --brand-secondary-light: hsl(199, 89%, 58%);
+  --brand-secondary-dark: hsl(199, 89%, 38%);
+  --brand-neutral: hsl(214, 15%, 66%); /* slate-400 - lighter for dark mode */
+  --brand-neutral-light: hsl(215, 20%, 65%); /* slate-400 */
+  --brand-unavailable: hsl(0, 84%, 60%); /* Red 500 - same as light mode */
+  --brand-unavailable-light: hsl(0, 84%, 70%);
+  --brand-unavailable-dark: hsl(0, 84%, 50%);
 }
 
 /* Section-based theme classes */
@@ -859,6 +875,48 @@
     background-color: hsl(215, 25%, 27%) !important; /* slate-700 */
     color: hsl(214, 15%, 66%) !important; /* slate-400 */
     cursor: not-allowed;
+  }
+
+  /* Scrollbar styling for light mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: hsl(210, 40%, 96%); /* slate-100 */
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(214.3, 31.8%, 91.4%); /* slate-200 */
+    border-radius: 4px;
+    border: 1px solid hsl(214.3, 31.8%, 88%); /* border */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(215.4, 16.3%, 46.9%); /* slate-500 */
+  }
+
+  /* Scrollbar styling for dark mode */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background-color: hsl(215, 25%, 27%); /* slate-700 */
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: hsl(215, 19%, 35%); /* slate-600 */
+    border-radius: 4px;
+    border: 1px solid hsl(214, 15%, 66%); /* slate-400 */
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(214, 15%, 66%); /* slate-400 */
   }
   
   /* Alternative cyan focus state class */
