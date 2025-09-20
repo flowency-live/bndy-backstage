@@ -174,9 +174,21 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
   // Helper function to get display name for an event
   const getEventDisplayName = (event: Event) => {
-    if (event.type === "unavailable" && event.membershipId) {
-      const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
-      return member?.displayName || "Unavailable";
+    if (event.type === "unavailable") {
+      if (event.membershipId) {
+        const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
+        console.log('Unavailable event debug:', {
+          eventId: event.id,
+          eventType: event.type,
+          eventTitle: event.title,
+          membershipId: event.membershipId,
+          foundMember: member,
+          displayName: member?.displayName,
+          bandMembersCount: bandMembers.length
+        });
+        return member?.displayName || "Unavailable";
+      }
+      return "Unavailable";
     }
     return event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
   };
@@ -455,23 +467,23 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           <div className="flex items-center justify-between">
             <button 
               onClick={navigateToPreviousMonth}
-              className="text-white hover:text-gray-200 p-2 -ml-2"
+              className="text-slate-700 dark:text-white hover:text-slate-900 dark:hover:text-gray-200 p-2 -ml-2"
               data-testid="button-previous-month"
             >
               <i className="fas fa-chevron-left text-xl"></i>
             </button>
             <div className="flex items-center space-x-2">
-              <div className="hidden md:block text-xs text-primary-foreground opacity-75">
+              <div className="hidden md:block text-xs text-slate-600 dark:text-primary-foreground opacity-75">
                 <i className="fas fa-hand-point-left mr-1"></i>
                 Swipe to navigate
               </div>
-              <h1 className="text-white font-sans text-xl font-semibold">
+              <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
                 {format(currentDate, "MMMM yyyy")}
               </h1>
             </div>
             <button 
               onClick={navigateToNextMonth}
-              className="text-white hover:text-gray-200 p-2 -mr-2"
+              className="text-slate-700 dark:text-white hover:text-slate-900 dark:hover:text-gray-200 p-2 -mr-2"
               data-testid="button-next-month"
             >
               <i className="fas fa-chevron-right text-xl"></i>
