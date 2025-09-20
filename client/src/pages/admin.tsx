@@ -1006,7 +1006,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
               <div>
                 <div className="mb-6">
                   <h2 className="text-2xl font-serif font-bold text-brand-primary mb-2">Member Management</h2>
-                  <p className="text-muted-foreground">View and manage your band members. {membership.role === 'admin' ? 'As an admin, you can invite new members and remove existing ones.' : 'Contact an admin to invite new members.'}</p>
+                  <p className="text-muted-foreground">View and manage your band members. {(membership.role === 'admin' || membership.role === 'owner') ? 'You can invite new members and remove existing ones.' : 'Contact an admin to invite new members.'}</p>
                 </div>
 
                 {/* Current Members */}
@@ -1044,7 +1044,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                           {/* Edit avatar button for self or admin */}
                         
                           {/* Only allow removal if not the current user and user is admin */}
-                          {member.id !== membership.id && membership.role === 'admin' && (
+                          {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <button className="text-red-500 hover:text-red-700 p-2" data-testid={`button-remove-${member.id}`}>
@@ -1077,8 +1077,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
                 </div>
                 
                 
-                {/* Magic Link Invites - only for admins */}
-                {membership.role === 'admin' && (
+                {/* Magic Link Invites - only for admins and owners */}
+                {(membership.role === 'admin' || membership.role === 'owner') && (
                   <div className="border-t pt-6 mb-8">
                     <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Magic Link Invites</h3>
                     
@@ -1212,8 +1212,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
                   </div>
                 )}
 
-                {/* Add New Member - only for admins */}
-                {membership.role === 'admin' && (
+                {/* Add New Member - only for admins and owners */}
+                {(membership.role === 'admin' || membership.role === 'owner') && (
                   <div className="border-t pt-6">
                     <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Manual Member Addition</h3>
                     <form onSubmit={handleSubmit}>
