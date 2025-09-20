@@ -34,7 +34,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
-  const { isPersonalMode, currentBandId, currentMembership } = useUser();
+  const { isPersonalMode, currentBandId, currentMembership, userProfile } = useUser();
   
   // Use context values if props aren't provided (for standalone usage)
   const effectiveBandId = bandId ?? currentBandId;
@@ -49,7 +49,19 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
+  
+  // Band filtering for personal mode
+  const [enabledBands, setEnabledBands] = useState<Set<string>>(new Set());
+  
   const { toast } = useToast();
+  
+  // Initialize band filters when entering personal mode
+  useEffect(() => {
+    if (isInPersonalMode && userProfile?.bands) {
+      const allBandIds = userProfile.bands.map(b => b.bandId);
+      setEnabledBands(new Set(allBandIds));
+    }
+  }, [isInPersonalMode, userProfile]);
 
   // Swipe handlers for month navigation
   const navigateToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -75,7 +87,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   // Get events - use personal API for personal mode, band API for band mode
-  const { data: events = [] } = useQuery<Event[]>({
+  const { data: allEvents = [] } = useQuery<Event[]>({
     queryKey: isInPersonalMode 
       ? ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
       : ["/api/bands", effectiveBandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
@@ -106,6 +118,14 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     },
     enabled: !!session?.access_token && (isInPersonalMode || !!effectiveBandId),
   });
+
+  // Apply band filters in personal mode
+  const events = isInPersonalMode 
+    ? allEvents.filter(event => 
+        !event.bandId || // Personal events (no bandId)
+        enabledBands.has(event.bandId) // Band events from enabled bands
+      )
+    : allEvents;
 
   // Get band members using new band-scoped API (only for band mode)
   const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
@@ -530,6 +550,48 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         </div>
       )}
 
+
+      {/* Band Filter Controls - Personal Mode Only */}
+      {isInPersonalMode && userProfile?.bands && userProfile.bands.length > 1 && (
+        <div className="bg-slate-50 dark:bg-slate-800 px-4 py-3 border-b">
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold mr-2 flex items-center">
+              Filter bands:
+            </span>
+            {userProfile.bands.map((bandMembership) => {
+              const isEnabled = enabledBands.has(bandMembership.bandId);
+              return (
+                <button
+                  key={bandMembership.bandId}
+                  onClick={() => {
+                    const newEnabledBands = new Set(enabledBands);
+                    if (isEnabled) {
+                      newEnabledBands.delete(bandMembership.bandId);
+                    } else {
+                      newEnabledBands.add(bandMembership.bandId);
+                    }
+                    setEnabledBands(newEnabledBands);
+                  }}
+                  className={`
+                    px-3 py-1 rounded-full text-sm font-medium border transition-colors
+                    ${isEnabled 
+                      ? 'bg-brand-accent text-white border-brand-accent' 
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
+                    }
+                  `}
+                  data-testid={`toggle-band-${bandMembership.bandId}`}
+                >
+                  <span 
+                    className="inline-block w-2 h-2 rounded-full mr-2"
+                    style={{ backgroundColor: bandMembership.color }}
+                  />
+                  {bandMembership.band.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Calendar Navigation */}
       <div className="bg-background">
