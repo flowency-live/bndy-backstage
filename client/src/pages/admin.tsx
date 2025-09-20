@@ -409,7 +409,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
   });
   const [activeTab, setActiveTab] = useState<'band' | 'members' | 'spotify'>('band');
   const [invitePhone, setInvitePhone] = useState("");
-  const [editingMemberAvatar, setEditingMemberAvatar] = useState<string | null>(null);
   const [bandSettings, setBandSettings] = useState({
     name: membership.band.name,
     description: membership.band.description || '',
@@ -1032,16 +1031,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
                                 <i className={`fas ${member.icon} text-white`}></i>
                               </div>
                             )}
-                            {/* Edit avatar overlay - only for current user or admins */}
-                            {(member.id === membership.id || membership.role === 'admin') && (
-                              <button
-                                onClick={() => setEditingMemberAvatar(member.id)}
-                                className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
-                                data-testid={`button-edit-avatar-${member.id}`}
-                              >
-                                <i className="fas fa-camera"></i>
-                              </button>
-                            )}
                           </div>
                           <div>
                             <h4 className="font-sans font-semibold text-card-foreground" data-testid={`member-name-${member.id}`}>{member.displayName}</h4>
@@ -1053,17 +1042,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           {/* Edit avatar button for self or admin */}
-                          {(member.id === membership.id || membership.role === 'admin') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingMemberAvatar(member.id)}
-                              data-testid={`button-edit-avatar-${member.id}`}
-                            >
-                              <i className="fas fa-camera mr-1 text-xs"></i>
-                              Avatar
-                            </Button>
-                          )}
                         
                           {/* Only allow removal if not the current user and user is admin */}
                           {member.id !== membership.id && membership.role === 'admin' && (
@@ -1098,25 +1076,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
                   </div>
                 </div>
                 
-                {/* Avatar Upload Modal */}
-                {editingMemberAvatar && (
-                  <AvatarUploadModal
-                    membershipId={editingMemberAvatar}
-                    member={bandMembers.find(m => m.id === editingMemberAvatar)}
-                    bandId={bandId}
-                    session={session}
-                    onClose={() => setEditingMemberAvatar(null)}
-                    onSuccess={() => {
-                      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "members"] });
-                      setEditingMemberAvatar(null);
-                      toast({
-                        title: "Avatar updated",
-                        description: "Member avatar has been successfully updated",
-                        variant: "default"
-                      });
-                    }}
-                  />
-                )}
                 
                 {/* Magic Link Invites - only for admins */}
                 {membership.role === 'admin' && (
