@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import ClockFacePicker from "@/components/clock-face-picker";
 
 interface TimePickerModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function TimePickerModal({
   const initialTime = parseTime(selectedTime);
   const [hour, setHour] = useState(initialTime.hour);
   const [minute, setMinute] = useState(initialTime.minute);
+  const [clockMode, setClockMode] = useState<'hour' | 'minute'>('hour');
 
   if (!isOpen) return null;
 
@@ -39,11 +41,11 @@ export default function TimePickerModal({
     return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
   };
 
-  const handleHourClick = (newHour: number) => {
+  const handleHourChange = (newHour: number) => {
     setHour(newHour);
   };
 
-  const handleMinuteClick = (newMinute: number) => {
+  const handleMinuteChange = (newMinute: number) => {
     setMinute(newMinute);
   };
 
@@ -71,53 +73,16 @@ export default function TimePickerModal({
             </div>
           </div>
 
-          {/* Time Selection */}
-          <div className="mb-6">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Hour Selection */}
-              <div>
-                <label className="block text-sm font-sans font-semibold text-card-foreground mb-2 text-center">Hour</label>
-                <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto">
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleHourClick(i)}
-                      className={`p-2 text-sm rounded transition-colors ${
-                        hour === i
-                          ? "bg-orange-500 text-white"
-                          : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-card-foreground"
-                      }`}
-                    >
-                      {i === 0 ? 12 : i > 12 ? i - 12 : i}
-                      <span className="text-xs ml-1">{i >= 12 ? "PM" : "AM"}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Minute Selection */}
-              <div>
-                <label className="block text-sm font-sans font-semibold text-card-foreground mb-2 text-center">Minute</label>
-                <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto">
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const min = i * 5;
-                    return (
-                      <button
-                        key={min}
-                        onClick={() => handleMinuteClick(min)}
-                        className={`p-2 text-sm rounded transition-colors ${
-                          minute === min
-                            ? "bg-orange-500 text-white"
-                            : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-card-foreground"
-                        }`}
-                      >
-                        {min.toString().padStart(2, "0")}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+          {/* Clock Face Time Selection */}
+          <div className="mb-6 flex justify-center">
+            <ClockFacePicker
+              hour={hour}
+              minute={minute}
+              onHourChange={handleHourChange}
+              onMinuteChange={handleMinuteChange}
+              mode={clockMode}
+              onModeChange={setClockMode}
+            />
           </div>
           
           <div className="flex space-x-3">
