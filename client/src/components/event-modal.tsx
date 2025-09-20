@@ -74,7 +74,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       // Editing existing event
       setIsEditing(true);
       setFormData({
-        type: selectedEvent.type,
+        type: selectedEvent.type as typeof EVENT_TYPES[number],
         date: selectedEvent.date,
         endDate: selectedEvent.endDate,
         membershipId: selectedEvent.membershipId,
