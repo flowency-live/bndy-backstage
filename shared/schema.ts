@@ -365,6 +365,26 @@ export const insertBandSchema = createInsertSchema(bands).omit({
   allowedEventTypes: z.array(z.enum(EVENT_TYPES)).default(['practice', 'public_gig']).optional(),
 });
 
+// Define allowed event types for band configuration (excluding unavailable)
+const BAND_EVENT_TYPES = [
+  'practice',
+  'meeting', 
+  'recording',
+  'private_booking',
+  'public_gig',
+  'festival'
+] as const;
+
+// Schema for updating band settings
+export const updateBandSchema = z.object({
+  name: z.string().min(1, "Band name is required").optional(),
+  description: z.string().optional().nullable(),
+  avatarUrl: z.string().url("Invalid avatar URL").optional().nullable(),
+  allowedEventTypes: z.array(z.enum(BAND_EVENT_TYPES))
+    .min(1, "At least one event type must be selected")
+    .optional(),
+});
+
 export const insertUserBandSchema = createInsertSchema(userBands).omit({
   id: true,
   joinedAt: true,
@@ -484,6 +504,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 export type InsertBand = z.infer<typeof insertBandSchema>;
+export type UpdateBand = z.infer<typeof updateBandSchema>;
 export type Band = typeof bands.$inferSelect;
 export type InsertUserBand = z.infer<typeof insertUserBandSchema>;
 export type UserBand = typeof userBands.$inferSelect;

@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema } from "@shared/schema";
+import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema, updateBandSchema } from "@shared/schema";
+import type { UpdateBand } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
 import { authenticateSupabaseJWT, requireMembership, type AuthenticatedRequest } from "./auth-middleware";
@@ -188,7 +189,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only band admins and owners can update band settings" });
       }
 
-      const { name, description, avatarUrl } = req.body;
+      // Validate request body
+      const validationResult = updateBandSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid band data", 
+          errors: validationResult.error.flatten()
+        });
+      }
+
+      const { name, description, avatarUrl, allowedEventTypes } = validationResult.data;
       const updates: any = {};
       
       if (name !== undefined) {
@@ -198,6 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (description !== undefined) updates.description = description;
       if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+      if (allowedEventTypes !== undefined) updates.allowedEventTypes = allowedEventTypes;
 
       const updatedBand = await storage.updateBand(req.params.bandId, updates);
       
@@ -265,6 +276,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         bandId: req.params.bandId
       });
+
+      // Enforce band event type constraints (except for unavailable events)
+      if (validatedData.type !== 'unavailable') {
+        const band = await storage.getBand(req.params.bandId);
+        const allowedTypes = band?.allowedEventTypes || ['practice', 'public_gig'];
+        
+        if (!allowedTypes.includes(validatedData.type)) {
+          return res.status(400).json({ 
+            message: `Event type '${validatedData.type}' is not allowed for this band`,
+            allowedTypes: allowedTypes
+          });
+        }
+      }
+
       const event = await storage.createEvent(req.params.bandId, validatedData);
       res.status(201).json(event);
     } catch (error) {
@@ -278,6 +303,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertEventSchema.partial().parse(req.body);
+
+      // Enforce band event type constraints (except for unavailable events)
+      if (validatedData.type && validatedData.type !== 'unavailable') {
+        const band = await storage.getBand(req.params.bandId);
+        const allowedTypes = band?.allowedEventTypes || ['practice', 'public_gig'];
+        
+        if (!allowedTypes.includes(validatedData.type)) {
+          return res.status(400).json({ 
+            message: `Event type '${validatedData.type}' is not allowed for this band`,
+            allowedTypes: allowedTypes
+          });
+        }
+      }
+
       const event = await storage.updateEvent(req.params.bandId, req.params.id, validatedData);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });

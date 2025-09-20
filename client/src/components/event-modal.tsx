@@ -285,15 +285,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             <div className="mb-6">
               <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Event Type</label>
               <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
-                {EVENT_TYPES.map((type) => {
-                  const config = EVENT_TYPE_CONFIG[type];
+                {(currentUser.band.allowedEventTypes || ['practice', 'public_gig']).map((type) => {
+                  const config = EVENT_TYPE_CONFIG[type as keyof typeof EVENT_TYPE_CONFIG];
                   const isSelected = formData.type === type;
                   
                   return (
                     <button 
                       key={type}
                       type="button"
-                      onClick={() => selectEventType(type)}
+                      onClick={() => selectEventType(type as EventType)}
                       className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
                         isSelected
                           ? `border-2 shadow-md`

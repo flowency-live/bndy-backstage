@@ -7,6 +7,7 @@ import { useSectionTheme } from "@/hooks/use-section-theme";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { UserBand, Band } from "@shared/schema";
+import { EVENT_TYPES, EVENT_TYPE_CONFIG } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +58,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
     name: membership.band.name,
     description: membership.band.description || '',
     avatar: membership.band.avatarUrl || null,
+    allowedEventTypes: membership.band.allowedEventTypes || ['practice', 'public_gig'],
   });
 
   // Get band members using new band-scoped API
@@ -232,6 +234,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
           name: settings.name,
           description: settings.description,
           avatarUrl: settings.avatar,
+          allowedEventTypes: settings.allowedEventTypes,
         }),
       });
       
@@ -545,6 +548,56 @@ export default function Admin({ bandId, membership }: AdminProps) {
                     />
                   </div>
 
+                  {/* Event Types Configuration */}
+                  <div>
+                    <Label className="text-card-foreground font-semibold mb-3 block">Allowed Event Types</Label>
+                    <p className="text-sm text-muted-foreground mb-4">Choose which event types your band uses. Members will only see these options when creating events.</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                      {EVENT_TYPES.filter(type => type !== 'unavailable').map((type) => {
+                        const config = EVENT_TYPE_CONFIG[type];
+                        const isSelected = bandSettings.allowedEventTypes.includes(type);
+                        
+                        return (
+                          <button 
+                            key={type}
+                            type="button"
+                            onClick={() => {
+                              setBandSettings(prev => {
+                                const newTypes = isSelected 
+                                  ? prev.allowedEventTypes.filter(t => t !== type)
+                                  : [...prev.allowedEventTypes, type];
+                                
+                                // Prevent deselecting all types - must have at least one
+                                if (newTypes.length === 0) {
+                                  return prev;
+                                }
+                                
+                                return { ...prev, allowedEventTypes: newTypes };
+                              });
+                            }}
+                            className={`p-3 rounded-lg border-2 text-center transition-all duration-200 ${
+                              isSelected
+                                ? `border-2 shadow-md`
+                                : "border-border hover:border-border/80 hover:shadow-sm"
+                            }`}
+                            style={{
+                              borderColor: isSelected ? config.color : undefined,
+                              backgroundColor: isSelected ? `${config.color}15` : undefined,
+                            }}
+                            data-testid={`button-event-type-${type}`}
+                          >
+                            <div className="text-xl mb-1">{config.icon}</div>
+                            <div className={`text-xs font-sans font-semibold ${
+                              isSelected ? "text-card-foreground" : "text-muted-foreground"
+                            }`} style={{
+                              color: isSelected ? config.color : undefined,
+                            }}>{config.label}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-3 pt-4">
                     <Button
@@ -555,6 +608,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                           name: membership.band.name,
                           description: membership.band.description || '',
                           avatar: membership.band.avatarUrl || null,
+                          allowedEventTypes: membership.band.allowedEventTypes || ['practice', 'public_gig'],
                         });
                       }}
                       className="px-6"
