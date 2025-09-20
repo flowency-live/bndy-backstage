@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { PageHeader } from "@/components/layout";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import ImageUpload from "@/components/ui/image-upload";
 
@@ -443,47 +442,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      {/* Page Header */}
-      <PageHeader title="Band Settings">
-        <div className="flex space-x-3">
-          <button
-            onClick={() => setActiveTab('band')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'band' 
-                ? 'bg-card text-card-foreground' 
-                : 'text-primary-foreground hover:bg-white/10'
-            }`}
-            data-testid="tab-band"
-          >
-            <i className="fas fa-cog mr-2"></i>
-            Band
-          </button>
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'members' 
-                ? 'bg-card text-card-foreground' 
-                : 'text-primary-foreground hover:bg-white/10'
-            }`}
-            data-testid="tab-members"
-          >
-            <i className="fas fa-users mr-2"></i>
-            Members
-          </button>
-          <button
-            onClick={() => setActiveTab('spotify')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'spotify' 
-                ? 'bg-card text-card-foreground' 
-                : 'text-primary-foreground hover:bg-white/10'
-            }`}
-            data-testid="tab-spotify"
-          >
-            <i className="fab fa-spotify mr-2"></i>
-            Spotify
-          </button>
-        </div>
-      </PageHeader>
       
       {/* Gig Alert Banner */}
       <div className="px-4">
@@ -492,7 +450,49 @@ export default function Admin({ bandId, membership }: AdminProps) {
       
       <div className="p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
+          {/* Tab Navigation */}
+          <div className="bg-card rounded-t-2xl border-b border-border">
+            <div className="flex space-x-0 px-1 pt-1">
+              <button
+                onClick={() => setActiveTab('band')}
+                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === 'band'
+                    ? 'bg-background text-foreground border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-band"
+              >
+                <i className="fas fa-cog mr-2"></i>
+                Band Settings
+              </button>
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === 'members'
+                    ? 'bg-background text-foreground border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-members"
+              >
+                <i className="fas fa-users mr-2"></i>
+                Members
+              </button>
+              <button
+                onClick={() => setActiveTab('spotify')}
+                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === 'spotify'
+                    ? 'bg-background text-foreground border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-spotify"
+              >
+                <i className="fab fa-spotify mr-2"></i>
+                Spotify
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-card rounded-b-2xl shadow-lg overflow-hidden">
             <div className="p-6">
             {/* Band Settings Tab */}
             {activeTab === 'band' && (
