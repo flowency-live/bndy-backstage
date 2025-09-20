@@ -497,7 +497,6 @@ export default function Admin({ bandId, membership }: AdminProps) {
             {/* Band Settings Tab */}
             {activeTab === 'band' && (
               <div>
-                <h3 className="text-xl font-sans font-semibold text-card-foreground mb-6">Band Settings</h3>
                 
                 <form onSubmit={(e) => {
                   e.preventDefault();
