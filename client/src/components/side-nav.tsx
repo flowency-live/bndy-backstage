@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
-import { ChevronDown, Plus, Menu, X, User, LogOut } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -254,7 +254,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
 
           {/* Navigation Items */}
           <nav className="flex-1 p-4">
-            <div className="space-y-1">
+            <div className="space-y-2">
               {navigationItems.map((item) => {
                 const isActive = location.startsWith(item.href);
                 const IconComponent = item.icon;
@@ -264,16 +264,28 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                     key={item.href}
                     onClick={() => navigateTo(item.href)}
                     className={`
-                      w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
+                      w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
                       ${isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'text-foreground hover:bg-muted'
+                        ? 'bg-primary/10 text-primary border border-primary/20' 
+                        : 'hover:bg-muted text-foreground'
                       }
                     `}
                     data-testid={`nav-${item.href.slice(1)}`}
                   >
-                    <IconComponent className="h-5 w-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <div 
+                      className={`
+                        w-10 h-10 rounded-lg flex items-center justify-center transition-colors
+                        ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted'}
+                      `}
+                      style={!isActive ? { backgroundColor: `${item.color}20` } : {}}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">{item.label}</div>
+                      <div className="text-sm text-muted-foreground">{item.description}</div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </button>
                 );
               })}
