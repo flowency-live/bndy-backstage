@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useUser } from "@/lib/user-context";
+import { useUser, PERSONAL_CALENDAR_ID } from "@/lib/user-context";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useSwipe } from "@/hooks/use-swipe";
@@ -24,8 +24,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import FloatingActionButton from "@/components/floating-action-button";
 
 interface CalendarProps {
-  bandId: string;
-  membership: UserBand & { band: Band };
+  bandId?: string | null;
+  membership?: (UserBand & { band: Band }) | null;
 }
 
 export default function Calendar({ bandId, membership }: CalendarProps) {
@@ -34,6 +34,12 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
+  const { isPersonalMode, currentBandId, currentMembership } = useUser();
+  
+  // Use context values if props aren't provided (for standalone usage)
+  const effectiveBandId = bandId ?? currentBandId;
+  const effectiveMembership = membership ?? currentMembership;
+  const isInPersonalMode = isPersonalMode || effectiveBandId === PERSONAL_CALENDAR_ID;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
@@ -68,15 +74,24 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  // Get events for this band using new band-scoped API
+  // Get events - use personal API for personal mode, band API for band mode
   const { data: events = [] } = useQuery<Event[]>({
-    queryKey: ["/api/bands", bandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
+    queryKey: isInPersonalMode 
+      ? ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
+      : ["/api/bands", effectiveBandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`, {
+      let url: string;
+      if (isInPersonalMode) {
+        url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+      } else {
+        url = `/api/bands/${effectiveBandId}/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+      }
+      
+      const response = await fetch(url, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -89,18 +104,18 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && (isInPersonalMode || !!effectiveBandId),
   });
 
-  // Get band members using new band-scoped API
+  // Get band members using new band-scoped API (only for band mode)
   const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
-    queryKey: ["/api/bands", bandId, "members"],
+    queryKey: ["/api/bands", effectiveBandId, "members"],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/members`, {
+      const response = await fetch(`/api/bands/${effectiveBandId}/members`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -113,7 +128,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && !isInPersonalMode && !!effectiveBandId,
   });
 
   // Get next upcoming band event (only practices and gigs, not unavailability)
@@ -178,16 +193,27 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   };
 
   // Helper function to get display name for an event
-  const getEventDisplayName = (event: Event) => {
+  const getEventDisplayName = (event: Event & { bandName?: string }) => {
+    let eventName = "";
+    
     if (event.type === "unavailable") {
       if (event.membershipId) {
         const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
         // For unavailable events, prefer the user's display name over the membership display name
-        return member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
+        eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
+      } else {
+        eventName = "Unavailable";
       }
-      return "Unavailable";
+    } else {
+      eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
-    return event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
+    
+    // Add band prefix in personal mode if bandName is available
+    if (isInPersonalMode && event.bandName) {
+      return `${event.bandName} - ${eventName}`;
+    }
+    
+    return eventName;
   };
 
   // Permission function to check if user can edit an event
@@ -770,8 +796,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         )}
       </div>
 
-      {/* Event Modal */}
-      {showEventModal && (
+      {/* Event Modal - only show in band mode for now */}
+      {showEventModal && !isInPersonalMode && effectiveMembership && effectiveBandId && (
         <EventModal
           isOpen={showEventModal}
           onClose={() => {
@@ -782,8 +808,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           selectedDate={selectedDate}
           selectedEvent={selectedEvent}
           eventType={eventType}
-          currentUser={membership}
-          bandId={bandId}
+          currentUser={effectiveMembership}
+          bandId={effectiveBandId}
         />
       )}
 
@@ -798,21 +824,23 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         onEdit={handleEditFromDetails}
         onDelete={handleDeleteFromDetails}
         bandMembers={bandMembers}
-        currentMembershipId={membership?.id || null}
+        currentMembershipId={effectiveMembership?.id || null}
         canEdit={canEdit}
       />
 
-      {/* Floating Action Button */}
-      <FloatingActionButton
-        onClick={() => {
-          setSelectedDate(new Date().toISOString().split('T')[0]);
-          setSelectedEvent(null);
-          setEventType('practice');
-          setIsEditingEvent(false);
-          setShowEventModal(true);
-        }}
-        hidden={showEventModal || showEventDetails}
-      />
+      {/* Floating Action Button - only show in band mode for now */}
+      {!isInPersonalMode && (
+        <FloatingActionButton
+          onClick={() => {
+            setSelectedDate(new Date().toISOString().split('T')[0]);
+            setSelectedEvent(null);
+            setEventType('practice');
+            setIsEditingEvent(false);
+            setShowEventModal(true);
+          }}
+          hidden={showEventModal || showEventDetails}
+        />
+      )}
 
     </div>
   );
