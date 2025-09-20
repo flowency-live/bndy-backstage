@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useUser } from "@/lib/user-context";
-import { ChevronDown, Plus, Settings, Menu, X, Home, Calendar, Music, User, LogOut } from "lucide-react";
+import { navigationItems } from "@/lib/navigation-config";
+import { ChevronDown, Plus, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -100,13 +101,6 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
 
   const otherBands = userProfile?.bands.filter(band => band.bandId !== currentBandId) || [];
 
-  const navigationItems = [
-    { path: "/dashboard", icon: Home, label: "Dashboard" },
-    { path: "/calendar", icon: Calendar, label: "Calendar" },
-    { path: "/songs", icon: Music, label: "Practice List" },
-    { path: "/admin", icon: Settings, label: "Manage Band" },
-    { path: "/profile", icon: User, label: "Profile" },
-  ];
 
   return (
     <>
@@ -262,13 +256,13 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
           <nav className="flex-1 p-4">
             <div className="space-y-1">
               {navigationItems.map((item) => {
-                const isActive = location.startsWith(item.path);
+                const isActive = location.startsWith(item.href);
                 const IconComponent = item.icon;
                 
                 return (
                   <button
-                    key={item.path}
-                    onClick={() => navigateTo(item.path)}
+                    key={item.href}
+                    onClick={() => navigateTo(item.href)}
                     className={`
                       w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
                       ${isActive 
@@ -276,7 +270,7 @@ export default function SideNav({ currentBandId, currentMembership, isOpen, onCl
                         : 'text-foreground hover:bg-muted'
                       }
                     `}
-                    data-testid={`nav-${item.path.slice(1)}`}
+                    data-testid={`nav-${item.href.slice(1)}`}
                   >
                     <IconComponent className="h-5 w-5" />
                     <span className="font-medium">{item.label}</span>

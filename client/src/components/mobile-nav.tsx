@@ -7,13 +7,9 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { useUser } from "@/lib/user-context";
+import { navigationItems } from "@/lib/navigation-config";
 import { 
   Menu, 
-  Home, 
-  Calendar, 
-  Music, 
-  Settings, 
-  User,
   X,
   ChevronRight,
   LogOut
@@ -26,43 +22,6 @@ interface MobileNavProps {
   isLoading?: boolean;
 }
 
-const navigationItems = [
-  { 
-    icon: Home, 
-    label: "Dashboard", 
-    href: "/dashboard", 
-    color: "hsl(220, 13%, 51%)",
-    description: "Overview & quick actions"
-  },
-  { 
-    icon: Calendar, 
-    label: "Calendar", 
-    href: "/calendar", 
-    color: "hsl(271, 91%, 65%)",
-    description: "Schedule & events"
-  },
-  { 
-    icon: Music, 
-    label: "Practice List", 
-    href: "/songs", 
-    color: "hsl(45, 93%, 47%)",
-    description: "Repertoire & setlists"
-  },
-  { 
-    icon: Settings, 
-    label: "Manage Band", 
-    href: "/admin", 
-    color: "hsl(220, 13%, 51%)",
-    description: "Band management & settings"
-  },
-  { 
-    icon: User, 
-    label: "Profile", 
-    href: "/profile", 
-    color: "hsl(220, 13%, 51%)",
-    description: "Personal settings"
-  }
-];
 
 export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps) {
   const [, setLocation] = useLocation();
