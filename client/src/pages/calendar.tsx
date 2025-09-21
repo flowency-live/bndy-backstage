@@ -244,9 +244,13 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     
     if (event.type === "unavailable") {
       if (event.membershipId) {
+        // Legacy band member unavailable event
         const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
         // For unavailable events, prefer the user's display name over the membership display name
         eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
+      } else if (event.ownerUserId) {
+        // User personal unavailable event - use the user's profile display name
+        eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
       } else {
         eventName = "Unavailable";
       }
@@ -264,9 +268,14 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
   // Permission function to check if user can edit an event
   const canEdit = (event: Event) => {
-    // For unavailability events, only the member who created it can edit
+    // For unavailability events, check ownership
     if (event.type === "unavailable") {
-      return event.membershipId === membership?.id;
+      // User personal unavailable event - check if owned by current user
+      if (event.ownerUserId) {
+        return event.ownerUserId === userProfile?.user?.id;
+      }
+      // Legacy band member unavailable event - check membership
+      return event.membershipId === effectiveMembership?.id;
     }
     
     // For other events, all band members can edit (could be extended with role-based permissions later)
