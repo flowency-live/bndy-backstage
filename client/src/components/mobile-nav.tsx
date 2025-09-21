@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -12,6 +13,7 @@ import {
   Menu, 
   X,
   ChevronRight,
+  ChevronDown,
   LogOut
 } from "lucide-react";
 import type { UserBand, Band } from "@shared/schema";
@@ -27,7 +29,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { clearBandSelection } = useUser();
+  const { clearBandSelection, memberships, setBandId, bandId } = useUser();
 
   const handleExitBand = () => {
     clearBandSelection();
@@ -52,7 +54,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 p-0"
+                className="h-10 w-10 p-0 overflow-hidden"
                 data-testid="mobile-nav-trigger"
               >
                 {currentMembership ? (
@@ -60,14 +62,14 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                     <img
                       src={currentMembership.band.avatarUrl}
                       alt={`${currentMembership.band.name} avatar`}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      className="w-full h-full rounded-full flex items-center justify-center"
                       style={{ backgroundColor: currentMembership.color }}
                     >
-                      <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
+                      <i className={`fas ${currentMembership.icon} text-white text-xl`}></i>
                     </div>
                   )
                 ) : (
@@ -81,46 +83,81 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="p-6 border-b border-border">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center mb-4">
                     <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsOpen(false)}
-                      className="h-8 w-8"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
                   </div>
 
-                  {/* Band Info */}
+                  {/* Band Info - Clickable for switching */}
                   {currentMembership && (
-                    <div className="bg-muted rounded-lg p-3">
-                      <div className="flex items-center gap-3">
-                        {currentMembership.band.avatarUrl ? (
-                          <img
-                            src={currentMembership.band.avatarUrl}
-                            alt={`${currentMembership.band.name} avatar`}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: currentMembership.color }}
-                          >
-                            <i className={`fas ${currentMembership.icon} text-white`}></i>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-foreground truncate">
-                            {currentMembership.band.name}
-                          </div>
-                          <div className="text-sm text-muted-foreground truncate">
-                            {currentMembership.displayName} • {currentMembership.role}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="bg-muted rounded-lg p-3 cursor-pointer hover:bg-muted/80 transition-colors">
+                          <div className="flex items-center gap-3">
+                            {currentMembership.band.avatarUrl ? (
+                              <img
+                                src={currentMembership.band.avatarUrl}
+                                alt={`${currentMembership.band.name} avatar`}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div 
+                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: currentMembership.color }}
+                              >
+                                <i className={`fas ${currentMembership.icon} text-white`}></i>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-foreground truncate">
+                                {currentMembership.band.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground truncate">
+                                {currentMembership.displayName} • {currentMembership.role}
+                              </div>
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="bottom" className="w-56">
+                        {memberships
+                          .filter(membership => membership.bandId !== bandId) // Don't show current band
+                          .map((membership) => (
+                            <DropdownMenuItem
+                              key={membership.bandId}
+                              onClick={() => {
+                                setBandId(membership.bandId);
+                                setIsOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-3"
+                            >
+                              {membership.band.avatarUrl ? (
+                                <img
+                                  src={membership.band.avatarUrl}
+                                  alt={`${membership.band.name} avatar`}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div 
+                                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                                  style={{ backgroundColor: membership.color }}
+                                >
+                                  <i className={`fas ${membership.icon} text-white text-sm`}></i>
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-foreground truncate">
+                                  {membership.band.name}
+                                </div>
+                                <div className="text-sm text-muted-foreground truncate">
+                                  {membership.displayName} • {membership.role}
+                                </div>
+                              </div>
+                            </DropdownMenuItem>
+                          ))
+                        }
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </div>
 

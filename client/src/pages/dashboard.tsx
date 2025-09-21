@@ -470,38 +470,6 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
-        {/* Band Header - Clear identification */}
-        {membership && (
-          <div className="mb-4 sm:mb-6">
-            <div className="bg-card rounded-lg p-4 border border-border shadow-sm">
-              <div className="flex items-center gap-4">
-                {membership.band.avatarUrl ? (
-                  <img
-                    src={membership.band.avatarUrl}
-                    alt={`${membership.band.name} logo`}
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div 
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: membership.color }}
-                  >
-                    <i className={`fas ${membership.icon} text-white text-xl sm:text-2xl`}></i>
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-foreground">
-                    {membership.band.name}
-                  </h1>
-                  <p className="text-muted-foreground text-sm sm:text-base">
-                    {membership.displayName} • {membership.role}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {/* Gig Alert Banner */}
         <GigAlertBanner bandId={bandId} className="mb-3 sm:mb-4" />
         

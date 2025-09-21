@@ -561,12 +561,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       {/* Simple Toggle Controls */}
       <div className="bg-brand-primary-light px-4 py-3 border-t">
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center mr-3">
-            <i className="fas fa-eye text-slate-600 dark:text-slate-400 mr-2"></i>
-            <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
-              Show:
-            </span>
-          </div>
           
           {/* Band Events Toggle */}
           {(effectiveBandId || userProfile?.bands?.length) && (
