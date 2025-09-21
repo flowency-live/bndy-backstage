@@ -444,6 +444,21 @@ export const insertEventSchema = createInsertSchema(events).omit({
   }
 );
 
+// Update schema for events (without XOR constraint for partial updates)
+export const updateEventSchema = createInsertSchema(events).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  bandId: z.string().optional().nullable(), // XOR with ownerUserId - for band events
+  ownerUserId: z.string().optional().nullable(), // XOR with bandId - for user events
+  membershipId: z.string().optional().nullable(),
+  createdByMembershipId: z.string().optional().nullable(),
+  type: z.enum(EVENT_TYPES, { errorMap: () => ({ message: "Please select a valid event type" }) }).optional(),
+  isPublic: z.boolean().optional().default(false),
+  venue: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+}).partial(); // Allow partial updates without XOR constraint
+
 export const insertSongSchema = createInsertSchema(songs).omit({
   id: true,
   createdAt: true,

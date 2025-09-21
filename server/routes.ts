@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { randomUUID } from "crypto";
 import { storage } from "./storage";
-import { insertBandMemberSchema, insertEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema, updateBandSchema } from "@shared/schema";
+import { insertBandMemberSchema, insertEventSchema, updateEventSchema, insertSongSchema, insertSongReadinessSchema, insertSongVetoSchema, insertUserProfileSchema, updateUserProfileSchema, updateBandSchema } from "@shared/schema";
 import type { UpdateBand } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertEventSchema.partial().parse(req.body);
+      const validatedData = updateEventSchema.parse(req.body);
 
       // Enforce band event type constraints (except for unavailable events)
       if (validatedData.type && validatedData.type !== 'unavailable') {
@@ -467,6 +467,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Failed to check conflicts" });
+    }
+  });
+
+  // Unified calendar endpoint (band events + user personal events + other band events)
+  app.get("/api/bands/:bandId/calendar", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ 
+          message: "Both startDate and endDate query parameters are required" 
+        });
+      }
+      
+      const calendar = await storage.getUnifiedCalendar(
+        req.params.bandId,
+        startDate as string,
+        endDate as string
+      );
+      
+      res.json(calendar);
+    } catch (error) {
+      console.error("Failed to fetch unified calendar:", error);
+      res.status(500).json({ message: "Failed to fetch unified calendar" });
     }
   });
 
