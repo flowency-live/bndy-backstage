@@ -314,8 +314,16 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     try {
       await apiRequest("DELETE", `/api/bands/${bandId}/events/${event.id}`);
       
-      // Refresh events data
-      queryClient.invalidateQueries({ queryKey: ['/api/bands', bandId, 'events'] });
+      // Invalidate all calendar and events queries for immediate UI update
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && 
+                 queryKey[0] === '/api/bands' && 
+                 queryKey[1] === bandId && 
+                 (queryKey[2] === 'events' || queryKey[2] === 'calendar');
+        }
+      });
       
       toast({
         title: "Event deleted",
