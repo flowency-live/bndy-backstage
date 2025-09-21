@@ -43,14 +43,15 @@ export default function TimePickerModal({
 
   const handleHourChange = (newHour: number) => {
     setHour(newHour);
+    // Auto-advance to minute selection for mobile optimization
+    setClockMode('minute');
   };
 
   const handleMinuteChange = (newMinute: number) => {
     setMinute(newMinute);
-  };
-
-  const handleConfirm = () => {
-    onSelectTime(formatTime24(hour, minute));
+    // Auto-close after minute selection for mobile optimization
+    onSelectTime(formatTime24(hour, newMinute));
+    onClose();
   };
 
   return (
@@ -85,17 +86,7 @@ export default function TimePickerModal({
             />
           </div>
           
-          <div className="flex space-x-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleConfirm}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              Select
-            </Button>
-          </div>
+          {/* Auto-closes on time selection - no buttons needed for mobile optimization */}
         </div>
       </div>
     </div>
