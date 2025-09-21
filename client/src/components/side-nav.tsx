@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useUser, PERSONAL_CALENDAR_ID } from "@/lib/user-context";
+import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,11 +42,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   const { session, signOut } = useSupabaseAuth();
   const { 
     clearBandSelection, 
-    selectPersonalMode, 
     selectBand,
     currentBandId, 
     currentMembership, 
-    isPersonalMode, 
     userProfile 
   } = useUser();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
@@ -59,11 +57,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   };
 
   const handleBandSwitch = (bandId: string) => {
-    if (bandId === PERSONAL_CALENDAR_ID) {
-      selectPersonalMode();
-    } else {
-      selectBand(bandId);
-    }
+    selectBand(bandId);
     window.location.reload(); // Force a full page reload to switch context
   };
 
@@ -128,17 +122,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   data-testid="button-context-switcher"
                 >
                   <div className="flex items-center gap-2">
-                    {isPersonalMode ? (
-                      <>
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Calendar className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">All Bands (Personal)</div>
-                          <div className="text-xs text-muted-foreground truncate">All bands + personal</div>
-                        </div>
-                      </>
-                    ) : currentMembership ? (
+                    {currentMembership ? (
                       <>
                         {currentMembership.band.avatarUrl ? (
                           <img
@@ -166,8 +150,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           <User className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">Select Context</div>
-                          <div className="text-xs text-muted-foreground truncate">Choose band or personal</div>
+                          <div className="font-medium text-sm truncate text-foreground">No Band Selected</div>
+                          <div className="text-xs text-muted-foreground truncate">Personal calendar only</div>
                         </div>
                       </>
                     )}
@@ -183,17 +167,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   </div>
                   <DropdownMenuItem disabled className="py-3">
                     <div className="flex items-center gap-3 w-full">
-                      {isPersonalMode ? (
-                        <>
-                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                            <Calendar className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="text-left min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate">Personal Calendar</div>
-                            <div className="text-xs text-muted-foreground truncate">All your events</div>
-                          </div>
-                        </>
-                      ) : currentMembership ? (
+                      {currentMembership ? (
                         <>
                           {currentMembership.band.avatarUrl ? (
                             <img
@@ -223,44 +197,24 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                             <User className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="text-left min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate">No Context</div>
-                            <div className="text-xs text-muted-foreground truncate">Please select</div>
+                            <div className="font-medium text-sm truncate">No Band Selected</div>
+                            <div className="text-xs text-muted-foreground truncate">Personal calendar only</div>
                           </div>
                         </>
                       )}
                     </div>
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  
-                  {/* Personal Calendar Option */}
-                  {!isPersonalMode && (
-                    <DropdownMenuItem
-                      onClick={() => handleBandSwitch(PERSONAL_CALENDAR_ID)}
-                      className="py-3 cursor-pointer"
-                      data-testid="button-switch-to-personal"
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Calendar className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">All Bands (Personal)</div>
-                          <div className="text-xs text-muted-foreground truncate">All bands + personal</div>
-                        </div>
-                      </div>
-                    </DropdownMenuItem>
-                  )}
 
                   {/* Band Options */}
                   {userProfile?.bands && userProfile.bands.length > 0 && (
                     <>
-                      {!isPersonalMode && <DropdownMenuSeparator />}
+                      <DropdownMenuSeparator />
                       <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
-                        {isPersonalMode ? 'Switch to Band' : 'Other Bands'}
+                        {currentBandId ? 'Other Bands' : 'Select Band'}
                       </div>
                       {userProfile.bands
-                        .filter(band => isPersonalMode || band.bandId !== currentBandId)
+                        .filter(band => band.bandId !== currentBandId)
                         .map((band) => (
                           <DropdownMenuItem
                             key={band.bandId}

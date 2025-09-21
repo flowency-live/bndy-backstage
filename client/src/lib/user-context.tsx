@@ -8,8 +8,7 @@ interface UserProfile {
   bands: (UserBand & { band: Band })[];
 }
 
-// Constants for personal calendar mode
-export const PERSONAL_CALENDAR_ID = '__personal__';
+// Simplified: Just band context vs no context
 
 interface UserContextType {
   // Authentication
@@ -23,11 +22,9 @@ interface UserContextType {
   // Current band context
   currentBandId: string | null;
   currentMembership: (UserBand & { band: Band }) | null;
-  isPersonalMode: boolean;
   
   // Actions
   selectBand: (bandId: string) => void;
-  selectPersonalMode: () => void;
   clearBandSelection: () => void;
   logout: () => void;
   
@@ -69,9 +66,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Load selected band from localStorage on mount
   useEffect(() => {
     const savedBandId = localStorage.getItem('bndy-selected-band-id');
-    if (savedBandId === PERSONAL_CALENDAR_ID) {
-      setCurrentBandId(PERSONAL_CALENDAR_ID);
-    } else if (savedBandId && userProfile?.bands?.some(b => b.bandId === savedBandId)) {
+    if (savedBandId && userProfile?.bands?.some(b => b.bandId === savedBandId)) {
       setCurrentBandId(savedBandId);
     } else if (userProfile?.bands?.length === 1) {
       // Auto-select if only one band
@@ -85,12 +80,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [userProfile]);
 
-  // Find current membership (null if in personal mode)
-  const currentMembership = (currentBandId && currentBandId !== PERSONAL_CALENDAR_ID)
+  // Find current membership (null if no band context)
+  const currentMembership = currentBandId
     ? userProfile?.bands.find(b => b.bandId === currentBandId) || null
     : null;
-  
-  const isPersonalMode = currentBandId === PERSONAL_CALENDAR_ID;
 
   const selectBand = (bandId: string) => {
     if (userProfile?.bands.some(b => b.bandId === bandId)) {
@@ -99,10 +92,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const selectPersonalMode = () => {
-    setCurrentBandId(PERSONAL_CALENDAR_ID);
-    localStorage.setItem('bndy-selected-band-id', PERSONAL_CALENDAR_ID);
-  };
 
   const clearBandSelection = () => {
     setCurrentBandId(null);
@@ -126,9 +115,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     userProfile: userProfile || null,
     currentBandId,
     currentMembership,
-    isPersonalMode,
     selectBand,
-    selectPersonalMode,
     clearBandSelection,
     logout,
     hasMultipleBands: (userProfile?.bands.length || 0) > 1,
