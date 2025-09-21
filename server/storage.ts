@@ -11,7 +11,7 @@ import {
   users, userBands, bands
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, count } from "drizzle-orm";
+import { eq, and, desc, count, ne, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Users - no band scoping needed
@@ -62,6 +62,24 @@ export interface IStorage {
     bandEventConflicts: Event[];
     unavailabilityConflicts: Event[];
     affectedBandEvents: Event[];
+  }>;
+  
+  // User events (personal events like unavailable days)
+  getUserEvents(userId: string): Promise<Event[]>;
+  getUserEventsByDateRange(userId: string, startDate: string, endDate: string): Promise<Event[]>;
+  createUserEvent(userId: string, event: Omit<InsertEvent, 'ownerUserId'>): Promise<Event>;
+  updateUserEvent(userId: string, eventId: string, event: Partial<Omit<InsertEvent, 'ownerUserId'>>): Promise<Event | undefined>;
+  deleteUserEvent(userId: string, eventId: string): Promise<boolean>;
+  
+  // Cross-band events (events from other bands user is a member of)
+  getOtherBandEvents(userId: string, excludeBandId: string): Promise<(Event & { bandName: string })[]>;
+  getOtherBandEventsByDateRange(userId: string, excludeBandId: string, startDate: string, endDate: string): Promise<(Event & { bandName: string })[]>;
+  
+  // Unified calendar (all events for a band's calendar view)
+  getUnifiedCalendar(bandId: string, startDate: string, endDate: string): Promise<{
+    bandEvents: Event[];
+    userEvents: Event[];
+    otherBandEvents: (Event & { bandName: string })[];
   }>;
   
   // Legacy Events - keep during migration
@@ -690,6 +708,130 @@ export class DatabaseStorage implements IStorage {
       bandEventConflicts,
       unavailabilityConflicts, 
       affectedBandEvents 
+    };
+  }
+
+  // User Events (personal events like unavailable days)
+  async getUserEvents(userId: string): Promise<Event[]> {
+    return await db.select().from(events).where(eq(events.ownerUserId, userId));
+  }
+
+  async getUserEventsByDateRange(userId: string, startDate: string, endDate: string): Promise<Event[]> {
+    const userEvents = await db.select().from(events).where(eq(events.ownerUserId, userId));
+    
+    return userEvents.filter(event => {
+      const eventDate = event.date;
+      const eventEndDate = event.endDate || event.date;
+      return eventDate <= endDate && eventEndDate >= startDate;
+    });
+  }
+
+  async createUserEvent(userId: string, eventData: Omit<InsertEvent, 'ownerUserId'>): Promise<Event> {
+    const [event] = await db
+      .insert(events)
+      .values({ ...eventData, ownerUserId: userId })
+      .returning();
+    return event;
+  }
+
+  async updateUserEvent(userId: string, eventId: string, eventData: Partial<Omit<InsertEvent, 'ownerUserId'>>): Promise<Event | undefined> {
+    const [updatedEvent] = await db
+      .update(events)
+      .set(eventData)
+      .where(and(eq(events.ownerUserId, userId), eq(events.id, eventId)))
+      .returning();
+    
+    return updatedEvent || undefined;
+  }
+
+  async deleteUserEvent(userId: string, eventId: string): Promise<boolean> {
+    const result = await db
+      .delete(events)
+      .where(and(eq(events.ownerUserId, userId), eq(events.id, eventId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Cross-band events (events from other bands user is a member of)
+  async getOtherBandEvents(userId: string, excludeBandId: string): Promise<(Event & { bandName: string })[]> {
+    const result = await db
+      .select({
+        id: events.id,
+        bandId: events.bandId,
+        ownerUserId: events.ownerUserId,
+        type: events.type,
+        title: events.title,
+        date: events.date,
+        endDate: events.endDate,
+        startTime: events.startTime,
+        endTime: events.endTime,
+        location: events.location,
+        venue: events.venue,
+        notes: events.notes,
+        isPublic: events.isPublic,
+        membershipId: events.membershipId,
+        memberId: events.memberId,
+        isAllDay: events.isAllDay,
+        createdByMembershipId: events.createdByMembershipId,
+        createdAt: events.createdAt,
+        bandName: bands.name,
+      })
+      .from(events)
+      .innerJoin(bands, eq(events.bandId, bands.id))
+      .innerJoin(userBands, and(
+        eq(userBands.bandId, bands.id),
+        eq(userBands.userId, userId)
+      ))
+      .where(and(
+        isNotNull(events.bandId), // band events only (bandId is not null)
+        ne(events.bandId, excludeBandId) // exclude current band
+      ));
+    
+    return result;
+  }
+
+  async getOtherBandEventsByDateRange(userId: string, excludeBandId: string, startDate: string, endDate: string): Promise<(Event & { bandName: string })[]> {
+    const allOtherBandEvents = await this.getOtherBandEvents(userId, excludeBandId);
+    
+    return allOtherBandEvents.filter(event => {
+      const eventDate = event.date;
+      const eventEndDate = event.endDate || event.date;
+      return eventDate <= endDate && eventEndDate >= startDate;
+    });
+  }
+
+  // Unified calendar (all events for a band's calendar view)
+  async getUnifiedCalendar(bandId: string, startDate: string, endDate: string): Promise<{
+    bandEvents: Event[];
+    userEvents: Event[];
+    otherBandEvents: (Event & { bandName: string })[];
+  }> {
+    // Get current band events in date range
+    const bandEvents = await this.getEventsByDateRange(bandId, startDate, endDate);
+    
+    // Get all user IDs who are members of this band
+    const bandMembers = await db
+      .select({ userId: userBands.userId })
+      .from(userBands)
+      .where(eq(userBands.bandId, bandId));
+    
+    const memberUserIds = bandMembers.map(member => member.userId);
+    
+    // Get user events (personal unavailable days) from all band members
+    const allUserEvents = await Promise.all(
+      memberUserIds.map(userId => this.getUserEventsByDateRange(userId, startDate, endDate))
+    );
+    const userEvents = allUserEvents.flat();
+    
+    // Get events from other bands that these users are in
+    const allOtherBandEvents = await Promise.all(
+      memberUserIds.map(userId => this.getOtherBandEventsByDateRange(userId, bandId, startDate, endDate))
+    );
+    const otherBandEvents = allOtherBandEvents.flat();
+    
+    return {
+      bandEvents,
+      userEvents,
+      otherBandEvents
     };
   }
 
