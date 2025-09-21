@@ -29,7 +29,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const { clearBandSelection, memberships, setBandId, bandId } = useUser();
+  const { clearBandSelection, userProfile, selectBand, currentBandId } = useUser();
 
   const handleExitBand = () => {
     clearBandSelection();
@@ -120,13 +120,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" side="bottom" className="w-56">
-                        {memberships
-                          .filter(membership => membership.bandId !== bandId) // Don't show current band
-                          .map((membership) => (
+                        {userProfile?.bands
+                          ?.filter(membership => membership.bandId !== currentBandId) // Don't show current band
+                          ?.map((membership) => (
                             <DropdownMenuItem
                               key={membership.bandId}
                               onClick={() => {
-                                setBandId(membership.bandId);
+                                selectBand(membership.bandId);
                                 setIsOpen(false);
                               }}
                               className="flex items-center gap-3 p-3"
@@ -154,8 +154,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                                 </div>
                               </div>
                             </DropdownMenuItem>
-                          ))
-                        }
+                          )) || []}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
