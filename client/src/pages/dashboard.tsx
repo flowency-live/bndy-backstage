@@ -315,6 +315,8 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
   const { selectBand } = useUser();
+  const [calendarExpanded, setCalendarExpanded] = React.useState(true);
+  const [songExpanded, setSongExpanded] = React.useState(true);
 
   // Get upcoming events for this band - moved to top to avoid hooks violation
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -499,40 +501,57 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
               <p className="text-muted-foreground text-sm sm:text-base">Schedule and manage your events</p>
             </div>
-            <Button 
-              onClick={() => setLocation("/calendar")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-              size="sm"
-              data-testid="button-add-event"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Event
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setCalendarExpanded(!calendarExpanded)}
+                className="text-primary hover:text-primary/80"
+                data-testid="button-toggle-calendar"
+              >
+                {calendarExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+              <Button 
+                onClick={() => setLocation("/calendar")}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
+                size="sm"
+                data-testid="button-add-event"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Event
+              </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-            <DashboardTile
-              title="Calendar"
-              subtitle="All scheduled events"
-              icon={<Calendar />}
-              color="hsl(271, 91%, 65%)"
-              count={upcomingEvents.length}
-              actionLabel="View Calendar"
-              onClick={() => setLocation("/calendar")}
-              className="animate-stagger-1"
-            />
-            
-            <DashboardTile
-              title="Gigs"
-              subtitle="Performance schedule"
-              icon={<Mic />}
-              color="hsl(24, 95%, 53%)"
-              count={upcomingGigs}
-              actionLabel="View Gigs"
-              onClick={() => setLocation("/calendar")}
-              className="animate-stagger-2"
-            />
-          </div>
+          {calendarExpanded && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+              <DashboardTile
+                title="Calendar"
+                subtitle="All scheduled events"
+                icon={<Calendar />}
+                color="hsl(271, 91%, 65%)"
+                count={upcomingEvents.length}
+                actionLabel="View Calendar"
+                onClick={() => setLocation("/calendar")}
+                className="animate-stagger-1"
+              />
+              
+              <DashboardTile
+                title="Gigs"
+                subtitle="Performance schedule"
+                icon={<Mic />}
+                color="hsl(24, 95%, 53%)"
+                count={upcomingGigs}
+                actionLabel="View Gigs"
+                onClick={() => setLocation("/calendar")}
+                className="animate-stagger-2"
+              />
+            </div>
+          )}
         </div>
 
         {/* Song Management Section */}
@@ -542,51 +561,68 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Management</h2>
               <p className="text-muted-foreground text-sm sm:text-base">Organize your repertoire and setlists</p>
             </div>
-            <Button 
-              onClick={() => setLocation("/songs")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-              size="sm"
-              data-testid="button-add-song"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Song
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSongExpanded(!songExpanded)}
+                className="text-primary hover:text-primary/80"
+                data-testid="button-toggle-songs"
+              >
+                {songExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+              <Button 
+                onClick={() => setLocation("/songs")}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
+                size="sm"
+                data-testid="button-add-song"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Song
+              </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <DashboardTile
-              title="Playbook"
-              subtitle="Complete song repertoire"
-              icon={<Music />}
-              color="hsl(199, 89%, 48%)"
-              count={totalSongs}
-              actionLabel="View All"
-              onClick={() => setLocation("/songs")}
-              className="animate-stagger-1"
-            />
-            
-            <DashboardTile
-              title="Setlists"
-              subtitle="Ready-to-perform sets"
-              icon={<List />}
-              color="hsl(159, 68%, 48%)"
-              count={0}
-              actionLabel="Create"
-              onClick={() => setLocation("/songs")}
-              className="animate-stagger-2"
-            />
-            
-            <DashboardTile
-              title="Pipeline"
-              subtitle="Songs in development"
-              icon={<GitBranch />}
-              color="hsl(45, 93%, 47%)"
-              count={Math.max(0, totalSongs - 5)}
-              actionLabel="Review"
-              onClick={() => setLocation("/songs")}
-              className="animate-stagger-3"
-            />
-          </div>
+          {songExpanded && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+              <DashboardTile
+                title="Playbook"
+                subtitle="Complete song repertoire"
+                icon={<Music />}
+                color="hsl(199, 89%, 48%)"
+                count={totalSongs}
+                actionLabel="View All"
+                onClick={() => setLocation("/songs")}
+                className="animate-stagger-1"
+              />
+              
+              <DashboardTile
+                title="Setlists"
+                subtitle="Ready-to-perform sets"
+                icon={<List />}
+                color="hsl(159, 68%, 48%)"
+                count={0}
+                actionLabel="Create"
+                onClick={() => setLocation("/songs")}
+                className="animate-stagger-2"
+              />
+              
+              <DashboardTile
+                title="Pipeline"
+                subtitle="Songs in development"
+                icon={<GitBranch />}
+                color="hsl(45, 93%, 47%)"
+                count={Math.max(0, totalSongs - 5)}
+                actionLabel="Review"
+                onClick={() => setLocation("/songs")}
+                className="animate-stagger-3"
+              />
+            </div>
+          )}
         </div>
 
         {/* Members & Settings Section */}
