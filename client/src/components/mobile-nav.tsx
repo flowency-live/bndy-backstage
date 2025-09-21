@@ -46,14 +46,14 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   return (
     <>
       {/* Mobile Header - Always visible on mobile */}
-      <header className="sticky top-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-between p-4">
+      <header className="sticky top-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-b border-border h-16">
+        <div className="flex items-center justify-between h-full">
           {/* Left: Band Avatar or Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-full w-10 p-0 overflow-hidden"
+                className="h-full w-16 p-0 overflow-hidden rounded-none"
                 data-testid="mobile-nav-trigger"
               >
                 {currentMembership ? (
@@ -222,7 +222,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
           </Sheet>
 
           {/* Center: Logo & Page Title */}
-          <div className="flex items-center gap-3 flex-1 justify-center">
+          <div className="flex items-center gap-3 flex-1 justify-center px-4">
             {isLoading ? (
               <BndySpinner size="sm" variant="grow" />
             ) : (
@@ -236,7 +236,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
           </div>
 
           {/* Right: Theme Toggle & Action Badge */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pr-4">
             <ThemeToggle size="sm" />
             {currentMembership && (
               <Badge 
