@@ -582,7 +582,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
               data-testid="toggle-band-events"
             >
               <i className="fas fa-users mr-2 text-xs"></i>
-              {effectiveBandId ? `${effectiveMembership?.band?.name || 'Band'} Events` : 'Band Events'}
+              Band Events
               {showBandEvents && (
                 <i className="fas fa-check ml-2 text-xs"></i>
               )}
@@ -609,13 +609,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           </button>
         </div>
         
-        <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          <i className="fas fa-info-circle mr-1"></i>
-          {effectiveBandId 
-            ? `${effectiveMembership?.band?.name || 'Band'} events and your personal/other band events` 
-            : 'Toggle visibility of band events and personal events'
-          }
-        </div>
       </div>
 
       {/* Calendar Navigation */}

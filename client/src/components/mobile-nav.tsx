@@ -46,7 +46,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
       {/* Mobile Header - Always visible on mobile */}
       <header className="sticky top-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between p-4">
-          {/* Left: Menu Button */}
+          {/* Left: Band Avatar or Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button
@@ -55,7 +55,24 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                 className="h-10 w-10 p-0"
                 data-testid="mobile-nav-trigger"
               >
-                <Menu className="h-6 w-6" />
+                {currentMembership ? (
+                  currentMembership.band.avatarUrl ? (
+                    <img
+                      src={currentMembership.band.avatarUrl}
+                      alt={`${currentMembership.band.name} avatar`}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: currentMembership.color }}
+                    >
+                      <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
+                    </div>
+                  )
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </Button>
             </SheetTrigger>
 
