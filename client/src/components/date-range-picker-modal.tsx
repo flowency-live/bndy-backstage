@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { format, addDays, differenceInDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface DateRangePickerModalProps {
   isOpen: boolean;
@@ -88,17 +81,22 @@ export default function DateRangePickerModal({
 
   const selectedDates = getSelectedDateRange();
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-brand-primary font-serif">
-            Select Unavailable Dates
-          </DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl max-w-md w-full animate-slide-up">
+        <div className="bg-orange-500 text-white p-4 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-serif">Select Unavailable Dates</h3>
+            <button onClick={handleClose} className="text-white hover:text-gray-200">
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
         
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">
+        <div className="p-6 space-y-4">
+          <div className="text-sm text-muted-foreground">
             {!startDate ? (
               "Select your first unavailable date"
             ) : !endDate ? (
@@ -127,10 +125,10 @@ export default function DateRangePickerModal({
               }
             }}
             modifiersStyles={{
-              selected: { backgroundColor: "var(--brand-unavailable)", color: "white" },
-              range_start: { backgroundColor: "var(--brand-unavailable)", color: "white", borderRadius: "6px 0 0 6px" },
-              range_end: { backgroundColor: "var(--brand-unavailable)", color: "white", borderRadius: "0 6px 6px 0" },
-              range_middle: { backgroundColor: "var(--brand-unavailable-light)", color: "var(--brand-unavailable)" }
+              selected: { backgroundColor: "hsl(0, 84%, 60%)", color: "white" },
+              range_start: { backgroundColor: "hsl(0, 84%, 60%)", color: "white", borderRadius: "6px 0 0 6px" },
+              range_end: { backgroundColor: "hsl(0, 84%, 60%)", color: "white", borderRadius: "0 6px 6px 0" },
+              range_middle: { backgroundColor: "hsl(0, 84%, 85%)", color: "hsl(0, 84%, 60%)" }
             }}
             className="rounded-md border"
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
@@ -138,7 +136,7 @@ export default function DateRangePickerModal({
 
           {/* Auto-closes after selecting date range - no buttons needed */}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

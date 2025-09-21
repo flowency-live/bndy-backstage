@@ -818,35 +818,17 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                       </div>
                     )}
 
-                    {/* Add event buttons (only for current month) */}
+                    {/* Add event button (only for current month) */}
                     {isCurrentMonth && (
                       <div className="absolute inset-0 bg-transparent hover:bg-brand-primary/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => openEventModal(dateStr, "practice")}
-                            className="w-6 h-6 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white text-xs"
-                            title="Add practice"
-                            data-testid={`button-add-practice-${dateStr}`}
-                          >
-                            <i className="fas fa-music"></i>
-                          </button>
-                          <button
-                            onClick={() => openEventModal(dateStr, "public_gig")}
-                            className="w-6 h-6 bg-yellow-500 hover:bg-yellow-600 rounded-full flex items-center justify-center text-white text-xs"
-                            title="Add gig"
-                            data-testid={`button-add-gig-${dateStr}`}
-                          >
-                            <i className="fas fa-star"></i>
-                          </button>
-                          <button
-                            onClick={() => openEventModal(dateStr, "unavailable")}
-                            className="w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
-                            title="Mark unavailable"
-                            data-testid={`button-add-unavailable-${dateStr}`}
-                          >
-                            <i className="fas fa-times"></i>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => openEventModal(dateStr, "practice")}
+                          className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg"
+                          title="Add event"
+                          data-testid={`button-add-event-${dateStr}`}
+                        >
+                          <i className="fas fa-plus"></i>
+                        </button>
                       </div>
                     )}
                   </div>
