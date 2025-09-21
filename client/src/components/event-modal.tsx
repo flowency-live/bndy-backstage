@@ -135,7 +135,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       return apiRequest("POST", `/api/bands/${bandId}/events`, event);
     },
     onSuccess: () => {
+      // Invalidate both events and calendar queries to ensure immediate display
       queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
       toast({
         title: "Success",
         description: "Event created successfully",
@@ -156,7 +158,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       return apiRequest("PATCH", `/api/bands/${bandId}/events/${id}`, event);
     },
     onSuccess: () => {
+      // Invalidate both events and calendar queries to ensure immediate display
       queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
       toast({
         title: "Success",
         description: "Event updated successfully",
@@ -177,7 +181,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       return apiRequest("DELETE", `/api/bands/${bandId}/events/${id}`);
     },
     onSuccess: () => {
+      // Invalidate both events and calendar queries to ensure immediate display
       queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
       toast({
         title: "Success",
         description: "Event deleted successfully",
@@ -412,14 +418,15 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                 className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 relative"
               >
                 <span>
+                  {/* UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app */}
                   {formData.type === "unavailable" ? (
                     formData.date ? (
                       formData.endDate && formData.endDate !== formData.date
-                        ? `${new Date(formData.date + 'T00:00:00').toLocaleDateString()} - ${new Date(formData.endDate + 'T00:00:00').toLocaleDateString()}`
-                        : new Date(formData.date + 'T00:00:00').toLocaleDateString()
+                        ? `${format(new Date(formData.date + 'T00:00:00'), 'dd/MM/yyyy')} - ${format(new Date(formData.endDate + 'T00:00:00'), 'dd/MM/yyyy')}`
+                        : format(new Date(formData.date + 'T00:00:00'), 'dd/MM/yyyy')
                     ) : "Select dates"
                   ) : (
-                    formData.date ? new Date(formData.date + 'T00:00:00').toLocaleDateString() : "Select date"
+                    formData.date ? format(new Date(formData.date + 'T00:00:00'), 'dd/MM/yyyy') : "Select date"
                   )}
                 </span>
                 <i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>

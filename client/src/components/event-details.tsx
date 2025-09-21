@@ -38,12 +38,13 @@ export default function EventDetails({
   const isOwner = event.membershipId === currentMembershipId
   
   const formatEventDate = (date: string, endDate?: string, startTime?: string, endTime?: string) => {
+    // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
     const start = parseISO(date + 'T00:00:00')
-    let dateStr = format(start, 'EEEE, MMMM do, yyyy')
+    let dateStr = format(start, 'EEEE, do MMMM yyyy') // UK format: Monday, 1st January 2025
     
     if (endDate && endDate !== date) {
       const end = parseISO(endDate + 'T00:00:00')
-      dateStr += ` - ${format(end, 'EEEE, MMMM do, yyyy')}`
+      dateStr += ` - ${format(end, 'EEEE, do MMMM yyyy')}`
     }
     
     if (startTime) {

@@ -31,20 +31,19 @@ export default function DatePickerModal({
   const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const handleDateClick = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
+    // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
+    const dateStr = format(date, "yyyy-MM-dd"); // Keep internal format as ISO for database compatibility
     setTempSelectedDate(dateStr);
-  };
-
-  const handleConfirm = () => {
-    if (tempSelectedDate) {
-      onSelectDate(tempSelectedDate);
-    }
+    // Auto-close on date selection
+    onSelectDate(dateStr);
+    onClose();
   };
 
   const handleClear = () => {
     if (onClear) {
       onClear();
     }
+    onClose();
   };
 
   return (
@@ -126,23 +125,14 @@ export default function DatePickerModal({
             </div>
           </div>
           
-          <div className="flex space-x-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            {allowClear && (
-              <Button variant="outline" onClick={handleClear} className="flex-1">
-                Clear
+          {/* Auto-closes on date selection - no buttons needed */}
+          {allowClear && (
+            <div className="flex justify-center">
+              <Button variant="outline" onClick={handleClear} className="px-6">
+                Clear Selection
               </Button>
-            )}
-            <Button 
-              onClick={handleConfirm} 
-              disabled={!tempSelectedDate}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              Select
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

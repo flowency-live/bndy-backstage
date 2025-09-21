@@ -155,11 +155,12 @@ function AgendaSection({ events, onEventClick, className = "" }: {
           {displayEvents.map((event, index) => {
             const config = eventTypeConfig[event.type as keyof typeof eventTypeConfig] || eventTypeConfig.practice;
             const eventDate = parseISO(event.date);
+            // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
             const formattedDate = isToday(eventDate) 
               ? 'Today'
               : isTomorrow(eventDate) 
               ? 'Tomorrow'
-              : format(eventDate, 'EEE, MMM d');
+              : format(eventDate, 'EEE, dd/MM');
               
             return (
               <div 
@@ -204,11 +205,12 @@ function AgendaSection({ events, onEventClick, className = "" }: {
 
 function NextUpCard({ event, onClick }: { event: Event, onClick: () => void }) {
   const eventDate = parseISO(event.date);
+  // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
   const formattedDate = isToday(eventDate) 
     ? 'Today'
     : isTomorrow(eventDate) 
     ? 'Tomorrow'
-    : format(eventDate, 'EEEE, MMM d');
+    : format(eventDate, 'EEEE, dd/MM/yyyy');
   
   const eventTypeConfig = {
     practice: { 

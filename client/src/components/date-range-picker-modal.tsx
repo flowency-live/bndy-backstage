@@ -37,29 +37,29 @@ export default function DateRangePickerModal({
         setStartDate(date);
         setIsSelectingEndDate(true);
       } else {
-        // Second click - set end date
-        if (date >= startDate) {
-          setEndDate(date);
-        } else {
+        // Second click - set end date and auto-close
+        let finalStartDate = startDate;
+        let finalEndDate = date;
+        
+        if (date < startDate) {
           // If selected date is before start date, swap them
-          setEndDate(startDate);
-          setStartDate(date);
+          finalStartDate = date;
+          finalEndDate = startDate;
         }
+        
+        setEndDate(finalEndDate);
+        
+        // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
+        const start = format(finalStartDate, "yyyy-MM-dd"); // Keep internal format as ISO for database compatibility
+        const end = format(finalEndDate, "yyyy-MM-dd");
+        onDateRangeSelect(start, end);
+        handleClose();
       }
     } else {
       // Reset selection
       setStartDate(date);
       setEndDate(undefined);
       setIsSelectingEndDate(true);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (startDate) {
-      const start = format(startDate, "yyyy-MM-dd");
-      const end = endDate ? format(endDate, "yyyy-MM-dd") : start;
-      onDateRangeSelect(start, end);
-      handleClose();
     }
   };
 
@@ -104,7 +104,8 @@ export default function DateRangePickerModal({
             ) : !endDate ? (
               "Select your last unavailable date (or click confirm for single day)"
             ) : (
-              `Selected: ${format(startDate, "MMM d")} - ${format(endDate, "MMM d")} (${differenceInDays(endDate, startDate) + 1} days)`
+              // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
+              `Selected: ${format(startDate, "dd/MM")} - ${format(endDate, "dd/MM")} (${differenceInDays(endDate, startDate) + 1} days)`
             )}
           </div>
 
@@ -135,18 +136,7 @@ export default function DateRangePickerModal({
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
           />
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleConfirm}
-              disabled={!startDate}
-              className="bg-brand-unavailable hover:bg-brand-unavailable-dark text-white"
-            >
-              Confirm Dates
-            </Button>
-          </div>
+          {/* Auto-closes after selecting date range - no buttons needed */}
         </div>
       </DialogContent>
     </Dialog>
