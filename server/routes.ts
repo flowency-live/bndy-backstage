@@ -383,13 +383,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bands/:bandId/events", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertEventSchema.parse({
-        ...req.body,
-        bandId: req.params.bandId
-      });
+      // Determine event ownership based on event type
+      const eventType = req.body.type;
+      const isUserEvent = eventType === 'unavailable'; // User personal events
+      
+      let validatedData;
+      if (isUserEvent) {
+        // User events: set ownerUserId, leave bandId null
+        validatedData = insertEventSchema.parse({
+          ...req.body,
+          ownerUserId: req.user!.dbUser!.id,
+          bandId: null
+        });
+        
+        // Create user event using the user storage method
+        const event = await storage.createUserEvent(req.user!.dbUser!.id, validatedData);
+        res.status(201).json(event);
+      } else {
+        // Band events: set bandId, leave ownerUserId null
+        validatedData = insertEventSchema.parse({
+          ...req.body,
+          bandId: req.params.bandId,
+          ownerUserId: null
+        });
 
-      // Enforce band event type constraints (except for unavailable events)
-      if (validatedData.type !== 'unavailable') {
+        // Enforce band event type constraints
         const band = await storage.getBand(req.params.bandId);
         const allowedTypes = band?.allowedEventTypes || ['practice', 'public_gig'];
         
@@ -399,14 +417,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             allowedTypes: allowedTypes
           });
         }
-      }
 
-      const event = await storage.createEvent(req.params.bandId, validatedData);
-      res.status(201).json(event);
+        // Create band event using the band storage method
+        const event = await storage.createEvent(req.params.bandId, validatedData);
+        res.status(201).json(event);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      console.error("Failed to create event:", error);
       res.status(500).json({ message: "Failed to create event" });
     }
   });
@@ -415,40 +435,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = updateEventSchema.parse(req.body);
 
-      // Enforce band event type constraints (except for unavailable events)
-      if (validatedData.type && validatedData.type !== 'unavailable') {
-        const band = await storage.getBand(req.params.bandId);
-        const allowedTypes = band?.allowedEventTypes || ['practice', 'public_gig'];
-        
-        if (!allowedTypes.includes(validatedData.type)) {
-          return res.status(400).json({ 
-            message: `Event type '${validatedData.type}' is not allowed for this band`,
-            allowedTypes: allowedTypes
-          });
+      // First, determine what type of event we're updating by checking both band and user events
+      let existingEvent = await storage.getEvent(req.params.bandId, req.params.id);
+      let isUserEvent = false;
+      
+      if (!existingEvent) {
+        // Event not found in band events, check if it's a user event
+        const userEvents = await storage.getUserEvents(req.user!.dbUser!.id);
+        existingEvent = userEvents.find(e => e.id === req.params.id);
+        if (existingEvent) {
+          isUserEvent = true;
         }
       }
-
-      const event = await storage.updateEvent(req.params.bandId, req.params.id, validatedData);
-      if (!event) {
+      
+      if (!existingEvent) {
         return res.status(404).json({ message: "Event not found" });
       }
-      res.json(event);
+
+      let updatedEvent;
+      if (isUserEvent) {
+        // Update user event
+        updatedEvent = await storage.updateUserEvent(req.user!.dbUser!.id, req.params.id, validatedData);
+      } else {
+        // Update band event - enforce band event type constraints
+        if (validatedData.type && validatedData.type !== 'unavailable') {
+          const band = await storage.getBand(req.params.bandId);
+          const allowedTypes = band?.allowedEventTypes || ['practice', 'public_gig'];
+          
+          if (!allowedTypes.includes(validatedData.type)) {
+            return res.status(400).json({ 
+              message: `Event type '${validatedData.type}' is not allowed for this band`,
+              allowedTypes: allowedTypes
+            });
+          }
+        }
+        
+        updatedEvent = await storage.updateEvent(req.params.bandId, req.params.id, validatedData);
+      }
+      
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json(updatedEvent);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      console.error("Failed to update event:", error);
       res.status(500).json({ message: "Failed to update event" });
     }
   });
 
   app.delete("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
-      const success = await storage.deleteEvent(req.params.bandId, req.params.id);
+      // First, determine what type of event we're deleting by checking both band and user events
+      let existingEvent = await storage.getEvent(req.params.bandId, req.params.id);
+      let isUserEvent = false;
+      
+      if (!existingEvent) {
+        // Event not found in band events, check if it's a user event
+        const userEvents = await storage.getUserEvents(req.user!.dbUser!.id);
+        existingEvent = userEvents.find(e => e.id === req.params.id);
+        if (existingEvent) {
+          isUserEvent = true;
+        }
+      }
+      
+      if (!existingEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      let success;
+      if (isUserEvent) {
+        // Delete user event
+        success = await storage.deleteUserEvent(req.user!.dbUser!.id, req.params.id);
+      } else {
+        // Delete band event
+        success = await storage.deleteEvent(req.params.bandId, req.params.id);
+      }
+      
       if (!success) {
         return res.status(404).json({ message: "Event not found" });
       }
       res.json({ message: "Event deleted successfully" });
     } catch (error) {
+      console.error("Failed to delete event:", error);
       res.status(500).json({ message: "Failed to delete event" });
     }
   });
