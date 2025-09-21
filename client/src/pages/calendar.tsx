@@ -625,28 +625,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
                   {format(currentDate, "MMMM yyyy")}
                 </h1>
-                {/* Context indicator */}
-                <div className="flex items-center mt-1">
-                  {effectiveBandId ? (
-                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
-                      <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full font-medium">
-                        Band Calendar
-                      </span>
-                      <span className="ml-1 text-slate-500 dark:text-slate-400">
-                        {effectiveMembership?.band?.name || 'Unknown Band'}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
-                      <span className="px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 rounded-full font-medium">
-                        Personal Calendar
-                      </span>
-                      <span className="ml-1 text-slate-500 dark:text-slate-400">
-                        No band context
-                      </span>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
             <button 

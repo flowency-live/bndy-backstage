@@ -54,7 +54,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 p-0 overflow-hidden"
+                className="h-12 w-12 p-0 overflow-hidden"
                 data-testid="mobile-nav-trigger"
               >
                 {currentMembership ? (
