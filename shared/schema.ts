@@ -423,14 +423,26 @@ export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
 }).extend({
-  bandId: z.string().optional().nullable(), // nullable for migration
+  bandId: z.string().optional().nullable(), // XOR with ownerUserId - for band events
+  ownerUserId: z.string().optional().nullable(), // XOR with bandId - for user events
   membershipId: z.string().optional().nullable(),
   createdByMembershipId: z.string().optional().nullable(),
   type: z.enum(EVENT_TYPES, { errorMap: () => ({ message: "Please select a valid event type" }) }),
   isPublic: z.boolean().optional().default(false),
   venue: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-});
+}).refine(
+  (data) => {
+    // XOR validation: exactly one of bandId or ownerUserId must be set
+    const hasBandId = !!data.bandId;
+    const hasOwnerUserId = !!data.ownerUserId;
+    return hasBandId !== hasOwnerUserId; // XOR: true if exactly one is true
+  },
+  {
+    message: "Event must be owned by either a band OR a user, but not both",
+    path: ["bandId", "ownerUserId"], // Show error on both fields
+  }
+);
 
 export const insertSongSchema = createInsertSchema(songs).omit({
   id: true,
