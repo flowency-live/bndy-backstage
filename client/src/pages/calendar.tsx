@@ -805,26 +805,6 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                       })}
                     </div>
 
-                    {/* Unavailable members indicator */}
-                    {unavailableMembers.length > 0 && (
-                      <div className="absolute bottom-1 right-1 flex -space-x-0.5">
-                        {unavailableMembers.slice(0, 3).map((member, i) => (
-                          <div
-                            key={`unavailable-${member?.id}-${i}`}
-                            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white flex items-center justify-center shadow-sm"
-                            style={{ backgroundColor: member?.color }}
-                            title={`${member?.displayName} unavailable`}
-                          >
-                            <i className={`fas ${member?.icon} text-white text-xs`}></i>
-                          </div>
-                        ))}
-                        {unavailableMembers.length > 3 && (
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted border border-foreground flex items-center justify-center text-foreground text-xs font-medium shadow-sm">
-                            +{unavailableMembers.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Add event button (only for current month) */}
                     {isCurrentMonth && (
