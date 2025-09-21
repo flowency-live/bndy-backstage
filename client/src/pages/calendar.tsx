@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useUser, PERSONAL_CALENDAR_ID } from "@/lib/user-context";
+import { useUser } from "@/lib/user-context";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useSwipe } from "@/hooks/use-swipe";
@@ -34,12 +34,11 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   
   const [, setLocation] = useLocation();
   const { session } = useSupabaseAuth();
-  const { isPersonalMode, currentBandId, currentMembership, userProfile } = useUser();
+  const { currentBandId, currentMembership, userProfile } = useUser();
   
   // Use context values if props aren't provided (for standalone usage)
   const effectiveBandId = bandId ?? currentBandId;
   const effectiveMembership = membership ?? currentMembership;
-  const isInPersonalMode = isPersonalMode || effectiveBandId === PERSONAL_CALENDAR_ID;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
@@ -50,18 +49,11 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
   
-  // Band filtering for personal mode
-  const [enabledBands, setEnabledBands] = useState<Set<string>>(new Set());
+  // Simple toggle controls for the unified calendar view
+  const [showBandEvents, setShowBandEvents] = useState(true);
+  const [showMyEvents, setShowMyEvents] = useState(true);
   
   const { toast } = useToast();
-  
-  // Initialize band filters when entering personal mode
-  useEffect(() => {
-    if (isInPersonalMode && userProfile?.bands) {
-      const allBandIds = userProfile.bands.map(b => b.bandId);
-      setEnabledBands(new Set(allBandIds));
-    }
-  }, [isInPersonalMode, userProfile]);
 
   // Swipe handlers for month navigation
   const navigateToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -86,21 +78,23 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  // Get events - use personal API for personal mode, band API for band mode
+  // Get events - unified data fetching for both band and no-band context
   const { data: allEvents = [] } = useQuery<Event[]>({
-    queryKey: isInPersonalMode 
-      ? ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
-      : ["/api/bands", effectiveBandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
+    queryKey: effectiveBandId 
+      ? ["/api/bands", effectiveBandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
+      : ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
       let url: string;
-      if (isInPersonalMode) {
-        url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
-      } else {
+      if (effectiveBandId) {
+        // Band context: get band events + user's personal events from all bands
         url = `/api/bands/${effectiveBandId}/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+      } else {
+        // No band context: get user's personal events from all bands
+        url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       }
       
       const response = await fetch(url, {
@@ -116,18 +110,31 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && (isInPersonalMode || !!effectiveBandId),
+    enabled: !!session?.access_token,
   });
 
-  // Apply band filters in personal mode
-  const events = isInPersonalMode 
-    ? allEvents.filter(event => 
-        !event.bandId || // Personal events (no bandId)
-        enabledBands.has(event.bandId) // Band events from enabled bands
-      )
-    : allEvents;
+  // Apply toggle filters based on user's preferences
+  const events = allEvents.filter(event => {
+    // Personal/unavailable events (including cross-band events)
+    if (event.type === 'unavailable' || !event.bandId) {
+      return showMyEvents;
+    }
+    
+    // Band events for current band context
+    if (effectiveBandId && event.bandId === effectiveBandId) {
+      return showBandEvents;
+    }
+    
+    // Events from other bands (when no band context, show if band events enabled)
+    if (!effectiveBandId) {
+      return showBandEvents;
+    }
+    
+    // Other band events in band context (shown as part of "My Events" for cross-band privacy)
+    return showMyEvents;
+  });
 
-  // Get band members using new band-scoped API (only for band mode)
+  // Get band members using new band-scoped API (only when band context exists)
   const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
     queryKey: ["/api/bands", effectiveBandId, "members"],
     queryFn: async () => {
@@ -148,7 +155,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !isInPersonalMode && !!effectiveBandId,
+    enabled: !!session?.access_token && !!effectiveBandId,
   });
 
   // Get next upcoming band event (only practices and gigs, not unavailability)
@@ -228,8 +235,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
     
-    // Add band prefix in personal mode if bandName is available
-    if (isInPersonalMode && event.bandName) {
+    // Add band prefix when not in band context if bandName is available
+    if (!effectiveBandId && event.bandName) {
       return `${event.bandName} - ${eventName}`;
     }
     
@@ -551,57 +558,65 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       )}
 
 
-      {/* Band Filter Controls - Personal Mode Only */}
-      {isInPersonalMode && userProfile?.bands && userProfile.bands.length > 1 && (
-        <div className="bg-brand-primary-light px-4 py-3 border-t">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center mr-3">
-              <i className="fas fa-filter text-slate-600 dark:text-slate-400 mr-2"></i>
-              <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
-                Show events from:
-              </span>
-            </div>
-            {userProfile.bands.map((bandMembership) => {
-              const isEnabled = enabledBands.has(bandMembership.bandId);
-              return (
-                <button
-                  key={bandMembership.bandId}
-                  onClick={() => {
-                    const newEnabledBands = new Set(enabledBands);
-                    if (isEnabled) {
-                      newEnabledBands.delete(bandMembership.bandId);
-                    } else {
-                      newEnabledBands.add(bandMembership.bandId);
-                    }
-                    setEnabledBands(newEnabledBands);
-                  }}
-                  className={`
-                    px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
-                    ${isEnabled 
-                      ? 'bg-brand-accent text-white border-brand-accent shadow-md' 
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
-                    }
-                  `}
-                  data-testid={`toggle-band-${bandMembership.bandId}`}
-                >
-                  <span 
-                    className="inline-block w-2.5 h-2.5 rounded-full mr-2"
-                    style={{ backgroundColor: bandMembership.color }}
-                  />
-                  {bandMembership.band.name}
-                  {isEnabled && (
-                    <i className="fas fa-check ml-2 text-xs"></i>
-                  )}
-                </button>
-              );
-            })}
+      {/* Simple Toggle Controls */}
+      <div className="bg-brand-primary-light px-4 py-3 border-t">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center mr-3">
+            <i className="fas fa-eye text-slate-600 dark:text-slate-400 mr-2"></i>
+            <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
+              Show:
+            </span>
           </div>
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            <i className="fas fa-info-circle mr-1"></i>
-            Click to show/hide events from each band in your personal view
-          </div>
+          
+          {/* Band Events Toggle */}
+          {(effectiveBandId || userProfile?.bands?.length) && (
+            <button
+              onClick={() => setShowBandEvents(!showBandEvents)}
+              className={`
+                px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+                ${showBandEvents 
+                  ? 'bg-brand-accent text-white border-brand-accent shadow-md' 
+                  : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+                }
+              `}
+              data-testid="toggle-band-events"
+            >
+              <i className="fas fa-users mr-2 text-xs"></i>
+              {effectiveBandId ? `${effectiveMembership?.band?.name || 'Band'} Events` : 'Band Events'}
+              {showBandEvents && (
+                <i className="fas fa-check ml-2 text-xs"></i>
+              )}
+            </button>
+          )}
+          
+          {/* My Events Toggle */}
+          <button
+            onClick={() => setShowMyEvents(!showMyEvents)}
+            className={`
+              px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+              ${showMyEvents 
+                ? 'bg-cyan-500 text-white border-cyan-500 shadow-md' 
+                : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+              }
+            `}
+            data-testid="toggle-my-events"
+          >
+            <i className="fas fa-user mr-2 text-xs"></i>
+            My Events
+            {showMyEvents && (
+              <i className="fas fa-check ml-2 text-xs"></i>
+            )}
+          </button>
         </div>
-      )}
+        
+        <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          <i className="fas fa-info-circle mr-1"></i>
+          {effectiveBandId 
+            ? `${effectiveMembership?.band?.name || 'Band'} events and your personal/other band events` 
+            : 'Toggle visibility of band events and personal events'
+          }
+        </div>
+      </div>
 
       {/* Calendar Navigation */}
       <div className="bg-background">
@@ -625,22 +640,22 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
                 </h1>
                 {/* Context indicator */}
                 <div className="flex items-center mt-1">
-                  {isInPersonalMode ? (
-                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
-                      <span className="px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 rounded-full font-medium">
-                        All Bands (Personal)
-                      </span>
-                      <span className="ml-1 text-slate-500 dark:text-slate-400">
-                        All bands + personal
-                      </span>
-                    </div>
-                  ) : (
+                  {effectiveBandId ? (
                     <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
                       <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full font-medium">
                         Band Calendar
                       </span>
                       <span className="ml-1 text-slate-500 dark:text-slate-400">
                         {effectiveMembership?.band?.name || 'Unknown Band'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <span className="px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 rounded-full font-medium">
+                        Personal Calendar
+                      </span>
+                      <span className="ml-1 text-slate-500 dark:text-slate-400">
+                        No band context
                       </span>
                     </div>
                   )}
@@ -892,8 +907,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         )}
       </div>
 
-      {/* Event Modal - only show in band mode for now */}
-      {showEventModal && !isInPersonalMode && effectiveMembership && effectiveBandId && (
+      {/* Event Modal - show when band context exists with membership */}
+      {showEventModal && effectiveBandId && effectiveMembership && (
         <EventModal
           isOpen={showEventModal}
           onClose={() => {
@@ -924,8 +939,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         canEdit={canEdit}
       />
 
-      {/* Floating Action Button - only show in band mode for now */}
-      {!isInPersonalMode && (
+      {/* Floating Action Button - always show */}
+      {true && (
         <FloatingActionButton
           onClick={() => {
             setSelectedDate(new Date().toISOString().split('T')[0]);
