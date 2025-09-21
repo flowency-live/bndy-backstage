@@ -25,7 +25,7 @@ export function BndySpinner({
 
   const animationClasses = {
     spin: "animate-spin",
-    grow: "animate-pulse",
+    grow: "animate-pulse-soft",
     pulse: "animate-bounce"
   };
 

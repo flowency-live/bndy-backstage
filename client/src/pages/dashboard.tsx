@@ -491,6 +491,50 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
             className="mb-6 sm:mb-8"
           />
         )}
+        
+        {/* Calendar & Gigs Section */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
+              <p className="text-muted-foreground text-sm sm:text-base">Schedule and manage your events</p>
+            </div>
+            <Button 
+              onClick={() => setLocation("/calendar")}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
+              size="sm"
+              data-testid="button-add-event"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+            <DashboardTile
+              title="Calendar"
+              subtitle="All scheduled events"
+              icon={<Calendar />}
+              color="hsl(271, 91%, 65%)"
+              count={upcomingEvents.length}
+              actionLabel="View Calendar"
+              onClick={() => setLocation("/calendar")}
+              className="animate-stagger-1"
+            />
+            
+            <DashboardTile
+              title="Gigs"
+              subtitle="Performance schedule"
+              icon={<Mic />}
+              color="hsl(24, 95%, 53%)"
+              count={upcomingGigs}
+              actionLabel="View Gigs"
+              onClick={() => setLocation("/calendar")}
+              className="animate-stagger-2"
+            />
+          </div>
+        </div>
+
         {/* Song Management Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -541,49 +585,6 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
               actionLabel="Review"
               onClick={() => setLocation("/songs")}
               className="animate-stagger-3"
-            />
-          </div>
-        </div>
-
-        {/* Calendar & Gigs Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
-              <p className="text-muted-foreground text-sm sm:text-base">Schedule and manage your events</p>
-            </div>
-            <Button 
-              onClick={() => setLocation("/calendar")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-              size="sm"
-              data-testid="button-add-event"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Event
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-            <DashboardTile
-              title="Calendar"
-              subtitle="All scheduled events"
-              icon={<Calendar />}
-              color="hsl(271, 91%, 65%)"
-              count={upcomingEvents.length}
-              actionLabel="View Calendar"
-              onClick={() => setLocation("/calendar")}
-              className="animate-stagger-1"
-            />
-            
-            <DashboardTile
-              title="Gigs"
-              subtitle="Performance schedule"
-              icon={<Mic />}
-              color="hsl(24, 95%, 53%)"
-              count={upcomingGigs}
-              actionLabel="View Gigs"
-              onClick={() => setLocation("/calendar")}
-              className="animate-stagger-2"
             />
           </div>
         </div>
