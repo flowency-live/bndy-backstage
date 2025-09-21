@@ -158,31 +158,30 @@ export default function DateRangePickerModal({
           {/* Calendar */}
           <Calendar
             mode="single"
-            selected={startDate}
+            selected={undefined}
             onSelect={handleDateSelect}
             modifiers={{
-              selected: (date) => selectedDates.some(d => 
-                format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
-              ),
-              range_start: startDate ? (date) => 
+              range_start: startDate && !endDate ? (date) => 
                 format(date, "yyyy-MM-dd") === format(startDate, "yyyy-MM-dd") : () => false,
               range_end: endDate ? (date) => 
                 format(date, "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd") : () => false,
               range_middle: (date) => {
                 if (!startDate || !endDate) return false;
                 return date > startDate && date < endDate;
-              }
+              },
+              selected_range: (date) => selectedDates.some(d => 
+                format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
+              )
             }}
             modifiersClassNames={{
-              selected: "bg-orange-500 text-white hover:bg-orange-600",
-              range_start: "bg-orange-500 text-white hover:bg-orange-600 rounded-l-md",
-              range_end: "bg-orange-500 text-white hover:bg-orange-600 rounded-r-md", 
-              range_middle: "bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100"
+              range_start: "bg-orange-500 text-white hover:bg-orange-600",
+              range_end: "bg-orange-500 text-white hover:bg-orange-600", 
+              range_middle: "bg-orange-100 dark:bg-orange-900/30 text-orange-900 dark:text-orange-100",
+              selected_range: "bg-orange-500 text-white hover:bg-orange-600"
             }}
             className="rounded-md border w-full"
             classNames={{
               day: "h-11 w-11 text-sm", // Larger touch targets (44px)
-              day_selected: "bg-orange-500 text-white hover:bg-orange-600",
               day_today: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-900 dark:text-cyan-100 font-semibold",
             }}
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
