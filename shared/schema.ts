@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, uniqueIndex, check, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -75,7 +75,8 @@ export const bandMembers = pgTable("band_members", {
 
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bandId: varchar("band_id").references(() => bands.id), // nullable for migration
+  bandId: varchar("band_id").references(() => bands.id), // XOR with ownerUserId - for band events
+  ownerUserId: varchar("owner_user_id").references(() => users.id), // XOR with bandId - for user events
   type: text("type").notNull(), // 'practice', 'meeting', 'recording', 'private_booking', 'public_gig', 'festival', 'unavailable'
   title: text("title"),
   date: text("date").notNull(), // YYYY-MM-DD format
@@ -86,12 +87,19 @@ export const events = pgTable("events", {
   venue: text("venue"), // For public events
   notes: text("notes"),
   isPublic: boolean("is_public").default(false), // true for public gigs/festivals, false for private events
-  membershipId: varchar("membership_id").references(() => userBands.id), // null for band-wide events
+  membershipId: varchar("membership_id").references(() => userBands.id), // null for band-wide events, used for user events
   memberId: varchar("member_id").references(() => bandMembers.id), // legacy - keep for migration
   isAllDay: boolean("is_all_day").default(false),
   createdByMembershipId: varchar("created_by_membership_id").references(() => userBands.id),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => ({
+  // XOR constraint: exactly one of bandId or ownerUserId must be non-null
+  ownershipConstraint: check("ownership_xor", sql`(${table.bandId} IS NOT NULL AND ${table.ownerUserId} IS NULL) OR (${table.bandId} IS NULL AND ${table.ownerUserId} IS NOT NULL)`),
+  // Indexes for efficient queries
+  bandDateIndex: index('events_band_date_idx').on(table.bandId, table.date),
+  userDateIndex: index('events_user_date_idx').on(table.ownerUserId, table.date),
+  userDateRangeIndex: index('events_user_daterange_idx').on(table.ownerUserId, table.endDate),
+}));
 
 export const songs = pgTable("songs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -175,6 +183,7 @@ export const calendarSyncEvents = pgTable("calendar_sync_events", {
 export const usersRelations = relations(users, ({ many }) => ({
   bands: many(userBands),
   createdBands: many(bands),
+  personalEvents: many(events), // User's personal events (unavailable days, etc.)
   receivedInvitations: many(invitations, { relationName: "invitee" }),
   calendarIntegrations: many(calendarIntegrations),
 }));
@@ -237,6 +246,10 @@ export const eventsRelations = relations(events, ({ one }) => ({
   band: one(bands, {
     fields: [events.bandId],
     references: [bands.id],
+  }),
+  ownerUser: one(users, {
+    fields: [events.ownerUserId],
+    references: [users.id],
   }),
   membership: one(userBands, {
     relationName: "membershipEvents",
