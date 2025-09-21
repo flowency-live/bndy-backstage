@@ -78,10 +78,14 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  // Get events - unified data fetching for both band and no-band context
-  const { data: allEvents = [] } = useQuery<Event[]>({
+  // Get unified calendar data - separate arrays for different event types
+  const { data: calendarData } = useQuery<{
+    bandEvents: Event[];
+    userEvents: Event[];
+    otherBandEvents: (Event & { bandName: string })[];
+  } | Event[]>({
     queryKey: effectiveBandId 
-      ? ["/api/bands", effectiveBandId, "events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
+      ? ["/api/bands", effectiveBandId, "calendar", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
       : ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
     queryFn: async () => {
       if (!session?.access_token) {
@@ -90,10 +94,10 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       
       let url: string;
       if (effectiveBandId) {
-        // Band context: get band events + user's personal events from all bands
-        url = `/api/bands/${effectiveBandId}/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+        // Band context: get unified calendar with all event types
+        url = `/api/bands/${effectiveBandId}/calendar?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       } else {
-        // No band context: get user's personal events from all bands
+        // No band context: get user's personal events from all bands (legacy endpoint)
         url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       }
       
@@ -112,6 +116,21 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     },
     enabled: !!session?.access_token,
   });
+
+  // Extract events from the unified calendar response or fallback to legacy format
+  const allEvents: Event[] = calendarData 
+    ? Array.isArray(calendarData) 
+      ? calendarData // Legacy format (no band context)
+      : [
+          ...calendarData.bandEvents,
+          ...calendarData.userEvents,
+          ...calendarData.otherBandEvents.map(event => ({ 
+            ...event, 
+            // Add visual indicator for cross-band events
+            title: event.title ? `${event.title} (${event.bandName})` : `${event.type} (${event.bandName})`
+          }))
+        ]
+    : [];
 
   // Apply toggle filters based on user's preferences
   const events = allEvents.filter(event => {
