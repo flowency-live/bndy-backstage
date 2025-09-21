@@ -321,8 +321,8 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                           : "border-border hover:border-border/80 hover:shadow-sm"
                       }`}
                       style={{
-                        borderColor: isSelected ? config.color : undefined,
-                        backgroundColor: isSelected ? `${config.color}15` : undefined,
+                        borderColor: isSelected ? (type === 'unavailable' ? 'hsl(0, 84%, 60%)' : config.color) : undefined,
+                        backgroundColor: isSelected ? (type === 'unavailable' ? 'hsl(0, 84%, 60%, 0.15)' : `${config.color}15`) : undefined,
                       }}
                       data-testid={`button-event-type-${type}`}
                     >
