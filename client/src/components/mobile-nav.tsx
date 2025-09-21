@@ -53,8 +53,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-12 w-12 p-0 overflow-hidden"
+                className="h-full w-10 p-0 overflow-hidden"
                 data-testid="mobile-nav-trigger"
               >
                 {currentMembership ? (
@@ -126,8 +125,8 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                             <DropdownMenuItem
                               key={membership.bandId}
                               onClick={() => {
-                                selectBand(membership.bandId);
-                                setIsOpen(false);
+                                localStorage.setItem('bndy-selected-band-id', membership.bandId);
+                                window.location.reload(); // Force full page reload like desktop nav
                               }}
                               className="flex items-center gap-3 p-3"
                             >
