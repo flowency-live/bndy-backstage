@@ -59,14 +59,9 @@ export default function DateRangePickerModal({
 
   const handleToggleMode = () => {
     setIsMultiDay(!isMultiDay);
-    if (isMultiDay) {
-      // Switching to single day mode - clear selection
-      setStartDate(undefined);
-      setEndDate(undefined);
-    } else {
-      // Switching to multi-day mode - keep current start date if any
-      setEndDate(undefined);
-    }
+    // Always clear selection when switching modes
+    setStartDate(undefined);
+    setEndDate(undefined);
   };
 
   const handleClose = () => {
