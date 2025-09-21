@@ -46,14 +46,14 @@ export function BndySpinner({
 /**
  * BndySpinnerOverlay - Full screen loading overlay with bndy spinner
  */
-export function BndySpinnerOverlay({ message = "Loading..." }: { message?: string }) {
+export function BndySpinnerOverlay() {
   return (
     <div 
       className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4"
       data-testid="bndy-spinner-overlay"
     >
       <BndySpinner size="xl" variant="grow" />
-      <p className="text-muted-foreground text-sm font-medium">{message}</p>
+      <p className="text-muted-foreground text-sm font-medium">Loading</p>
     </div>
   );
 }

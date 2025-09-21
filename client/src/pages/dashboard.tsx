@@ -462,7 +462,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const isLoading = !session?.access_token || eventsLoading || songsLoading || membersLoading;
 
   if (isLoading) {
-    return <BndySpinnerOverlay message="Loading your band dashboard..." />;
+    return <BndySpinnerOverlay />;
   }
 
   return (
