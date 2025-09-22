@@ -163,9 +163,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
               </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-60" align="start">
-                  {/* Current Context */}
+                  {/* Active Band */}
                   <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
-                    Current Context
+                    Active Band
                   </div>
                   <DropdownMenuItem disabled className="py-3">
                     <div className="flex items-center gap-3 w-full">
