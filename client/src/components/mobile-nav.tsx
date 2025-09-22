@@ -9,6 +9,7 @@ import BndyLogo from "@/components/ui/bndy-logo";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Menu, 
   X,
@@ -29,6 +30,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { toast } = useToast();
   const { clearBandSelection, userProfile, selectBand, currentBandId } = useUser();
 
   const handleExitBand = () => {
@@ -164,20 +166,33 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.startsWith(item.href);
+                    const isComingSoon = item.href === '/songs';
+                    
+                    const handleClick = () => {
+                      if (isComingSoon) {
+                        toast({
+                          title: "Coming Soon!",
+                          description: "Song Lists features are being finalized for launch",
+                          duration: 3000,
+                        });
+                        setIsOpen(false);
+                      } else {
+                        setLocation(item.href);
+                        setIsOpen(false);
+                      }
+                    };
                     
                     return (
                       <button
                         key={item.href}
-                        onClick={() => {
-                          setLocation(item.href);
-                          setIsOpen(false);
-                        }}
+                        onClick={handleClick}
                         className={`
                           w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
                           ${isActive 
                             ? 'bg-primary/10 text-primary border border-primary/20' 
                             : 'hover:bg-muted text-foreground'
                           }
+                          ${isComingSoon ? 'opacity-75' : ''}
                         `}
                         data-testid={`nav-${item.label.toLowerCase()}`}
                       >
@@ -191,7 +206,14 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="flex-1 text-left">
-                          <div className="font-medium">{item.label}</div>
+                          <div className="font-medium flex items-center gap-2">
+                            {item.label}
+                            {isComingSoon && (
+                              <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                                Soon
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm text-muted-foreground">{item.description}</div>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground" />

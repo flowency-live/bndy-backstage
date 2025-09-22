@@ -556,12 +556,19 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
           )}
         </div>
 
-        {/* Song Management Section */}
-        <div className="mb-6 sm:mb-8">
+        {/* Song Lists Section */}
+        <div className="mb-6 sm:mb-8 relative">
+          {/* Coming Soon Overlay */}
+          <div className="absolute inset-0 bg-black/5 backdrop-blur-[1px] rounded-2xl z-10 flex items-center justify-center">
+            <div className="bg-orange-500 text-white px-4 py-2 rounded-full font-medium shadow-lg">
+              Coming Soon!
+            </div>
+          </div>
+          
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Management</h2>
-              <p className="text-muted-foreground text-sm sm:text-base">Organize your repertoire and setlists</p>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Lists</h2>
+              <p className="text-muted-foreground text-sm sm:text-base">Playbook, setlists & pipeline management</p>
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -614,8 +621,8 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
               />
               
               <DashboardTile
-                title="Pipeline"
-                subtitle="Songs in development"
+                title="Song Pipeline"
+                subtitle="Active practice & new suggestions"
                 icon={<GitBranch />}
                 color="hsl(45, 93%, 47%)"
                 count={Math.max(0, totalSongs - 5)}

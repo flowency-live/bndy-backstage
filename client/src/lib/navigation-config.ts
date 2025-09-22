@@ -26,10 +26,10 @@ export const navigationItems: NavigationItem[] = [
   },
   { 
     icon: Music, 
-    label: "Practice List", 
+    label: "Song Lists", 
     href: "/songs", 
     color: "hsl(45, 93%, 47%)",
-    description: "Repertoire & setlists"
+    description: "Playbook, setlists & pipeline"
   },
   { 
     icon: Settings, 

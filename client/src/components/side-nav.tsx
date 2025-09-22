@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { useToast } from "@/hooks/use-toast";
 import type { UserBand, Band } from "@shared/schema";
 
 interface UserProfile {
@@ -40,6 +41,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const { session, signOut } = useSupabaseAuth();
+  const { toast } = useToast();
   const { 
     clearBandSelection, 
     selectBand,
@@ -267,17 +269,31 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
               {navigationItems.map((item) => {
                 const isActive = location.startsWith(item.href);
                 const IconComponent = item.icon;
+                const isComingSoon = item.href === '/songs';
+                
+                const handleClick = () => {
+                  if (isComingSoon) {
+                    toast({
+                      title: "Coming Soon!",
+                      description: "Song Lists features are being finalized for launch",
+                      duration: 3000,
+                    });
+                  } else {
+                    navigateTo(item.href);
+                  }
+                };
                 
                 return (
                   <button
                     key={item.href}
-                    onClick={() => navigateTo(item.href)}
+                    onClick={handleClick}
                     className={`
                       w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
                       ${isActive 
                         ? 'bg-primary/10 text-primary border border-primary/20' 
                         : 'hover:bg-muted text-foreground'
                       }
+                      ${isComingSoon ? 'opacity-75' : ''}
                     `}
                     data-testid={`nav-${item.href.slice(1)}`}
                   >
@@ -291,7 +307,14 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                       <IconComponent className="h-5 w-5" />
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="font-medium">{item.label}</div>
+                      <div className="font-medium flex items-center gap-2">
+                        {item.label}
+                        {isComingSoon && (
+                          <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                            Soon
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-muted-foreground">{item.description}</div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
