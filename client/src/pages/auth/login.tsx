@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
 import { useCognitoAuth } from "@/hooks/useCognitoAuth"
+import { cognitoAuth } from "@/lib/cognito"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -132,9 +133,19 @@ export default function Login() {
     setOtp('')
   }
 
-  const handleGoogleSignIn = () => {
-    const cognitoAuthUrl = `https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=5v481th8k6v9lqifnp5oppak89&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard')}&identity_provider=Google`
-    window.location.href = cognitoAuthUrl
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await cognitoAuth.signInWithGoogle();
+      if (result.data && result.data.code) {
+        console.log('Google OAuth successful, got code:', result.data.code);
+        // Code received, would need backend to exchange for tokens
+        // For now, redirect to dashboard
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('Google sign in failed:', error);
+      setError('Google sign in failed');
+    }
   }
 
   return (
