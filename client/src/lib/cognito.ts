@@ -31,7 +31,7 @@ const amplifyConfig = {
         oauth: {
           domain: 'eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com',
           scopes: ['email', 'openid', 'profile', 'phone'],
-          redirectSignIn: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : '',
+          redirectSignIn: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '',
           redirectSignOut: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
           responseType: 'code',
           providers: ['Google'],
@@ -194,13 +194,13 @@ class CognitoAuthService {
       // Use direct OAuth URL for popup instead of Amplify redirect
       const cognitoDomain = 'https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com';
       const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
-      const redirectUri = window.location.origin + '/dashboard';
+      const redirectUri = window.location.origin + '/auth/callback';
 
       const oauthUrl = `${cognitoDomain}/oauth2/authorize?` +
         `response_type=code&` +
         `client_id=${clientId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=email+openid+profile&` +
+        `scope=email+openid+profile+phone&` +
         `identity_provider=Google`;
 
       // Open popup window
@@ -210,31 +210,39 @@ class CognitoAuthService {
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
 
+
+      if (!popup) {
+        throw new Error("Popup was blocked. Please allow popups for this site.");
+      }
+
       return new Promise((resolve, reject) => {
+        // Listen for postMessage from callback page
+        const messageHandler = (event: MessageEvent) => {
+          // Verify origin
+          if (event.origin !== window.location.origin) return;
+
+          if (event.data.type === "oauth-success") {
+            window.removeEventListener("message", messageHandler);
+            clearInterval(checkPopup);
+            resolve({
+              data: { code: event.data.code },
+              error: null,
+            });
+          } else if (event.data.type === "oauth-error") {
+            window.removeEventListener("message", messageHandler);
+            clearInterval(checkPopup);
+            reject(new Error(event.data.error || "OAuth failed"));
+          }
+        };
+
+        window.addEventListener("message", messageHandler);
+
+        // Also check if popup is closed periodically
         const checkPopup = setInterval(() => {
-          try {
-            if (popup?.closed) {
-              clearInterval(checkPopup);
-              reject(new Error('Popup was closed'));
-            }
-
-            // Check if popup has navigated to redirect URI
-            if (popup?.location.href.includes('/dashboard')) {
-              const url = new URL(popup.location.href);
-              const code = url.searchParams.get('code');
-
-              if (code) {
-                clearInterval(checkPopup);
-                popup.close();
-                // Exchange code for tokens (would need backend endpoint)
-                resolve({
-                  data: { code },
-                  error: null,
-                });
-              }
-            }
-          } catch (e) {
-            // Cross-origin error means popup is still on OAuth provider
+          if (popup?.closed) {
+            clearInterval(checkPopup);
+            window.removeEventListener("message", messageHandler);
+            reject(new Error("Authentication cancelled"));
           }
         }, 1000);
       });

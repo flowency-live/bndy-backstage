@@ -16,6 +16,7 @@ import Songs from "@/pages/songs";
 import Admin from "@/pages/admin";
 import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/auth/login";
+import OAuthCallback from "@/pages/auth/callback";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Footer from "@/components/ui/footer";
@@ -25,6 +26,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
+      <Route path="/auth/callback" component={OAuthCallback} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/profile">
