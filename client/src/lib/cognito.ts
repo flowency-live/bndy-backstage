@@ -188,18 +188,57 @@ class CognitoAuthService {
     }
   }
 
-  // Sign in with Google
+  // Sign in with Google (using popup instead of redirect)
   async signInWithGoogle() {
     try {
-      await signInWithRedirect({
-        provider: 'Google',
+      // Use direct OAuth URL for popup instead of Amplify redirect
+      const cognitoDomain = 'https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com';
+      const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
+      const redirectUri = window.location.origin + '/dashboard';
+
+      const oauthUrl = `${cognitoDomain}/oauth2/authorize?` +
+        `response_type=code&` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=email+openid+profile&` +
+        `identity_provider=Google`;
+
+      // Open popup window
+      const popup = window.open(
+        oauthUrl,
+        'google-login',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      );
+
+      return new Promise((resolve, reject) => {
+        const checkPopup = setInterval(() => {
+          try {
+            if (popup?.closed) {
+              clearInterval(checkPopup);
+              reject(new Error('Popup was closed'));
+            }
+
+            // Check if popup has navigated to redirect URI
+            if (popup?.location.href.includes('/dashboard')) {
+              const url = new URL(popup.location.href);
+              const code = url.searchParams.get('code');
+
+              if (code) {
+                clearInterval(checkPopup);
+                popup.close();
+                // Exchange code for tokens (would need backend endpoint)
+                resolve({
+                  data: { code },
+                  error: null,
+                });
+              }
+            }
+          } catch (e) {
+            // Cross-origin error means popup is still on OAuth provider
+          }
+        }, 1000);
       });
 
-      // The redirect happens automatically, so we don't return anything
-      return {
-        data: null,
-        error: null,
-      };
     } catch (error: any) {
       return {
         data: null,
