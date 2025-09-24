@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Plus, LogOut, Settings, Users } from "lucide-react";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface UserProfile {
   user: {

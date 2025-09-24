@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import BndyLogo from "@/components/ui/bndy-logo";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface UserProfile {
   user: {

@@ -17,7 +17,7 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { useToast } from "@/hooks/use-toast";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface UserProfile {
   user: {

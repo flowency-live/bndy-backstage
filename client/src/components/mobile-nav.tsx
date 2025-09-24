@@ -17,7 +17,7 @@ import {
   ChevronDown,
   LogOut
 } from "lucide-react";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface MobileNavProps {
   currentBandId?: string;

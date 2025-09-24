@@ -8,7 +8,7 @@ import ProfileForm from "@/components/ui/profile-form";
 import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { User, InsertUserProfile, UpdateUserProfile } from "@shared/schema";
+import type { User, InsertUserProfile, UpdateUserProfile } from "@/types/api";
 
 interface UserProfileResponse {
   user: User;

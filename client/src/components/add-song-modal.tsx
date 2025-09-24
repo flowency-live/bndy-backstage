@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { SpotifyTrack } from "../../../server/spotify";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface AddSongModalProps {
   isOpen: boolean;

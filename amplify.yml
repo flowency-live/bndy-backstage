@@ -1,5 +1,5 @@
 version: 1
-backend:
+frontend:
   phases:
     preBuild:
       commands:
@@ -9,18 +9,6 @@ backend:
         - npm run build
   artifacts:
     baseDirectory: dist
-    files:
-      - '**/*'
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - echo "Frontend build handled by backend"
-    build:
-      commands:
-        - echo "Frontend assets are in dist/public"
-  artifacts:
-    baseDirectory: dist/public
     files:
       - '**/*'
   cache:

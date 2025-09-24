@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { EVENT_TYPE_CONFIG } from "@shared/schema"
-import type { Event, UserBand } from "@shared/schema"
+import { EVENT_TYPE_CONFIG } from "@/types/api"
+import type { Event, UserBand } from "@/types/api"
 
 interface EventDetailsProps {
   event: Event | null

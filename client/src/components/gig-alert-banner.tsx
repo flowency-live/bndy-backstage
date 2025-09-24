@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import type { Event } from "@shared/schema";
-import { EVENT_TYPE_CONFIG } from "@shared/schema";
+import type { Event } from "@/types/api";
+import { EVENT_TYPE_CONFIG } from "@/types/api";
 
 interface GigAlertBannerProps {
   bandId: string;

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
-import type { Event, Song, UserBand, Band, User } from "@shared/schema";
+import type { Event, Song, UserBand, Band, User } from "@/types/api";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 

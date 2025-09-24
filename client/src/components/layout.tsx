@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import SideNav, { BurgerMenuButton } from "@/components/side-nav";
 import { MobileNavHeader } from "@/components/mobile-nav";
 import BndyLogo from "@/components/ui/bndy-logo";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface NavigationContextType {
   isNavOpen: boolean;

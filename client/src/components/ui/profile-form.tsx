@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "@googlemaps/js-api-loader";
-import { insertUserProfileSchema, updateUserProfileSchema, INSTRUMENT_OPTIONS, type InsertUserProfile, type UpdateUserProfile } from "@shared/schema";
+import { insertUserProfileSchema, updateUserProfileSchema, INSTRUMENT_OPTIONS, type InsertUserProfile, type UpdateUserProfile } from "@/types/api";
 import { cn } from "@/lib/utils";
 import { User, Camera, MapPin, Music } from "lucide-react";
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode";

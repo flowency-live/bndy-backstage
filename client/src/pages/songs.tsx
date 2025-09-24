@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
-import type { UserBand, Band } from "@shared/schema";
+import type { UserBand, Band } from "@/types/api";
 
 interface SongWithDetails {
   id: string;

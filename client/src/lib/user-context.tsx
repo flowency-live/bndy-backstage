@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCognitoAuth } from "@/hooks/useCognitoAuth";
-import type { User, UserBand, Band } from "@shared/schema";
+import type { User, UserBand, Band } from "@/types/api";
 
 interface UserProfile {
   user: User;
