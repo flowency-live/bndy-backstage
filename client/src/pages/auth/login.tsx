@@ -141,6 +141,18 @@ export default function Login() {
 
       if (result.data) {
         console.log('🔧 LOGIN: Google OAuth successful, session created');
+
+        // Debug: Check what tokens are now in localStorage
+        const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
+        const lastUserKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
+        const lastUser = localStorage.getItem(lastUserKey);
+        console.log('🔧 LOGIN: Checking stored tokens:', {
+          lastUser,
+          hasIdToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.idToken`),
+          hasAccessToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.accessToken`),
+          hasRefreshToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.refreshToken`),
+        });
+
         toast({
           title: "Signed in successfully!",
           description: "Welcome to bndy",

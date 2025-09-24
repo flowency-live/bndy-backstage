@@ -425,10 +425,26 @@ class CognitoAuthService {
   // Get current session
   async getCurrentSession(): Promise<{ data: AuthSession | null; error: any }> {
     try {
+      console.log('🔧 GET CURRENT SESSION: Starting session check');
+
       const user = await getCurrentUser();
+      console.log('🔧 GET CURRENT SESSION: getCurrentUser result:', {
+        hasUser: !!user,
+        userId: user?.userId,
+        username: user?.username,
+        loginId: user?.signInDetails?.loginId
+      });
+
       const session = await fetchAuthSession();
+      console.log('🔧 GET CURRENT SESSION: fetchAuthSession result:', {
+        hasTokens: !!session.tokens,
+        hasAccessToken: !!session.tokens?.accessToken,
+        hasIdToken: !!session.tokens?.idToken,
+        hasRefreshToken: !!session.tokens?.refreshToken,
+      });
 
       if (user && session.tokens) {
+        console.log('🔧 GET CURRENT SESSION: Valid session found, creating session object');
         return {
           data: {
             user: {
@@ -447,11 +463,13 @@ class CognitoAuthService {
         };
       }
 
+      console.log('🔧 GET CURRENT SESSION: No valid session found');
       return {
         data: null,
         error: null,
       };
     } catch (error: any) {
+      console.log('🔧 GET CURRENT SESSION: Session check error:', error);
       return {
         data: null,
         error: { message: error.message || 'Session retrieval failed' },
