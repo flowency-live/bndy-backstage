@@ -25,12 +25,13 @@ export default function OAuthCallback() {
       if (error) {
         console.error('🔧 OAUTH CALLBACK: OAuth error detected:', error, errorDescription);
 
-        // If in popup, communicate back to parent
+        // If in popup, communicate via localStorage (COOP workaround)
         if (window.opener) {
-          window.opener.postMessage({
+          localStorage.setItem('oauth-result', JSON.stringify({
             type: 'oauth-error',
-            error: errorDescription || error
-          }, window.location.origin);
+            error: errorDescription || error,
+            timestamp: Date.now()
+          }));
           window.close();
         } else {
           toast({
@@ -46,14 +47,15 @@ export default function OAuthCallback() {
       if (code) {
         console.log('🔧 OAUTH CALLBACK: OAuth code received:', code.substring(0, 10) + '...');
 
-        // If in popup, send code to parent window
+        // If in popup, communicate via localStorage (COOP workaround)
         if (window.opener) {
-          console.log('🔧 OAUTH CALLBACK: Sending code to parent window');
-          window.opener.postMessage({
+          console.log('🔧 OAUTH CALLBACK: Using localStorage communication due to COOP policy');
+          localStorage.setItem('oauth-result', JSON.stringify({
             type: 'oauth-success',
-            code: code
-          }, window.location.origin);
-          console.log('🔧 OAUTH CALLBACK: Closing popup');
+            code: code,
+            timestamp: Date.now()
+          }));
+          console.log('🔧 OAUTH CALLBACK: OAuth result stored in localStorage');
           window.close();
         } else {
           console.log('🔧 OAUTH CALLBACK: Not in popup, handling redirect flow');
@@ -73,10 +75,11 @@ export default function OAuthCallback() {
         // No code or error
         console.error('No code or error in callback');
         if (window.opener) {
-          window.opener.postMessage({
+          localStorage.setItem('oauth-result', JSON.stringify({
             type: 'oauth-error',
-            error: 'No authorization code received'
-          }, window.location.origin);
+            error: 'No authorization code received',
+            timestamp: Date.now()
+          }));
           window.close();
         } else {
           setLocation('/login');
