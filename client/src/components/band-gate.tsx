@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import BndyLogo from "@/components/ui/bndy-logo";
 import type { UserBand, Band } from "@/types/api";
 
@@ -36,7 +36,7 @@ interface BandGateProps {
 
 export default function BandGate({ children, allowNoBandForDashboard = false }: BandGateProps) {
   const [, setLocation] = useLocation();
-  const { user, loading: authLoading, isAuthenticated, session } = useCognitoAuth();
+  const { user, bands, loading: authLoading, isAuthenticated, session } = useServerAuth();
   const [selectedBandId, setSelectedBandId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -46,54 +46,53 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
     isAuthenticated,
     hasUser: !!user,
     hasSession: !!session,
-    hasTokens: !!session?.tokens,
-    hasIdToken: !!session?.tokens?.idToken,
+    bandsCount: bands?.length || 0,
     allowNoBandForDashboard,
     selectedBandId,
     isRedirecting
   });
 
-  // Get user profile and bands from our backend
-  const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
-    queryKey: ["/api/me"],
-    queryFn: async () => {
-      console.log('🔧 BAND GATE: Making API call to fetch user profile');
-      if (!session?.tokens?.idToken) {
-        console.error('🔧 BAND GATE: No ID token available for API call');
-        throw new Error("No access token");
+  // Server auth already provides user and bands data
+  const userProfile: UserProfile = {
+    user: user ? {
+      id: user.id,
+      supabaseId: user.cognitoId, // For compatibility
+      email: user.email,
+      phone: null,
+      firstName: null,
+      lastName: null,
+      displayName: user.username,
+      hometown: null,
+      instrument: null,
+      avatarUrl: null,
+      platformAdmin: false,
+      profileCompleted: true,
+      createdAt: user.createdAt,
+      updatedAt: user.createdAt,
+    } : null,
+    bands: bands.map(band => ({
+      id: band.id,
+      userId: user?.id || '',
+      bandId: band.id,
+      role: band.role,
+      status: band.status as 'active' | 'inactive' | 'pending',
+      joinedAt: new Date().toISOString(),
+      permissions: [],
+      band: {
+        id: band.id,
+        name: band.name,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        profileImage: null,
+        bio: null,
+        hometown: null,
+        socials: {},
+        genres: [],
+        spotifyArtistId: null,
+        appleMusicArtistId: null,
       }
-
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/me`;
-      console.log('🔧 BAND GATE: API URL:', apiUrl);
-      console.log('🔧 BAND GATE: Token length:', session.tokens.idToken.length);
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log('🔧 BAND GATE: API response status:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔧 BAND GATE: API error response:', errorText);
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
-
-      const profileData = await response.json();
-      console.log('🔧 BAND GATE: Profile data received:', {
-        hasUser: !!profileData.user,
-        userId: profileData.user?.id,
-        profileCompleted: profileData.user?.profileCompleted,
-        bandsCount: profileData.bands?.length || 0,
-      });
-
-      return profileData;
-    },
-    enabled: isAuthenticated && !!session?.tokens?.idToken,
-  });
+    }))
+  } as any;
 
   // Check localStorage for selected band on mount
   useEffect(() => {
@@ -117,18 +116,17 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
     console.log('🔧 BAND GATE: Authentication redirect check triggered');
     console.log('🔧 BAND GATE: Auth state details:', {
       authLoading,
-      profileLoading,
+      profileLoading: false,
       isAuthenticated,
       hasSession: !!session,
       hasUser: !!user,
-      hasError: !!error,
       isRedirecting
     });
 
     // Only redirect if we're absolutely sure the user is not authenticated
-    if (!authLoading && !profileLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       console.log('🔧 BAND GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
-      console.log('🔧 BAND GATE: Redirect reason: authLoading=false, profileLoading=false, isAuthenticated=false');
+      console.log('🔧 BAND GATE: Redirect reason: authLoading=false, isAuthenticated=false');
       setIsRedirecting(true);
       setLocation('/login');
     } else {

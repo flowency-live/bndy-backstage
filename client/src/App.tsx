@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CognitoAuthProvider } from "@/hooks/useCognitoAuth";
+import { ServerAuthProvider } from "@/hooks/useServerAuth";
 import { UserProvider } from "@/lib/user-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import BandGate from "@/components/band-gate";
@@ -89,7 +89,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider defaultTheme="dark" storageKey="bndy-ui-theme">
-          <CognitoAuthProvider>
+          <ServerAuthProvider>
             <UserProvider>
               <Layout>
                 <div className="min-h-screen flex flex-col">
@@ -101,7 +101,7 @@ function App() {
                 <Toaster />
               </Layout>
             </UserProvider>
-        </CognitoAuthProvider>
+        </ServerAuthProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>

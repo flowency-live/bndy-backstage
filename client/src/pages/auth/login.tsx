@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
-import { useCognitoAuth } from "@/hooks/useCognitoAuth"
-import { cognitoAuth } from "@/lib/cognito"
+import { useServerAuth } from "@/hooks/useServerAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -22,7 +21,7 @@ export default function Login() {
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { sendOTP, verifyOTP } = useCognitoAuth()
+  // Server auth handles authentication server-side
   const { toast } = useToast()
 
   const formatPhoneNumber = (value: string) => {
@@ -136,39 +135,20 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('🔧 LOGIN: Starting Google sign in');
-      const result = await cognitoAuth.signInWithGoogle();
+      console.log('🔧 LOGIN: Starting server-side Google OAuth');
 
-      if (result.data) {
-        console.log('🔧 LOGIN: Google OAuth successful, session created');
+      // Redirect to backend OAuth endpoint
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://4kxjn4gjqj.eu-west-2.awsapprunner.com';
+      const oauthUrl = `${apiBaseUrl}/auth/google`;
 
-        // Debug: Check what tokens are now in localStorage
-        const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
-        const lastUserKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
-        const lastUser = localStorage.getItem(lastUserKey);
-        console.log('🔧 LOGIN: Checking stored tokens:', {
-          lastUser,
-          hasIdToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.idToken`),
-          hasAccessToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.accessToken`),
-          hasRefreshToken: !!localStorage.getItem(`CognitoIdentityServiceProvider.${clientId}.${lastUser}.refreshToken`),
-        });
+      console.log('🔧 LOGIN: Redirecting to:', oauthUrl);
+      window.location.href = oauthUrl;
 
-        toast({
-          title: "Signed in successfully!",
-          description: "Welcome to bndy",
-          variant: "default"
-        });
-
-        // Force a page reload to refresh authentication state
-        // This ensures the auth hook picks up the new session
-        console.log('🔧 LOGIN: Reloading page to refresh auth state');
-        window.location.href = '/dashboard';
-      }
     } catch (error) {
-      console.error('🔧 LOGIN: Google sign in failed:', error);
+      console.error('🔧 LOGIN: Google OAuth redirect failed:', error);
       toast({
         title: "Google sign in failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        description: "Unable to start authentication process",
         variant: "destructive"
       });
     }
