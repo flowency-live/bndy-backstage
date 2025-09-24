@@ -12,6 +12,13 @@ import {
   resendSignUpCode
 } from '@aws-amplify/auth';
 
+// Debug environment variables
+console.log('🔧 COGNITO ENV VARS:', {
+  userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+  clientId: import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID,
+  region: import.meta.env.VITE_AWS_REGION,
+});
+
 // Configure Amplify with Cognito settings
 const amplifyConfig = {
   Auth: {
