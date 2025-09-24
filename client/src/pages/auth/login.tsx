@@ -21,6 +21,7 @@ export default function Login() {
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const { sendOTP, verifyOTP } = useCognitoAuth()
   const { toast } = useToast()
 
@@ -144,7 +145,11 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Google sign in failed:', error);
-      setError('Google sign in failed');
+      toast({
+        title: "Google sign in failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
     }
   }
 
