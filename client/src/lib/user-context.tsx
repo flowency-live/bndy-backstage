@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import type { User, UserBand, Band } from "@shared/schema";
 
 interface UserProfile {
@@ -36,31 +36,31 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const { session, isAuthenticated, loading: authLoading, signOut } = useSupabaseAuth();
+  const { session, isAuthenticated, loading: authLoading, signOut } = useCognitoAuth();
   const [currentBandId, setCurrentBandId] = useState<string | null>(null);
 
   // Get user profile and bands from our backend
   const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
     queryKey: ["/api/me"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
-      
+
       const response = await fetch("/api/me", {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch user profile");
       }
-      
+
       return response.json();
     },
-    enabled: isAuthenticated && !!session?.access_token,
+    enabled: isAuthenticated && !!session?.tokens?.idToken,
   });
 
   // Load selected band from localStorage on mount

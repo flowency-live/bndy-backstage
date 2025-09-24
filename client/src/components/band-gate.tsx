@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import BndyLogo from "@/components/ui/bndy-logo";
 import type { UserBand, Band } from "@shared/schema";
 
@@ -36,7 +36,7 @@ interface BandGateProps {
 
 export default function BandGate({ children, allowNoBandForDashboard = false }: BandGateProps) {
   const [, setLocation] = useLocation();
-  const { user, loading: authLoading, isAuthenticated, session } = useSupabaseAuth();
+  const { user, loading: authLoading, isAuthenticated, session } = useCognitoAuth();
   const [selectedBandId, setSelectedBandId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -44,13 +44,13 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
     queryKey: ["/api/me"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
       
       const response = await fetch("/api/me", {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -61,7 +61,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
       
       return response.json();
     },
-    enabled: isAuthenticated && !!session?.access_token,
+    enabled: isAuthenticated && !!session?.tokens?.idToken,
   });
 
   // Check localStorage for selected band on mount
@@ -83,7 +83,16 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
 
   // Handle authentication redirects
   useEffect(() => {
+    console.log('🔍 CLAUDE DEBUG: BandGate auth check', {
+      authLoading,
+      profileLoading,
+      isAuthenticated,
+      session: !!session,
+      user: !!user
+    });
+
     if (!authLoading && !profileLoading && !isAuthenticated) {
+      console.log('🔍 CLAUDE DEBUG: BandGate redirecting to /login - not authenticated');
       setIsRedirecting(true);
       setLocation('/login');
     }

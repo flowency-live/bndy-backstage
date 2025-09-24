@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useUser } from "@/lib/user-context";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -315,7 +315,7 @@ function BandTile({ band, membership, onClick }: {
 
 export default function Dashboard({ bandId, membership, userProfile }: DashboardProps) {
   const [, setLocation] = useLocation();
-  const { session } = useSupabaseAuth();
+  const { session } = useCognitoAuth();
   const { selectBand } = useUser();
   const [calendarExpanded, setCalendarExpanded] = React.useState(true);
   const [songExpanded, setSongExpanded] = React.useState(true);
@@ -324,7 +324,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/bands", bandId, "events", "upcoming"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
       
@@ -334,7 +334,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       const response = await fetch(`/api/bands/${bandId}/events?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -360,20 +360,20 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
           return dateA.getTime() - dateB.getTime();
         });
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.tokens?.idToken && !!bandId,
   });
 
   // Get songs for this band
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
     queryKey: ["/api/bands", bandId, "songs"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
       
       const response = await fetch(`/api/bands/${bandId}/songs`, {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -384,20 +384,20 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.tokens?.idToken && !!bandId,
   });
 
   // Get band members
   const { data: bandMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/bands", bandId, "members"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
       
       const response = await fetch(`/api/bands/${bandId}/members`, {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -408,7 +408,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.tokens?.idToken && !!bandId,
   });
 
   // Calculate some stats
@@ -463,7 +463,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   }
 
   // Loading state - check if any queries are still loading
-  const isLoading = !session?.access_token || eventsLoading || songsLoading || membersLoading;
+  const isLoading = !session?.tokens?.idToken || eventsLoading || songsLoading || membersLoading;
 
   if (isLoading) {
     return <BndySpinnerOverlay />;

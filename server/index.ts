@@ -1,8 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function log(message: string, source = "express") {
+  const timestamp = new Date().toLocaleTimeString();
+  console.log(`${timestamp} [${source}] ${message}`);
+}
 
 const app = express();
+const isDevelopment = process.env.NODE_ENV === 'development';
 // Increase body parser limits to handle base64 encoded images (up to ~7MB after encoding)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
@@ -48,15 +57,16 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  const isDevelopment = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-  if (isDevelopment) {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // Serve static files from dist/public
+  const publicPath = path.resolve(__dirname, "..", "dist", "public");
+  app.use(express.static(publicPath));
+
+  // Serve index.html for all non-API routes (SPA fallback)
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      res.sendFile(path.join(publicPath, "index.html"));
+    }
+  });
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.

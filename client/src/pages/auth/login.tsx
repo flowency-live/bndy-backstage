@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { useCognitoAuth } from "@/hooks/useCognitoAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import BndyLogo from "@/components/ui/bndy-logo"
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Phone, Mail } from "lucide-react"
 
 type AuthStep = 'phone' | 'verify'
 
@@ -18,7 +20,7 @@ export default function Login() {
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
-  const { sendOTP, verifyOTP } = useSupabaseAuth()
+  const { sendOTP, verifyOTP } = useCognitoAuth()
   const { toast } = useToast()
 
   const formatPhoneNumber = (value: string) => {
@@ -57,17 +59,7 @@ export default function Login() {
       const { error } = await sendOTP(e164Phone)
       
       if (error) {
-        // Development mode - skip SMS and go to verify step
-        if (error.message?.includes('SMS') || import.meta.env.DEV) {
-          toast({
-            title: "Development Mode",
-            description: "SMS not configured. Use code: 123456",
-            variant: "default"
-          })
-          setStep('verify')
-        } else {
-          throw error
-        }
+        throw error
       } else {
         toast({
           title: "Code sent!",
@@ -103,70 +95,27 @@ export default function Login() {
     const digits = phone.replace(/\D/g, '')
     // UK mobile numbers start with 07, convert to +44 7
     const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
-    
+
     try {
-      // God mode for development - specific phone number with any 6-digit code
-      if (import.meta.env.DEV && phone.replace(/\D/g, '') === '07758240770' && otp.length === 6) {
-        // Store the dev token for the authentication hook to recognize
-        localStorage.setItem('dev-auth-token', 'DEV_GOD_MODE_TOKEN');
+      console.log('🔍 CLAUDE DEBUG: Login calling verifyOTP', { e164Phone, otp })
+      const { data, error } = await verifyOTP(e164Phone, otp)
+      console.log('🔍 CLAUDE DEBUG: Login verifyOTP result', { data, error })
 
-        // Trigger a storage event to notify the useSupabaseAuth hook
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'dev-auth-token',
-          newValue: 'DEV_GOD_MODE_TOKEN'
-        }));
-
-        toast({
-          title: "🚀 GOD MODE ACCESS",
-          description: "Development admin access granted",
-          variant: "default"
-        })
-        
-        // Small delay to allow auth state to update
-        setTimeout(() => {
-          setLocation('/dashboard')
-        }, 100)
-        return
-      }
-
-      // Development mode - accept 123456 as valid code for any phone
-      if (import.meta.env.DEV && otp === '123456') {
-        const phoneDigits = phone.replace(/\D/g, '');
-        
-        // Store the dev token for the authentication hook to recognize
-        localStorage.setItem('dev-auth-token', `DEV_USER_${phoneDigits}`);
-
-        // Trigger a storage event to notify the useSupabaseAuth hook
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'dev-auth-token',
-          newValue: `DEV_USER_${phoneDigits}`
-        }));
-
-        toast({
-          title: "Signed in successfully!",
-          description: "Welcome to bndy",
-          variant: "default"
-        })
-        
-        // Small delay to allow auth state to update
-        setTimeout(() => {
-          setLocation('/dashboard')
-        }, 100)
-        return
-      }
-
-      const { error } = await verifyOTP(e164Phone, otp)
-      
       if (error) {
         throw error
       }
+
+      console.log('🔍 CLAUDE DEBUG: Login success')
 
       toast({
         title: "Signed in successfully!",
         description: "Welcome to bndy",
         variant: "default"
       })
+
+      console.log('🔍 CLAUDE DEBUG: About to redirect to /dashboard')
       setLocation('/dashboard')
+      console.log('🔍 CLAUDE DEBUG: setLocation called with /dashboard')
     } catch (error: any) {
       toast({
         title: "Invalid code",
@@ -183,6 +132,11 @@ export default function Login() {
     setOtp('')
   }
 
+  const handleGoogleSignIn = () => {
+    const cognitoAuthUrl = `https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=5v481th8k6v9lqifnp5oppak89&response_type=code&scope=email+openid+phone+profile&redirect_uri=${encodeURIComponent(window.location.origin + '/dashboard')}&identity_provider=Google`
+    window.location.href = cognitoAuthUrl
+  }
+
   return (
     <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
@@ -196,9 +150,22 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Auth form */}
+        {/* Auth form with tabs */}
         <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
-          {step === 'phone' ? (
+          <Tabs defaultValue="phone" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="phone" className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                Phone
+              </TabsTrigger>
+              <TabsTrigger value="social" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Social
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="phone">
+              {step === 'phone' ? (
             <>
               <h2 className="text-2xl font-serif text-foreground mb-2">Welcome Back</h2>
               <p className="text-muted-foreground font-sans mb-6">Enter your phone number to sign in</p>
@@ -284,14 +251,33 @@ export default function Login() {
               </form>
             </>
           )}
+            </TabsContent>
+
+            <TabsContent value="social">
+              <h2 className="text-2xl font-serif text-foreground mb-2">Welcome Back</h2>
+              <p className="text-muted-foreground font-sans mb-6">Sign in with your social account</p>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-sans py-3"
+                  disabled={loading}
+                  data-testid="button-google-signin"
+                >
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path fill="none" d="M1 1h22v22H1z"/>
+                  </svg>
+                  Continue with Google
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
-        {/* Development info */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 text-xs text-muted-foreground bg-card border border-border rounded p-2">
-            Development mode: Use code <strong>123456</strong> to sign in
-          </div>
-        )}
       </div>
     </div>
   )

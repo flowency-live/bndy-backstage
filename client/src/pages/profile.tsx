@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProfileForm from "@/components/ui/profile-form";
@@ -17,7 +17,7 @@ interface UserProfileResponse {
 
 export default function Profile() {
   const [, setLocation] = useLocation();
-  const { session, isAuthenticated } = useSupabaseAuth();
+  const { session, isAuthenticated } = useCognitoAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"create" | "edit">("create");
 

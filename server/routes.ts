@@ -6,12 +6,57 @@ import { insertBandMemberSchema, insertEventSchema, updateEventSchema, insertSon
 import type { UpdateBand } from "@shared/schema";
 import { spotifyService } from "./spotify";
 import { spotifyUserService } from "./spotify-user";
-import { authenticateSupabaseJWT, requireMembership, type AuthenticatedRequest } from "./auth-middleware";
+import { authenticateCognitoJWT, requireMembership, type AuthenticatedRequest } from "./cognito-auth-middleware";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  // Auth endpoints
+  app.post("/api/auth/login", async (req, res) => {
+    const { phone, smsCode } = req.body;
+
+    // God mode authentication
+    if (phone === '+447758240770' && smsCode === '123456') {
+      const devSupabaseId = 'dev-god-mode-user';
+      let dbUser;
+
+      try {
+        dbUser = await storage.getUserBySupabaseId(devSupabaseId);
+        if (!dbUser) {
+          dbUser = await storage.createOrGetUser({
+            supabaseId: devSupabaseId,
+            phone: '+447758240770',
+            email: null,
+            displayName: null,
+            firstName: null,
+            lastName: null,
+            hometown: null,
+            instrument: null,
+            platformAdmin: false,
+            profileCompleted: false
+          });
+        }
+      } catch (error) {
+        console.error('Failed to create/get god mode user:', error);
+        return res.status(500).json({ message: 'Login failed' });
+      }
+
+      return res.json({
+        user: dbUser,
+        token: 'DEV_GOD_MODE_TOKEN',
+        session: { access_token: 'DEV_GOD_MODE_TOKEN', user: dbUser }
+      });
+    }
+
+    return res.status(401).json({ message: 'Invalid credentials' });
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    res.json({ success: true });
+  });
+
   // Authentication endpoint
-  app.get("/api/me", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/me", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -24,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // User doesn't exist in our database yet, create them
         try {
           dbUser = await storage.createOrGetUser({
-            supabaseId: req.user.supabaseId,
+            supabaseId: req.user.cognitoId,
             email: req.user.email || null,
             phone: req.user.phone || null,
             displayName: req.user.email || req.user.phone || null,
@@ -68,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User Profile Update endpoint
-  app.put("/api/me", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/me", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -117,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Personal calendar events endpoint - fetch events from all user's bands plus personal events
-  app.get("/api/me/events", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/me/events", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -186,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Band Management endpoints
-  app.get("/api/bands", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -199,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bands", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -236,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bands/:bandId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const band = await storage.getBand(req.params.bandId);
       res.json(band);
@@ -245,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bands/:bandId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/bands/:bandId", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -294,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Band Members endpoints (band-scoped)
-  app.get("/api/bands/:bandId/members", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/members", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const members = await storage.getBandMembers(req.params.bandId);
       res.json(members);
@@ -303,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bands/:bandId/members/:membershipId/avatar", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/bands/:bandId/members/:membershipId/avatar", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { membershipId, bandId } = req.params;
       const { avatarUrl } = req.body;
@@ -348,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use /api/bands/:bandId/members endpoints instead, which require proper authentication and band membership
 
   // Events endpoints (band-scoped)
-  app.get("/api/bands/:bandId/events", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/events", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { startDate, endDate } = req.query;
       
@@ -369,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/events/:id", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const event = await storage.getEvent(req.params.bandId, req.params.id);
       if (!event) {
@@ -381,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bands/:bandId/events", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/events", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       // Determine event ownership based on event type
       const eventType = req.body.type;
@@ -431,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.patch("/api/bands/:bandId/events/:id", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = updateEventSchema.parse(req.body);
 
@@ -486,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/bands/:bandId/events/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/bands/:bandId/events/:id", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       // First, determine what type of event we're deleting by checking both band and user events
       let existingEvent = await storage.getEvent(req.params.bandId, req.params.id);
@@ -525,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check for conflicts (band-scoped)
-  app.post("/api/bands/:bandId/events/check-conflicts", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/events/check-conflicts", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { date, endDate, type, membershipId, excludeEventId } = req.body;
       const result = await storage.checkConflicts(req.params.bandId, { 
@@ -542,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Unified calendar endpoint (band events + user personal events + other band events)
-  app.get("/api/bands/:bandId/calendar", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/calendar", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { startDate, endDate } = req.query;
       
@@ -733,7 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sync practice list to Spotify playlist (requires bandId in request body)
-  app.post("/api/spotify/playlists/:id/sync", authenticateSupabaseJWT, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/spotify/playlists/:id/sync", authenticateCognitoJWT, async (req: AuthenticatedRequest, res) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -808,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Songs endpoints (band-scoped)
-  app.get("/api/bands/:bandId/songs", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/songs", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const songs = await storage.getSongs(req.params.bandId);
       
@@ -829,7 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bands/:bandId/songs", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/songs", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertSongSchema.parse({
         ...req.body,
@@ -852,7 +897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/bands/:bandId/songs/:id", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/bands/:bandId/songs/:id", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const success = await storage.deleteSong(req.params.bandId, req.params.id);
       if (!success) {
@@ -865,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Song readiness endpoints (band-scoped)
-  app.post("/api/bands/:bandId/songs/:id/readiness", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/songs/:id/readiness", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const songId = req.params.id;
       const validatedData = insertSongReadinessSchema.parse({
@@ -883,7 +928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/bands/:bandId/songs/:id/readiness/:memberId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/bands/:bandId/songs/:id/readiness/:memberId", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { id: songId, memberId } = req.params;
       const success = await storage.removeSongReadiness(req.params.bandId, songId, memberId);
@@ -897,7 +942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Song veto endpoints (band-scoped)
-  app.post("/api/bands/:bandId/songs/:id/veto", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/songs/:id/veto", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const songId = req.params.id;
       const validatedData = insertSongVetoSchema.parse({
@@ -915,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/bands/:bandId/songs/:id/veto/:memberId", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/bands/:bandId/songs/:id/veto/:memberId", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { id: songId, memberId } = req.params;
       const success = await storage.removeSongVeto(req.params.bandId, songId, memberId);
@@ -932,7 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use /api/bands/:bandId/songs endpoints instead, which require proper authentication and band membership
 
   // Calendar Export endpoints
-  app.get("/api/bands/:bandId/calendar/export/ical", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/calendar/export/ical", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { bandId } = req.params;
       const { includePrivate = 'false', memberOnly = 'false' } = req.query;
@@ -983,7 +1028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Calendar Export URL endpoint (for sharing)
-  app.get("/api/bands/:bandId/calendar/url", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/bands/:bandId/calendar/url", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       const { bandId } = req.params;
       const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -1014,7 +1059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Magic Link Invite endpoints
   
   // Generate general band invite link
-  app.post("/api/bands/:bandId/invites/general", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/invites/general", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -1048,7 +1093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Send specific phone invite
-  app.post("/api/bands/:bandId/invites/phone", authenticateSupabaseJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/bands/:bandId/invites/phone", authenticateCognitoJWT, requireMembership, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.dbUser?.id) {
         return res.status(401).json({ message: "User not authenticated" });

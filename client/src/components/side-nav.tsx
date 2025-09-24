@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+// TODO: MIGRATE TO COGNITO - Replace useSupabaseAuth with useCognitoAuth and update token references
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";

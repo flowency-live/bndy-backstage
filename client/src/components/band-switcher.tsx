@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,20 +34,20 @@ interface BandSwitcherProps {
 
 export default function BandSwitcher({ currentBandId, currentMembership }: BandSwitcherProps) {
   const [, setLocation] = useLocation();
-  const { session, signOut } = useSupabaseAuth();
+  const { session, signOut } = useCognitoAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   // Get user profile and all bands
   const { data: userProfile } = useQuery<UserProfile>({
     queryKey: ["/api/me"],
     queryFn: async () => {
-      if (!session?.access_token) {
+      if (!session?.tokens?.idToken) {
         throw new Error("No access token");
       }
       
       const response = await fetch("/api/me", {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -58,7 +58,7 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
       
       return response.json();
     },
-    enabled: !!session?.access_token,
+    enabled: !!session?.tokens?.idToken,
   });
 
   const handleBandSwitch = (bandId: string) => {

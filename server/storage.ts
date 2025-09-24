@@ -1,22 +1,20 @@
-import { 
-  type BandMember, type InsertBandMember, 
-  type Event, type InsertEvent, 
+import {
+  type BandMember, type InsertBandMember,
+  type Event, type InsertEvent,
   type Song, type InsertSong,
   type SongReadiness, type InsertSongReadiness,
   type SongVeto, type InsertSongVeto,
   type User, type InsertUser,
   type UserBand, type InsertUserBand,
   type Band, type InsertBand,
-  bandMembers, events, songs, songReadiness, songVetos,
-  users, userBands, bands
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, and, desc, count, ne, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Users - no band scoping needed
   getUserBySupabaseId(supabaseId: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
+  getUsersByPhone(phone: string): Promise<User[]>;
+  getUsersByEmail(email: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   createOrGetUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
@@ -116,97 +114,172 @@ export interface IStorage {
   acceptInviteToken(token: string, userId: string, userDisplayName: string): Promise<{ success: boolean; bandId?: string; error?: string }>;
 }
 
-export class DatabaseStorage implements IStorage {
+const BNDY_API_URL = process.env.BNDY_API_URL || 'https://4kxjn4gjqj.eu-west-2.awsapprunner.com';
+
+export class ApiStorage implements IStorage {
   // Users
   async getUserBySupabaseId(supabaseId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId));
-    return user || undefined;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/users/by-supabase/${supabaseId}`);
+      if (response.status === 404) {
+        return undefined;
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to get user: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get user by supabase ID:', error);
+      return undefined;
+    }
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/users/${id}`);
+      if (response.status === 404) {
+        return undefined;
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to get user: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get user by ID:', error);
+      return undefined;
+    }
+  }
+
+  async getUsersByPhone(phone: string): Promise<User[]> {
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/users/by-phone/${encodeURIComponent(phone)}`);
+      if (response.status === 404) {
+        return [];
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to get users by phone: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return Array.isArray(result) ? result : [result];
+    } catch (error) {
+      console.error('Failed to get users by phone:', error);
+      return [];
+    }
+  }
+
+  async getUsersByEmail(email: string): Promise<User[]> {
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/users/by-email/${encodeURIComponent(email)}`);
+      if (response.status === 404) {
+        return [];
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to get users by email: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return Array.isArray(result) ? result : [result];
+    } catch (error) {
+      console.error('Failed to get users by email:', error);
+      return [];
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(insertUser),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to create user: ${error.error}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      throw error;
+    }
   }
 
   async createOrGetUser(insertUser: InsertUser): Promise<User> {
-    // First, try to get existing user by supabaseId
+    // First, try to get existing user
     const existingUser = await this.getUserBySupabaseId(insertUser.supabaseId);
     if (existingUser) {
       return existingUser;
     }
 
     try {
-      // Try to create the user
       return await this.createUser(insertUser);
     } catch (error: any) {
-      // If it's a unique constraint violation, try to fetch the existing user
-      if (error?.code === '23505') {
-        // Handle both supabase_id and phone unique constraints
-        if (error?.constraint?.includes('supabase_id')) {
-          const user = await this.getUserBySupabaseId(insertUser.supabaseId);
-          if (user) {
-            return user;
-          }
-        } else if (error?.constraint?.includes('phone') && insertUser.phone) {
-          // Try to find user by phone
-          const [userByPhone] = await db.select().from(users).where(eq(users.phone, insertUser.phone));
-          if (userByPhone) {
-            return userByPhone;
-          }
-        }
+      // If creation fails due to duplicate, try to fetch again
+      const user = await this.getUserBySupabaseId(insertUser.supabaseId);
+      if (user) {
+        return user;
       }
-      // Re-throw the error if it's not a unique constraint violation or user not found
       throw error;
     }
   }
 
   async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
-    const [updatedUser] = await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.id, id))
-      .returning();
-    
-    return updatedUser || undefined;
+    try {
+      console.log(`[DEBUG] Calling PUT ${BNDY_API_URL}/admin/users/${id} with data:`, updateData);
+      const response = await fetch(`${BNDY_API_URL}/admin/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+      console.log(`[DEBUG] PUT response status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`[DEBUG] PUT response error:`, errorText);
+        return undefined;
+      }
+      const result = await response.json();
+      console.log(`[DEBUG] PUT response success:`, result);
+      return result;
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      return undefined;
+    }
   }
 
   async getUserBands(userId: string): Promise<(UserBand & { band: Band })[]> {
-    const result = await db
-      .select({
-        id: userBands.id,
-        userId: userBands.userId,
-        bandId: userBands.bandId,
-        role: userBands.role,
-        displayName: userBands.displayName,
-        icon: userBands.icon,
-        color: userBands.color,
-        avatarUrl: userBands.avatarUrl,
-        joinedAt: userBands.joinedAt,
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/bands/user/${userId}`);
+      if (!response.ok) {
+        console.error('Failed to get user bands:', response.statusText);
+        return [];
+      }
+      const bands = await response.json();
+
+      // Convert Aurora response to expected format
+      return bands.map((ab: any) => ({
+        id: ab.membershipId,
+        userId: userId,
+        bandId: ab.id,
+        role: ab.role,
+        displayName: ab.displayName,
+        icon: ab.icon,
+        color: ab.color,
+        avatarUrl: ab.avatarUrl,
+        joinedAt: new Date(ab.joinedAt),
         band: {
-          id: bands.id,
-          name: bands.name,
-          slug: bands.slug,
-          description: bands.description,
-          avatarUrl: bands.avatarUrl,
-          allowedEventTypes: bands.allowedEventTypes,
-          createdBy: bands.createdBy,
-          createdAt: bands.createdAt,
-          updatedAt: bands.updatedAt,
+          id: ab.id,
+          name: ab.name,
+          slug: ab.slug,
+          description: ab.description,
+          avatarUrl: ab.avatarUrl,
+          allowedEventTypes: ab.allowedEventTypes,
+          createdBy: ab.createdBy,
+          createdAt: new Date(ab.createdAt || new Date()),
+          updatedAt: new Date(ab.updatedAt || new Date()),
         }
-      })
-      .from(userBands)
-      .innerJoin(bands, eq(userBands.bandId, bands.id))
-      .where(eq(userBands.userId, userId));
-    
-    return result;
+      }));
+    } catch (error) {
+      console.error('Failed to get user bands:', error);
+      return [];
+    }
   }
 
   async getUserBandsBySupabaseId(supabaseId: string): Promise<(UserBand & { band: Band })[]> {
@@ -451,35 +524,106 @@ export class DatabaseStorage implements IStorage {
 
   // Band Management
   async createBand(insertBand: InsertBand, creatorUserId: string): Promise<Band> {
-    const [band] = await db
-      .insert(bands)
-      .values({ ...insertBand, createdBy: creatorUserId })
-      .returning();
-    
-    // Automatically add creator as owner
-    await this.addUserToBand(creatorUserId, band.id, {
-      role: 'owner',
-      displayName: insertBand.name + ' Owner',
-      icon: 'fa-crown',
-      color: '#f59e0b', // amber color for owners
-    });
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/bands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: insertBand.name,
+          slug: insertBand.slug,
+          description: insertBand.description,
+          avatarUrl: insertBand.avatarUrl,
+          allowedEventTypes: insertBand.allowedEventTypes,
+          createdBy: creatorUserId,
+        }),
+      });
 
-    return band;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to create band: ${error.error}`);
+      }
+
+      const auroraBand = await response.json();
+
+      // Create membership for creator
+      await this.addUserToBand(creatorUserId, auroraBand.id, {
+        role: 'owner',
+        displayName: insertBand.name + ' Owner',
+        icon: 'fa-crown',
+        color: '#FFD700',
+      });
+
+      // Convert Aurora response to expected format
+      return {
+        id: auroraBand.id,
+        name: auroraBand.name,
+        slug: auroraBand.slug,
+        description: auroraBand.description,
+        avatarUrl: auroraBand.avatarUrl,
+        allowedEventTypes: auroraBand.allowedEventTypes,
+        createdBy: auroraBand.createdBy,
+        createdAt: new Date(auroraBand.createdAt),
+        updatedAt: new Date(auroraBand.updatedAt),
+      };
+    } catch (error) {
+      console.error('Failed to create band:', error);
+      throw error;
+    }
   }
 
   async getBand(bandId: string): Promise<Band | undefined> {
-    const [band] = await db.select().from(bands).where(eq(bands.id, bandId));
-    return band || undefined;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/bands/${bandId}`);
+      if (response.status === 404) {
+        return undefined;
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to get band: ${response.statusText}`);
+      }
+      const band = await response.json();
+      return {
+        id: band.id,
+        name: band.name,
+        slug: band.slug,
+        description: band.description,
+        avatarUrl: band.avatarUrl,
+        allowedEventTypes: band.allowedEventTypes,
+        createdBy: band.createdBy,
+        createdAt: new Date(band.createdAt),
+        updatedAt: new Date(band.updatedAt),
+      };
+    } catch (error) {
+      console.error('Failed to get band:', error);
+      return undefined;
+    }
   }
 
   async updateBand(bandId: string, updates: Partial<InsertBand>): Promise<Band | undefined> {
-    const [updatedBand] = await db
-      .update(bands)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(bands.id, bandId))
-      .returning();
-    
-    return updatedBand || undefined;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/bands/${bandId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        return undefined;
+      }
+      const band = await response.json();
+      return {
+        id: band.id,
+        name: band.name,
+        slug: band.slug,
+        description: band.description,
+        avatarUrl: band.avatarUrl,
+        allowedEventTypes: band.allowedEventTypes,
+        createdBy: band.createdBy,
+        createdAt: new Date(band.createdAt),
+        updatedAt: new Date(band.updatedAt),
+      };
+    } catch (error) {
+      console.error('Failed to update band:', error);
+      return undefined;
+    }
   }
 
   async deleteBand(bandId: string): Promise<boolean> {
@@ -507,15 +651,43 @@ export class DatabaseStorage implements IStorage {
 
   // Band Membership Management
   async addUserToBand(userId: string, bandId: string, membership: Omit<InsertUserBand, 'userId' | 'bandId'>): Promise<UserBand> {
-    const [userBand] = await db
-      .insert(userBands)
-      .values({
-        ...membership,
-        userId,
-        bandId,
-      })
-      .returning();
-    return userBand;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/user-bands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          bandId,
+          role: membership.role,
+          displayName: membership.displayName,
+          icon: membership.icon,
+          color: membership.color,
+          avatarUrl: membership.avatarUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to add user to band: ${error.error}`);
+      }
+
+      const auroraMembership = await response.json();
+
+      return {
+        id: auroraMembership.id,
+        userId: auroraMembership.userId,
+        bandId: auroraMembership.bandId,
+        role: auroraMembership.role,
+        displayName: auroraMembership.displayName,
+        icon: auroraMembership.icon,
+        color: auroraMembership.color,
+        avatarUrl: auroraMembership.avatarUrl,
+        joinedAt: new Date(auroraMembership.joinedAt),
+      };
+    } catch (error) {
+      console.error('Failed to add user to band:', error);
+      throw error;
+    }
   }
 
   async removeUserFromBand(userId: string, bandId: string): Promise<boolean> {
@@ -559,40 +731,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBandMembers(bandId: string): Promise<(UserBand & { user: User })[]> {
-    const result = await db
-      .select({
-        id: userBands.id,
-        userId: userBands.userId,
-        bandId: userBands.bandId,
-        role: userBands.role,
-        displayName: userBands.displayName,
-        icon: userBands.icon,
-        color: userBands.color,
-        avatarUrl: userBands.avatarUrl,
-        joinedAt: userBands.joinedAt,
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/bands/${bandId}/members`);
+      if (!response.ok) {
+        console.error('Failed to get band members:', response.statusText);
+        return [];
+      }
+      const auroraMembers = await response.json();
+
+      return auroraMembers.map((am: any) => ({
+        id: am.id,
+        userId: am.userId,
+        bandId: am.bandId,
+        role: am.role,
+        displayName: am.displayName,
+        icon: am.icon,
+        color: am.color,
+        avatarUrl: am.avatarUrl,
+        joinedAt: new Date(am.joinedAt),
         user: {
-          id: users.id,
-          supabaseId: users.supabaseId,
-          phone: users.phone,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          displayName: users.displayName,
-          hometown: users.hometown,
-          avatarUrl: users.avatarUrl,
-          instrument: users.instrument,
-          profileCompleted: users.profileCompleted,
-          platformAdmin: users.platformAdmin,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
+          id: am.userId,
+          supabaseId: am.supabaseId || '',
+          phone: am.phone,
+          email: am.email,
+          firstName: am.firstName,
+          lastName: am.lastName,
+          displayName: am.userDisplayName || am.displayName,
+          hometown: am.hometown || '',
+          instrument: am.instrument || '',
+          avatarUrl: am.userAvatarUrl || am.avatarUrl,
+          platformAdmin: false,
+          profileCompleted: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }
-      })
-      .from(userBands)
-      .innerJoin(users, eq(userBands.userId, users.id))
-      .where(eq(userBands.bandId, bandId))
-      .orderBy(userBands.displayName);
-    
-    return result;
+      }));
+    } catch (error) {
+      console.error('Failed to get band members:', error);
+      return [];
+    }
   }
 
   // Band-Scoped Event Methods
@@ -626,11 +803,63 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEvent(bandId: string, eventData: Omit<InsertEvent, 'bandId'>): Promise<Event> {
-    const [event] = await db
-      .insert(events)
-      .values({ ...eventData, bandId })
-      .returning();
-    return event;
+    try {
+      const response = await fetch(`${BNDY_API_URL}/admin/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bandId: bandId,
+          ownerUserId: eventData.ownerUserId,
+          type: eventData.type,
+          title: eventData.title,
+          date: eventData.date,
+          endDate: eventData.endDate,
+          startTime: eventData.startTime,
+          endTime: eventData.endTime,
+          location: eventData.location,
+          venue: eventData.venue,
+          notes: eventData.notes,
+          isPublic: eventData.isPublic,
+          membershipId: eventData.membershipId,
+          isAllDay: eventData.isAllDay,
+          createdByMembershipId: eventData.createdByMembershipId,
+          latitude: eventData.latitude || null,
+          longitude: eventData.longitude || null,
+          venueId: eventData.venueId || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Failed to create event: ${error.error}`);
+      }
+
+      const auroraEvent = await response.json();
+
+      return {
+        id: auroraEvent.id,
+        bandId: auroraEvent.bandId,
+        ownerUserId: auroraEvent.ownerUserId,
+        type: auroraEvent.type,
+        title: auroraEvent.title,
+        date: auroraEvent.date,
+        endDate: auroraEvent.endDate,
+        startTime: auroraEvent.startTime,
+        endTime: auroraEvent.endTime,
+        location: auroraEvent.location,
+        venue: auroraEvent.venue,
+        notes: auroraEvent.notes,
+        isPublic: auroraEvent.isPublic,
+        membershipId: auroraEvent.membershipId,
+        memberId: null,
+        isAllDay: auroraEvent.isAllDay,
+        createdByMembershipId: auroraEvent.createdByMembershipId,
+        createdAt: new Date(auroraEvent.createdAt),
+      };
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      throw error;
+    }
   }
 
   async updateEvent(bandId: string, eventId: string, eventData: Partial<Omit<InsertEvent, 'bandId'>>): Promise<Event | undefined> {
@@ -1000,4 +1229,4 @@ export class DatabaseStorage implements IStorage {
 
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new ApiStorage();

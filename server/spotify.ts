@@ -33,9 +33,9 @@ class SpotifyService {
   constructor() {
     this.clientId = process.env.SPOTIFY_CLIENT_ID || '';
     this.clientSecret = process.env.SPOTIFY_CLIENT_SECRET || '';
-    
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error('Spotify credentials not found in environment variables');
+
+    if (!this.clientId || !this.clientSecret || this.clientId === 'placeholder') {
+      console.warn('Spotify credentials not configured. Spotify features will be disabled.');
     }
   }
 

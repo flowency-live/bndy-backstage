@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { authHelpers } from "@/lib/cognito";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -10,22 +10,18 @@ async function throwIfResNotOk(res: Response) {
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   const headers: HeadersInit = {};
-  
-  // Check for development token first
-  if (import.meta.env.DEV) {
-    const devToken = localStorage.getItem('dev-auth-token');
-    if (devToken) {
-      headers['Authorization'] = `Bearer ${devToken}`;
-      return headers;
+
+  try {
+    // Get current session from Cognito
+    const { data: session } = await authHelpers.getSession();
+
+    if (session?.tokens?.idToken) {
+      headers['Authorization'] = `Bearer ${session.tokens.idToken}`;
     }
+  } catch (error) {
+    console.warn('Failed to get auth headers:', error);
   }
-  
-  // Otherwise use regular Supabase session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    headers['Authorization'] = `Bearer ${session.access_token}`;
-  }
-  
+
   return headers;
 }
 

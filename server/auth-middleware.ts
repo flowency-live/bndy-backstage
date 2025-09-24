@@ -55,46 +55,42 @@ export async function authenticateSupabaseJWT(
     const token = authHeader.replace('Bearer ', '');
     
     // Development mode bypass for god mode authentication
-    if (process.env.NODE_ENV === 'development' && token === 'DEV_GOD_MODE_TOKEN') {
-      console.log('🚀 DEV MODE: God mode authentication bypassed');
-      
+    if (process.env.NODE_ENV === 'development' &&
+        (token === 'DEV_GOD_MODE_TOKEN' || token.includes('7758240770'))) {
+      console.log('🚀 DEV MODE: God mode authentication bypassed for token:', token);
+
       // Create a development user for god mode
       const devSupabaseId = 'dev-god-mode-user';
       let dbUser;
-      
+
       try {
         dbUser = await storage.getUserBySupabaseId(devSupabaseId);
         if (!dbUser) {
-          // Create the god mode user in our database with complete profile
+          // Create the god mode user in our database with minimal profile (to allow profile completion)
           dbUser = await storage.createOrGetUser({
             supabaseId: devSupabaseId,
             phone: '+447758240770',
             email: null,
-            displayName: 'God Mode Dev User',
+            displayName: null,
+            firstName: null,
+            lastName: null,
+            hometown: null,
+            instrument: null,
+            platformAdmin: false,
+            profileCompleted: false
           });
-          
-          // Make them a platform admin with complete profile
-          dbUser = await storage.updateUser(dbUser.id, { 
-            platformAdmin: true,
-            displayName: 'God Mode Dev User',
-            firstName: 'God',
-            lastName: 'Mode',
-            hometown: 'London',
-            instrument: 'All Instruments',
-            profileCompleted: true
-          }) || dbUser;
         }
       } catch (error) {
         console.error('Failed to create/get god mode user:', error);
       }
-      
+
       req.user = {
         supabaseId: devSupabaseId,
         phone: '+447758240770',
         email: undefined,
         dbUser: dbUser,
       };
-      
+
       return next();
     }
     
