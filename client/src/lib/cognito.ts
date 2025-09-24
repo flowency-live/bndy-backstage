@@ -229,58 +229,49 @@ class CognitoAuthService {
       console.log('🔧 GOOGLE SIGN IN: Popup opened, waiting for response');
 
       return new Promise((resolve, reject) => {
-        // Clear any existing OAuth result
-        localStorage.removeItem('oauth-result');
+        // Listen for postMessage from callback page
+        const messageHandler = (event: MessageEvent) => {
+          console.log('🔧 GOOGLE SIGN IN: Received postMessage:', { origin: event.origin, data: event.data });
 
-        // Poll for OAuth result in localStorage (COOP workaround)
-        const pollForResult = () => {
-          console.log('🔧 GOOGLE SIGN IN: Polling for OAuth result in localStorage');
-          const result = localStorage.getItem('oauth-result');
+          // Verify origin
+          if (event.origin !== window.location.origin) {
+            console.log('🔧 GOOGLE SIGN IN: Ignoring message from different origin:', event.origin);
+            return;
+          }
 
-          if (result) {
-            try {
-              const data = JSON.parse(result);
-              console.log('🔧 GOOGLE SIGN IN: Found OAuth result:', { type: data.type, hasCode: !!data.code });
+          if (event.data.type === "oauth-success") {
+            console.log('🔧 GOOGLE SIGN IN: OAuth success received, exchanging code for tokens');
+            window.removeEventListener("message", messageHandler);
+            clearInterval(checkPopup);
 
-              // Clear the result
-              localStorage.removeItem('oauth-result');
-              clearInterval(checkResult);
-              clearInterval(checkPopup);
-
-              if (data.type === "oauth-success") {
-                console.log('🔧 GOOGLE SIGN IN: OAuth success received, exchanging code for tokens');
-
-                // Exchange the authorization code for tokens
-                this.exchangeCodeForTokens(data.code)
-                  .then(session => {
-                    console.log('🔧 GOOGLE SIGN IN: Token exchange successful');
-                    resolve({
-                      data: session,
-                      error: null,
-                    });
-                  })
-                  .catch(error => {
-                    console.error('🔧 GOOGLE SIGN IN: Token exchange failed:', error);
-                    reject(error);
-                  });
-              } else if (data.type === "oauth-error") {
-                console.error('🔧 GOOGLE SIGN IN: OAuth error received:', data.error);
-                reject(new Error(data.error || "OAuth failed"));
-              }
-            } catch (error) {
-              console.error('🔧 GOOGLE SIGN IN: Failed to parse OAuth result:', error);
-            }
+            // Exchange the authorization code for tokens
+            this.exchangeCodeForTokens(event.data.code)
+              .then(session => {
+                console.log('🔧 GOOGLE SIGN IN: Token exchange successful');
+                resolve({
+                  data: session,
+                  error: null,
+                });
+              })
+              .catch(error => {
+                console.error('🔧 GOOGLE SIGN IN: Token exchange failed:', error);
+                reject(error);
+              });
+          } else if (event.data.type === "oauth-error") {
+            console.error('🔧 GOOGLE SIGN IN: OAuth error received:', event.data.error);
+            window.removeEventListener("message", messageHandler);
+            clearInterval(checkPopup);
+            reject(new Error(event.data.error || "OAuth failed"));
           }
         };
 
-        const checkResult = setInterval(pollForResult, 500);
+        window.addEventListener("message", messageHandler);
 
         // Also check if popup is closed periodically
         const checkPopup = setInterval(() => {
           if (popup?.closed) {
             clearInterval(checkPopup);
-            clearInterval(checkResult);
-            localStorage.removeItem('oauth-result');
+            window.removeEventListener("message", messageHandler);
             reject(new Error("Authentication cancelled"));
           }
         }, 1000);
