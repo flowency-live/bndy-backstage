@@ -1,5 +1,6 @@
 //path: src/components/ui/bndy-badge.tsx
 import React from 'react';
+import badgeImage from '@/assets/images/BndyBeatBadge.png';
 
 interface BndyBadgeProps {
   className?: string;
@@ -25,14 +26,13 @@ const BndyBadge: React.FC<BndyBadgeProps> = ({
     large: 'h-16'
   };
 
-  // Use Vite alias import for reliability
-  const badgePath = '/src/assets/images/BndyBeatBadge.png';
+  // Use imported badge image
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div className="bg-transparent">
         <img 
-          src={badgePath} 
+          src={badgeImage} 
           alt={altText} 
           className={`${sizeMap[size]} w-auto`} 
           data-testid="bndy-badge"
