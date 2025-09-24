@@ -70,3 +70,6 @@ export const useCognitoAuth = () => {
   return context;
 };
 
+// Export alias for App.tsx compatibility
+export const CognitoAuthProvider = AuthProvider;
+
