@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
@@ -33,7 +33,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   useSectionTheme('calendar');
   
   const [, setLocation] = useLocation();
-  const { session } = useSupabaseAuth();
+  const { session } = useCognitoAuth();
   const { currentBandId, currentMembership, userProfile } = useUser();
   
   // Use context values if props aren't provided (for standalone usage)

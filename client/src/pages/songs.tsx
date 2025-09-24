@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
@@ -45,7 +45,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
   useSectionTheme('songs');
   
   const [, setLocation] = useLocation();
-  const { session } = useSupabaseAuth();
+  const { session } = useCognitoAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -391,7 +391,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
   useSectionTheme('band');
   
   const [, setLocation] = useLocation();
-  const { session } = useSupabaseAuth();
+  const { session } = useCognitoAuth();
   const { toast } = useToast();
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem('spotify_access_token')

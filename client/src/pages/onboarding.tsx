@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useCognitoAuth } from "@/hooks/useCognitoAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export default function Onboarding() {
   useForceDarkMode()
   
   const [, setLocation] = useLocation();
-  const { session } = useSupabaseAuth();
+  const { session } = useCognitoAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
