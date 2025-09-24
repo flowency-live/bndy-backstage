@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,7 @@ interface BandSwitcherProps {
 
 export default function BandSwitcher({ currentBandId, currentMembership }: BandSwitcherProps) {
   const [, setLocation] = useLocation();
-  const { session, signOut } = useCognitoAuth();
+  const { session, signOut } = useServerAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   // Get user profile and all bands

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import type { Event } from "@/types/api";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 
@@ -10,7 +10,7 @@ interface GigAlertBannerProps {
 }
 
 export default function GigAlertBanner({ bandId, className = "" }: GigAlertBannerProps) {
-  const { session } = useCognitoAuth();
+  const { session } = useServerAuth();
   
   // Get today's date in YYYY-MM-DD format
   const today = format(new Date(), "yyyy-MM-dd");

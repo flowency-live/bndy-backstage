@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { SpotifyTrack } from "../../../server/spotify";
 import type { UserBand, Band } from "@/types/api";
@@ -16,7 +16,7 @@ export default function AddSongModal({ isOpen, onClose, bandId, membership }: Ad
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { session } = useCognitoAuth();
+  const { session } = useServerAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);

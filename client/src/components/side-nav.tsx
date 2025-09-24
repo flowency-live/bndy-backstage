@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-// TODO: MIGRATE TO COGNITO - Replace useCognitoAuth with useCognitoAuth and update token references
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar } from "lucide-react";
@@ -41,7 +40,7 @@ interface SideNavProps {
 export default function SideNav({ isOpen, onClose }: SideNavProps) {
   const [, setLocation] = useLocation();
   const [location] = useLocation();
-  const { session, signOut } = useCognitoAuth();
+  const { session, signOut } = useServerAuth();
   const { toast } = useToast();
   const { 
     clearBandSelection, 

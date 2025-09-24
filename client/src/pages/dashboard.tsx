@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -315,7 +315,7 @@ function BandTile({ band, membership, onClick }: {
 
 export default function Dashboard({ bandId, membership, userProfile }: DashboardProps) {
   const [, setLocation] = useLocation();
-  const { session } = useCognitoAuth();
+  const { session } = useServerAuth();
   const { selectBand } = useUser();
   const [calendarExpanded, setCalendarExpanded] = React.useState(true);
   const [songExpanded, setSongExpanded] = React.useState(true);

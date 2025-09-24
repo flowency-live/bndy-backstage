@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useCognitoAuth } from "@/hooks/useCognitoAuth";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import type { User, UserBand, Band } from "@/types/api";
 
 interface UserProfile {
@@ -36,7 +36,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const { session, isAuthenticated, loading: authLoading, signOut } = useCognitoAuth();
+  const { session, isAuthenticated, loading: authLoading, signOut } = useServerAuth();
   const [currentBandId, setCurrentBandId] = useState<string | null>(null);
 
   // Get user profile and bands from our backend
