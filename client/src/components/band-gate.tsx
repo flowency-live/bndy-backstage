@@ -133,11 +133,11 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
       console.log('🔧 BAND GATE: ✅ Not redirecting to login');
       console.log('🔧 BAND GATE: Stay reason:', {
         authLoading: authLoading ? 'still loading' : 'done',
-        profileLoading: profileLoading ? 'still loading' : 'done',
+        profileLoading: 'done',
         isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
       });
     }
-  }, [authLoading, profileLoading, isAuthenticated, setLocation, session, user, error, isRedirecting]);
+  }, [authLoading, isAuthenticated, setLocation, session, user, isRedirecting]);
 
   // Handle profile completion redirect
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   };
 
   // Show loading state
-  if (authLoading || profileLoading || isRedirecting) {
+  if (authLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
