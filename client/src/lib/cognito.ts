@@ -190,11 +190,19 @@ class CognitoAuthService {
 
   // Sign in with Google (using popup instead of redirect)
   async signInWithGoogle() {
+    console.log('🔧 GOOGLE SIGN IN: Starting Google OAuth flow');
     try {
       // Use direct OAuth URL for popup instead of Amplify redirect
       const cognitoDomain = 'https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com';
       const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
       const redirectUri = window.location.origin + '/auth/callback';
+
+      console.log('🔧 GOOGLE SIGN IN: OAuth config:', {
+        cognitoDomain,
+        clientId: clientId ? 'PRESENT' : 'MISSING',
+        redirectUri,
+        origin: window.location.origin
+      });
 
       const oauthUrl = `${cognitoDomain}/oauth2/authorize?` +
         `response_type=code&` +
@@ -203,25 +211,36 @@ class CognitoAuthService {
         `scope=email+openid+profile+phone&` +
         `identity_provider=Google`;
 
+      console.log('🔧 GOOGLE SIGN IN: OAuth URL:', oauthUrl);
+
       // Open popup window
+      console.log('🔧 GOOGLE SIGN IN: Opening popup window');
       const popup = window.open(
         oauthUrl,
         'google-login',
         'width=500,height=600,scrollbars=yes,resizable=yes'
       );
 
-
       if (!popup) {
+        console.error('🔧 GOOGLE SIGN IN: Popup was blocked');
         throw new Error("Popup was blocked. Please allow popups for this site.");
       }
+
+      console.log('🔧 GOOGLE SIGN IN: Popup opened, waiting for response');
 
       return new Promise((resolve, reject) => {
         // Listen for postMessage from callback page
         const messageHandler = (event: MessageEvent) => {
+          console.log('🔧 GOOGLE SIGN IN: Received postMessage:', { origin: event.origin, data: event.data });
+
           // Verify origin
-          if (event.origin !== window.location.origin) return;
+          if (event.origin !== window.location.origin) {
+            console.log('🔧 GOOGLE SIGN IN: Ignoring message from different origin:', event.origin);
+            return;
+          }
 
           if (event.data.type === "oauth-success") {
+            console.log('🔧 GOOGLE SIGN IN: OAuth success received, cleaning up');
             window.removeEventListener("message", messageHandler);
             clearInterval(checkPopup);
             resolve({
@@ -229,6 +248,7 @@ class CognitoAuthService {
               error: null,
             });
           } else if (event.data.type === "oauth-error") {
+            console.error('🔧 GOOGLE SIGN IN: OAuth error received:', event.data.error);
             window.removeEventListener("message", messageHandler);
             clearInterval(checkPopup);
             reject(new Error(event.data.error || "OAuth failed"));

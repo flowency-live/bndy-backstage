@@ -9,14 +9,21 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('🔧 OAUTH CALLBACK: Started handling OAuth callback');
+      console.log('🔧 OAUTH CALLBACK: Full URL:', window.location.href);
+      console.log('🔧 OAUTH CALLBACK: Search params:', window.location.search);
+      console.log('🔧 OAUTH CALLBACK: Is popup?', !!window.opener);
+
       // Get the authorization code from URL
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       const error = params.get('error');
       const errorDescription = params.get('error_description');
 
+      console.log('🔧 OAUTH CALLBACK: Parsed params:', { code: code ? 'PRESENT' : 'MISSING', error, errorDescription });
+
       if (error) {
-        console.error('OAuth error:', error, errorDescription);
+        console.error('🔧 OAUTH CALLBACK: OAuth error detected:', error, errorDescription);
 
         // If in popup, communicate back to parent
         if (window.opener) {
@@ -37,16 +44,19 @@ export default function OAuthCallback() {
       }
 
       if (code) {
-        console.log('OAuth code received:', code);
+        console.log('🔧 OAUTH CALLBACK: OAuth code received:', code.substring(0, 10) + '...');
 
         // If in popup, send code to parent window
         if (window.opener) {
+          console.log('🔧 OAUTH CALLBACK: Sending code to parent window');
           window.opener.postMessage({
             type: 'oauth-success',
             code: code
           }, window.location.origin);
+          console.log('🔧 OAUTH CALLBACK: Closing popup');
           window.close();
         } else {
+          console.log('🔧 OAUTH CALLBACK: Not in popup, handling redirect flow');
           // Handle redirect flow (if needed in future)
           // For now, we need backend to exchange code for tokens
           toast({
@@ -54,6 +64,7 @@ export default function OAuthCallback() {
             description: "Completing sign in...",
           });
 
+          console.log('🔧 OAUTH CALLBACK: Redirecting to /login (temporary)');
           // TODO: Call backend to exchange code for tokens
           // For now, redirect to login
           setLocation('/login');

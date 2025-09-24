@@ -40,26 +40,57 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   const [selectedBandId, setSelectedBandId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // Debug current auth state
+  console.log('🔧 BAND GATE: Current state:', {
+    authLoading,
+    isAuthenticated,
+    hasUser: !!user,
+    hasSession: !!session,
+    hasTokens: !!session?.tokens,
+    hasIdToken: !!session?.tokens?.idToken,
+    allowNoBandForDashboard,
+    selectedBandId,
+    isRedirecting
+  });
+
   // Get user profile and bands from our backend
   const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
     queryKey: ["/api/me"],
     queryFn: async () => {
+      console.log('🔧 BAND GATE: Making API call to fetch user profile');
       if (!session?.tokens?.idToken) {
+        console.error('🔧 BAND GATE: No ID token available for API call');
         throw new Error("No access token");
       }
-      
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/me`, {
+
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/me`;
+      console.log('🔧 BAND GATE: API URL:', apiUrl);
+      console.log('🔧 BAND GATE: Token length:', session.tokens.idToken.length);
+
+      const response = await fetch(apiUrl, {
         headers: {
           "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
-      
+
+      console.log('🔧 BAND GATE: API response status:', response.status, response.statusText);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔧 BAND GATE: API error response:', errorText);
         throw new Error(`${response.status}: ${response.statusText}`);
       }
-      
-      return response.json();
+
+      const profileData = await response.json();
+      console.log('🔧 BAND GATE: Profile data received:', {
+        hasUser: !!profileData.user,
+        userId: profileData.user?.id,
+        profileCompleted: profileData.user?.profileCompleted,
+        bandsCount: profileData.bands?.length || 0,
+      });
+
+      return profileData;
     },
     enabled: isAuthenticated && !!session?.tokens?.idToken,
   });
@@ -83,20 +114,32 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
 
   // Handle authentication redirects
   useEffect(() => {
-    console.log('🔍 CLAUDE DEBUG: BandGate auth check', {
+    console.log('🔧 BAND GATE: Authentication redirect check triggered');
+    console.log('🔧 BAND GATE: Auth state details:', {
       authLoading,
       profileLoading,
       isAuthenticated,
-      session: !!session,
-      user: !!user
+      hasSession: !!session,
+      hasUser: !!user,
+      hasError: !!error,
+      isRedirecting
     });
 
+    // Only redirect if we're absolutely sure the user is not authenticated
     if (!authLoading && !profileLoading && !isAuthenticated) {
-      console.log('🔍 CLAUDE DEBUG: BandGate redirecting to /login - not authenticated');
+      console.log('🔧 BAND GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
+      console.log('🔧 BAND GATE: Redirect reason: authLoading=false, profileLoading=false, isAuthenticated=false');
       setIsRedirecting(true);
       setLocation('/login');
+    } else {
+      console.log('🔧 BAND GATE: ✅ Not redirecting to login');
+      console.log('🔧 BAND GATE: Stay reason:', {
+        authLoading: authLoading ? 'still loading' : 'done',
+        profileLoading: profileLoading ? 'still loading' : 'done',
+        isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
+      });
     }
-  }, [authLoading, profileLoading, isAuthenticated, setLocation]);
+  }, [authLoading, profileLoading, isAuthenticated, setLocation, session, user, error, isRedirecting]);
 
   // Handle profile completion redirect
   useEffect(() => {
