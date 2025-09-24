@@ -136,15 +136,24 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('🔧 LOGIN: Starting Google sign in');
       const result = await cognitoAuth.signInWithGoogle();
-      if (result.data && result.data.code) {
-        console.log('Google OAuth successful, got code:', result.data.code);
-        // Code received, would need backend to exchange for tokens
-        // For now, redirect to dashboard
+
+      if (result.data) {
+        console.log('🔧 LOGIN: Google OAuth successful, session created');
+        toast({
+          title: "Signed in successfully!",
+          description: "Welcome to bndy",
+          variant: "default"
+        });
+
+        // Force a page reload to refresh authentication state
+        // This ensures the auth hook picks up the new session
+        console.log('🔧 LOGIN: Reloading page to refresh auth state');
         window.location.href = '/dashboard';
       }
     } catch (error) {
-      console.error('Google sign in failed:', error);
+      console.error('🔧 LOGIN: Google sign in failed:', error);
       toast({
         title: "Google sign in failed",
         description: error instanceof Error ? error.message : "Please try again",

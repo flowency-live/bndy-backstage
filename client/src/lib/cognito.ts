@@ -240,13 +240,23 @@ class CognitoAuthService {
           }
 
           if (event.data.type === "oauth-success") {
-            console.log('🔧 GOOGLE SIGN IN: OAuth success received, cleaning up');
+            console.log('🔧 GOOGLE SIGN IN: OAuth success received, exchanging code for tokens');
             window.removeEventListener("message", messageHandler);
             clearInterval(checkPopup);
-            resolve({
-              data: { code: event.data.code },
-              error: null,
-            });
+
+            // Exchange the authorization code for tokens
+            this.exchangeCodeForTokens(event.data.code)
+              .then(session => {
+                console.log('🔧 GOOGLE SIGN IN: Token exchange successful');
+                resolve({
+                  data: session,
+                  error: null,
+                });
+              })
+              .catch(error => {
+                console.error('🔧 GOOGLE SIGN IN: Token exchange failed:', error);
+                reject(error);
+              });
           } else if (event.data.type === "oauth-error") {
             console.error('🔧 GOOGLE SIGN IN: OAuth error received:', event.data.error);
             window.removeEventListener("message", messageHandler);
@@ -272,6 +282,143 @@ class CognitoAuthService {
         data: null,
         error: { message: error.message || 'Google sign in failed' },
       };
+    }
+  }
+
+  // Exchange authorization code for tokens
+  private async exchangeCodeForTokens(code: string): Promise<AuthSession> {
+    console.log('🔧 TOKEN EXCHANGE: Starting token exchange with code:', code.substring(0, 10) + '...');
+
+    const cognitoDomain = 'https://eu-west-2lqtkkhs1p.auth.eu-west-2.amazoncognito.com';
+    const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
+    const redirectUri = window.location.origin + '/auth/callback';
+
+    try {
+      // Exchange code for tokens using Cognito token endpoint
+      const tokenResponse = await fetch(`${cognitoDomain}/oauth2/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: clientId,
+          code: code,
+          redirect_uri: redirectUri,
+        }),
+      });
+
+      console.log('🔧 TOKEN EXCHANGE: Token response status:', tokenResponse.status);
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('🔧 TOKEN EXCHANGE: Token exchange failed:', errorText);
+        throw new Error(`Token exchange failed: ${tokenResponse.status} ${errorText}`);
+      }
+
+      const tokens = await tokenResponse.json();
+      console.log('🔧 TOKEN EXCHANGE: Tokens received:', {
+        hasAccessToken: !!tokens.access_token,
+        hasIdToken: !!tokens.id_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        tokenType: tokens.token_type,
+        expiresIn: tokens.expires_in
+      });
+
+      // Parse the ID token to get user info
+      const idTokenPayload = this.parseJWT(tokens.id_token);
+      console.log('🔧 TOKEN EXCHANGE: ID token payload:', {
+        sub: idTokenPayload.sub,
+        email: idTokenPayload.email,
+        cognitoUsername: idTokenPayload['cognito:username'],
+        identities: idTokenPayload.identities
+      });
+
+      // Create session object
+      const session: AuthSession = {
+        user: {
+          userId: idTokenPayload.sub,
+          username: idTokenPayload['cognito:username'] || idTokenPayload.email,
+          email: idTokenPayload.email,
+          email_verified: idTokenPayload.email_verified,
+        },
+        tokens: {
+          accessToken: tokens.access_token,
+          idToken: tokens.id_token,
+          refreshToken: tokens.refresh_token,
+        }
+      };
+
+      // Store tokens in Amplify's credential storage
+      // This allows Amplify to detect the session on page reload
+      await this.storeTokensInAmplify(tokens);
+
+      console.log('🔧 TOKEN EXCHANGE: Session created and stored successfully');
+      return session;
+
+    } catch (error: any) {
+      console.error('🔧 TOKEN EXCHANGE: Exchange failed:', error);
+      throw new Error(`Token exchange failed: ${error.message}`);
+    }
+  }
+
+  // Parse JWT token (basic implementation)
+  private parseJWT(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('🔧 TOKEN EXCHANGE: JWT parsing failed:', error);
+      throw new Error('Invalid JWT token');
+    }
+  }
+
+  // Store tokens in Amplify's credential storage
+  private async storeTokensInAmplify(tokens: any): Promise<void> {
+    try {
+      console.log('🔧 TOKEN EXCHANGE: Storing tokens in Amplify credential storage');
+
+      // Use Amplify's internal storage to store credentials
+      // This ensures getCurrentSession() can find them
+      const credentialStorage = {
+        accessToken: {
+          jwtToken: tokens.access_token,
+          payload: this.parseJWT(tokens.access_token)
+        },
+        idToken: {
+          jwtToken: tokens.id_token,
+          payload: this.parseJWT(tokens.id_token)
+        },
+        refreshToken: {
+          token: tokens.refresh_token
+        },
+        clockDrift: 0
+      };
+
+      // Store in localStorage with Amplify's expected key format
+      const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID;
+      const clientId = import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID;
+      const username = this.parseJWT(tokens.id_token).sub;
+
+      const storageKey = `CognitoIdentityServiceProvider.${clientId}.${username}.idToken`;
+      const accessTokenKey = `CognitoIdentityServiceProvider.${clientId}.${username}.accessToken`;
+      const refreshTokenKey = `CognitoIdentityServiceProvider.${clientId}.${username}.refreshToken`;
+      const lastUserKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
+
+      localStorage.setItem(storageKey, tokens.id_token);
+      localStorage.setItem(accessTokenKey, tokens.access_token);
+      localStorage.setItem(refreshTokenKey, tokens.refresh_token);
+      localStorage.setItem(lastUserKey, username);
+
+      console.log('🔧 TOKEN EXCHANGE: Tokens stored in localStorage');
+
+    } catch (error) {
+      console.error('🔧 TOKEN EXCHANGE: Failed to store tokens:', error);
+      // Don't throw here, the session is still valid
     }
   }
 
