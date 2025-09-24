@@ -138,7 +138,7 @@ export default function Login() {
       console.log('🔧 LOGIN: Starting server-side Google OAuth');
 
       // Redirect to backend OAuth endpoint
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://4kxjn4gjqj.eu-west-2.awsapprunner.com';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.bndy.co.uk';
       const oauthUrl = `${apiBaseUrl}/auth/google`;
 
       console.log('🔧 LOGIN: Redirecting to:', oauthUrl);

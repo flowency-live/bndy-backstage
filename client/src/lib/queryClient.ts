@@ -25,7 +25,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return headers;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://4kxjn4gjqj.eu-west-2.awsapprunner.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.bndy.co.uk';
 
 export async function apiRequest(
   method: string,

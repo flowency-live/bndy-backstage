@@ -46,7 +46,7 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://4kxjn4gjqj.eu-west-2.awsapprunner.com';
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.bndy.co.uk';
 
   const checkAuth = async () => {
     try {
