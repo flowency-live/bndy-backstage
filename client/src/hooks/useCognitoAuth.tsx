@@ -70,5 +70,3 @@ export const useCognitoAuth = () => {
   return context;
 };
 
-// For backward compatibility, export as useCognitoAuth
-export const useCognitoAuth = useCognitoAuth;
