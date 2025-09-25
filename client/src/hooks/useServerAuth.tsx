@@ -46,14 +46,12 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.bndy.co.uk';
-
   const checkAuth = async () => {
     try {
       console.log('🔧 SERVER AUTH: Checking authentication status');
       setLoading(true);
 
-      const response = await fetch(`${apiBaseUrl}/api/me`, {
+      const response = await fetch('/api/me', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +91,7 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
     try {
       console.log('🔧 SERVER AUTH: Signing out');
 
-      await fetch(`${apiBaseUrl}/auth/logout`, {
+      await fetch('/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });

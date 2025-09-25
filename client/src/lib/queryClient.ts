@@ -25,15 +25,14 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return headers;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.bndy.co.uk';
-
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
   const authHeaders = await getAuthHeaders();
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  // Always use relative URLs - Amplify proxies to backend
+  const fullUrl = url.startsWith('http') ? url : url;
 
   const res = await fetch(fullUrl, {
     method,
@@ -56,7 +55,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const authHeaders = await getAuthHeaders();
     const url = queryKey.join("/") as string;
-    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    // Always use relative URLs - Amplify proxies to backend
+    const fullUrl = url.startsWith('http') ? url : url;
 
     const res = await fetch(fullUrl, {
       headers: authHeaders,
