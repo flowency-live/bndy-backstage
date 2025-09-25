@@ -53,8 +53,8 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   });
 
   // Server auth already provides user and bands data
-  const userProfile: UserProfile = {
-    user: user ? {
+  const userProfile: UserProfile | null = user ? {
+    user: {
       id: user.id,
       supabaseId: user.cognitoId, // For compatibility
       email: user.email,
@@ -69,7 +69,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
       profileCompleted: true,
       createdAt: user.createdAt,
       updatedAt: user.createdAt,
-    } : null,
+    },
     bands: bands.map(band => ({
       id: band.id,
       userId: user?.id || '',
@@ -92,7 +92,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
         appleMusicArtistId: null,
       }
     }))
-  } as any;
+  } : null;
 
   // Check localStorage for selected band on mount
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
 
   // Handle profile completion redirect
   useEffect(() => {
-    if (userProfile && !userProfile.user.profileCompleted) {
+    if (userProfile && userProfile.user && !userProfile.user.profileCompleted) {
       setIsRedirecting(true);
       setLocation('/profile');
     }
