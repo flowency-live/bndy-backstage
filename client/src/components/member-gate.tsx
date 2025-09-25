@@ -96,20 +96,20 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Check localStorage for selected band on mount
   useEffect(() => {
-    const savedBandId = localStorage.getItem('bndy-selected-context-id');
-    if (savedBandId && userProfile?.bands?.some(b => b.bandId === savedBandId)) {
-      setSelectedBandId(savedBandId);
+    const savedContextId = localStorage.getItem('bndy-selected-context-id');
+    if (savedContextId && userProfile?.bands?.some(b => b.bandId === savedContextId)) {
+      setSelectedContextId(savedContextId);
     }
   }, [userProfile]);
 
   // Auto-select single band
   useEffect(() => {
-    if (userProfile?.bands?.length === 1 && !selectedBandId) {
-      const bandId = userProfile.bands[0].bandId;
-      setSelectedBandId(bandId);
-      localStorage.setItem('bndy-selected-context-id', bandId);
+    if (userProfile?.bands?.length === 1 && !selectedContextId) {
+      const contextId = userProfile.bands[0].bandId;
+      setSelectedContextId(contextId);
+      localStorage.setItem('bndy-selected-context-id', contextId);
     }
-  }, [userProfile, selectedBandId]);
+  }, [userProfile, selectedContextId]);
 
   // Handle authentication redirects
   useEffect(() => {
@@ -152,11 +152,11 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Handle band selection reset
   useEffect(() => {
-    if (selectedBandId && userProfile && !userProfile.bands.find(b => b.bandId === selectedBandId)) {
-      setSelectedBandId(null);
+    if (selectedContextId && userProfile && !userProfile.bands.find(b => b.bandId === selectedContextId)) {
+      setSelectedContextId(null);
       localStorage.removeItem('bndy-selected-context-id');
     }
-  }, [selectedBandId, userProfile]);
+  }, [selectedContextId, userProfile]);
 
   const handleContextSelect = (contextId: string) => {
     setSelectedContextId(contextId);
@@ -249,9 +249,9 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
             {userProfile.bands.map((membership) => (
               <button
                 key={membership.bandId}
-                onClick={() => handleBandSelect(membership.bandId)}
+                onClick={() => handleContextSelect(membership.bandId)}
                 className="w-full bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
-                data-testid={`button-select-band-${membership.bandId}`}
+                data-testid={`button-select-context-${membership.bandId}`}
               >
                 <div className="flex items-center gap-3">
                   <div 
