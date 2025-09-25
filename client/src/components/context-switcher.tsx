@@ -27,12 +27,12 @@ interface UserProfile {
   bands: (UserBand & { band: Band })[];
 }
 
-interface BandSwitcherProps {
-  currentBandId: string;
-  currentMembership: UserBand & { band: Band };
+interface ContextSwitcherProps {
+  currentContextId: string;  // Was currentBandId
+  currentMembership: UserBand & { band: Band };  // Will evolve to support venues etc
 }
 
-export default function BandSwitcher({ currentBandId, currentMembership }: BandSwitcherProps) {
+export default function ContextSwitcher({ currentContextId, currentMembership }: ContextSwitcherProps) {
   const [, setLocation] = useLocation();
   const { session, signOut } = useServerAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -61,23 +61,23 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
     enabled: !!session?.tokens?.idToken,
   });
 
-  const handleBandSwitch = (bandId: string) => {
-    localStorage.setItem('bndy-selected-band-id', bandId);
+  const handleContextSwitch = (contextId: string) => {
+    localStorage.setItem('bndy-selected-context-id', contextId);
     window.location.reload(); // Force a full page reload to switch context
   };
 
-  const handleCreateBand = () => {
-    setLocation('/onboarding');
+  const handleCreateContext = () => {
+    setLocation('/onboarding');  // Will handle venue creation etc in future
   };
 
   const handleSignOut = async () => {
-    localStorage.removeItem('bndy-selected-band-id');
+    localStorage.removeItem('bndy-selected-context-id');
     localStorage.removeItem('bndy-current-user');
     await signOut();
     setLocation('/login');
   };
 
-  const otherBands = userProfile?.bands.filter(band => band.bandId !== currentBandId) || [];
+  const otherContexts = userProfile?.bands.filter(band => band.bandId !== currentContextId) || [];
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -85,7 +85,7 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
         <Button
           variant="ghost"
           className="w-full justify-between bg-white/10 hover:bg-white/20 text-white border-white/20"
-          data-testid="button-band-switcher"
+          data-testid="button-context-switcher"
         >
           <div className="flex items-center gap-3">
             <div 
@@ -104,9 +104,9 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
       </DropdownMenuTrigger>
       
       <DropdownMenuContent className="w-64" align="start">
-        {/* Current Band */}
+        {/* Current Context */}
         <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
-          Current Band
+          Current Context
         </div>
         <DropdownMenuItem disabled className="py-3">
           <div className="flex items-center gap-3 w-full">
@@ -125,31 +125,31 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
           </div>
         </DropdownMenuItem>
 
-        {/* Other Bands */}
-        {otherBands.length > 0 && (
+        {/* Other Contexts */}
+        {otherContexts.length > 0 && (
           <>
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
               Switch to
             </div>
-            {otherBands.map((band) => (
+            {otherContexts.map((context) => (
               <DropdownMenuItem
-                key={band.bandId}
-                onClick={() => handleBandSwitch(band.bandId)}
+                key={context.bandId}
+                onClick={() => handleContextSwitch(context.bandId)}
                 className="py-3 cursor-pointer"
-                data-testid={`button-switch-to-band-${band.bandId}`}
+                data-testid={`button-switch-to-context-${context.bandId}`}
               >
                 <div className="flex items-center gap-3 w-full">
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: band.color }}
+                    style={{ backgroundColor: context.color }}
                   >
-                    <i className={`fas ${band.icon} text-white text-sm`}></i>
+                    <i className={`fas ${context.icon} text-white text-sm`}></i>
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">{band.band.name}</div>
+                    <div className="font-medium text-sm truncate">{context.band.name}</div>
                     <div className="text-xs text-gray-500 truncate">
-                      {band.displayName} • {band.role}
+                      {context.displayName} • {context.role}
                     </div>
                   </div>
                 </div>
@@ -161,14 +161,14 @@ export default function BandSwitcher({ currentBandId, currentMembership }: BandS
         <DropdownMenuSeparator />
         
         {/* Actions */}
-        <DropdownMenuItem onClick={handleCreateBand} className="cursor-pointer" data-testid="button-create-new-band">
+        <DropdownMenuItem onClick={handleCreateContext} className="cursor-pointer" data-testid="button-create-new-context">
           <Plus className="h-4 w-4 mr-2" />
-          Create New Band
+          Create New Context
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => setLocation('/admin')} className="cursor-pointer" data-testid="button-band-settings">
+        <DropdownMenuItem onClick={() => setLocation('/admin')} className="cursor-pointer" data-testid="button-context-settings">
           <Settings className="h-4 w-4 mr-2" />
-          Band Settings
+          Settings
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />

@@ -25,30 +25,30 @@ interface UserProfile {
   bands: (UserBand & { band: Band })[];
 }
 
-interface BandGateProps {
-  children: ({ bandId, membership, userProfile }: { 
-    bandId: string | null, 
-    membership: (UserBand & { band: Band }) | null,
+interface MemberGateProps {
+  children: ({ contextId, membership, userProfile }: {
+    contextId: string | null,  // Was bandId - now generic for any entity
+    membership: (UserBand & { band: Band }) | null,  // Will evolve to support venues etc
     userProfile: UserProfile | null
   }) => React.ReactNode;
-  allowNoBandForDashboard?: boolean;
+  allowNoContextForDashboard?: boolean;  // Was allowNoBandForDashboard
 }
 
-export default function BandGate({ children, allowNoBandForDashboard = false }: BandGateProps) {
+export default function MemberGate({ children, allowNoContextForDashboard = false }: MemberGateProps) {
   const [, setLocation] = useLocation();
   const { user, bands, loading: authLoading, isAuthenticated, session } = useServerAuth();
-  const [selectedBandId, setSelectedBandId] = useState<string | null>(null);
+  const [selectedContextId, setSelectedContextId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Debug current auth state
-  console.log('🔧 BAND GATE: Current state:', {
+  console.log('🔧 MEMBER GATE: Current state:', {
     authLoading,
     isAuthenticated,
     hasUser: !!user,
     hasSession: !!session,
     bandsCount: bands?.length || 0,
-    allowNoBandForDashboard,
-    selectedBandId,
+    allowNoContextForDashboard,
+    selectedContextId,
     isRedirecting
   });
 
@@ -96,7 +96,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
 
   // Check localStorage for selected band on mount
   useEffect(() => {
-    const savedBandId = localStorage.getItem('bndy-selected-band-id');
+    const savedBandId = localStorage.getItem('bndy-selected-context-id');
     if (savedBandId && userProfile?.bands?.some(b => b.bandId === savedBandId)) {
       setSelectedBandId(savedBandId);
     }
@@ -107,14 +107,14 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
     if (userProfile?.bands?.length === 1 && !selectedBandId) {
       const bandId = userProfile.bands[0].bandId;
       setSelectedBandId(bandId);
-      localStorage.setItem('bndy-selected-band-id', bandId);
+      localStorage.setItem('bndy-selected-context-id', bandId);
     }
   }, [userProfile, selectedBandId]);
 
   // Handle authentication redirects
   useEffect(() => {
-    console.log('🔧 BAND GATE: Authentication redirect check triggered');
-    console.log('🔧 BAND GATE: Auth state details:', {
+    console.log('🔧 MEMBER GATE: Authentication redirect check triggered');
+    console.log('🔧 MEMBER GATE: Auth state details:', {
       authLoading,
       profileLoading: false,
       isAuthenticated,
@@ -125,13 +125,13 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
 
     // Only redirect if we're absolutely sure the user is not authenticated
     if (!authLoading && !isAuthenticated) {
-      console.log('🔧 BAND GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
-      console.log('🔧 BAND GATE: Redirect reason: authLoading=false, isAuthenticated=false');
+      console.log('🔧 MEMBER GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
+      console.log('🔧 MEMBER GATE: Redirect reason: authLoading=false, isAuthenticated=false');
       setIsRedirecting(true);
       setLocation('/login');
     } else {
-      console.log('🔧 BAND GATE: ✅ Not redirecting to login');
-      console.log('🔧 BAND GATE: Stay reason:', {
+      console.log('🔧 MEMBER GATE: ✅ Not redirecting to login');
+      console.log('🔧 MEMBER GATE: Stay reason:', {
         authLoading: authLoading ? 'still loading' : 'done',
         profileLoading: 'done',
         isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
@@ -154,18 +154,18 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   useEffect(() => {
     if (selectedBandId && userProfile && !userProfile.bands.find(b => b.bandId === selectedBandId)) {
       setSelectedBandId(null);
-      localStorage.removeItem('bndy-selected-band-id');
+      localStorage.removeItem('bndy-selected-context-id');
     }
   }, [selectedBandId, userProfile]);
 
-  const handleBandSelect = (bandId: string) => {
-    setSelectedBandId(bandId);
-    localStorage.setItem('bndy-selected-band-id', bandId);
+  const handleContextSelect = (contextId: string) => {
+    setSelectedContextId(contextId);
+    localStorage.setItem('bndy-selected-context-id', contextId);
   };
 
   const handleLogout = async () => {
     // Clear localStorage
-    localStorage.removeItem('bndy-selected-band-id');
+    localStorage.removeItem('bndy-selected-context-id');
     localStorage.removeItem('bndy-current-user');
     
     // Redirect to login
@@ -229,7 +229,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   // Remove this blocking check
 
   // Multiple bands but none selected - show band selector unless dashboard allows no band
-  if (userProfile && userProfile.bands.length > 1 && !selectedBandId && !allowNoBandForDashboard) {
+  if (userProfile && userProfile.bands.length > 1 && !selectedContextId && !allowNoContextForDashboard) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center max-w-md w-full">
@@ -291,12 +291,12 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   }
 
   // Find the selected band membership
-  const selectedMembership = selectedBandId 
-    ? userProfile?.bands.find(b => b.bandId === selectedBandId) || null
+  const selectedMembership = selectedContextId
+    ? userProfile?.bands.find(b => b.bandId === selectedContextId) || null
     : null;
   
-  // If no band selected but we have a selectedBandId, handle the error
-  if (selectedBandId && !selectedMembership) {
+  // If no context selected but we have a selectedContextId, handle the error
+  if (selectedContextId && !selectedMembership) {
     // Band not found, will be handled by useEffect
     return null;
   }
@@ -305,7 +305,7 @@ export default function BandGate({ children, allowNoBandForDashboard = false }: 
   return (
     <>
       {children({ 
-        bandId: selectedBandId, 
+        contextId: selectedContextId, 
         membership: selectedMembership, 
         userProfile: userProfile || null 
       })}

@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServerAuthProvider } from "@/hooks/useServerAuth";
 import { UserProvider } from "@/lib/user-context";
 import { ThemeProvider } from "@/contexts/theme-context";
-import BandGate from "@/components/band-gate";
+import MemberGate from "@/components/member-gate";
 import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -35,49 +35,49 @@ function Router() {
         </AppLayout>
       </Route>
       <Route path="/dashboard">
-        <BandGate allowNoBandForDashboard={true}>
-          {({ bandId, membership, userProfile }) => (
-            <AppLayout bandId={bandId} membership={membership}>
-              <Dashboard bandId={bandId} membership={membership} userProfile={userProfile} />
+        <MemberGate allowNoContextForDashboard={true}>
+          {({ contextId, membership, userProfile }) => (
+            <AppLayout bandId={contextId} membership={membership}>
+              <Dashboard bandId={contextId} membership={membership} userProfile={userProfile} />
             </AppLayout>
           )}
-        </BandGate>
+        </MemberGate>
       </Route>
       <Route path="/calendar">
-        <BandGate>
-          {({ bandId, membership }) => {
-            if (!bandId || !membership) return null;
+        <MemberGate>
+          {({ contextId, membership }) => {
+            if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={bandId} membership={membership}>
-                <Calendar bandId={bandId} membership={membership} />
+              <AppLayout bandId={contextId} membership={membership}>
+                <Calendar bandId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
-        </BandGate>
+        </MemberGate>
       </Route>
       <Route path="/songs">
-        <BandGate>
-          {({ bandId, membership }) => {
-            if (!bandId || !membership) return null;
+        <MemberGate>
+          {({ contextId, membership }) => {
+            if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={bandId} membership={membership}>
-                <Songs bandId={bandId} membership={membership} />
+              <AppLayout bandId={contextId} membership={membership}>
+                <Songs bandId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
-        </BandGate>
+        </MemberGate>
       </Route>
       <Route path="/admin">
-        <BandGate>
-          {({ bandId, membership }) => {
-            if (!bandId || !membership) return null;
+        <MemberGate>
+          {({ contextId, membership }) => {
+            if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={bandId} membership={membership}>
-                <Admin bandId={bandId} membership={membership} />
+              <AppLayout bandId={contextId} membership={membership}>
+                <Admin bandId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
-        </BandGate>
+        </MemberGate>
       </Route>
       <Route component={NotFound} />
     </Switch>
