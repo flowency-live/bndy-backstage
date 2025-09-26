@@ -1,5 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { authHelpers } from "@/lib/cognito";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -8,37 +7,19 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const headers: HeadersInit = {};
-
-  try {
-    // Get current session from Cognito
-    const { data: session } = await authHelpers.getSession();
-
-    if (session?.tokens?.idToken) {
-      headers['Authorization'] = `Bearer ${session.tokens.idToken}`;
-    }
-  } catch (error) {
-    console.warn('Failed to get auth headers:', error);
-  }
-
-  return headers;
-}
-
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const authHeaders = await getAuthHeaders();
   // Always use relative URLs - Amplify proxies to backend
   const fullUrl = url.startsWith('http') ? url : url;
 
   const res = await fetch(fullUrl, {
     method,
+    credentials: 'include',
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
-      ...authHeaders,
     },
     body: data ? JSON.stringify(data) : undefined,
   });
@@ -53,13 +34,12 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const authHeaders = await getAuthHeaders();
     const url = queryKey.join("/") as string;
     // Always use relative URLs - Amplify proxies to backend
     const fullUrl = url.startsWith('http') ? url : url;
 
     const res = await fetch(fullUrl, {
-      headers: authHeaders,
+      credentials: 'include',
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
