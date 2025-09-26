@@ -324,17 +324,17 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/bands", bandId, "events", "upcoming"],
     queryFn: async () => {
-      if (!session?.tokens?.idToken) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
+
       const today = new Date();
       const nextMonth = new Date();
       nextMonth.setMonth(today.getMonth() + 1);
-      
+
       const response = await fetch(`/api/bands/${bandId}/events?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
+        credentials: 'include',
         headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -360,20 +360,20 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
           return dateA.getTime() - dateB.getTime();
         });
     },
-    enabled: !!session?.tokens?.idToken && !!bandId,
+    enabled: !!session && !!bandId,
   });
 
   // Get songs for this band
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
     queryKey: ["/api/bands", bandId, "songs"],
     queryFn: async () => {
-      if (!session?.tokens?.idToken) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
+
       const response = await fetch(`/api/bands/${bandId}/songs`, {
+        credentials: 'include',
         headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -384,20 +384,20 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session?.tokens?.idToken && !!bandId,
+    enabled: !!session && !!bandId,
   });
 
   // Get band members
   const { data: bandMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/bands", bandId, "members"],
     queryFn: async () => {
-      if (!session?.tokens?.idToken) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
+
       const response = await fetch(`/api/bands/${bandId}/members`, {
+        credentials: 'include',
         headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -408,7 +408,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session?.tokens?.idToken && !!bandId,
+    enabled: !!session && !!bandId,
   });
 
   // Calculate some stats
@@ -463,7 +463,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   }
 
   // Loading state - check if any queries are still loading
-  const isLoading = !session?.tokens?.idToken || eventsLoading || songsLoading || membersLoading;
+  const isLoading = !session || eventsLoading || songsLoading || membersLoading;
 
   if (isLoading) {
     return <BndySpinnerOverlay />;
