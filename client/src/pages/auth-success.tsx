@@ -14,6 +14,19 @@ export default function AuthSuccess() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if session token is in URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionToken = params.get('session');
+
+    if (sessionToken) {
+      // Set cookie client-side
+      document.cookie = `bndy_session=${sessionToken}; Max-Age=604800; Path=/; Secure; SameSite=Lax`;
+      console.log('✅ Session cookie set from URL parameter');
+
+      // Remove session param from URL
+      window.history.replaceState({}, '', '/auth-success');
+    }
+
     // Get all cookies
     setCookies(document.cookie);
 
