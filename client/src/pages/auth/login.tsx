@@ -138,7 +138,7 @@ export default function Login() {
       console.log('🔧 LOGIN: Starting server-side Google OAuth');
 
       // Redirect to backend OAuth endpoint directly
-      const oauthUrl = 'https://qry0k6pmd0.execute-api.eu-west-2.amazonaws.com/auth/google';
+      const oauthUrl = 'https://api.bndy.co.uk/auth/google';
 
       console.log('🔧 LOGIN: Redirecting to:', oauthUrl);
       window.location.href = oauthUrl;
