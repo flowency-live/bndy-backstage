@@ -18,6 +18,7 @@ import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
 import AuthSuccess from "@/pages/auth-success";
+import OAuthResult from "@/pages/oauth-result";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Footer from "@/components/ui/footer";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/auth/callback" component={OAuthCallback} />
       <Route path="/auth-success" component={AuthSuccess} />
       <Route path="/test-auth" component={AuthSuccess} />
+      <Route path="/oauth-result" component={OAuthResult} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/profile">

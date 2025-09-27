@@ -134,23 +134,20 @@ export default function Login() {
   }
 
   const handleGoogleSignIn = async () => {
-    try {
-      console.log('🔧 LOGIN: Starting server-side Google OAuth');
+    // Store timestamp for flow tracking
+    const flowStart = Date.now();
+    localStorage.setItem('oauth_flow_start', flowStart.toString());
+    localStorage.setItem('oauth_flow_steps', JSON.stringify([
+      { step: 'button_clicked', timestamp: flowStart, location: window.location.href }
+    ]));
 
-      // Redirect to backend OAuth endpoint directly
-      const oauthUrl = 'https://api.bndy.co.uk/auth/google';
+    console.log('🔧 OAUTH FLOW: Button clicked at', new Date(flowStart).toISOString());
 
-      console.log('🔧 LOGIN: Redirecting to:', oauthUrl);
-      window.location.href = oauthUrl;
+    // Direct redirect to Lambda OAuth endpoint
+    const oauthUrl = 'https://api.bndy.co.uk/auth/google';
+    console.log('🔧 OAUTH FLOW: Redirecting to:', oauthUrl);
 
-    } catch (error) {
-      console.error('🔧 LOGIN: Google OAuth redirect failed:', error);
-      toast({
-        title: "Google sign in failed",
-        description: "Unable to start authentication process",
-        variant: "destructive"
-      });
-    }
+    window.location.href = oauthUrl;
   }
 
   return (
