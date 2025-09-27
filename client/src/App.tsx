@@ -29,6 +29,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={OAuthCallback} />
       <Route path="/auth-success" component={AuthSuccess} />
+      <Route path="/test-auth" component={AuthSuccess} />
       <Route path="/invite/:token" component={Invite} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/profile">
