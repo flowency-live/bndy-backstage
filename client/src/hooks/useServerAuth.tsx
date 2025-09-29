@@ -1,28 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  cognitoId: string;
-  username: string;
-  email: string;
-  createdAt: string;
-}
-
-interface Band {
-  id: string;
-  name: string;
-  role: string;
-  status: string;
-}
-
-interface AuthSession {
-  user: User;
-  bands: Band[];
-  session: {
-    issuedAt: number;
-    expiresAt: number;
-  };
-}
+import { authService, User, Band, AuthSession } from '../lib/services/auth-service';
 
 interface AuthContextType {
   user: User | null;
@@ -51,26 +28,18 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
       console.log('🔧 SERVER AUTH: Checking authentication status');
       setLoading(true);
 
-      const response = await fetch('/api/me', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const authResponse = await authService.checkAuth();
 
-      console.log('🔧 SERVER AUTH: API response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
+      if (authResponse) {
         console.log('🔧 SERVER AUTH: Authentication successful', {
-          userId: data.user?.id,
-          username: data.user?.username,
-          bandsCount: data.bands?.length || 0
+          userId: authResponse.user?.id,
+          username: authResponse.user?.username,
+          bandsCount: authResponse.bands?.length || 0
         });
 
-        setUser(data.user);
-        setBands(data.bands || []);
-        setSession(data);
+        setUser(authResponse.user);
+        setBands(authResponse.bands || []);
+        setSession(authResponse);
       } else {
         console.log('🔧 SERVER AUTH: Not authenticated');
         setUser(null);
@@ -91,10 +60,7 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
     try {
       console.log('🔧 SERVER AUTH: Signing out');
 
-      await fetch('/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await authService.signOut();
 
       setUser(null);
       setBands([]);

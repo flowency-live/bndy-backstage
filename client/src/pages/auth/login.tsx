@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
 import { useServerAuth } from "@/hooks/useServerAuth"
+import { authService } from "@/lib/services/auth-service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -23,6 +24,17 @@ export default function Login() {
   const [error, setError] = useState('')
   // Server auth handles authentication server-side
   const { toast } = useToast()
+
+  // TODO: Implement proper OTP service - currently stubbed
+  const sendOTP = async (phone: string) => {
+    console.warn('OTP functionality not yet implemented for server auth')
+    return { error: new Error('OTP not available - use Google login') }
+  }
+
+  const verifyOTP = async (phone: string, otp: string) => {
+    console.warn('OTP functionality not yet implemented for server auth')
+    return { data: null, error: new Error('OTP not available - use Google login') }
+  }
 
   const formatPhoneNumber = (value: string) => {
     // Remove all non-digits
@@ -144,7 +156,7 @@ export default function Login() {
     console.log('🔧 OAUTH FLOW: Button clicked at', new Date(flowStart).toISOString());
 
     // Direct redirect to Lambda OAuth endpoint
-    const oauthUrl = 'https://api.bndy.co.uk/auth/google';
+    const oauthUrl = authService.getGoogleAuthUrl();
     console.log('🔧 OAUTH FLOW: Redirecting to:', oauthUrl);
 
     window.location.href = oauthUrl;
