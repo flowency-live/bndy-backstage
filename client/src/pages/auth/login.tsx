@@ -146,19 +146,8 @@ export default function Login() {
   }
 
   const handleGoogleSignIn = async () => {
-    // Store timestamp for flow tracking
-    const flowStart = Date.now();
-    localStorage.setItem('oauth_flow_start', flowStart.toString());
-    localStorage.setItem('oauth_flow_steps', JSON.stringify([
-      { step: 'button_clicked', timestamp: flowStart, location: window.location.href }
-    ]));
-
-    console.log('🔧 OAUTH FLOW: Button clicked at', new Date(flowStart).toISOString());
-
-    // Direct redirect to Lambda OAuth endpoint
+    // Simple redirect to OAuth flow
     const oauthUrl = authService.getGoogleAuthUrl();
-    console.log('🔧 OAUTH FLOW: Redirecting to:', oauthUrl);
-
     window.location.href = oauthUrl;
   }
 
