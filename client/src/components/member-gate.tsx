@@ -189,41 +189,8 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     return null;
   }
 
-  // Error fetching profile - could be missing profile, redirect to profile creation
-  if (error) {
-    // If it's a 404 or user not found, redirect to profile creation
-    if (error.message?.includes('404') || error.message?.includes('Not Found')) {
-      setIsRedirecting(true);
-      setLocation('/profile');
-      return null;
-    }
-
-    // For other errors, show error screen
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4" data-testid="logo-container">
-            <div className="w-32 h-32 flex items-center justify-center mx-auto mb-4">
-              <BndyLogo
-                className="w-24 h-24"
-                color="white"
-                holeColor="rgb(51 65 85)"
-              />
-            </div>
-          </div>
-          <h2 className="text-2xl font-serif text-primary-foreground mb-4">Something went wrong</h2>
-          <p className="text-primary-foreground/80 mb-6">Failed to load your profile. Please try again.</p>
-          <button
-            onClick={handleLogout}
-            className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-6 py-2 rounded-lg transition-colors"
-            data-testid="button-logout"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Error fetching profile is now handled by useServerAuth
+  // No need for explicit error handling here as auth errors are handled in the auth hook
 
   // Users with no bands can access dashboard without active band context
   // Remove this blocking check
