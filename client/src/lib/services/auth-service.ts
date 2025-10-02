@@ -11,6 +11,7 @@ export interface User {
   displayName?: string;
   avatarUrl?: string;
   instrument?: string;
+  hometown?: string;
   profileCompleted: boolean;
   createdAt: string;
 }

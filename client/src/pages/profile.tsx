@@ -54,7 +54,7 @@ export default function Profile() {
         throw new Error("Not authenticated");
       }
 
-      const response = await apiRequest("PUT", "/api/me", data);
+      const response = await apiRequest("PUT", "/users/profile", data);
       return response.json();
     },
     onSuccess: (response) => {
