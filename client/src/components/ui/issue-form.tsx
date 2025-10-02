@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { apiUrl } from "@/config/api";
 import { Bug, AlertTriangle, Lightbulb, Plus, X } from "lucide-react";
 
 // Issue form schema
@@ -96,7 +97,7 @@ export default function IssueForm({ open, onOpenChange, onSuccess }: IssueFormPr
         screenshotUrl: data.screenshotUrl || undefined
       };
 
-      const response = await apiRequest("POST", "/issues", submitData);
+      const response = await apiRequest("POST", apiUrl("/issues"), submitData);
 
       if (!response.ok) {
         const errorData = await response.json();

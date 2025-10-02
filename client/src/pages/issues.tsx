@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiUrl } from "@/config/api";
 import IssueForm from "@/components/ui/issue-form";
 import {
   Bug,
@@ -90,7 +91,7 @@ export default function Issues() {
 
   // Fetch issues
   const { data: issuesData, isLoading, error, refetch } = useQuery<IssuesResponse>({
-    queryKey: ["/issues", filters],
+    queryKey: [apiUrl("/issues"), filters],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.type) params.append("type", filters.type);
@@ -111,14 +112,14 @@ export default function Issues() {
   // Update issue mutation
   const updateIssueMutation = useMutation({
     mutationFn: async ({ issueId, updates }: { issueId: string; updates: Partial<Issue> }) => {
-      const response = await apiRequest("PUT", `/issues/${issueId}`, updates);
+      const response = await apiRequest("PUT", apiUrl(`/issues/${issueId}`), updates);
       if (!response.ok) {
         throw new Error("Failed to update issue");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/issues"] });
+      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
       toast({
         title: "Issue Updated",
         description: "Issue has been updated successfully.",
@@ -136,7 +137,7 @@ export default function Issues() {
   // Batch update mutation
   const batchUpdateMutation = useMutation({
     mutationFn: async (updates: Partial<Issue>) => {
-      const response = await apiRequest("POST", "/issues/batch", {
+      const response = await apiRequest("POST", apiUrl("/issues/batch"), {
         issueIds: selectedIssues,
         updates
       });
@@ -146,7 +147,7 @@ export default function Issues() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/issues"] });
+      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
       setSelectedIssues([]);
       toast({
         title: "Issues Updated",
@@ -165,14 +166,14 @@ export default function Issues() {
   // Delete issue mutation
   const deleteIssueMutation = useMutation({
     mutationFn: async (issueId: string) => {
-      const response = await apiRequest("DELETE", `/issues/${issueId}`);
+      const response = await apiRequest("DELETE", apiUrl(`/issues/${issueId}`));
       if (!response.ok) {
         throw new Error("Failed to delete issue");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/issues"] });
+      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
       toast({
         title: "Issue Deleted",
         description: "Issue has been deleted successfully.",
