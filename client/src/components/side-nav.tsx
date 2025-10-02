@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
-import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -16,6 +16,7 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { useToast } from "@/hooks/use-toast";
+import IssueForm from "@/components/ui/issue-form";
 import type { UserBand, Band } from "@/types/api";
 
 interface UserProfile {
@@ -51,6 +52,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   } = useUser();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
 
   const handleExitBand = () => {
     clearBandSelection();
@@ -326,11 +328,21 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-3">
-            {/* Theme Toggle */}
-            <div className="flex justify-center">
-              <ThemeToggle 
-                variant="ghost" 
-                size="sm" 
+            {/* Issue Report & Theme Toggle */}
+            <div className="flex justify-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsIssueFormOpen(true)}
+                className="h-8 w-8 p-0 text-foreground hover:bg-muted"
+                data-testid="button-report-issue"
+                title="Report Issue"
+              >
+                <Bug className="h-4 w-4" />
+              </Button>
+              <ThemeToggle
+                variant="ghost"
+                size="sm"
                 className="text-foreground hover:bg-muted"
               />
             </div>
@@ -359,15 +371,24 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                 </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-56" align="start" side="top">
-                  <DropdownMenuItem 
-                    onClick={() => navigateTo('/profile')} 
+                  <DropdownMenuItem
+                    onClick={() => navigateTo('/profile')}
                     className="cursor-pointer"
                     data-testid="button-view-profile"
                   >
                     <User className="h-4 w-4 mr-2" />
                     View Profile
                   </DropdownMenuItem>
-                  
+
+                  <DropdownMenuItem
+                    onClick={() => navigateTo('/issues')}
+                    className="cursor-pointer"
+                    data-testid="button-view-issues"
+                  >
+                    <Bug className="h-4 w-4 mr-2" />
+                    View Issues
+                  </DropdownMenuItem>
+
                   {currentMembership && (
                     <DropdownMenuItem 
                       onClick={handleExitBand} 
@@ -395,6 +416,18 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
           </div>
         </div>
       </div>
+
+      {/* Issue Form Modal */}
+      <IssueForm
+        open={isIssueFormOpen}
+        onOpenChange={setIsIssueFormOpen}
+        onSuccess={() => {
+          toast({
+            title: "Issue Reported",
+            description: "Thank you for helping improve the platform!",
+          });
+        }}
+      />
     </>
   );
 }
