@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/config/api";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,8 +13,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Always use relative URLs - Amplify proxies to backend
-  const fullUrl = url.startsWith('http') ? url : url;
+  // Use full API URL for all requests
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
 
   const res = await fetch(fullUrl, {
     method,
@@ -35,8 +36,8 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
-    // Always use relative URLs - Amplify proxies to backend
-    const fullUrl = url.startsWith('http') ? url : url;
+    // Use full API URL for all requests
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
 
     const res = await fetch(fullUrl, {
       credentials: 'include',

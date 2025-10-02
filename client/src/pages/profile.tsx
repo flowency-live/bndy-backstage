@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { usersService } from "@/lib/services/users-service";
 import ProfileForm from "@/components/ui/profile-form";
 import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
@@ -50,12 +51,7 @@ export default function Profile() {
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: InsertUserProfile | UpdateUserProfile) => {
-      if (!session?.access_token) {
-        throw new Error("Not authenticated");
-      }
-
-      const response = await apiRequest("PUT", "/users/profile", data);
-      return response.json();
+      return usersService.updateProfile(data);
     },
     onSuccess: (response) => {
       // Invalidate and refetch user profile
