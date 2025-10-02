@@ -86,16 +86,9 @@ function Router() {
         </MemberGate>
       </Route>
       <Route path="/issues">
-        <MemberGate>
-          {({ contextId, membership }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <AppLayout bandId={contextId} membership={membership}>
-                <Issues bandId={contextId} membership={membership} />
-              </AppLayout>
-            );
-          }}
-        </MemberGate>
+        <AppLayout>
+          <Issues />
+        </AppLayout>
       </Route>
       <Route component={NotFound} />
     </Switch>
