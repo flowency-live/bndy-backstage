@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { apiUrl } from "@/config/api";
+import { issuesService } from "@/lib/services/issues-service";
 import { Bug, AlertTriangle, Lightbulb, Plus, X } from "lucide-react";
 
 // Issue form schema
@@ -97,14 +96,7 @@ export default function IssueForm({ open, onOpenChange, onSuccess }: IssueFormPr
         screenshotUrl: data.screenshotUrl || undefined
       };
 
-      const response = await apiRequest("POST", apiUrl("/issues"), submitData);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create issue');
-      }
-
-      const result = await response.json();
+      const result = await issuesService.createIssue(submitData);
 
       console.log('🐛 Issue created:', result);
 

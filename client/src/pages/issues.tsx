@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { apiUrl } from "@/config/api";
+import { queryClient } from "@/lib/queryClient";
+import { issuesService, type Issue, type IssuesResponse } from "@/lib/services/issues-service";
 import IssueForm from "@/components/ui/issue-form";
 import {
   Bug,
@@ -35,27 +35,6 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
-// Types
-interface Issue {
-  issue_id: string;
-  title: string;
-  description: string;
-  type: "bug" | "unfinished" | "enhancement" | "new";
-  location: string;
-  priority: "critical" | "high" | "medium" | "low";
-  status: "new" | "in-progress" | "resolved" | "wont-fix";
-  screenshot_url?: string;
-  reported_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface IssuesResponse {
-  issues: Issue[];
-  count: number;
-  scannedCount: number;
-}
-
 // Issue type configuration
 const issueTypeConfig = {
   bug: { icon: Bug, label: "Bug", color: "bg-red-100 text-red-800 border-red-200" },
@@ -72,10 +51,10 @@ const priorityConfig = {
 };
 
 const statusConfig = {
-  new: { icon: AlertCircle, label: "New", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  "in-progress": { icon: Clock, label: "In Progress", color: "bg-orange-100 text-orange-800 border-orange-200" },
+  open: { icon: AlertCircle, label: "Open", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  in_progress: { icon: Clock, label: "In Progress", color: "bg-orange-100 text-orange-800 border-orange-200" },
   resolved: { icon: CheckCircle2, label: "Resolved", color: "bg-green-100 text-green-800 border-green-200" },
-  "wont-fix": { icon: RefreshCw, label: "Won't Fix", color: "bg-gray-100 text-gray-800 border-gray-200" }
+  closed: { icon: RefreshCw, label: "Closed", color: "bg-gray-100 text-gray-800 border-gray-200" }
 };
 
 export default function Issues() {
@@ -91,35 +70,17 @@ export default function Issues() {
 
   // Fetch issues
   const { data: issuesData, isLoading, error, refetch } = useQuery<IssuesResponse>({
-    queryKey: [apiUrl("/issues"), filters],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters.type) params.append("type", filters.type);
-      if (filters.priority) params.append("priority", filters.priority);
-      if (filters.status) params.append("status", filters.status);
-
-      const url = `/issues${params.toString() ? `?${params.toString()}` : ""}`;
-      const response = await apiRequest("GET", url);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch issues");
-      }
-
-      return response.json();
-    }
+    queryKey: ["issues", filters],
+    queryFn: () => issuesService.getIssues(filters)
   });
 
   // Update issue mutation
   const updateIssueMutation = useMutation({
     mutationFn: async ({ issueId, updates }: { issueId: string; updates: Partial<Issue> }) => {
-      const response = await apiRequest("PUT", apiUrl(`/issues/${issueId}`), updates);
-      if (!response.ok) {
-        throw new Error("Failed to update issue");
-      }
-      return response.json();
+      return issuesService.updateIssue(issueId, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
+      queryClient.invalidateQueries({ queryKey: ["issues"] });
       toast({
         title: "Issue Updated",
         description: "Issue has been updated successfully.",
@@ -137,17 +98,13 @@ export default function Issues() {
   // Batch update mutation
   const batchUpdateMutation = useMutation({
     mutationFn: async (updates: Partial<Issue>) => {
-      const response = await apiRequest("POST", apiUrl("/issues/batch"), {
+      return issuesService.batchUpdateIssues({
         issueIds: selectedIssues,
         updates
       });
-      if (!response.ok) {
-        throw new Error("Failed to batch update issues");
-      }
-      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
+      queryClient.invalidateQueries({ queryKey: ["issues"] });
       setSelectedIssues([]);
       toast({
         title: "Issues Updated",
@@ -166,14 +123,10 @@ export default function Issues() {
   // Delete issue mutation
   const deleteIssueMutation = useMutation({
     mutationFn: async (issueId: string) => {
-      const response = await apiRequest("DELETE", apiUrl(`/issues/${issueId}`));
-      if (!response.ok) {
-        throw new Error("Failed to delete issue");
-      }
-      return response.json();
+      return issuesService.deleteIssue(issueId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [apiUrl("/issues")] });
+      queryClient.invalidateQueries({ queryKey: ["issues"] });
       toast({
         title: "Issue Deleted",
         description: "Issue has been deleted successfully.",
