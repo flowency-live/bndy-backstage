@@ -14,6 +14,7 @@ import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Admin from "@/pages/admin";
+import Issues from "@/pages/issues";
 import Onboarding from "@/pages/onboarding";
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
@@ -79,6 +80,18 @@ function Router() {
             return (
               <AppLayout bandId={contextId} membership={membership}>
                 <Admin bandId={contextId} membership={membership} />
+              </AppLayout>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/issues">
+        <MemberGate>
+          {({ contextId, membership }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <AppLayout bandId={contextId} membership={membership}>
+                <Issues bandId={contextId} membership={membership} />
               </AppLayout>
             );
           }}

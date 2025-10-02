@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
+import IssueForm from "@/components/ui/issue-form";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Menu, 
+import {
+  Menu,
   X,
   ChevronRight,
   ChevronDown,
-  LogOut
+  LogOut,
+  Bug
 } from "lucide-react";
 import type { UserBand, Band } from "@/types/api";
 
@@ -30,6 +32,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [, setLocation] = useLocation();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
   const { toast } = useToast();
   const { clearBandSelection, userProfile, selectBand, currentBandId } = useUser();
 
@@ -257,12 +260,24 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             )}
           </div>
 
-          {/* Right: Theme Toggle & Action Badge */}
+          {/* Right: Issue Report, Theme Toggle & Action Badge */}
           <div className="flex items-center gap-2 pr-4">
+            {/* Issue Report Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsIssueFormOpen(true)}
+              className="h-8 w-8 p-0 hover:bg-accent"
+              data-testid="button-report-issue"
+              title="Report Issue"
+            >
+              <Bug className="h-4 w-4" />
+            </Button>
+
             <ThemeToggle size="sm" />
             {currentMembership && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="h-6 px-2 text-xs"
                 style={{ backgroundColor: `${currentMembership.color}20`, color: currentMembership.color }}
               >
@@ -297,6 +312,18 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
           })}
         </div>
       </nav>
+
+      {/* Issue Form Modal */}
+      <IssueForm
+        open={isIssueFormOpen}
+        onOpenChange={setIsIssueFormOpen}
+        onSuccess={() => {
+          toast({
+            title: "Issue Reported",
+            description: "Thank you for helping improve the platform!",
+          });
+        }}
+      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { Home, Calendar, Music, Settings, User } from "lucide-react";
+import { Home, Calendar, Music, Settings, User, Bug } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
@@ -31,17 +31,24 @@ export const navigationItems: NavigationItem[] = [
     color: "hsl(45, 93%, 47%)",
     description: "Playbook, setlists & pipeline"
   },
-  { 
-    icon: Settings, 
-    label: "Manage Band", 
-    href: "/admin", 
+  {
+    icon: Settings,
+    label: "Manage Band",
+    href: "/admin",
     color: "hsl(220, 13%, 51%)",
     description: "Band management & settings"
   },
-  { 
-    icon: User, 
-    label: "Profile", 
-    href: "/profile", 
+  {
+    icon: Bug,
+    label: "Issues",
+    href: "/issues",
+    color: "hsl(0, 84%, 60%)",
+    description: "Bug reports & feature requests"
+  },
+  {
+    icon: User,
+    label: "Profile",
+    href: "/profile",
     color: "hsl(220, 13%, 51%)",
     description: "Personal settings"
   }
