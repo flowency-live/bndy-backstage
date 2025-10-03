@@ -126,27 +126,15 @@ export default function ProfileForm({
 
   return (
     <div className={cn("w-full animate-fade-in", className)}>
-      {/* Profile Header */}
-      <div className="text-center mb-6">
-        {/* Avatar Section */}
-        <div className="mb-4">
-          <div className="flex justify-center">
-            <ImageUpload
-              value={avatarUrl || undefined}
-              onChange={(value) => setAvatarUrl(value)}
-              placeholder="Upload your profile picture"
-              size="lg"
-              data-testid="profile-avatar-upload"
-            />
-          </div>
-        </div>
-        
-        {mode === "create" && (
-          <div className="text-center">
-            <h2 className="text-xl font-serif text-white mb-1">Complete Your Profile</h2>
-            <p className="text-slate-400 text-sm">Help your bandmates get to know you</p>
-          </div>
-        )}
+      {/* Avatar Section - simplified, no headers */}
+      <div className="flex justify-center mb-6">
+        <ImageUpload
+          value={avatarUrl || undefined}
+          onChange={(value) => setAvatarUrl(value)}
+          placeholder="Upload your profile picture"
+          size="lg"
+          data-testid="profile-avatar-upload"
+        />
       </div>
 
       {/* Form Container */}
@@ -211,14 +199,9 @@ export default function ProfileForm({
             />
           </div>
 
-          {/* Optional Fields */}
+          {/* Optional Fields - no header, just separator */}
           <div className="space-y-4">
             <div className="border-t border-slate-600 pt-4">
-              <h3 className="text-lg font-serif text-white mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
-                Optional Information
-              </h3>
-              
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -306,12 +289,6 @@ export default function ProfileForm({
             )}
           </Button>
 
-          {/* Help Text */}
-          {mode === "create" && (
-            <p className="text-center text-slate-400 text-sm">
-              Fields marked with * are required to get started
-            </p>
-          )}
         </form>
       </Form>
     </div>

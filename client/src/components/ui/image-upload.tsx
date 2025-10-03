@@ -62,31 +62,53 @@ export default function ImageUpload({
 
     setUploading(true);
     try {
-      // Convert file to base64 for now - could be enhanced with proper upload service later
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onChange(result);
-        setUploading(false);
-        toast({
-          title: "Image uploaded",
-          description: "Your image has been uploaded successfully",
-        });
-      };
-      reader.onerror = () => {
-        setUploading(false);
-        toast({
-          title: "Upload failed",
-          description: "Failed to read the image file",
-          variant: "destructive",
-        });
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
+      // Step 1: Get presigned upload URL from our API
+      const response = await fetch('/uploads/presigned-url', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+          uploadType: 'avatar',
+          fileSize: file.size
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get upload URL: ${response.status}`);
+      }
+
+      const { uploadUrl, publicUrl } = await response.json();
+
+      // Step 2: Upload file directly to S3 using presigned URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload file: ${uploadResponse.status}`);
+      }
+
+      // Step 3: Return the public URL for the uploaded image
+      onChange(publicUrl);
       setUploading(false);
       toast({
+        title: "Image uploaded",
+        description: "Your image has been uploaded successfully",
+      });
+    } catch (error) {
+      setUploading(false);
+      console.error('Upload error:', error);
+      toast({
         title: "Upload failed",
-        description: "An error occurred while uploading the image",
+        description: error instanceof Error ? error.message : "An error occurred while uploading the image",
         variant: "destructive",
       });
     }
