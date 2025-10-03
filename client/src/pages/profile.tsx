@@ -70,12 +70,8 @@ export default function Profile() {
           setLocation("/onboarding");
         }
       } else {
-        // If editing, go back to dashboard or previous page
-        if (userProfile?.bands && userProfile.bands.length > 0) {
-          setLocation("/dashboard");
-        } else {
-          setLocation("/");
-        }
+        // If editing, always go back to dashboard
+        setLocation("/dashboard");
       }
     },
     onError: (error: Error) => {
@@ -92,17 +88,8 @@ export default function Profile() {
   };
 
   const handleCancel = () => {
-    if (mode === "edit") {
-      // If editing, go back to previous page or dashboard
-      if (userProfile?.bands && userProfile.bands.length > 0) {
-        setLocation("/dashboard");
-      } else {
-        setLocation("/");
-      }
-    } else {
-      // If creating for first time, go to landing
-      setLocation("/");
-    }
+    // Always return to dashboard (user is already logged in)
+    setLocation("/dashboard");
   };
 
   // Loading state
