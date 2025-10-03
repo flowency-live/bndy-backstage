@@ -33,13 +33,34 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
       if (authResponse) {
         console.log('🔧 SERVER AUTH: Authentication successful', {
           userId: authResponse.user?.id,
-          username: authResponse.user?.username,
-          bandsCount: authResponse.bands?.length || 0
+          username: authResponse.user?.username
         });
 
         setUser(authResponse.user);
-        setBands(authResponse.bands || []);
         setSession(authResponse);
+
+        // Fetch memberships separately (separation of concerns)
+        try {
+          const membershipsResponse = await fetch('/api/memberships/me', {
+            credentials: 'include'
+          });
+
+          if (membershipsResponse.ok) {
+            const membershipsData = await membershipsResponse.json();
+            console.log('🔧 SERVER AUTH: Fetched memberships', {
+              bandsCount: membershipsData.bands?.length || 0
+            });
+            setBands(membershipsData.bands || []);
+          } else {
+            // Not an error - user may not have any memberships yet
+            console.log('🔧 SERVER AUTH: No memberships found or endpoint unavailable');
+            setBands([]);
+          }
+        } catch (membershipError) {
+          console.warn('🔧 SERVER AUTH: Could not fetch memberships:', membershipError);
+          // Don't fail auth if memberships fail
+          setBands([]);
+        }
       } else {
         console.log('🔧 SERVER AUTH: Not authenticated');
         setUser(null);
