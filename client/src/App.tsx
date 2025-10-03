@@ -15,7 +15,7 @@ import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Admin from "@/pages/admin";
 import Issues from "@/pages/issues";
-import Onboarding from "@/pages/onboarding";
+// Onboarding removed - artist creation now in dashboard
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
 import AuthSuccess from "@/pages/auth-success";
@@ -34,7 +34,6 @@ function Router() {
       <Route path="/test-auth" component={AuthSuccess} />
       <Route path="/oauth-result" component={OAuthResult} />
       <Route path="/invite/:token" component={Invite} />
-      <Route path="/onboarding" component={Onboarding} />
       <Route path="/profile">
         <AppLayout>
           <Profile />

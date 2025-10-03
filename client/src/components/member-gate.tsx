@@ -237,14 +237,14 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
           </div>
 
           <div className="flex flex-col gap-2">
-            <button 
-              onClick={() => setLocation('/onboarding')}
+            <button
+              onClick={() => setLocation('/dashboard')}
               className="text-white hover:text-white/80 font-sans underline text-sm bg-white/20 px-4 py-2 rounded"
               data-testid="button-create-new-band"
             >
               Create New Band
             </button>
-            <button 
+            <button
               onClick={handleLogout}
               className="text-white/70 hover:text-white/50 font-sans text-sm"
               data-testid="button-logout"

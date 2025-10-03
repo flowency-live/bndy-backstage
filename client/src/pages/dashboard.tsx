@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
@@ -8,12 +8,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X } from "lucide-react";
 import type { Event, Song, UserBand, Band, User } from "@/types/api";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
+import ImageUpload from "@/components/ui/image-upload";
+import { useToast } from "@/hooks/use-toast";
 
 // All icons verified as valid lucide-react exports
+
+const ICONS = [
+  { icon: "fa-microphone", color: "#D2691E", label: "Vocalist" },
+  { icon: "fa-guitar", color: "#6B8E23", label: "Guitarist" },
+  { icon: "fa-guitar", color: "#9932CC", label: "Bassist" },
+  { icon: "fa-drum", color: "#DC143C", label: "Drummer" },
+  { icon: "fa-piano", color: "#4169E1", label: "Keyboardist" },
+  { icon: "fa-music", color: "#708090", label: "Multi-instrumentalist" },
+  { icon: "fa-headphones", color: "#FF6347", label: "Producer" },
+  { icon: "fa-crown", color: "#f59e0b", label: "Band Leader" },
+];
 
 interface UserProfile {
   user: User;
@@ -273,6 +289,269 @@ function NextUpCard({ event, onClick }: { event: Event, onClick: () => void }) {
   );
 }
 
+function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuccess: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { selectBand } = useUser();
+
+  const [formData, setFormData] = useState({
+    bandName: "",
+    bandDescription: "",
+    bandAvatar: null as string | null,
+    displayName: "",
+    role: "",
+    icon: "fa-music",
+    color: "#708090",
+  });
+
+  const createBandMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const artistResponse = await fetch("/api/artists", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.bandName,
+          bio: data.bandDescription,
+          artistType: "band",
+          profileImageUrl: data.bandAvatar,
+          memberDisplayName: data.displayName || null,
+          memberInstrument: null,
+          memberIcon: data.icon,
+          memberColor: data.color,
+        }),
+      });
+
+      if (!artistResponse.ok) {
+        const errorData = await artistResponse.json();
+        throw new Error(errorData.error || "Failed to create band");
+      }
+
+      const result = await artistResponse.json();
+      return { artist: result.artist, membership: result.membership };
+    },
+    onSuccess: ({ artist }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+      localStorage.setItem('bndy-selected-context-id', artist.id);
+
+      toast({
+        title: "Welcome to your band!",
+        description: `${formData.bandName} has been created successfully.`,
+      });
+
+      // Select the new band
+      selectBand(artist.id);
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create band",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.bandName.trim()) {
+      toast({
+        title: "Band name required",
+        description: "Please enter a name for your band",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.displayName.trim()) {
+      toast({
+        title: "Display name required",
+        description: "Please enter your display name in the band",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createBandMutation.mutate(formData);
+  };
+
+  const handleIconSelect = (iconData: typeof ICONS[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      icon: iconData.icon,
+      color: iconData.color,
+      role: prev.role || iconData.label,
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-serif">Create Your Band</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              className="rounded-full"
+              data-testid="button-close-create-artist"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-5">
+              <h2 className="text-xl font-semibold text-card-foreground mb-1">Band Information</h2>
+
+              <div>
+                <Label htmlFor="bandName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
+                <Input
+                  id="bandName"
+                  type="text"
+                  value={formData.bandName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bandName: e.target.value }))}
+                  placeholder="Enter your band name"
+                  className="mt-2"
+                  data-testid="input-band-name"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bandDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
+                <Textarea
+                  id="bandDescription"
+                  value={formData.bandDescription}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bandDescription: e.target.value }))}
+                  placeholder="Tell us about your band..."
+                  className="mt-2 resize-none"
+                  data-testid="input-band-description"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <h2 className="text-xl font-semibold text-card-foreground mb-1">Your Profile</h2>
+
+              <div>
+                <Label htmlFor="displayName" className="text-card-foreground font-medium mb-1 block">Display Name *</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+                  placeholder="How you'll appear in the band"
+                  className="mt-2"
+                  data-testid="input-display-name"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="role" className="text-card-foreground font-medium mb-1 block">Role</Label>
+                <Input
+                  id="role"
+                  type="text"
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                  placeholder="e.g., Lead Vocalist, Guitarist"
+                  className="mt-2"
+                  data-testid="input-role"
+                />
+              </div>
+
+              <div>
+                <Label className="text-card-foreground font-medium mb-2 block">Band Avatar (Optional)</Label>
+                <p className="text-sm text-muted-foreground mb-3">Upload a logo or image for your band</p>
+                <div className="flex justify-center">
+                  <ImageUpload
+                    value={formData.bandAvatar || undefined}
+                    onChange={(value) => setFormData(prev => ({ ...prev, bandAvatar: value }))}
+                    placeholder="Upload band logo"
+                    size="lg"
+                    data-testid="band-avatar-upload"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-card-foreground font-medium mb-2 block">Choose Your Icon</Label>
+                <p className="text-sm text-muted-foreground mb-3">This represents you within the band</p>
+                <div className="grid grid-cols-4 gap-3 mt-3">
+                  {ICONS.map((iconData) => (
+                    <button
+                      key={iconData.icon}
+                      type="button"
+                      onClick={() => handleIconSelect(iconData)}
+                      className={`p-3 rounded-lg border-2 transition-all hover:shadow-md hover:scale-105 ${
+                        formData.icon === iconData.icon
+                          ? 'border-orange-500 bg-orange-500/10 shadow-md scale-105'
+                          : 'border-border hover:border-orange-500/50 hover:bg-muted'
+                      }`}
+                      data-testid={`button-icon-${iconData.icon}`}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center mx-auto"
+                        style={{ backgroundColor: iconData.color }}
+                      >
+                        <i className={`fas ${iconData.icon} text-primary-foreground text-sm`}></i>
+                      </div>
+                      <p className="text-xs mt-1 text-muted-foreground truncate">{iconData.label}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Label className="text-card-foreground font-medium">Your Color:</Label>
+                <div
+                  className="w-8 h-8 rounded-full border-2 border-border shadow-sm"
+                  style={{ backgroundColor: formData.color }}
+                ></div>
+                <span className="text-sm text-muted-foreground font-mono">{formData.color}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1"
+                data-testid="button-cancel-create-artist"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={createBandMutation.isPending}
+                data-testid="button-create-band"
+              >
+                {createBandMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  "Create Band"
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function BandTile({ band, membership, onClick }: { 
   band: Band, 
   membership: UserBand & { band: Band },
@@ -319,6 +598,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const { selectBand } = useUser();
   const [calendarExpanded, setCalendarExpanded] = React.useState(true);
   const [songExpanded, setSongExpanded] = React.useState(true);
+  const [showingCreateForm, setShowingCreateForm] = React.useState(false);
 
   // Get upcoming events for this band - moved to top to avoid hooks violation
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -419,46 +699,54 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   // Handle no band selected case - show band tiles (after hooks are called)
   if (!bandId || !membership || !userProfile) {
     return (
-      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-        <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
-                Select Your Band
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Choose a band to access your dashboard, calendar, and practice lists
-              </p>
-            </div>
-            
-            <div className="grid gap-4 max-w-2xl mx-auto">
-              {userProfile?.bands.map((bandMembership) => (
-                <BandTile
-                  key={bandMembership.bandId}
-                  band={bandMembership.band}
-                  membership={bandMembership}
-                  onClick={() => {
-                    selectBand(bandMembership.bandId);
-                    // The page will automatically reload due to band selection
-                  }}
-                />
-              ))}
-            </div>
-            
-            <div className="text-center mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setLocation('/onboarding')}
-                className="mr-4"
-                data-testid="button-create-new-band"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Band
-              </Button>
+      <>
+        {showingCreateForm && (
+          <CreateArtistForm
+            onCancel={() => setShowingCreateForm(false)}
+            onSuccess={() => setShowingCreateForm(false)}
+          />
+        )}
+        <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+          <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
+                  Select Your Band
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                  Choose a band to access your dashboard, calendar, and practice lists
+                </p>
+              </div>
+
+              <div className="grid gap-4 max-w-2xl mx-auto">
+                {userProfile?.bands.map((bandMembership) => (
+                  <BandTile
+                    key={bandMembership.bandId}
+                    band={bandMembership.band}
+                    membership={bandMembership}
+                    onClick={() => {
+                      selectBand(bandMembership.bandId);
+                      // The page will automatically reload due to band selection
+                    }}
+                  />
+                ))}
+              </div>
+
+              <div className="text-center mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowingCreateForm(true)}
+                  className="mr-4"
+                  data-testid="button-create-new-band"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Band
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
