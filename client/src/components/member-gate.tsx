@@ -42,9 +42,7 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Trigger auth check when MemberGate mounts (lazy auth check)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated && !user) {
-      checkAuth();
-    }
+    checkAuth();
   }, []);
 
   // Debug current auth state
