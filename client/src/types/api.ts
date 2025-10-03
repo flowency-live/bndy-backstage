@@ -110,18 +110,6 @@ export const EVENT_TYPE_CONFIG = {
 } as const;
 
 // Form types
-export interface InsertUserProfile {
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  email?: string;
-  phone?: string;
-}
-
-export interface UpdateUserProfile extends InsertUserProfile {
-  id: string;
-}
-
 export interface InsertEvent {
   title: string;
   description?: string;
@@ -133,29 +121,11 @@ export interface InsertEvent {
   recurringPattern?: string;
 }
 
-// Instrument options
-export const INSTRUMENT_OPTIONS = [
-  'vocals',
-  'guitar',
-  'bass',
-  'drums',
-  'keyboard',
-  'piano',
-  'saxophone',
-  'trumpet',
-  'violin',
-  'other'
-] as const;
-
-// Zod schemas for validation
-export const insertUserProfileSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  displayName: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-});
-
-export const updateUserProfileSchema = insertUserProfileSchema.extend({
-  id: z.string(),
-});
+// Re-export shared schemas and types for user profiles
+export {
+  INSTRUMENT_OPTIONS,
+  insertUserProfileSchema,
+  updateUserProfileSchema,
+  type InsertUserProfile,
+  type UpdateUserProfile
+} from '../../../shared/schema';
