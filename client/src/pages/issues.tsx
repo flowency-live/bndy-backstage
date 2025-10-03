@@ -382,9 +382,9 @@ export default function Issues() {
 
             {/* Issues */}
             {filteredIssues.map((issue) => {
-              const typeConfig = issueTypeConfig[issue.type];
+              const typeConfig = issueTypeConfig[issue.type] || issueTypeConfig.bug; // Fallback to bug
               const TypeIcon = typeConfig.icon;
-              const statusInfo = statusConfig[issue.status];
+              const statusInfo = statusConfig[issue.status] || statusConfig.open; // Fallback to open
               const StatusIcon = statusInfo.icon;
 
               return (
@@ -406,8 +406,8 @@ export default function Issues() {
                               <TypeIcon className="w-3 h-3 mr-1" />
                               {typeConfig.label}
                             </Badge>
-                            <Badge variant="outline" className={priorityConfig[issue.priority].color}>
-                              {priorityConfig[issue.priority].label}
+                            <Badge variant="outline" className={(priorityConfig[issue.priority] || priorityConfig.medium).color}>
+                              {(priorityConfig[issue.priority] || priorityConfig.medium).label}
                             </Badge>
                             <Badge variant="outline" className={statusInfo.color}>
                               <StatusIcon className="w-3 h-3 mr-1" />
