@@ -121,11 +121,32 @@ export interface InsertEvent {
   recurringPattern?: string;
 }
 
-// Re-export shared schemas and types for user profiles
-export {
-  INSTRUMENT_OPTIONS,
-  insertUserProfileSchema,
-  updateUserProfileSchema,
-  type InsertUserProfile,
-  type UpdateUserProfile
-} from '../../../shared/schema';
+// Instrument options - must match backend
+export const INSTRUMENT_OPTIONS = [
+  'Vocals',
+  'Guitar',
+  'Bass',
+  'Drums',
+  'Keyboard',
+  'Piano',
+  'Saxophone',
+  'Trumpet',
+  'Violin',
+  'Flute',
+  'Other'
+] as const;
+
+// User profile schemas - must match backend validation
+export const insertUserProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  displayName: z.string().min(1, "Display name is required"),
+  hometown: z.string().min(1, "Hometown is required"),
+  instrument: z.enum(INSTRUMENT_OPTIONS, { errorMap: () => ({ message: "Please select an instrument" }) }),
+  avatarUrl: z.string().nullable().optional(),
+});
+
+export const updateUserProfileSchema = insertUserProfileSchema.partial();
+
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
