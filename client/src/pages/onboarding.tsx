@@ -43,43 +43,47 @@ export default function Onboarding() {
 
   const createBandMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      if (!session?.access_token) {
-        throw new Error("Not authenticated");
-      }
-
-      // Create the band
-      const bandResponse = await fetch("/api/bands", {
+      // Create the artist (band type)
+      const artistResponse = await fetch("/api/artists", {
         method: "POST",
+        credentials: "include", // Use cookie authentication
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: data.bandName,
-          description: data.bandDescription,
-          avatarUrl: data.bandAvatar,
+          bio: data.bandDescription,
+          artistType: "band", // Explicitly set as band type
+          profileImageUrl: data.bandAvatar,
+
+          // Member profile customization (optional - null = inherit from user)
+          memberDisplayName: data.displayName || null,
+          memberInstrument: null, // Will inherit from user profile
+          memberIcon: data.icon,
+          memberColor: data.color,
         }),
       });
 
-      if (!bandResponse.ok) {
-        throw new Error("Failed to create band");
+      if (!artistResponse.ok) {
+        const errorData = await artistResponse.json();
+        throw new Error(errorData.error || "Failed to create band");
       }
 
-      const band = await bandResponse.json();
-      return { band };
+      const result = await artistResponse.json();
+      return { artist: result.artist, membership: result.membership };
     },
-    onSuccess: ({ band }) => {
-      // Invalidate user profile to refetch bands
+    onSuccess: ({ artist, membership }) => {
+      // Invalidate user profile to refetch artists/bands
       queryClient.invalidateQueries({ queryKey: ["/api/me"] });
-      
-      // Store the selected band ID
-      localStorage.setItem('bndy-selected-band-id', band.id);
-      
+
+      // Store the selected artist ID (using legacy key name for compatibility)
+      localStorage.setItem('bndy-selected-context-id', artist.id);
+
       toast({
         title: "Welcome to your band!",
         description: `${formData.bandName} has been created successfully.`,
       });
-      
+
       // Redirect to calendar
       setLocation("/calendar");
     },

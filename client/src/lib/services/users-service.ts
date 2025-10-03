@@ -23,7 +23,7 @@ export interface UserProfileUpdate {
   firstName?: string;
   lastName?: string;
   displayName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   instrument?: string;
   hometown?: string;
 }

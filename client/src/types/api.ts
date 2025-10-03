@@ -9,6 +9,8 @@ export interface User {
   firstName?: string | null;
   lastName?: string | null;
   displayName?: string | null;
+  hometown?: string | null;
+  instrument?: string | null;
   avatarUrl?: string | null;
   oauthProfilePicture?: string | null;
   platformAdmin: boolean;
