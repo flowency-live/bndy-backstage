@@ -3,6 +3,7 @@ import { Upload, X, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ImageUploadProps {
   value?: string;
@@ -63,23 +64,12 @@ export default function ImageUpload({
     setUploading(true);
     try {
       // Step 1: Get presigned upload URL from our API
-      const response = await fetch('/uploads/presigned-url', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          uploadType: 'avatar',
-          fileSize: file.size
-        })
+      const response = await apiRequest('POST', '/uploads/presigned-url', {
+        fileName: file.name,
+        contentType: file.type,
+        uploadType: 'avatar',
+        fileSize: file.size
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to get upload URL: ${response.status}`);
-      }
 
       const { uploadUrl, publicUrl } = await response.json();
 

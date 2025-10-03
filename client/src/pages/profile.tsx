@@ -177,6 +177,7 @@ export default function Profile() {
                   hometown: userProfile.user.hometown || "",
                   instrument: userProfile.user.instrument as any || undefined,
                   avatarUrl: userProfile.user.avatarUrl || null,
+                  oauthProfilePicture: userProfile.user.oauthProfilePicture || null,
                 } : undefined}
                 onSubmit={handleProfileSubmit}
                 isLoading={updateProfileMutation.isPending}

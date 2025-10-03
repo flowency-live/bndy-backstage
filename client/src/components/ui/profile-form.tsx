@@ -15,7 +15,7 @@ import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
 import ImageUpload from "@/components/ui/image-upload";
 
 interface ProfileFormProps {
-  initialData?: Partial<UpdateUserProfile>;
+  initialData?: Partial<UpdateUserProfile & { oauthProfilePicture?: string | null }>;
   onSubmit: (data: InsertUserProfile | UpdateUserProfile) => Promise<void>;
   isLoading?: boolean;
   mode?: "create" | "edit";
@@ -36,6 +36,9 @@ export default function ProfileForm({
   const [placesLoaded, setPlacesLoaded] = useState(false);
   const [placesError, setPlacesError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialData?.avatarUrl || null);
+
+  // Use OAuth profile picture as fallback if no custom avatar is set
+  const displayAvatarUrl = avatarUrl || initialData?.oauthProfilePicture || null;
   const hometownInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
@@ -129,9 +132,9 @@ export default function ProfileForm({
       {/* Avatar Section - simplified, no headers */}
       <div className="flex justify-center mb-6">
         <ImageUpload
-          value={avatarUrl || undefined}
+          value={displayAvatarUrl || undefined}
           onChange={(value) => setAvatarUrl(value)}
-          placeholder="Upload your profile picture"
+          placeholder={initialData?.oauthProfilePicture ? "Click to change your profile picture" : "Upload your profile picture"}
           size="lg"
           data-testid="profile-avatar-upload"
         />

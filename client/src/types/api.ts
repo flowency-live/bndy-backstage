@@ -10,6 +10,7 @@ export interface User {
   lastName?: string | null;
   displayName?: string | null;
   avatarUrl?: string | null;
+  oauthProfilePicture?: string | null;
   platformAdmin: boolean;
   profileCompleted: boolean;
   createdAt: string;
