@@ -96,9 +96,7 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
     }
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  // Removed automatic checkAuth on mount - auth is checked lazily when needed by protected routes
 
   const isAuthenticated = !!user && !!session;
 

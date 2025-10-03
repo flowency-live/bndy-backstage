@@ -36,9 +36,16 @@ interface MemberGateProps {
 
 export default function MemberGate({ children, allowNoContextForDashboard = false }: MemberGateProps) {
   const [, setLocation] = useLocation();
-  const { user, bands, loading: authLoading, isAuthenticated, session } = useServerAuth();
+  const { user, bands, loading: authLoading, isAuthenticated, session, checkAuth } = useServerAuth();
   const [selectedContextId, setSelectedContextId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Trigger auth check when MemberGate mounts (lazy auth check)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && !user) {
+      checkAuth();
+    }
+  }, []);
 
   // Debug current auth state
   console.log('🔧 MEMBER GATE: Current state:', {
