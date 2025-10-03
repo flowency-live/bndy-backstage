@@ -25,50 +25,28 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
 
   const checkAuth = async () => {
     try {
-      console.log('🔧 SERVER AUTH: Checking authentication status');
+      console.log('SERVER AUTH: Checking authentication status');
       setLoading(true);
 
       const authResponse = await authService.checkAuth();
 
       if (authResponse) {
-        console.log('🔧 SERVER AUTH: Authentication successful', {
+        console.log('SERVER AUTH: Authentication successful', {
           userId: authResponse.user?.id,
           username: authResponse.user?.username
         });
 
         setUser(authResponse.user);
         setSession(authResponse);
-
-        // Fetch memberships separately (separation of concerns)
-        try {
-          const membershipsResponse = await fetch('/api/memberships/me', {
-            credentials: 'include'
-          });
-
-          if (membershipsResponse.ok) {
-            const membershipsData = await membershipsResponse.json();
-            console.log('🔧 SERVER AUTH: Fetched memberships', {
-              bandsCount: membershipsData.bands?.length || 0
-            });
-            setBands(membershipsData.bands || []);
-          } else {
-            // Not an error - user may not have any memberships yet
-            console.log('🔧 SERVER AUTH: No memberships found or endpoint unavailable');
-            setBands([]);
-          }
-        } catch (membershipError) {
-          console.warn('🔧 SERVER AUTH: Could not fetch memberships:', membershipError);
-          // Don't fail auth if memberships fail
-          setBands([]);
-        }
+        setBands([]); // No artist memberships yet - will implement later
       } else {
-        console.log('🔧 SERVER AUTH: Not authenticated');
+        console.log('SERVER AUTH: Not authenticated');
         setUser(null);
         setBands([]);
         setSession(null);
       }
     } catch (error) {
-      console.error('🔧 SERVER AUTH: Auth check failed:', error);
+      console.error('SERVER AUTH: Auth check failed:', error);
       setUser(null);
       setBands([]);
       setSession(null);
