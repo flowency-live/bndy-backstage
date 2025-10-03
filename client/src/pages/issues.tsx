@@ -141,13 +141,25 @@ export default function Issues() {
     }
   });
 
-  // Filter issues by search term
-  const filteredIssues = issuesData?.issues?.filter(issue =>
-    filters.search === "" ||
-    issue.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-    issue.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-    issue.location.toLowerCase().includes(filters.search.toLowerCase())
-  ) || [];
+  // Filter issues by search term and filters
+  const filteredIssues = issuesData?.issues?.filter(issue => {
+    // Search filter
+    const matchesSearch = filters.search === "" ||
+      issue.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+      issue.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+      issue.location.toLowerCase().includes(filters.search.toLowerCase());
+
+    // Type filter
+    const matchesType = filters.type === "" || filters.type === "all" || issue.type === filters.type;
+
+    // Priority filter
+    const matchesPriority = filters.priority === "" || filters.priority === "all" || issue.priority === filters.priority;
+
+    // Status filter
+    const matchesStatus = filters.status === "" || filters.status === "all" || issue.status === filters.status;
+
+    return matchesSearch && matchesType && matchesPriority && matchesStatus;
+  }) || [];
 
   // Handle issue selection
   const handleIssueSelection = (issueId: string, checked: boolean) => {
@@ -241,7 +253,7 @@ export default function Issues() {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="bug">🐛 Bug</SelectItem>
                 <SelectItem value="unfinished">⚠️ Unfinished</SelectItem>
                 <SelectItem value="enhancement">💡 Enhancement</SelectItem>
@@ -255,7 +267,7 @@ export default function Issues() {
                 <SelectValue placeholder="All Priorities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Priorities</SelectItem>
+                <SelectItem value="all">All Priorities</SelectItem>
                 <SelectItem value="critical">🚨 Critical</SelectItem>
                 <SelectItem value="high">⚠️ High</SelectItem>
                 <SelectItem value="medium">🔧 Medium</SelectItem>
@@ -269,7 +281,7 @@ export default function Issues() {
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="new">🆕 New</SelectItem>
                 <SelectItem value="in-progress">🔄 In Progress</SelectItem>
                 <SelectItem value="resolved">✅ Resolved</SelectItem>
@@ -280,7 +292,7 @@ export default function Issues() {
             {/* Clear Filters */}
             <Button
               variant="outline"
-              onClick={() => setFilters({ search: "", type: "", priority: "", status: "" })}
+              onClick={() => setFilters({ search: "", type: "all", priority: "all", status: "all" })}
             >
               Clear Filters
             </Button>
@@ -344,7 +356,7 @@ export default function Issues() {
                 <Bug className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Issues Found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {filters.search || filters.type || filters.priority || filters.status
+                  {filters.search || (filters.type !== "" && filters.type !== "all") || (filters.priority !== "" && filters.priority !== "all") || (filters.status !== "" && filters.status !== "all")
                     ? "Try adjusting your filters"
                     : "No issues have been reported yet"}
                 </p>
