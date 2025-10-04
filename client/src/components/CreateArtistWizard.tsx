@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, Globe } from "lucide-react";
+import ImageUpload from "@/components/ui/image-upload";
+import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
+import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
 
 // Hardcoded artist types for initial implementation
 // Will be fetched from backend configuration later
@@ -31,9 +34,13 @@ interface WizardData {
   location: string;
   description: string;
   genres: string[];
-  displayName: string;
-  icon: string;
-  color: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  youtubeUrl: string;
+  spotifyUrl: string;
+  twitterUrl: string;
+  websiteUrl: string;
+  profileImageUrl: string;
 }
 
 interface ExistingArtist {
@@ -58,9 +65,13 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
     location: "",
     description: "",
     genres: [],
-    displayName: "",
-    icon: "fa-music",
-    color: "#708090",
+    facebookUrl: "",
+    instagramUrl: "",
+    youtubeUrl: "",
+    spotifyUrl: "",
+    twitterUrl: "",
+    websiteUrl: "",
+    profileImageUrl: "",
   });
 
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
@@ -141,9 +152,15 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
           bio: data.description || null,
           genres: data.genres,
           artistType: data.artistType,
-          memberDisplayName: data.displayName || null,
-          memberIcon: data.icon,
-          memberColor: data.color,
+          facebookUrl: data.facebookUrl || null,
+          instagramUrl: data.instagramUrl || null,
+          websiteUrl: data.websiteUrl || null,
+          socialMediaUrls: [
+            ...(data.youtubeUrl ? [{ type: 'youtube', url: data.youtubeUrl }] : []),
+            ...(data.spotifyUrl ? [{ type: 'spotify', url: data.spotifyUrl }] : []),
+            ...(data.twitterUrl ? [{ type: 'twitter', url: data.twitterUrl }] : []),
+          ],
+          profileImageUrl: data.profileImageUrl || null,
         }),
       });
 
@@ -191,6 +208,25 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
         : [...prev.genres, genre]
     }));
   };
+
+  // Auto-fetch Facebook profile picture when URL is entered
+  useEffect(() => {
+    const fetchFBPicture = async () => {
+      if (wizardData.facebookUrl && !wizardData.profileImageUrl) {
+        const picUrl = await fetchFacebookProfilePicture(wizardData.facebookUrl);
+        if (picUrl) {
+          setWizardData(prev => ({ ...prev, profileImageUrl: picUrl }));
+          toast({
+            title: "Profile picture found!",
+            description: "We've automatically set your artist avatar from Facebook.",
+          });
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(fetchFBPicture, 1000); // Debounce 1 second
+    return () => clearTimeout(timeoutId);
+  }, [wizardData.facebookUrl]);
 
   // Navigation helpers
   const canGoNext = () => {
@@ -363,9 +399,124 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </div>
           )}
 
-          {/* Step 4: Genres & Member Profile */}
+          {/* Step 4: Social Media, Avatar & Genres */}
           {currentStep === 4 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Artist Avatar Upload */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Artist Avatar (Optional)</label>
+                <ImageUpload
+                  value={wizardData.profileImageUrl}
+                  onChange={(url) => setWizardData(prev => ({ ...prev, profileImageUrl: url || "" }))}
+                  size="lg"
+                  placeholder="Upload artist image"
+                />
+                {wizardData.facebookUrl && !wizardData.profileImageUrl && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    💡 We'll try to auto-fetch your profile picture from Facebook
+                  </p>
+                )}
+              </div>
+
+              {/* Social Media Links */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium">Social Media Links (Optional)</label>
+                  <p className="text-xs text-muted-foreground">* You can add these later</p>
+                </div>
+
+                {/* Facebook */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#1877F2] flex items-center justify-center flex-shrink-0">
+                    <FaFacebook className="w-6 h-6 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.facebookUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, facebookUrl: e.target.value }))}
+                    placeholder="https://facebook.com/yourband"
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-facebook"
+                  />
+                </div>
+
+                {/* Instagram */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] flex items-center justify-center flex-shrink-0">
+                    <FaInstagram className="w-6 h-6 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.instagramUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                    placeholder="https://instagram.com/yourband"
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-instagram"
+                  />
+                </div>
+
+                {/* YouTube */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#FF0000] flex items-center justify-center flex-shrink-0">
+                    <FaYoutube className="w-6 h-6 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.youtubeUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                    placeholder="https://youtube.com/@yourband"
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-youtube"
+                  />
+                </div>
+
+                {/* Spotify */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#1DB954] flex items-center justify-center flex-shrink-0">
+                    <FaSpotify className="w-6 h-6 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.spotifyUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, spotifyUrl: e.target.value }))}
+                    placeholder="https://open.spotify.com/artist/..."
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-spotify"
+                  />
+                </div>
+
+                {/* X (Twitter) */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                    <FaXTwitter className="w-5 h-5 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.twitterUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, twitterUrl: e.target.value }))}
+                    placeholder="https://x.com/yourband"
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-twitter"
+                  />
+                </div>
+
+                {/* Website */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-5 h-5 text-white" />
+                  </div>
+                  <input
+                    type="url"
+                    value={wizardData.websiteUrl}
+                    onChange={(e) => setWizardData(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                    placeholder="https://yourband.com"
+                    className="flex-1 px-4 py-2 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                    data-testid="input-website"
+                  />
+                </div>
+              </div>
+
+              {/* Genres */}
               <div>
                 <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
                 <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
@@ -386,20 +537,6 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Your Display Name *</label>
-                <input
-                  type="text"
-                  value={wizardData.displayName}
-                  onChange={(e) => setWizardData(prev => ({ ...prev, displayName: e.target.value }))}
-                  placeholder="Your name in this artist"
-                  className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  autoFocus
-                  data-testid="input-display-name"
-                />
-                <p className="text-xs text-muted-foreground mt-1">How you'll appear as a member</p>
               </div>
             </div>
           )}
