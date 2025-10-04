@@ -17,6 +17,7 @@ import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import ImageUpload from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
+import CreateArtistWizard from "@/components/CreateArtistWizard";
 
 // All icons verified as valid lucide-react exports
 
@@ -701,47 +702,42 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
     return (
       <>
         {showingCreateForm && (
-          <CreateArtistForm
-            onCancel={() => setShowingCreateForm(false)}
+          <CreateArtistWizard
+            onClose={() => setShowingCreateForm(false)}
             onSuccess={() => setShowingCreateForm(false)}
           />
         )}
         <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
           <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
             <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-8">
-                <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-4">
-                  Select Your Band
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Choose a band to access your dashboard, calendar, and practice lists
-                </p>
-              </div>
+              {/* Existing artists - show as tiles */}
+              {userProfile?.bands && userProfile.bands.length > 0 && (
+                <div className="grid gap-4 max-w-2xl mx-auto mb-6">
+                  {userProfile.bands.map((bandMembership) => (
+                    <BandTile
+                      key={bandMembership.bandId}
+                      band={bandMembership.band}
+                      membership={bandMembership}
+                      onClick={() => {
+                        selectBand(bandMembership.bandId);
+                        // The page will automatically reload due to band selection
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
 
-              <div className="grid gap-4 max-w-2xl mx-auto">
-                {userProfile?.bands.map((bandMembership) => (
-                  <BandTile
-                    key={bandMembership.bandId}
-                    band={bandMembership.band}
-                    membership={bandMembership}
-                    onClick={() => {
-                      selectBand(bandMembership.bandId);
-                      // The page will automatically reload due to band selection
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="text-center mt-8">
-                <Button
-                  variant="outline"
+              {/* Create New Artist Tile */}
+              <div className="max-w-2xl mx-auto">
+                <DashboardTile
+                  title="Create New"
+                  subtitle="Start your artist profile"
+                  icon={<Plus />}
+                  color="hsl(24, 95%, 53%)"
+                  actionLabel="Get Started"
                   onClick={() => setShowingCreateForm(true)}
-                  className="mr-4"
-                  data-testid="button-create-new-band"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Band
-                </Button>
+                  className="animate-fade-in-up"
+                />
               </div>
             </div>
           </div>
