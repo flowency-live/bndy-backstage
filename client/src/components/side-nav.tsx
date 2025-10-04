@@ -43,34 +43,35 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   const [location] = useLocation();
   const { session, signOut } = useServerAuth();
   const { toast } = useToast();
-  const { 
-    clearBandSelection, 
-    selectBand,
-    currentBandId, 
-    currentMembership, 
-    userProfile 
+  const {
+    clearArtistSelection,
+    selectArtist,
+    currentArtistId,
+    currentMembership,
+    userProfile
   } = useUser();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
 
-  const handleExitBand = () => {
-    clearBandSelection();
+  const handleExitArtist = () => {
+    clearArtistSelection();
     setLocation('/dashboard');
     onClose();
   };
 
-  const handleBandSwitch = (bandId: string) => {
-    selectBand(bandId);
+  const handleArtistSwitch = (artistId: string) => {
+    selectArtist(artistId);
     window.location.reload(); // Force a full page reload to switch context
   };
 
-  const handleCreateBand = () => {
-    setLocation('/onboarding');
+  const handleCreateArtist = () => {
+    setLocation('/dashboard'); // Dashboard now has wizard
     onClose();
   };
 
   const handleSignOut = async () => {
+    localStorage.removeItem('bndy-selected-artist-id');
     localStorage.removeItem('bndy-selected-band-id');
     localStorage.removeItem('bndy-current-user');
     await signOut();
@@ -83,7 +84,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
     onClose();
   };
 
-  const otherBands = userProfile?.bands.filter(band => band.bandId !== currentBandId) || [];
+  const otherArtists = userProfile?.bands.filter(band => band.bandId !== currentArtistId) || [];
 
 
   return (
@@ -154,7 +155,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           <User className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">No Band Selected</div>
+                          <div className="font-medium text-sm truncate text-foreground">No Artist Selected</div>
                           <div className="text-xs text-muted-foreground truncate">Personal calendar only</div>
                         </div>
                       </>
@@ -165,9 +166,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
               </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-60" align="start">
-                  {/* Active Band */}
+                  {/* Active Artist */}
                   <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
-                    Active Band
+                    Active Artist
                   </div>
                   <DropdownMenuItem disabled className="py-3">
                     <div className="flex items-center gap-3 w-full">
@@ -201,7 +202,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                             <User className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="text-left min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate">No Band Selected</div>
+                            <div className="font-medium text-sm truncate">No Artist Selected</div>
                             <div className="text-xs text-muted-foreground truncate">Personal calendar only</div>
                           </div>
                         </>
@@ -210,21 +211,21 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   </DropdownMenuItem>
 
 
-                  {/* Band Options */}
+                  {/* Artist Options */}
                   {userProfile?.bands && userProfile.bands.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
-                        {currentBandId ? 'Other Bands' : 'Select Band'}
+                        {currentArtistId ? 'Other Artists' : 'Select Artist'}
                       </div>
                       {userProfile.bands
-                        .filter(band => band.bandId !== currentBandId)
+                        .filter(band => band.bandId !== currentArtistId)
                         .map((band) => (
                           <DropdownMenuItem
                             key={band.bandId}
-                            onClick={() => handleBandSwitch(band.bandId)}
+                            onClick={() => handleArtistSwitch(band.bandId)}
                             className="py-3 cursor-pointer"
-                            data-testid={`button-switch-to-band-${band.bandId}`}
+                            data-testid={`button-switch-to-artist-${band.bandId}`}
                           >
                             <div className="flex items-center gap-3 w-full">
                               {band.band.avatarUrl ? (
@@ -257,9 +258,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   <DropdownMenuSeparator />
                   
                   {/* Actions */}
-                  <DropdownMenuItem onClick={handleCreateBand} className="cursor-pointer" data-testid="button-create-new-band">
+                  <DropdownMenuItem onClick={handleCreateArtist} className="cursor-pointer" data-testid="button-create-new-artist">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create New Band
+                    Create New Artist
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -269,10 +270,16 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
           <nav className="flex-1 p-4">
             <div className="space-y-2">
               {navigationItems.map((item) => {
+                // Hide "Song Lists" and "Manage Band" when no artist context
+                const requiresArtistContext = item.href === '/songs' || item.href === '/admin';
+                if (requiresArtistContext && !currentMembership) {
+                  return null;
+                }
+
                 const isActive = location.startsWith(item.href);
                 const IconComponent = item.icon;
                 const isComingSoon = item.href === '/songs';
-                
+
                 const handleClick = () => {
                   if (isComingSoon) {
                     toast({
@@ -284,15 +291,15 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     navigateTo(item.href);
                   }
                 };
-                
+
                 return (
                   <button
                     key={item.href}
                     onClick={handleClick}
                     className={`
                       w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
-                      ${isActive 
-                        ? 'bg-primary/10 text-primary border border-primary/20' 
+                      ${isActive
+                        ? 'bg-primary/10 text-primary border border-primary/20'
                         : 'hover:bg-muted text-foreground'
                       }
                       ${isComingSoon ? 'opacity-75' : ''}
@@ -390,13 +397,13 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   </DropdownMenuItem>
 
                   {currentMembership && (
-                    <DropdownMenuItem 
-                      onClick={handleExitBand} 
+                    <DropdownMenuItem
+                      onClick={handleExitArtist}
                       className="cursor-pointer text-muted-foreground hover:text-foreground"
-                      data-testid="button-exit-band"
+                      data-testid="button-exit-artist"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
-                      Exit Band
+                      Exit Artist
                     </DropdownMenuItem>
                   )}
                   

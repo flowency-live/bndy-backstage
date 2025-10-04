@@ -33,10 +33,10 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     icon: Settings,
-    label: "Manage Band",
+    label: "Manage Artist",
     href: "/admin",
     color: "hsl(220, 13%, 51%)",
-    description: "Band management & settings"
+    description: "Artist management & settings"
   },
   {
     icon: User,

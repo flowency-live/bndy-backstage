@@ -231,8 +231,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   // Navigation helpers
   const canGoNext = () => {
     if (currentStep === 2) return wizardData.name.trim(); // Allow even if duplicate
-    if (currentStep === 3) return true; // Description optional
-    if (currentStep === 4) return wizardData.displayName.trim();
+    if (currentStep === 3) return true; // Description and location optional
+    if (currentStep === 4) return true; // All social media fields optional
     return false;
   };
 
