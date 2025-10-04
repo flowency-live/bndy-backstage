@@ -20,9 +20,16 @@ type ArtistType = typeof ARTIST_TYPES[number]['value'];
 interface WizardData {
   artistType: ArtistType | null;
   name: string;
+  location: string;
   displayName: string;
   icon: string;
   color: string;
+}
+
+interface ExistingArtist {
+  id: string;
+  name: string;
+  location: string | null;
 }
 
 interface CreateArtistWizardProps {
@@ -38,12 +45,14 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const [wizardData, setWizardData] = useState<WizardData>({
     artistType: null,
     name: "",
+    location: "",
     displayName: "",
     icon: "fa-music",
     color: "#708090",
   });
 
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  const [existingArtists, setExistingArtists] = useState<ExistingArtist[]>([]);
   const [checkingName, setCheckingName] = useState(false);
 
   // Get enabled artist types
@@ -60,6 +69,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const checkNameAvailability = async (name: string) => {
     if (!name.trim()) {
       setNameAvailable(null);
+      setExistingArtists([]);
       return;
     }
 
@@ -76,9 +86,11 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
 
       const data = await response.json();
       setNameAvailable(data.available);
+      setExistingArtists(data.matches || []);
     } catch (error) {
       console.error('Error checking name:', error);
       setNameAvailable(null);
+      setExistingArtists([]);
       toast({
         title: "Error",
         description: "Could not check name availability. Please try again.",
@@ -113,6 +125,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
         },
         body: JSON.stringify({
           name: data.name,
+          location: data.location || null,
           artistType: data.artistType,
           memberDisplayName: data.displayName || null,
           memberIcon: data.icon,
@@ -150,7 +163,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   // Navigation helpers
   const canGoNext = () => {
     if (currentStep === 1) return wizardData.artistType !== null;
-    if (currentStep === 2) return wizardData.name.trim() && nameAvailable === true;
+    if (currentStep === 2) return wizardData.name.trim(); // Allow even if duplicate
     if (currentStep === 3) return wizardData.displayName.trim();
     return false;
   };
@@ -247,10 +260,22 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                   <p className="text-sm text-muted-foreground mt-2">Checking availability...</p>
                 )}
 
-                {!checkingName && nameAvailable === false && (
-                  <p className="text-sm text-destructive mt-2" data-testid="error-name-taken">
-                    An artist with this name already exists
-                  </p>
+                {!checkingName && nameAvailable === false && existingArtists.length > 0 && (
+                  <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg" data-testid="warning-name-exists">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-2">
+                      ⚠️ {existingArtists.length} artist{existingArtists.length > 1 ? 's' : ''} with this name already exist{existingArtists.length === 1 ? 's' : ''}:
+                    </p>
+                    <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1 ml-4">
+                      {existingArtists.map((artist) => (
+                        <li key={artist.id}>
+                          {artist.name} {artist.location ? `(${artist.location})` : '(no location)'}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 mt-2">
+                      If this is a different artist, add a location on the next step to differentiate.
+                    </p>
+                  </div>
                 )}
 
                 {!checkingName && nameAvailable === true && wizardData.name.trim() && (
@@ -262,10 +287,35 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </div>
           )}
 
-          {/* Step 3: Member Profile (Minimal) */}
+          {/* Step 3: Member Profile + Location */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <p className="text-muted-foreground">How should you appear as a member?</p>
+              <p className="text-muted-foreground">Complete your artist profile</p>
+
+              {/* Show reminder if duplicates exist */}
+              {existingArtists.length > 0 && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    💡 Add a location to differentiate from existing artists named "{wizardData.name}"
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Location {existingArtists.length > 0 && <span className="text-amber-600">(Recommended)</span>}
+                </label>
+                <input
+                  type="text"
+                  value={wizardData.location}
+                  onChange={(e) => setWizardData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="e.g., Stoke-on-Trent, Manchester, London"
+                  className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                  autoFocus={existingArtists.length > 0}
+                  data-testid="input-location"
+                />
+                <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based</p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">Display Name *</label>
@@ -275,7 +325,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                   onChange={(e) => setWizardData(prev => ({ ...prev, displayName: e.target.value }))}
                   placeholder="Your name in this artist"
                   className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  autoFocus
+                  autoFocus={existingArtists.length === 0}
                   data-testid="input-display-name"
                 />
               </div>
