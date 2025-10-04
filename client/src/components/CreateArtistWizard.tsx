@@ -15,12 +15,22 @@ const ARTIST_TYPES = [
   { value: 'dj', label: 'DJ', enabled: false }, // Disabled initially
 ] as const;
 
+// Hardcoded genres for initial implementation
+// Will be fetched from backend configuration later
+const GENRES = [
+  'Rock', 'Pop', 'Jazz', 'Blues', 'Country', 'Folk', 'Metal',
+  'Punk', 'Indie', 'Alternative', 'Electronic', 'Dance', 'Hip Hop',
+  'R&B', 'Soul', 'Funk', 'Reggae', 'Latin', 'Classical', 'Other'
+];
+
 type ArtistType = typeof ARTIST_TYPES[number]['value'];
 
 interface WizardData {
   artistType: ArtistType | null;
   name: string;
   location: string;
+  description: string;
+  genres: string[];
   displayName: string;
   icon: string;
   color: string;
@@ -41,11 +51,13 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [wizardData, setWizardData] = useState<WizardData>({
     artistType: null,
     name: "",
     location: "",
+    description: "",
+    genres: [],
     displayName: "",
     icon: "fa-music",
     color: "#708090",
@@ -126,6 +138,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
         body: JSON.stringify({
           name: data.name,
           location: data.location || null,
+          bio: data.description || null,
+          genres: data.genres,
           artistType: data.artistType,
           memberDisplayName: data.displayName || null,
           memberIcon: data.icon,
@@ -141,15 +155,16 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
       return await response.json();
     },
     onSuccess: ({ artist }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me"] });
-      localStorage.setItem('bndy-selected-context-id', artist.id);
+      // Set artist as active context
+      localStorage.setItem('bndy-selected-artist-id', artist.id);
 
       toast({
         title: "Artist created!",
         description: `${wizardData.name} has been created successfully.`,
       });
 
-      onSuccess();
+      // Reload page to activate artist context and load full dashboard
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
@@ -160,17 +175,34 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
     },
   });
 
+  // Auto-progress on type selection
+  const handleTypeSelect = (type: ArtistType) => {
+    setWizardData(prev => ({ ...prev, artistType: type }));
+    // Auto-advance to next step
+    setTimeout(() => setCurrentStep(2), 300);
+  };
+
+  // Toggle genre selection
+  const toggleGenre = (genre: string) => {
+    setWizardData(prev => ({
+      ...prev,
+      genres: prev.genres.includes(genre)
+        ? prev.genres.filter(g => g !== genre)
+        : [...prev.genres, genre]
+    }));
+  };
+
   // Navigation helpers
   const canGoNext = () => {
-    if (currentStep === 1) return wizardData.artistType !== null;
     if (currentStep === 2) return wizardData.name.trim(); // Allow even if duplicate
-    if (currentStep === 3) return wizardData.displayName.trim();
+    if (currentStep === 3) return true; // Description optional
+    if (currentStep === 4) return wizardData.displayName.trim();
     return false;
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep((currentStep + 1) as 1 | 2 | 3);
+    if (currentStep < 4) {
+      setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4);
     } else {
       // Final step - submit
       createArtistMutation.mutate(wizardData);
@@ -179,7 +211,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as 1 | 2 | 3);
+      setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4);
     }
   };
 
@@ -191,7 +223,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             <CardTitle className="text-2xl font-serif">
               {currentStep === 1 && "Create new..."}
               {currentStep === 2 && `What's the ${getTypeLabel(wizardData.artistType)} name?`}
-              {currentStep === 3 && "Your Profile"}
+              {currentStep === 3 && "Tell us about your artist"}
+              {currentStep === 4 && "Your Profile"}
             </CardTitle>
             <Button
               variant="ghost"
@@ -204,21 +237,23 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </Button>
           </div>
 
-          {/* Progress indicator */}
-          <div className="flex gap-2 mt-4">
-            {[1, 2, 3].map((step) => (
-              <div
-                key={step}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  step <= currentStep ? 'bg-primary' : 'bg-muted'
-                }`}
-              />
-            ))}
-          </div>
+          {/* Progress indicator - only show after step 1 */}
+          {currentStep > 1 && (
+            <div className="flex gap-2 mt-4">
+              {[2, 3, 4].map((step) => (
+                <div
+                  key={step}
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    step <= currentStep ? 'bg-primary' : 'bg-muted'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="pt-6">
-          {/* Step 1: Artist Type Selection */}
+          {/* Step 1: Artist Type Selection - Auto-progresses */}
           {currentStep === 1 && (
             <div className="space-y-4">
               <p className="text-muted-foreground">Select the type of artist profile you want to create:</p>
@@ -227,12 +262,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                 {enabledTypes.map((type) => (
                   <button
                     key={type.value}
-                    onClick={() => setWizardData(prev => ({ ...prev, artistType: type.value }))}
-                    className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                      wizardData.artistType === type.value
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50 hover:bg-muted'
-                    }`}
+                    onClick={() => handleTypeSelect(type.value)}
+                    className="w-full p-4 rounded-lg border-2 text-left transition-all border-border hover:border-primary/50 hover:bg-muted"
                     data-testid={`button-type-${type.value}`}
                   >
                     <div className="font-semibold text-lg">{type.label}</div>
@@ -287,10 +318,10 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </div>
           )}
 
-          {/* Step 3: Member Profile + Location */}
+          {/* Step 3: Description & Location */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <p className="text-muted-foreground">Complete your artist profile</p>
+              <p className="text-muted-foreground">Add details about your artist (will show on your public profile)</p>
 
               {/* Show reminder if duplicates exist */}
               {existingArtists.length > 0 && (
@@ -318,23 +349,64 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Display Name *</label>
+                <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+                <textarea
+                  value={wizardData.description}
+                  onChange={(e) => setWizardData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Tell people about this artist..."
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors resize-none"
+                  data-testid="input-description"
+                />
+                <p className="text-xs text-muted-foreground mt-1">This will appear on your public profile</p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Genres & Member Profile */}
+          {currentStep === 4 && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
+                <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map((genre) => (
+                    <button
+                      key={genre}
+                      type="button"
+                      onClick={() => toggleGenre(genre)}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                        wizardData.genres.includes(genre)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      }`}
+                      data-testid={`badge-genre-${genre.toLowerCase()}`}
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Your Display Name *</label>
                 <input
                   type="text"
                   value={wizardData.displayName}
                   onChange={(e) => setWizardData(prev => ({ ...prev, displayName: e.target.value }))}
                   placeholder="Your name in this artist"
                   className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  autoFocus={existingArtists.length === 0}
+                  autoFocus
                   data-testid="input-display-name"
                 />
+                <p className="text-xs text-muted-foreground mt-1">How you'll appear as a member</p>
               </div>
             </div>
           )}
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-3 mt-8">
-            {currentStep > 1 && (
+          {/* Navigation Buttons - Hidden on Step 1 (auto-progresses) */}
+          {currentStep > 1 && (
+            <div className="flex gap-3 mt-8">
               <Button
                 type="button"
                 variant="outline"
@@ -345,30 +417,30 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
-            )}
 
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={!canGoNext() || createArtistMutation.isPending}
-              className={`flex-1 ${currentStep === 1 ? 'w-full' : ''}`}
-              data-testid="button-wizard-next"
-            >
-              {createArtistMutation.isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating...
-                </>
-              ) : currentStep === 3 ? (
-                "Create Artist"
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
+              <Button
+                type="button"
+                onClick={handleNext}
+                disabled={!canGoNext() || createArtistMutation.isPending}
+                className="flex-1"
+                data-testid="button-wizard-next"
+              >
+                {createArtistMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : currentStep === 4 ? (
+                  "Create Artist"
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

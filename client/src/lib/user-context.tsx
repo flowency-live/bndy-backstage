@@ -19,13 +19,13 @@ interface UserContextType {
   user: User | null;
   userProfile: UserProfile | null;
   
-  // Current band context
-  currentBandId: string | null;
+  // Current artist context
+  currentArtistId: string | null;
   currentMembership: (UserBand & { band: Band }) | null;
-  
+
   // Actions
-  selectBand: (bandId: string) => void;
-  clearBandSelection: () => void;
+  selectArtist: (artistId: string) => void;
+  clearArtistSelection: () => void;
   logout: () => void;
   
   // Helper methods
@@ -37,7 +37,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { session, isAuthenticated, loading: authLoading, signOut } = useServerAuth();
-  const [currentBandId, setCurrentBandId] = useState<string | null>(null);
+  const [currentArtistId, setCurrentArtistId] = useState<string | null>(null);
 
   // Get user profile and bands from our backend
   const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
@@ -63,43 +63,55 @@ export function UserProvider({ children }: { children: ReactNode }) {
     enabled: isAuthenticated && !!session?.tokens?.idToken,
   });
 
-  // Load selected band from localStorage on mount
+  // Load selected artist from localStorage on mount
   useEffect(() => {
-    const savedBandId = localStorage.getItem('bndy-selected-band-id');
-    if (savedBandId && userProfile?.bands?.some(b => b.bandId === savedBandId)) {
-      setCurrentBandId(savedBandId);
-    } else if (userProfile?.bands?.length === 1) {
-      // Auto-select if only one band
-      const bandId = userProfile.bands[0].bandId;
-      setCurrentBandId(bandId);
-      localStorage.setItem('bndy-selected-band-id', bandId);
-    } else if (savedBandId && userProfile?.bands && !userProfile.bands.some(b => b.bandId === savedBandId)) {
-      // Clear invalid band selection
+    // Check both new and legacy keys for backward compatibility
+    const savedArtistId = localStorage.getItem('bndy-selected-artist-id') || localStorage.getItem('bndy-selected-context-id') || localStorage.getItem('bndy-selected-band-id');
+
+    if (savedArtistId && userProfile?.bands?.some(b => b.bandId === savedArtistId)) {
+      setCurrentArtistId(savedArtistId);
+      // Migrate to new key
+      localStorage.setItem('bndy-selected-artist-id', savedArtistId);
       localStorage.removeItem('bndy-selected-band-id');
-      setCurrentBandId(null);
+      localStorage.removeItem('bndy-selected-context-id');
+    } else if (userProfile?.bands?.length === 1) {
+      // Auto-select if only one artist
+      const artistId = userProfile.bands[0].bandId;
+      setCurrentArtistId(artistId);
+      localStorage.setItem('bndy-selected-artist-id', artistId);
+    } else if (savedArtistId && userProfile?.bands && !userProfile.bands.some(b => b.bandId === savedArtistId)) {
+      // Clear invalid artist selection
+      localStorage.removeItem('bndy-selected-artist-id');
+      localStorage.removeItem('bndy-selected-band-id');
+      localStorage.removeItem('bndy-selected-context-id');
+      setCurrentArtistId(null);
     }
   }, [userProfile]);
 
-  // Find current membership (null if no band context)
-  const currentMembership = currentBandId
-    ? userProfile?.bands.find(b => b.bandId === currentBandId) || null
+  // Find current membership (null if no artist context)
+  const currentMembership = currentArtistId
+    ? userProfile?.bands.find(b => b.bandId === currentArtistId) || null
     : null;
 
-  const selectBand = (bandId: string) => {
-    if (userProfile?.bands.some(b => b.bandId === bandId)) {
-      setCurrentBandId(bandId);
-      localStorage.setItem('bndy-selected-band-id', bandId);
+  const selectArtist = (artistId: string) => {
+    if (userProfile?.bands.some(b => b.bandId === artistId)) {
+      setCurrentArtistId(artistId);
+      localStorage.setItem('bndy-selected-artist-id', artistId);
+      // Clean up legacy keys
+      localStorage.removeItem('bndy-selected-band-id');
+      localStorage.removeItem('bndy-selected-context-id');
     }
   };
 
-
-  const clearBandSelection = () => {
-    setCurrentBandId(null);
+  const clearArtistSelection = () => {
+    setCurrentArtistId(null);
+    localStorage.removeItem('bndy-selected-artist-id');
     localStorage.removeItem('bndy-selected-band-id');
+    localStorage.removeItem('bndy-selected-context-id');
   };
 
   const logout = async () => {
-    clearBandSelection();
+    clearArtistSelection();
     localStorage.removeItem('bndy-current-user'); // Legacy cleanup
     await signOut();
   };
@@ -113,10 +125,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isLoading: authLoading || profileLoading,
     user: userProfile?.user || null,
     userProfile: userProfile || null,
-    currentBandId,
+    currentArtistId,
     currentMembership,
-    selectBand,
-    clearBandSelection,
+    selectArtist,
+    clearArtistSelection,
     logout,
     hasMultipleBands: (userProfile?.bands.length || 0) > 1,
     canAccessBand,

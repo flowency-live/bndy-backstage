@@ -293,7 +293,7 @@ function NextUpCard({ event, onClick }: { event: Event, onClick: () => void }) {
 function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuccess: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectBand } = useUser();
+  const { selectArtist } = useUser();
 
   const [formData, setFormData] = useState({
     bandName: "",
@@ -343,7 +343,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
       });
 
       // Select the new band
-      selectBand(artist.id);
+      selectArtist(artist.id);
       onSuccess();
     },
     onError: (error: Error) => {
@@ -596,7 +596,7 @@ function BandTile({ band, membership, onClick }: {
 export default function Dashboard({ bandId, membership, userProfile }: DashboardProps) {
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
-  const { selectBand } = useUser();
+  const { selectArtist } = useUser();
   const [calendarExpanded, setCalendarExpanded] = React.useState(true);
   const [songExpanded, setSongExpanded] = React.useState(true);
   const [showingCreateForm, setShowingCreateForm] = React.useState(false);
@@ -719,7 +719,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
                       band={bandMembership.band}
                       membership={bandMembership}
                       onClick={() => {
-                        selectBand(bandMembership.bandId);
+                        selectArtist(bandMembership.bandId);
                         // The page will automatically reload due to band selection
                       }}
                     />
