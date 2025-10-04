@@ -58,7 +58,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [wizardData, setWizardData] = useState<WizardData>({
     artistType: null,
     name: "",
@@ -171,17 +171,27 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
 
       return await response.json();
     },
-    onSuccess: ({ artist }) => {
+    onSuccess: (response) => {
+      console.log('🎨 Artist created successfully:', response);
+
       // Set artist as active context
-      localStorage.setItem('bndy-selected-artist-id', artist.id);
+      const artistId = response.artist.id;
+      console.log('🎯 Setting artist context:', artistId);
+      localStorage.setItem('bndy-selected-artist-id', artistId);
 
       toast({
         title: "Artist created!",
         description: `${wizardData.name} has been created successfully.`,
       });
 
-      // Reload page to activate artist context and load full dashboard
-      window.location.reload();
+      // Invalidate queries and reload page to activate artist context
+      queryClient.invalidateQueries({ queryKey: ["/api/memberships/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/users/profile"] });
+
+      console.log('🔄 Reloading page to activate artist context...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -232,13 +242,14 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const canGoNext = () => {
     if (currentStep === 2) return wizardData.name.trim(); // Allow even if duplicate
     if (currentStep === 3) return true; // Description and location optional
-    if (currentStep === 4) return true; // All social media fields optional
+    if (currentStep === 4) return true; // Genres optional
+    if (currentStep === 5) return true; // All social media fields optional
     return false;
   };
 
   const handleNext = () => {
-    if (currentStep < 4) {
-      setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4);
+    if (currentStep < 5) {
+      setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4 | 5);
     } else {
       // Final step - submit
       createArtistMutation.mutate(wizardData);
@@ -247,7 +258,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4);
+      setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4 | 5);
     }
   };
 
@@ -399,8 +410,35 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </div>
           )}
 
-          {/* Step 4: Social Media, Avatar & Genres */}
+          {/* Step 4: Genres */}
           {currentStep === 4 && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
+                <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map((genre) => (
+                    <button
+                      key={genre}
+                      type="button"
+                      onClick={() => toggleGenre(genre)}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                        wizardData.genres.includes(genre)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      }`}
+                      data-testid={`badge-genre-${genre.toLowerCase()}`}
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Social Media & Avatar */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               {/* Artist Avatar Upload */}
               <div>

@@ -5,32 +5,32 @@ import type { User, UserBand, Band } from "@/types/api";
 
 interface UserProfile {
   user: User;
-  bands: (UserBand & { band: Band })[];
+  artists: (UserBand & { artist: Band })[];
 }
 
-// Simplified: Just band context vs no context
+// Simplified: Just artist context vs no context
 
 interface UserContextType {
   // Authentication
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+
   // User profile
   user: User | null;
   userProfile: UserProfile | null;
-  
+
   // Current artist context
   currentArtistId: string | null;
-  currentMembership: (UserBand & { band: Band }) | null;
+  currentMembership: (UserBand & { artist: Band }) | null;
 
   // Actions
   selectArtist: (artistId: string) => void;
   clearArtistSelection: () => void;
   logout: () => void;
-  
+
   // Helper methods
-  hasMultipleBands: boolean;
-  canAccessBand: (bandId: string) => boolean;
+  hasMultipleArtists: boolean;
+  canAccessArtist: (artistId: string) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -39,19 +39,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { session, isAuthenticated, loading: authLoading, signOut } = useServerAuth();
   const [currentArtistId, setCurrentArtistId] = useState<string | null>(null);
 
-  // Get user profile and bands from our backend
-  const { data: userProfile, isLoading: profileLoading, error } = useQuery<UserProfile>({
-    queryKey: ["/api/me"],
+  // Layer 2: Get user profile
+  const { data: userProfileData, isLoading: profileLoading } = useQuery<User>({
+    queryKey: ["/users/profile"],
     queryFn: async () => {
-      if (!session?.tokens?.idToken) {
-        throw new Error("No access token");
-      }
-
-      const response = await fetch("/api/me", {
-        headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch("/users/profile", {
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -60,26 +53,49 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       return response.json();
     },
-    enabled: isAuthenticated && !!session?.tokens?.idToken,
+    enabled: isAuthenticated,
   });
+
+  // Layer 3: Get artist memberships
+  const { data: membershipsData, isLoading: membershipsLoading } = useQuery<{ user: { id: string }, artists: (UserBand & { artist: Band })[] }>({
+    queryKey: ["/api/memberships/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/memberships/me", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch memberships");
+      }
+
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Combine user profile and memberships
+  const userProfile: UserProfile | null = (userProfileData && membershipsData) ? {
+    user: userProfileData,
+    artists: membershipsData.artists || []
+  } : null;
 
   // Load selected artist from localStorage on mount
   useEffect(() => {
     // Check both new and legacy keys for backward compatibility
     const savedArtistId = localStorage.getItem('bndy-selected-artist-id') || localStorage.getItem('bndy-selected-context-id') || localStorage.getItem('bndy-selected-band-id');
 
-    if (savedArtistId && userProfile?.bands?.some(b => b.bandId === savedArtistId)) {
+    if (savedArtistId && userProfile?.artists?.some(a => a.artist_id === savedArtistId)) {
       setCurrentArtistId(savedArtistId);
       // Migrate to new key
       localStorage.setItem('bndy-selected-artist-id', savedArtistId);
       localStorage.removeItem('bndy-selected-band-id');
       localStorage.removeItem('bndy-selected-context-id');
-    } else if (userProfile?.bands?.length === 1) {
+    } else if (userProfile?.artists?.length === 1) {
       // Auto-select if only one artist
-      const artistId = userProfile.bands[0].bandId;
+      const artistId = userProfile.artists[0].artist_id;
       setCurrentArtistId(artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
-    } else if (savedArtistId && userProfile?.bands && !userProfile.bands.some(b => b.bandId === savedArtistId)) {
+    } else if (savedArtistId && userProfile?.artists && !userProfile.artists.some(a => a.artist_id === savedArtistId)) {
       // Clear invalid artist selection
       localStorage.removeItem('bndy-selected-artist-id');
       localStorage.removeItem('bndy-selected-band-id');
@@ -90,11 +106,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Find current membership (null if no artist context)
   const currentMembership = currentArtistId
-    ? userProfile?.bands.find(b => b.bandId === currentArtistId) || null
+    ? userProfile?.artists.find(a => a.artist_id === currentArtistId) || null
     : null;
 
   const selectArtist = (artistId: string) => {
-    if (userProfile?.bands.some(b => b.bandId === artistId)) {
+    if (userProfile?.artists.some(a => a.artist_id === artistId)) {
       setCurrentArtistId(artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
       // Clean up legacy keys
@@ -116,13 +132,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await signOut();
   };
 
-  const canAccessBand = (bandId: string): boolean => {
-    return userProfile?.bands.some(b => b.bandId === bandId) || false;
+  const canAccessArtist = (artistId: string): boolean => {
+    return userProfile?.artists.some(a => a.artist_id === artistId) || false;
   };
 
   const contextValue: UserContextType = {
     isAuthenticated,
-    isLoading: authLoading || profileLoading,
+    isLoading: authLoading || profileLoading || membershipsLoading,
     user: userProfile?.user || null,
     userProfile: userProfile || null,
     currentArtistId,
@@ -130,8 +146,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     selectArtist,
     clearArtistSelection,
     logout,
-    hasMultipleBands: (userProfile?.bands.length || 0) > 1,
-    canAccessBand,
+    hasMultipleArtists: (userProfile?.artists.length || 0) > 1,
+    canAccessArtist,
   };
 
   return (
