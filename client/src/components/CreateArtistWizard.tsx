@@ -185,8 +185,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
       });
 
       // Invalidate queries and reload page to activate artist context
-      queryClient.invalidateQueries({ queryKey: ["/api/memberships/me"] });
-      queryClient.invalidateQueries({ queryKey: ["/users/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
+      queryClient.invalidateQueries({ queryKey: ["users-profile"] });
 
       console.log('🔄 Reloading page to activate artist context...');
       setTimeout(() => {

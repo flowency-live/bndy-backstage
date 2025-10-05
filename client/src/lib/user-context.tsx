@@ -41,9 +41,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Layer 2: Get user profile
   const { data: userProfileData, isLoading: profileLoading } = useQuery<User>({
-    queryKey: ["/users/profile"],
+    queryKey: ["users-profile"],
     queryFn: async () => {
-      const response = await fetch("/users/profile", {
+      const response = await fetch("https://api.bndy.co.uk/users/profile", {
         credentials: "include",
       });
 
@@ -58,9 +58,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Layer 3: Get artist memberships
   const { data: membershipsData, isLoading: membershipsLoading } = useQuery<{ user: { id: string }, artists: (UserBand & { artist: Band })[] }>({
-    queryKey: ["/api/memberships/me"],
+    queryKey: ["api-memberships-me"],
     queryFn: async () => {
-      const response = await fetch("/api/memberships/me", {
+      const response = await fetch("https://api.bndy.co.uk/api/memberships/me", {
         credentials: "include",
       });
 
