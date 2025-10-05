@@ -1,14 +1,245 @@
-import { useState } from 'react';
-import { MapPin, Music, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  getAllVenues,
+  getAllArtists,
+  getAllSongs,
+  updateVenue,
+  updateArtist,
+  updateSong,
+  deleteVenue,
+  deleteArtist,
+  deleteSong,
+  formatDuration,
+  type Venue,
+  type Artist,
+  type Song
+} from '@/lib/services/godmode-service';
 
 export default function GodmodePage() {
   const [activeTab, setActiveTab] = useState('venues');
 
+  // Venues State
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [venuesLoading, setVenuesLoading] = useState(false);
+  const [venuesError, setVenuesError] = useState<string | null>(null);
+  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated'>('all');
+  const [editingVenue, setEditingVenue] = useState<string | null>(null);
+  const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
+  const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
+
+  // Artists State
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [artistsLoading, setArtistsLoading] = useState(false);
+  const [artistsError, setArtistsError] = useState<string | null>(null);
+  const [artistFilter, setArtistFilter] = useState<'all' | 'verified' | 'unverified' | 'claimed' | 'unclaimed'>('all');
+  const [artistSearch, setArtistSearch] = useState('');
+  const [editingArtist, setEditingArtist] = useState<string | null>(null);
+  const [artistEditForm, setArtistEditForm] = useState<Artist | null>(null);
+  const [deletingArtist, setDeletingArtist] = useState<string | null>(null);
+
+  // Songs State
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [songsLoading, setSongsLoading] = useState(false);
+  const [songsError, setSongsError] = useState<string | null>(null);
+  const [songFilter, setSongFilter] = useState<'all' | 'featured' | 'has-streaming'>('all');
+  const [songSearch, setSongSearch] = useState('');
+  const [editingSong, setEditingSong] = useState<string | null>(null);
+  const [songEditForm, setSongEditForm] = useState<Song | null>(null);
+  const [deletingSong, setDeletingSong] = useState<string | null>(null);
+
+  // Fetch Functions
+  const fetchVenues = async () => {
+    setVenuesLoading(true);
+    setVenuesError(null);
+    try {
+      const data = await getAllVenues();
+      setVenues(data);
+    } catch (err) {
+      setVenuesError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setVenuesLoading(false);
+    }
+  };
+
+  const fetchArtists = async () => {
+    setArtistsLoading(true);
+    setArtistsError(null);
+    try {
+      const data = await getAllArtists();
+      setArtists(data);
+    } catch (err) {
+      setArtistsError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setArtistsLoading(false);
+    }
+  };
+
+  const fetchSongs = async () => {
+    setSongsLoading(true);
+    setSongsError(null);
+    try {
+      const data = await getAllSongs();
+      setSongs(data);
+    } catch (err) {
+      setSongsError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setSongsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'venues' && venues.length === 0) fetchVenues();
+    if (activeTab === 'artists' && artists.length === 0) fetchArtists();
+    if (activeTab === 'songs' && songs.length === 0) fetchSongs();
+  }, [activeTab]);
+
+  // Venue Handlers
+  const handleVenueEditStart = (venue: Venue) => {
+    setEditingVenue(venue.id);
+    setVenueEditForm({ ...venue });
+  };
+
+  const handleVenueEditSave = async () => {
+    if (!venueEditForm) return;
+    try {
+      const updated = await updateVenue(venueEditForm.id, venueEditForm);
+      setVenues(venues.map(v => v.id === updated.id ? updated : v));
+      setEditingVenue(null);
+      setVenueEditForm(null);
+    } catch (err) {
+      setVenuesError(err instanceof Error ? err.message : 'Failed to save');
+    }
+  };
+
+  const handleVenueDelete = async (venueId: string) => {
+    if (!confirm('Delete this venue?')) return;
+    setDeletingVenue(venueId);
+    try {
+      await deleteVenue(venueId);
+      setVenues(venues.filter(v => v.id !== venueId));
+    } catch (err) {
+      setVenuesError(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setDeletingVenue(null);
+    }
+  };
+
+  // Artist Handlers
+  const handleArtistEditStart = (artist: Artist) => {
+    setEditingArtist(artist.id);
+    setArtistEditForm({ ...artist });
+  };
+
+  const handleArtistEditSave = async () => {
+    if (!artistEditForm) return;
+    try {
+      const updated = await updateArtist(artistEditForm.id, artistEditForm);
+      setArtists(artists.map(a => a.id === updated.id ? updated : a));
+      setEditingArtist(null);
+      setArtistEditForm(null);
+    } catch (err) {
+      setArtistsError(err instanceof Error ? err.message : 'Failed to save');
+    }
+  };
+
+  const handleArtistDelete = async (artistId: string) => {
+    if (!confirm('Delete this artist?')) return;
+    setDeletingArtist(artistId);
+    try {
+      await deleteArtist(artistId);
+      setArtists(artists.filter(a => a.id !== artistId));
+    } catch (err) {
+      setArtistsError(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setDeletingArtist(null);
+    }
+  };
+
+  // Song Handlers
+  const handleSongEditStart = (song: Song) => {
+    setEditingSong(song.id);
+    setSongEditForm({ ...song });
+  };
+
+  const handleSongEditSave = async () => {
+    if (!songEditForm) return;
+    try {
+      const updated = await updateSong(songEditForm.id, songEditForm);
+      setSongs(songs.map(s => s.id === updated.id ? updated : s));
+      setEditingSong(null);
+      setSongEditForm(null);
+    } catch (err) {
+      setSongsError(err instanceof Error ? err.message : 'Failed to save');
+    }
+  };
+
+  const handleSongDelete = async (songId: string) => {
+    if (!confirm('Delete this song?')) return;
+    setDeletingSong(songId);
+    try {
+      await deleteSong(songId);
+      setSongs(songs.filter(s => s.id !== songId));
+    } catch (err) {
+      setSongsError(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setDeletingSong(null);
+    }
+  };
+
+  // Filtered Data
+  const filteredVenues = venues.filter(v => {
+    if (venueFilter === 'validated') return v.validated;
+    if (venueFilter === 'unvalidated') return !v.validated;
+    return true;
+  });
+
+  const filteredArtists = artists.filter(a => {
+    const matchesSearch = a.name.toLowerCase().includes(artistSearch.toLowerCase()) ||
+                         a.location.toLowerCase().includes(artistSearch.toLowerCase());
+    if (!matchesSearch) return false;
+    if (artistFilter === 'verified') return a.isVerified;
+    if (artistFilter === 'unverified') return !a.isVerified;
+    if (artistFilter === 'claimed') return a.claimedByUserId !== null;
+    if (artistFilter === 'unclaimed') return a.claimedByUserId === null;
+    return true;
+  });
+
+  const filteredSongs = songs.filter(s => {
+    const matchesSearch = s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
+                         s.artistName.toLowerCase().includes(songSearch.toLowerCase());
+    if (!matchesSearch) return false;
+    if (songFilter === 'featured') return s.isFeatured;
+    if (songFilter === 'has-streaming') return !!(s.spotifyUrl || s.appleMusicUrl);
+    return true;
+  });
+
+  // Stats
+  const venueStats = {
+    total: venues.length,
+    validated: venues.filter(v => v.validated).length,
+    unvalidated: venues.filter(v => !v.validated).length,
+    withImages: venues.filter(v => v.profileImageUrl).length,
+  };
+
+  const artistStats = {
+    total: artists.length,
+    verified: artists.filter(a => a.isVerified).length,
+    claimed: artists.filter(a => a.claimedByUserId).length,
+  };
+
+  const songStats = {
+    total: songs.length,
+    featured: songs.filter(s => s.isFeatured).length,
+    hasStreaming: songs.filter(s => s.spotifyUrl || s.appleMusicUrl).length,
+  };
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Godmode Admin</h1>
         <p className="text-muted-foreground">Manage venues, artists, and songs across the platform</p>
@@ -18,52 +249,373 @@ export default function GodmodePage() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="venues" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            Venues
+            Venues ({venueStats.total})
           </TabsTrigger>
           <TabsTrigger value="artists" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Artists
+            Artists ({artistStats.total})
           </TabsTrigger>
           <TabsTrigger value="songs" className="flex items-center gap-2">
             <Music className="h-4 w-4" />
-            Songs
+            Songs ({songStats.total})
           </TabsTrigger>
         </TabsList>
 
+        {/* VENUES TAB */}
         <TabsContent value="venues" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Venues Management</CardTitle>
-              <CardDescription>View and manage all venues in the system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Venues grid coming soon...</p>
-            </CardContent>
-          </Card>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex gap-2">
+              <Button
+                variant={venueFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('all')}
+                size="sm"
+              >
+                All ({venueStats.total})
+              </Button>
+              <Button
+                variant={venueFilter === 'validated' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('validated')}
+                size="sm"
+              >
+                Validated ({venueStats.validated})
+              </Button>
+              <Button
+                variant={venueFilter === 'unvalidated' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('unvalidated')}
+                size="sm"
+              >
+                Unvalidated ({venueStats.unvalidated})
+              </Button>
+            </div>
+            <Button onClick={fetchVenues} size="sm" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+
+          {venuesLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
+          {venuesError && <div className="text-destructive text-center py-12">{venuesError}</div>}
+
+          {!venuesLoading && !venuesError && (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Address</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Coordinates</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {filteredVenues.map(venue => (
+                      <tr key={venue.id} className="hover:bg-muted/50">
+                        <td className="px-4 py-3">
+                          {venue.validated ?
+                            <CheckCircle className="h-5 w-5 text-green-500" /> :
+                            <AlertCircle className="h-5 w-5 text-yellow-500" />
+                          }
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingVenue === venue.id ? (
+                            <Input
+                              value={venueEditForm?.name || ''}
+                              onChange={(e) => setVenueEditForm(prev => prev ? {...prev, name: e.target.value} : null)}
+                              className="h-8"
+                            />
+                          ) : (
+                            <div className="font-medium">{venue.name}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingVenue === venue.id ? (
+                            <Input
+                              value={venueEditForm?.address || ''}
+                              onChange={(e) => setVenueEditForm(prev => prev ? {...prev, address: e.target.value} : null)}
+                              className="h-8"
+                            />
+                          ) : (
+                            <div className="text-sm max-w-xs truncate">{venue.address}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-xs text-muted-foreground">
+                            <div>{venue.location.lat.toFixed(6)}</div>
+                            <div>{venue.location.lng.toFixed(6)}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {editingVenue === venue.id ? (
+                              <>
+                                <Button size="sm" variant="default" onClick={handleVenueEditSave}>
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingVenue(null)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => handleVenueEditStart(venue)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleVenueDelete(venue.id)}
+                                  disabled={deletingVenue === venue.id}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </TabsContent>
 
+        {/* ARTISTS TAB */}
         <TabsContent value="artists" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Artists Management</CardTitle>
-              <CardDescription>View and manage all artists in the system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Artists grid coming soon...</p>
-            </CardContent>
-          </Card>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex gap-2">
+              <Button
+                variant={artistFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('all')}
+                size="sm"
+              >
+                All ({artistStats.total})
+              </Button>
+              <Button
+                variant={artistFilter === 'verified' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('verified')}
+                size="sm"
+              >
+                Verified ({artistStats.verified})
+              </Button>
+              <Button
+                variant={artistFilter === 'claimed' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('claimed')}
+                size="sm"
+              >
+                Claimed ({artistStats.claimed})
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search artists..."
+                  value={artistSearch}
+                  onChange={(e) => setArtistSearch(e.target.value)}
+                  className="pl-8 w-64"
+                />
+              </div>
+              <Button onClick={fetchArtists} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          {artistsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
+          {artistsError && <div className="text-destructive text-center py-12">{artistsError}</div>}
+
+          {!artistsLoading && !artistsError && (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Location</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genres</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {filteredArtists.map(artist => (
+                      <tr key={artist.id} className="hover:bg-muted/50">
+                        <td className="px-4 py-3">
+                          {editingArtist === artist.id ? (
+                            <Input
+                              value={artistEditForm?.name || ''}
+                              onChange={(e) => setArtistEditForm(prev => prev ? {...prev, name: e.target.value} : null)}
+                              className="h-8"
+                            />
+                          ) : (
+                            <div className="font-medium">{artist.name}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">{artist.location}</td>
+                        <td className="px-4 py-3 text-sm">{artist.genres.slice(0, 2).join(', ')}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {artist.isVerified && <CheckCircle className="h-4 w-4 text-green-500" />}
+                            {artist.claimedByUserId && <User className="h-4 w-4 text-blue-500" />}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {editingArtist === artist.id ? (
+                              <>
+                                <Button size="sm" variant="default" onClick={handleArtistEditSave}>
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingArtist(null)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => handleArtistEditStart(artist)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleArtistDelete(artist.id)}
+                                  disabled={deletingArtist === artist.id}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </TabsContent>
 
+        {/* SONGS TAB */}
         <TabsContent value="songs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Songs Management</CardTitle>
-              <CardDescription>View and manage all songs in the system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Songs grid coming soon...</p>
-            </CardContent>
-          </Card>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex gap-2">
+              <Button
+                variant={songFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setSongFilter('all')}
+                size="sm"
+              >
+                All ({songStats.total})
+              </Button>
+              <Button
+                variant={songFilter === 'featured' ? 'default' : 'outline'}
+                onClick={() => setSongFilter('featured')}
+                size="sm"
+              >
+                Featured ({songStats.featured})
+              </Button>
+              <Button
+                variant={songFilter === 'has-streaming' ? 'default' : 'outline'}
+                onClick={() => setSongFilter('has-streaming')}
+                size="sm"
+              >
+                Has Streaming ({songStats.hasStreaming})
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search songs..."
+                  value={songSearch}
+                  onChange={(e) => setSongSearch(e.target.value)}
+                  className="pl-8 w-64"
+                />
+              </div>
+              <Button onClick={fetchSongs} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          {songsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
+          {songsError && <div className="text-destructive text-center py-12">{songsError}</div>}
+
+          {!songsLoading && !songsError && (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Title</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artist</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genre</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Duration</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Featured</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {filteredSongs.map(song => (
+                      <tr key={song.id} className="hover:bg-muted/50">
+                        <td className="px-4 py-3">
+                          {editingSong === song.id ? (
+                            <Input
+                              value={songEditForm?.title || ''}
+                              onChange={(e) => setSongEditForm(prev => prev ? {...prev, title: e.target.value} : null)}
+                              className="h-8"
+                            />
+                          ) : (
+                            <div className="font-medium">{song.title}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm">{song.artistName}</td>
+                        <td className="px-4 py-3 text-sm">{song.genre || '-'}</td>
+                        <td className="px-4 py-3 text-sm">{formatDuration(song.duration)}</td>
+                        <td className="px-4 py-3">
+                          {song.isFeatured && <CheckCircle className="h-4 w-4 text-green-500" />}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {editingSong === song.id ? (
+                              <>
+                                <Button size="sm" variant="default" onClick={handleSongEditSave}>
+                                  <Save className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingSong(null)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => handleSongEditStart(song)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleSongDelete(song.id)}
+                                  disabled={deletingSong === song.id}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
