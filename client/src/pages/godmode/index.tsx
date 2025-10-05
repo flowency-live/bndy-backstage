@@ -27,7 +27,8 @@ export default function GodmodePage() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated'>('all');
+  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'has-coords' | 'has-images'>('all');
+  const [venueSearch, setVenueSearch] = useState('');
   const [editingVenue, setEditingVenue] = useState<string | null>(null);
   const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
   const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function GodmodePage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
   const [songsError, setSongsError] = useState<string | null>(null);
-  const [songFilter, setSongFilter] = useState<'all' | 'featured' | 'has-streaming'>('all');
+  const [songFilter, setSongFilter] = useState<'all' | 'featured' | 'has-streaming' | 'has-audio' | 'has-genre'>('all');
   const [songSearch, setSongSearch] = useState('');
   const [editingSong, setEditingSong] = useState<string | null>(null);
   const [songEditForm, setSongEditForm] = useState<Song | null>(null);
@@ -193,8 +194,14 @@ export default function GodmodePage() {
 
   // Filtered Data
   const filteredVenues = venues.filter(v => {
+    const matchesSearch = v.name.toLowerCase().includes(venueSearch.toLowerCase()) ||
+                         v.address.toLowerCase().includes(venueSearch.toLowerCase()) ||
+                         (v.postcode && v.postcode.toLowerCase().includes(venueSearch.toLowerCase()));
+    if (!matchesSearch) return false;
     if (venueFilter === 'validated') return v.validated;
     if (venueFilter === 'unvalidated') return !v.validated;
+    if (venueFilter === 'has-coords') return v.latitude !== 0 && v.longitude !== 0;
+    if (venueFilter === 'has-images') return v.profileImageUrl !== null;
     return true;
   });
 
@@ -211,10 +218,14 @@ export default function GodmodePage() {
 
   const filteredSongs = songs.filter(s => {
     const matchesSearch = s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
-                         s.artistName.toLowerCase().includes(songSearch.toLowerCase());
+                         s.artistName.toLowerCase().includes(songSearch.toLowerCase()) ||
+                         s.genre.toLowerCase().includes(songSearch.toLowerCase()) ||
+                         (s.album && s.album.toLowerCase().includes(songSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (songFilter === 'featured') return s.isFeatured;
-    if (songFilter === 'has-streaming') return !!(s.spotifyUrl || s.appleMusicUrl);
+    if (songFilter === 'has-streaming') return !!(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl);
+    if (songFilter === 'has-audio') return !!s.audioFileUrl;
+    if (songFilter === 'has-genre') return !!s.genre;
     return true;
   });
 
@@ -223,19 +234,27 @@ export default function GodmodePage() {
     total: venues.length,
     validated: venues.filter(v => v.validated).length,
     unvalidated: venues.filter(v => !v.validated).length,
-    withImages: venues.filter(v => v.profileImageUrl).length,
+    hasCoords: venues.filter(v => v.latitude !== 0 && v.longitude !== 0).length,
+    hasImages: venues.filter(v => v.profileImageUrl).length,
+    hasPhone: venues.filter(v => v.phone).length,
   };
 
   const artistStats = {
     total: artists.length,
     verified: artists.filter(a => a.isVerified).length,
-    claimed: artists.filter(a => a.claimedByUserId).length,
+    unverified: artists.filter(a => !a.isVerified).length,
+    claimed: artists.filter(a => a.claimedByUserId !== null).length,
+    unclaimed: artists.filter(a => a.claimedByUserId === null).length,
+    withImages: artists.filter(a => a.profileImageUrl).length,
   };
 
   const songStats = {
     total: songs.length,
     featured: songs.filter(s => s.isFeatured).length,
-    hasStreaming: songs.filter(s => s.spotifyUrl || s.appleMusicUrl).length,
+    hasStreaming: songs.filter(s => s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl).length,
+    hasAudio: songs.filter(s => s.audioFileUrl).length,
+    hasGenre: songs.filter(s => s.genre).length,
+    hasDuration: songs.filter(s => s.duration).length,
   };
 
   return (
@@ -263,8 +282,20 @@ export default function GodmodePage() {
 
         {/* VENUES TAB */}
         <TabsContent value="venues" className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <Input
+                placeholder="Search venues by name, address, or postcode..."
+                value={venueSearch}
+                onChange={(e) => setVenueSearch(e.target.value)}
+                className="max-w-md"
+              />
+              <Button onClick={fetchVenues} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={venueFilter === 'all' ? 'default' : 'outline'}
                 onClick={() => setVenueFilter('all')}
@@ -286,11 +317,21 @@ export default function GodmodePage() {
               >
                 Unvalidated ({venueStats.unvalidated})
               </Button>
+              <Button
+                variant={venueFilter === 'has-coords' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('has-coords')}
+                size="sm"
+              >
+                Has Coords ({venueStats.hasCoords})
+              </Button>
+              <Button
+                variant={venueFilter === 'has-images' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('has-images')}
+                size="sm"
+              >
+                With Images ({venueStats.hasImages})
+              </Button>
             </div>
-            <Button onClick={fetchVenues} size="sm" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
           </div>
 
           {venuesLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
@@ -503,8 +544,23 @@ export default function GodmodePage() {
 
         {/* SONGS TAB */}
         <TabsContent value="songs" className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search songs by title, artist, genre, or album..."
+                  value={songSearch}
+                  onChange={(e) => setSongSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Button onClick={fetchSongs} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={songFilter === 'all' ? 'default' : 'outline'}
                 onClick={() => setSongFilter('all')}
@@ -524,22 +580,21 @@ export default function GodmodePage() {
                 onClick={() => setSongFilter('has-streaming')}
                 size="sm"
               >
-                Has Streaming ({songStats.hasStreaming})
+                Streaming ({songStats.hasStreaming})
               </Button>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search songs..."
-                  value={songSearch}
-                  onChange={(e) => setSongSearch(e.target.value)}
-                  className="pl-8 w-64"
-                />
-              </div>
-              <Button onClick={fetchSongs} size="sm" variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+              <Button
+                variant={songFilter === 'has-audio' ? 'default' : 'outline'}
+                onClick={() => setSongFilter('has-audio')}
+                size="sm"
+              >
+                Audio ({songStats.hasAudio})
+              </Button>
+              <Button
+                variant={songFilter === 'has-genre' ? 'default' : 'outline'}
+                onClick={() => setSongFilter('has-genre')}
+                size="sm"
+              >
+                Genre ({songStats.hasGenre})
               </Button>
             </div>
           </div>
