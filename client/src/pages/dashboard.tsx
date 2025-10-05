@@ -914,16 +914,38 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           )}
         </div>
 
-        {/* Members & Settings Section */}
+        {/* Profile & Members Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+          {/* Profile Section */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">
+                  {membership?.artist?.name || membership?.name} Profile
+                </h2>
+              </div>
+            </div>
+
+            <DashboardTile
+              title={`${membership?.artist?.name || membership?.name} Profile`}
+              subtitle="Artist settings & configuration"
+              icon={<Settings />}
+              color="hsl(220, 13%, 51%)"
+              actionLabel="Configure"
+              onClick={() => setLocation("/admin")}
+              className="animate-stagger-3"
+            />
+          </div>
+
           {/* Members Section */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Members</h2>
-                <p className="text-muted-foreground text-sm sm:text-base">Band member management</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">
+                  {membership?.artist?.name || membership?.name} Members
+                </h2>
               </div>
-              <Button 
+              <Button
                 onClick={() => setLocation("/admin")}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
                 size="sm"
@@ -935,32 +957,12 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
             </div>
 
             <DashboardTile
-              title="Members"
+              title={`${membership?.artist?.name || membership?.name} Members`}
               subtitle="Manage your team"
               icon={<Users />}
               color="hsl(142, 71%, 45%)"
               count={bandMembers.length}
               actionLabel="Manage"
-              onClick={() => setLocation("/admin")}
-              className="animate-stagger-3"
-            />
-          </div>
-
-          {/* Settings Section */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Settings</h2>
-                <p className="text-muted-foreground text-sm sm:text-base">Band configuration</p>
-              </div>
-            </div>
-
-            <DashboardTile
-              title="Settings"
-              subtitle="Configure your band"
-              icon={<Settings />}
-              color="hsl(220, 13%, 51%)"
-              actionLabel="Configure"
               onClick={() => setLocation("/admin")}
               className="animate-stagger-4"
             />
