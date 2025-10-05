@@ -124,6 +124,26 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" side="bottom" className="w-56">
+                        {/* View All Artists Link */}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setLocation('/my-artists');
+                            setIsOpen(false);
+                          }}
+                          className="flex items-center gap-3 p-3 font-medium text-primary"
+                        >
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/10">
+                            <i className="fas fa-th text-primary text-sm"></i>
+                          </div>
+                          <span>My Artists</span>
+                        </DropdownMenuItem>
+
+                        {/* Separator if there are other artists */}
+                        {userProfile?.artists?.filter(membership => membership.artist_id !== currentArtistId).length > 0 && (
+                          <div className="h-px bg-border my-1" />
+                        )}
+
+                        {/* Other Artists Quick Switch */}
                         {userProfile?.artists
                           ?.filter(membership => membership.artist_id !== currentArtistId) // Don't show current artist
                           ?.map((membership) => (

@@ -697,8 +697,15 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const totalSongs = songs.length;
   const nextUpEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
 
-  // Handle no band selected case - show band tiles (after hooks are called)
+  // Handle no artist selected case
   if (!artistId || !membership || !userProfile) {
+    // If user has artist memberships, redirect to My Artists page
+    if (userProfile?.artists && userProfile.artists.length > 0) {
+      setLocation('/my-artists');
+      return null;
+    }
+
+    // No artist memberships - show ONLY create new tile
     return (
       <>
         {showingCreateForm && (
@@ -710,24 +717,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
           <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
             <div className="max-w-4xl mx-auto">
-              {/* Existing artists - show as tiles */}
-              {userProfile?.artists && userProfile.artists.length > 0 && (
-                <div className="grid gap-4 max-w-2xl mx-auto mb-6">
-                  {userProfile.artists.map((artistMembership) => (
-                    <ArtistTile
-                      key={artistMembership.artist_id}
-                      artist={artistMembership.artist!}
-                      membership={artistMembership}
-                      onClick={() => {
-                        selectArtist(artistMembership.artist_id);
-                        // The page will automatically reload due to artist selection
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Create New Artist Tile */}
+              {/* Create New Artist Tile - Only shown when no artists exist */}
               <div className="max-w-2xl mx-auto">
                 <DashboardTile
                   title="Create New"

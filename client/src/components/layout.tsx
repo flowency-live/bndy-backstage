@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import SideNav, { BurgerMenuButton } from "@/components/side-nav";
 import { MobileNavHeader } from "@/components/mobile-nav";
 import BndyLogo from "@/components/ui/bndy-logo";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership } from "@/types/api";
 
 interface NavigationContextType {
   isNavOpen: boolean;
@@ -42,12 +42,12 @@ function NavigationProvider({ children }: NavigationProviderProps) {
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  bandId?: string;
-  membership?: UserBand & { band: Band };
+  artistId?: string;
+  membership?: ArtistMembership;
   isLoading?: boolean;
 }
 
-export function AppLayout({ children, bandId, membership, isLoading = false }: AppLayoutProps) {
+export function AppLayout({ children, artistId, membership, isLoading = false }: AppLayoutProps) {
   const { isNavOpen, closeNav } = useNavigation();
   const [location] = useLocation();
 
@@ -61,9 +61,9 @@ export function AppLayout({ children, bandId, membership, isLoading = false }: A
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Mobile Navigation Header */}
-      <MobileNavHeader 
-        currentBandId={bandId} 
-        currentMembership={membership} 
+      <MobileNavHeader
+        currentArtistId={artistId}
+        currentMembership={membership}
         isLoading={isLoading}
       />
 

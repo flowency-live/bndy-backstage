@@ -10,6 +10,7 @@ import MemberGate from "@/components/member-gate";
 import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import MyArtists from "@/pages/my-artists";
 import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
@@ -42,8 +43,17 @@ function Router() {
       <Route path="/dashboard">
         <MemberGate allowNoContextForDashboard={true}>
           {({ contextId, membership, userProfile }) => (
-            <AppLayout bandId={contextId} membership={membership}>
-              <Dashboard bandId={contextId} membership={membership} userProfile={userProfile} />
+            <AppLayout artistId={contextId} membership={membership}>
+              <Dashboard artistId={contextId} membership={membership} userProfile={userProfile} />
+            </AppLayout>
+          )}
+        </MemberGate>
+      </Route>
+      <Route path="/my-artists">
+        <MemberGate allowNoContextForDashboard={true}>
+          {({ userProfile }) => (
+            <AppLayout>
+              <MyArtists />
             </AppLayout>
           )}
         </MemberGate>
@@ -53,8 +63,8 @@ function Router() {
           {({ contextId, membership }) => {
             if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={contextId} membership={membership}>
-                <Calendar bandId={contextId} membership={membership} />
+              <AppLayout artistId={contextId} membership={membership}>
+                <Calendar artistId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
@@ -65,8 +75,8 @@ function Router() {
           {({ contextId, membership }) => {
             if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={contextId} membership={membership}>
-                <Songs bandId={contextId} membership={membership} />
+              <AppLayout artistId={contextId} membership={membership}>
+                <Songs artistId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
@@ -77,8 +87,8 @@ function Router() {
           {({ contextId, membership }) => {
             if (!contextId || !membership) return null;
             return (
-              <AppLayout bandId={contextId} membership={membership}>
-                <Admin bandId={contextId} membership={membership} />
+              <AppLayout artistId={contextId} membership={membership}>
+                <Admin artistId={contextId} membership={membership} />
               </AppLayout>
             );
           }}
