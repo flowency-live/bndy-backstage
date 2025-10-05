@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { ArtistMembership } from "@/types/api";
+import type { ArtistMembership, Artist } from "@/types/api";
 import { EVENT_TYPES, EVENT_TYPE_CONFIG } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -409,15 +409,38 @@ export default function Admin({ artistId, membership }: AdminProps) {
   });
   const [activeTab, setActiveTab] = useState<'band' | 'members' | 'spotify'>('band');
   const [invitePhone, setInvitePhone] = useState("");
-  const [bandSettings, setBandSettings] = useState({
-    name: membership.band.name,
-    description: membership.band.description || '',
-    avatar: membership.band.avatarUrl || null,
-    allowedEventTypes: membership.band.allowedEventTypes || ['practice', 'public_gig'],
+  // Fetch full artist data
+  const { data: artistData } = useQuery<Artist>({
+    queryKey: ["/api/artists", artistId],
+    queryFn: async () => {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}`);
+      if (!response.ok) throw new Error("Failed to fetch artist");
+      return response.json();
+    },
+    enabled: !!artistId,
   });
 
+  const [bandSettings, setBandSettings] = useState({
+    name: artistData?.name || membership.artist?.name || membership.name || '',
+    description: artistData?.bio || membership.artist?.bio || '',
+    avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
+    allowedEventTypes: artistData?.allowedEventTypes || membership.artist?.allowedEventTypes || ['practice', 'public_gig'],
+  });
+
+  // Update form when artist data loads
+  useEffect(() => {
+    if (artistData) {
+      setBandSettings({
+        name: artistData.name || '',
+        description: artistData.bio || '',
+        avatar: artistData.profileImageUrl || null,
+        allowedEventTypes: artistData.allowedEventTypes || ['practice', 'public_gig'],
+      });
+    }
+  }, [artistData]);
+
   // Get band members using new band-scoped API
-  const { data: bandMembers = [], isLoading } = useQuery<(UserBand & { user: any })[]>({
+  const { data: bandMembers = [], isLoading } = useQuery<ArtistMembership[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session?.access_token) {
@@ -968,12 +991,14 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setBandSettings({
-                          name: membership.band.name,
-                          description: membership.band.description || '',
-                          avatar: membership.band.avatarUrl || null,
-                          allowedEventTypes: membership.band.allowedEventTypes || ['practice', 'public_gig'],
-                        });
+                        if (artistData) {
+                          setBandSettings({
+                            name: artistData.name || '',
+                            description: artistData.bio || '',
+                            avatar: artistData.profileImageUrl || null,
+                            allowedEventTypes: artistData.allowedEventTypes || ['practice', 'public_gig'],
+                          });
+                        }
                       }}
                       className="px-6"
                       data-testid="button-cancel-band"
