@@ -101,7 +101,7 @@ class IssuesService {
    * Create a new issue
    */
   async createIssue(issueData: CreateIssueData): Promise<Issue> {
-    return this.apiRequest<Issue>('/issues', {
+    return this.apiRequest<Issue>('/api/issues', {
       method: 'POST',
       body: JSON.stringify(issueData),
     });
@@ -119,7 +119,7 @@ class IssuesService {
     if (filters.search) params.append('search', filters.search);
 
     const queryString = params.toString();
-    const endpoint = queryString ? `/issues?${queryString}` : '/issues';
+    const endpoint = queryString ? `/api/issues?${queryString}` : '/api/issues';
 
     return this.apiRequest<IssuesResponse>(endpoint);
   }
@@ -128,7 +128,7 @@ class IssuesService {
    * Update an existing issue
    */
   async updateIssue(issueId: string, updates: UpdateIssueData): Promise<Issue> {
-    return this.apiRequest<Issue>(`/issues/${issueId}`, {
+    return this.apiRequest<Issue>(`/api/issues/${issueId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
@@ -138,7 +138,7 @@ class IssuesService {
    * Delete an issue
    */
   async deleteIssue(issueId: string): Promise<void> {
-    return this.apiRequest<void>(`/issues/${issueId}`, {
+    return this.apiRequest<void>(`/api/issues/${issueId}`, {
       method: 'DELETE',
     });
   }
@@ -147,7 +147,7 @@ class IssuesService {
    * Batch update multiple issues
    */
   async batchUpdateIssues(data: BatchUpdateData): Promise<{ updated: number }> {
-    return this.apiRequest<{ updated: number }>('/issues/batch', {
+    return this.apiRequest<{ updated: number }>('/api/issues/batch', {
       method: 'POST',
       body: JSON.stringify(data),
     });
