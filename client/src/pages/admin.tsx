@@ -62,16 +62,16 @@ function AvatarUploadModal({ membershipId, member, artistId, session, onClose, o
   
   const saveMutation = useMutation({
     mutationFn: async (newAvatarUrl: string | null) => {
-      if (!session?.access_token) {
-        throw new Error('No access token');
+      if (!session) {
+        throw new Error('Not authenticated');
       }
-      
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/${membershipId}/avatar`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ avatarUrl: newAvatarUrl })
       });
       
@@ -195,15 +195,15 @@ function ActiveMagicLinks({ artistId, session, toast }: {
   const { data: magicLinks = [], isLoading: linksLoading, refetch: refetchLinks } = useQuery<MagicLink[]>({
     queryKey: ['/api/artists', artistId, 'invites'],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error('No access token');
+      if (!session) {
+        throw new Error('Not authenticated');
       }
-      
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       if (!response.ok) {
@@ -212,22 +212,22 @@ function ActiveMagicLinks({ artistId, session, toast }: {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!artistId
+    enabled: !!session && !!artistId
   });
   
   // Mutation for revoking magic links
   const revokeLinkMutation = useMutation({
     mutationFn: async (linkId: string) => {
-      if (!session?.access_token) {
-        throw new Error('No access token');
+      if (!session) {
+        throw new Error('Not authenticated');
       }
-      
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/${linkId}/revoke`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       if (!response.ok) {
@@ -443,15 +443,15 @@ export default function Admin({ artistId, membership }: AdminProps) {
   const { data: bandMembers = [], isLoading } = useQuery<ArtistMembership[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       
       if (!response.ok) {
@@ -460,21 +460,21 @@ export default function Admin({ artistId, membership }: AdminProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!artistId,
+    enabled: !!session && !!artistId,
   });
 
   // Spotify queries
-  const { data: playlists = [] } = useQuery({
+  const { data: playlistsResponse } = useQuery({
     queryKey: ['/api/spotify/playlists'],
     queryFn: async () => {
-      if (!accessToken) return [];
-      
+      if (!accessToken) return { items: [] };
+
       const response = await fetch("/api/spotify/playlists", {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           setAccessToken(null);
@@ -483,11 +483,20 @@ export default function Admin({ artistId, membership }: AdminProps) {
         }
         throw new Error('Failed to fetch playlists');
       }
-      
-      return response.json();
+
+      const data = await response.json();
+      // Handle both array and object responses
+      return Array.isArray(data) ? { items: data } : data;
     },
     enabled: !!accessToken,
   });
+
+  // Ensure playlists is always an array
+  const playlists = Array.isArray(playlistsResponse?.items)
+    ? playlistsResponse.items
+    : Array.isArray(playlistsResponse)
+      ? playlistsResponse
+      : [];
 
   const { data: profile } = useQuery({
     queryKey: ['/api/spotify/user'],
@@ -522,24 +531,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
   const inviteMemberMutation = useMutation({
     mutationFn: async (member: typeof newMember) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/invite`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(member),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to invite member");
-      }
-      
+
+      const response = await apiRequest("POST", `/api/artists/${artistId}/members/invite`, member);
+
       return response.json();
     },
     onSuccess: () => {
@@ -561,21 +558,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/${membershipId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to remove member");
-      }
-      
+
+      const response = await apiRequest("DELETE", `/api/artists/${artistId}/members/${membershipId}`);
       return response.json();
     },
     onSuccess: () => {
@@ -598,16 +585,16 @@ export default function Admin({ artistId, membership }: AdminProps) {
   // Band settings mutation
   const updateBandMutation = useMutation({
     mutationFn: async (settings: typeof bandSettings) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
-      
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}`, {
         method: "PATCH",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           name: settings.name,
           description: settings.description,
@@ -707,7 +694,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
   };
 
   const importFromPlaylist = async () => {
-    if (!selectedPlaylistId || !accessToken || !session?.access_token) return;
+    if (!selectedPlaylistId || !accessToken || !session) return;
     
     try {
       const response = await fetch(`/api/spotify/playlists/${selectedPlaylistId}/tracks`, {
@@ -723,24 +710,17 @@ export default function Admin({ artistId, membership }: AdminProps) {
       let addedCount = 0;
       for (const item of tracks) {
         try {
-          const addResponse = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
-            method: "POST",
-            headers: { 
-              "Authorization": `Bearer ${session.access_token}`,
-              "Content-Type": "application/json" 
-            },
-            body: JSON.stringify({
-              spotifyId: item.track.id,
-              title: item.track.name,
-              artist: item.track.artists.map((a: any) => a.name).join(", "),
-              album: item.track.album.name || "",
-              spotifyUrl: item.track.external_urls.spotify,
-              imageUrl: item.track.album.images.length > 0 ? item.track.album.images[0].url : null,
-              previewUrl: item.track.preview_url,
-              addedByMembershipId: membership.id
-            }),
+          const addResponse = await apiRequest("POST", `/api/artists/${artistId}/songs`, {
+            spotifyId: item.track.id,
+            title: item.track.name,
+            artist: item.track.artists.map((a: any) => a.name).join(", "),
+            album: item.track.album.name || "",
+            spotifyUrl: item.track.external_urls.spotify,
+            imageUrl: item.track.album.images.length > 0 ? item.track.album.images[0].url : null,
+            previewUrl: item.track.preview_url,
+            addedByMembershipId: membership.id
           });
-          
+
           if (addResponse.ok) {
             addedCount++;
           }
@@ -1117,18 +1097,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                         <Button
                           onClick={async () => {
                             try {
-                              const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/general`, {
-                                method: 'POST',
-                                headers: {
-                                  'Authorization': `Bearer ${session?.access_token}`,
-                                  'Content-Type': 'application/json'
-                                }
-                              });
-                              
-                              if (!response.ok) {
-                                throw new Error('Failed to generate invite link');
-                              }
-                              
+                              const response = await apiRequest("POST", `/api/artists/${artistId}/invites/general`);
                               const data = await response.json();
                               
                               // Copy to clipboard
@@ -1185,23 +1154,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
                               });
                               return;
                             }
-                            
+
                             try {
-                              const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/phone`, {
-                                method: 'POST',
-                                headers: {
-                                  'Authorization': `Bearer ${session?.access_token}`,
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                  phone: invitePhone
-                                })
+                              const response = await apiRequest("POST", `/api/artists/${artistId}/invites/phone`, {
+                                phone: invitePhone
                               });
-                              
-                              if (!response.ok) {
-                                throw new Error('Failed to send invite');
-                              }
-                              
                               const data = await response.json();
                               
                               toast({
