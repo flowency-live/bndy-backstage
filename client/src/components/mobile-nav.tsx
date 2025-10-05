@@ -17,7 +17,8 @@ import {
   ChevronRight,
   ChevronDown,
   LogOut,
-  Bug
+  Bug,
+  Shield
 } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
@@ -317,8 +318,20 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             )}
           </div>
 
-          {/* Right: Issue Report, Theme Toggle & Action Badge */}
+          {/* Right: Godmode, Issue Report, Theme Toggle & Action Badge */}
           <div className="flex items-center gap-2 pr-4">
+            {/* Godmode Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open('/godmode', '_blank')}
+              className="h-8 w-8 p-0 hover:bg-accent"
+              data-testid="button-godmode"
+              title="Admin Godmode"
+            >
+              <Shield className="h-4 w-4" />
+            </Button>
+
             {/* Issue Report Button */}
             <Button
               variant="ghost"
