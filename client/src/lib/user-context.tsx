@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import type { User, UserBand, Band } from "@/types/api";
+import type { User, ArtistMembership } from "@/types/api";
 
 interface UserProfile {
   user: User;
-  artists: (UserBand & { artist: Band })[];
+  artists: ArtistMembership[];
 }
 
 // Simplified: Just artist context vs no context
@@ -21,7 +21,7 @@ interface UserContextType {
 
   // Current artist context
   currentArtistId: string | null;
-  currentMembership: (UserBand & { artist: Band }) | null;
+  currentMembership: ArtistMembership | null;
 
   // Actions
   selectArtist: (artistId: string) => void;
@@ -57,7 +57,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   });
 
   // Layer 3: Get artist memberships
-  const { data: membershipsData, isLoading: membershipsLoading } = useQuery<{ user: { id: string }, artists: (UserBand & { artist: Band })[] }>({
+  const { data: membershipsData, isLoading: membershipsLoading } = useQuery<{ user: { id: string }, artists: ArtistMembership[] }>({
     queryKey: ["api-memberships-me"],
     queryFn: async () => {
       const response = await fetch("https://api.bndy.co.uk/api/memberships/me", {

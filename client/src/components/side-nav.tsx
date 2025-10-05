@@ -17,20 +17,11 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { useToast } from "@/hooks/use-toast";
 import IssueForm from "@/components/ui/issue-form";
-import type { UserBand, Band } from "@/types/api";
+import type { User, ArtistMembership } from "@/types/api";
 
 interface UserProfile {
-  user: {
-    id: string;
-    supabaseId: string;
-    email: string | null;
-    phone: string | null;
-    displayName: string | null;
-    avatarUrl: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-  artists: (UserBand & { artist: Band })[];
+  user: User;
+  artists: ArtistMembership[];
 }
 
 interface SideNavProps {

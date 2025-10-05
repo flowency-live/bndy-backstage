@@ -19,27 +19,61 @@ export interface User {
   updatedAt: string;
 }
 
-export interface Band {
+export interface Artist {
   id: string;
   name: string;
-  slug: string;
-  description?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  bio?: string | null;
+  location?: string | null;
+  genres?: string[];
+  artist_type?: string;
+  profileImageUrl?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  websiteUrl?: string | null;
+  socialMediaUrls?: Array<{ type: string; url: string }>;
+  isVerified?: boolean;
+  followerCount?: number;
+  member_count?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface UserBand {
-  id: string;
-  userId: string;
-  bandId: string;
+export interface ArtistMembership {
+  membership_id: string;
+  user_id: string;
+  artist_id: string;
   role: string;
-  displayName?: string | null;
-  icon?: string | null;
-  color?: string | null;
-  joinedAt: string;
-  user: User;
-  band: Band;
+  membership_type: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  instrument?: string | null;
+  bio?: string | null;
+  icon?: string;
+  color?: string;
+  permissions?: string[];
+  status: string;
+  joined_at: string;
+  invited_at?: string | null;
+  invited_by_user_id?: string | null;
+  created_at: string;
+  updated_at: string;
+
+  // Resolved fields (with inheritance from user profile)
+  resolved_display_name?: string;
+  resolved_avatar_url?: string;
+  resolved_instrument?: string;
+  has_custom_display_name?: boolean;
+  has_custom_avatar?: boolean;
+  has_custom_instrument?: boolean;
+
+  // Full artist details when populated
+  artist?: Artist;
+  name?: string; // Artist name for convenience
 }
+
+// Legacy type aliases for backwards compatibility during migration
+export type Band = Artist;
+export type UserBand = ArtistMembership;
 
 export interface Event {
   id: string;
