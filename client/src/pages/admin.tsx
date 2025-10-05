@@ -447,17 +447,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch band members");
-      }
-      
+      const response = await apiRequest("GET", `/api/artists/${artistId}/members`);
       return response.json();
     },
     enabled: !!session && !!artistId,
