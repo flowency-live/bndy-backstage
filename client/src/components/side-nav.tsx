@@ -52,8 +52,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   };
 
   const handleArtistSwitch = (artistId: string) => {
-    selectArtist(artistId);
-    window.location.reload(); // Force a full page reload to switch context
+    localStorage.setItem('bndy-selected-artist-id', artistId);
+    window.location.href = '/dashboard'; // Direct to dashboard with new context
   };
 
   const handleCreateArtist = () => {
@@ -157,6 +157,25 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
               </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-60" align="start">
+                  {/* My Artists Link */}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setLocation('/my-artists');
+                      setIsBandDropdownOpen(false);
+                      onClose();
+                    }}
+                    className="py-3 cursor-pointer font-medium text-primary"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/10 flex-shrink-0">
+                        <i className="fas fa-th text-primary text-sm"></i>
+                      </div>
+                      <span>My Artists</span>
+                    </div>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
                   {/* Active Artist */}
                   <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
                     Active Artist
@@ -202,12 +221,12 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   </DropdownMenuItem>
 
 
-                  {/* Artist Options */}
-                  {userProfile?.artists && userProfile.artists.length > 0 && (
+                  {/* Artist Quick Switch Options */}
+                  {userProfile?.artists && userProfile.artists.length > 0 && otherArtists.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
-                        {currentArtistId ? 'Other Artists' : 'Select Artist'}
+                        Quick Switch
                       </div>
                       {userProfile.artists
                         .filter(artist => artist.artist_id !== currentArtistId)

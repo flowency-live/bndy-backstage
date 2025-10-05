@@ -151,7 +151,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                               key={membership.artist_id}
                               onClick={() => {
                                 localStorage.setItem('bndy-selected-artist-id', membership.artist_id);
-                                window.location.reload(); // Force full page reload like desktop nav
+                                window.location.href = '/dashboard'; // Direct to dashboard with new context
                               }}
                               className="flex items-center gap-3 p-3"
                             >
@@ -245,18 +245,54 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                   })}
                 </nav>
 
-                {/* Footer */}
+                {/* Footer - User Menu */}
                 <div className="p-6 border-t border-border space-y-4">
-                  {currentMembership && (
-                    <Button
-                      variant="ghost"
-                      onClick={handleExitArtist}
-                      className="w-full justify-start text-muted-foreground hover:text-foreground"
-                      data-testid="button-exit-artist"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Exit Artist
-                    </Button>
+                  {/* User Profile Display and Menu */}
+                  {userProfile && (
+                    <div className="space-y-3">
+                      {/* User Display Name */}
+                      <div className="flex items-center gap-2 px-2">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                          <i className="fas fa-user text-primary-foreground text-sm"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">
+                            {userProfile.user.displayName || userProfile.user.firstName || userProfile.user.email}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {userProfile.user.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* User Actions */}
+                      <div className="space-y-1">
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setLocation('/profile');
+                            setIsOpen(false);
+                          }}
+                          className="w-full justify-start text-muted-foreground hover:text-foreground"
+                          data-testid="button-view-profile"
+                        >
+                          <i className="fas fa-user h-4 w-4 mr-2"></i>
+                          View Profile
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            logout();
+                            setIsOpen(false);
+                          }}
+                          className="w-full justify-start text-muted-foreground hover:text-foreground"
+                          data-testid="button-sign-out"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </div>
+                    </div>
                   )}
                   <div className="text-center text-xs text-muted-foreground">
                     bndy • Artist Management Platform
