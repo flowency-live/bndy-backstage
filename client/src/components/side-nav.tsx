@@ -120,15 +120,15 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   <div className="flex items-center gap-2">
                     {currentMembership ? (
                       <>
-                        {currentMembership.band.avatarUrl ? (
+                        {currentMembership.artist?.profileImageUrl ? (
                           <img
-                            src={currentMembership.band.avatarUrl}
-                            alt={`${currentMembership.band.name} avatar`}
+                            src={currentMembership.artist.profileImageUrl}
+                            alt={`${currentMembership.artist.name} avatar`}
                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                            data-testid="band-avatar-image"
+                            data-testid="artist-avatar-image"
                           />
                         ) : (
-                          <div 
+                          <div
                             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                             style={{ backgroundColor: currentMembership.color }}
                           >
@@ -136,8 +136,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           </div>
                         )}
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">{currentMembership.band.name}</div>
-                          <div className="text-xs text-muted-foreground truncate">{currentMembership.displayName}</div>
+                          <div className="font-medium text-sm truncate text-foreground">{currentMembership.artist?.name || currentMembership.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{currentMembership.resolved_display_name}</div>
                         </div>
                       </>
                     ) : (
@@ -165,15 +165,15 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     <div className="flex items-center gap-3 w-full">
                       {currentMembership ? (
                         <>
-                          {currentMembership.band.avatarUrl ? (
+                          {currentMembership.artist?.profileImageUrl ? (
                             <img
-                              src={currentMembership.band.avatarUrl}
-                              alt={`${currentMembership.band.name} avatar`}
+                              src={currentMembership.artist.profileImageUrl}
+                              alt={`${currentMembership.artist.name} avatar`}
                               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              data-testid="band-avatar-image-dropdown"
+                              data-testid="artist-avatar-image-dropdown"
                             />
                           ) : (
-                            <div 
+                            <div
                               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                               style={{ backgroundColor: currentMembership.color }}
                             >
@@ -181,9 +181,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                             </div>
                           )}
                           <div className="text-left min-w-0 flex-1">
-                            <div className="font-medium text-sm truncate">{currentMembership.band.name}</div>
+                            <div className="font-medium text-sm truncate">{currentMembership.artist?.name || currentMembership.name}</div>
                             <div className="text-xs text-muted-foreground truncate">
-                              {currentMembership.displayName} • {currentMembership.role}
+                              {currentMembership.resolved_display_name} • {currentMembership.role}
                             </div>
                           </div>
                         </>
