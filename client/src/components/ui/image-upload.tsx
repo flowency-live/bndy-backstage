@@ -89,10 +89,6 @@ export default function ImageUpload({
       // Step 3: Return the public URL for the uploaded image
       onChange(publicUrl);
       setUploading(false);
-      toast({
-        title: "Image uploaded",
-        description: "Your image has been uploaded successfully",
-      });
     } catch (error) {
       setUploading(false);
       console.error('Upload error:', error);

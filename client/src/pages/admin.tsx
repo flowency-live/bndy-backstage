@@ -90,7 +90,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
   });
 
   // Ensure artistMembers is always an array
-  const artistMembers = Array.isArray(membersResponse) ? membersResponse : [];
+  const artistMembers = Array.isArray(membersResponse) ? membersResponse : (membersResponse?.members || []);
 
   // Spotify queries
   const { data: playlistsResponse } = useQuery({
@@ -547,16 +547,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => {
-                        if (artistData) {
-                          setArtistSettings({
-                            name: artistData.name || '',
-                            description: artistData.bio || '',
-                            avatar: artistData.profileImageUrl || null,
-                            allowedEventTypes: artistData.allowedEventTypes || ['practice', 'public_gig'],
-                          });
-                        }
-                      }}
+                      onClick={() => setLocation("/dashboard")}
                       className="px-6"
                       data-testid="button-cancel-band"
                     >
