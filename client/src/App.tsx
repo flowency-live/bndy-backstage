@@ -16,6 +16,7 @@ import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Admin from "@/pages/admin";
 import Issues from "@/pages/issues";
+import Godmode from "@/pages/godmode";
 // Onboarding removed - artist creation now in dashboard
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
@@ -97,6 +98,11 @@ function Router() {
       <Route path="/issues">
         <AppLayout>
           <Issues />
+        </AppLayout>
+      </Route>
+      <Route path="/godmode">
+        <AppLayout>
+          <Godmode />
         </AppLayout>
       </Route>
       <Route component={NotFound} />
