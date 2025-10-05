@@ -731,11 +731,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       );
     }
 
-    // Has artists but none selected - redirect to My Artists page
-    // (only after userProfile is loaded to avoid race condition)
+    // Has artists but none selected - show loading while user-context handles auto-selection
+    // User-context will auto-select if user has single artist, or show artist selector if multiple
+    // Dashboard should not redirect - just wait for context to be established
     if (userProfile?.artists && userProfile.artists.length > 0) {
-      setLocation('/my-artists');
-      return null;
+      return <BndySpinnerOverlay />;
     }
 
     // Still loading userProfile - show spinner
