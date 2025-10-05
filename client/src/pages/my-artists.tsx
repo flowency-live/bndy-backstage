@@ -91,8 +91,8 @@ export default function MyArtists() {
               </p>
             </div>
 
-            {/* Artist Tiles - 2 per row */}
-            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+            {/* Artist Tiles - Responsive grid: 2 on mobile, 3 on tablet, 4 on desktop */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {userProfile?.artists?.map((artistMembership) => (
                 <ArtistTile
                   key={artistMembership.artist_id}
