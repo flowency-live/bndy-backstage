@@ -34,6 +34,7 @@ export interface Artist {
   isVerified?: boolean;
   followerCount?: number;
   member_count?: number;
+  allowedEventTypes?: string[];
   created_at: string;
   updated_at: string;
 }

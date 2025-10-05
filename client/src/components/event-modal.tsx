@@ -305,9 +305,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
               <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Event Type</label>
               <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
                 {(() => {
-                  // Always include 'unavailable' regardless of band settings since it's a personal action
-                  const bandEventTypes = currentUser.band.allowedEventTypes || ['practice', 'public_gig'];
-                  const allAvailableTypes = [...bandEventTypes];
+                  // Always include 'unavailable' regardless of artist settings since it's a personal action
+                  const artistEventTypes = currentUser.artist?.allowedEventTypes || ['practice', 'public_gig'];
+                  const allAvailableTypes = [...artistEventTypes];
                   if (!allAvailableTypes.includes('unavailable')) {
                     allAvailableTypes.push('unavailable');
                   }
