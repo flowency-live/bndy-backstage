@@ -30,7 +30,7 @@ interface UserProfile {
     createdAt: string;
     updatedAt: string;
   };
-  bands: (UserBand & { band: Band })[];
+  artists: (UserBand & { artist: Band })[];
 }
 
 interface SideNavProps {
@@ -84,7 +84,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
     onClose();
   };
 
-  const otherArtists = userProfile?.bands.filter(band => band.bandId !== currentArtistId) || [];
+  const otherArtists = userProfile?.artists.filter(artist => artist.artist_id !== currentArtistId) || [];
 
 
   return (
@@ -212,41 +212,41 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
 
                   {/* Artist Options */}
-                  {userProfile?.bands && userProfile.bands.length > 0 && (
+                  {userProfile?.artists && userProfile.artists.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
                         {currentArtistId ? 'Other Artists' : 'Select Artist'}
                       </div>
-                      {userProfile.bands
-                        .filter(band => band.bandId !== currentArtistId)
-                        .map((band) => (
+                      {userProfile.artists
+                        .filter(artist => artist.artist_id !== currentArtistId)
+                        .map((artist) => (
                           <DropdownMenuItem
-                            key={band.bandId}
-                            onClick={() => handleArtistSwitch(band.bandId)}
+                            key={artist.artist_id}
+                            onClick={() => handleArtistSwitch(artist.artist_id)}
                             className="py-3 cursor-pointer"
-                            data-testid={`button-switch-to-artist-${band.bandId}`}
+                            data-testid={`button-switch-to-artist-${artist.artist_id}`}
                           >
                             <div className="flex items-center gap-3 w-full">
-                              {band.band.avatarUrl ? (
+                              {artist.artist.profileImageUrl ? (
                                 <img
-                                  src={band.band.avatarUrl}
-                                  alt={`${band.band.name} avatar`}
+                                  src={artist.artist.profileImageUrl}
+                                  alt={`${artist.artist.name} avatar`}
                                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                                  data-testid={`band-avatar-image-${band.bandId}`}
+                                  data-testid={`artist-avatar-image-${artist.artist_id}`}
                                 />
                               ) : (
-                                <div 
+                                <div
                                   className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ backgroundColor: band.color }}
+                                  style={{ backgroundColor: artist.color }}
                                 >
-                                  <i className={`fas ${band.icon} text-white text-sm`}></i>
+                                  <i className={`fas ${artist.icon} text-white text-sm`}></i>
                                 </div>
                               )}
                               <div className="text-left min-w-0 flex-1">
-                                <div className="font-medium text-sm truncate">{band.band.name}</div>
+                                <div className="font-medium text-sm truncate">{artist.artist.name}</div>
                                 <div className="text-xs text-muted-foreground truncate">
-                                  {band.displayName} • {band.role}
+                                  {artist.resolved_display_name} • {artist.role}
                                 </div>
                               </div>
                             </div>
