@@ -66,19 +66,10 @@ function AvatarUploadModal({ membershipId, member, artistId, session, onClose, o
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/${membershipId}/avatar`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ avatarUrl: newAvatarUrl })
+      const response = await apiRequest('PATCH', `/api/artists/${artistId}/members/${membershipId}/avatar`, {
+        avatarUrl: newAvatarUrl
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update avatar');
-      }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -199,17 +190,7 @@ function ActiveMagicLinks({ artistId, session, toast }: {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites`, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch magic links');
-      }
-      
+      const response = await apiRequest('GET', `/api/artists/${artistId}/invites`);
       return response.json();
     },
     enabled: !!session && !!artistId
@@ -222,18 +203,7 @@ function ActiveMagicLinks({ artistId, session, toast }: {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/${linkId}/revoke`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to revoke magic link');
-      }
-      
+      const response = await apiRequest('POST', `/api/artists/${artistId}/invites/${linkId}/revoke`);
       return response.json();
     },
     onSuccess: () => {
@@ -413,8 +383,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
   const { data: artistData } = useQuery<Artist>({
     queryKey: ["/api/artists", artistId],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}`);
-      if (!response.ok) throw new Error("Failed to fetch artist");
+      const response = await apiRequest("GET", `/api/artists/${artistId}`);
       return response.json();
     },
     enabled: !!artistId,
