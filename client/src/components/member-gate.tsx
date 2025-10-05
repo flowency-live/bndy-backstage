@@ -1,43 +1,43 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@/lib/user-context";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import BndyLogo from "@/components/ui/bndy-logo";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership, Artist } from "@/types/api";
 
 interface UserProfile {
   user: {
     id: string;
-    supabaseId: string;
+    supabaseId?: string;
     email: string | null;
-    phone: string | null;
-    firstName: string | null;
-    lastName: string | null;
+    phone?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
     displayName: string | null;
-    hometown: string | null;
-    instrument: string | null;
+    hometown?: string | null;
+    instrument?: string | null;
     avatarUrl: string | null;
-    platformAdmin: boolean;
-    profileCompleted: boolean;
+    platformAdmin?: boolean;
+    profileCompleted?: boolean;
     createdAt: string;
     updatedAt: string;
   };
-  bands: (UserBand & { band: Band })[];
+  artists: ArtistMembership[];
 }
 
 interface MemberGateProps {
   children: ({ contextId, membership, userProfile }: {
-    contextId: string | null,  // Was bandId - now generic for any entity
-    membership: (UserBand & { band: Band }) | null,  // Will evolve to support venues etc
+    contextId: string | null,
+    membership: ArtistMembership | null,
     userProfile: UserProfile | null
   }) => React.ReactNode;
-  allowNoContextForDashboard?: boolean;  // Was allowNoBandForDashboard
+  allowNoContextForDashboard?: boolean;
 }
 
 export default function MemberGate({ children, allowNoContextForDashboard = false }: MemberGateProps) {
   const [, setLocation] = useLocation();
-  const { user, bands, loading: authLoading, isAuthenticated, session, checkAuth } = useServerAuth();
-  const [selectedContextId, setSelectedContextId] = useState<string | null>(null);
+  const { loading: authLoading, isAuthenticated, checkAuth } = useServerAuth();
+  const { currentArtistId, currentMembership, userProfile: contextUserProfile, isLoading: contextLoading } = useUser();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Trigger auth check when MemberGate mounts (lazy auth check)
@@ -48,137 +48,46 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
   // Debug current auth state
   console.log('🔧 MEMBER GATE: Current state:', {
     authLoading,
+    contextLoading,
     isAuthenticated,
-    hasUser: !!user,
-    hasSession: !!session,
-    bandsCount: bands?.length || 0,
+    hasUser: !!contextUserProfile?.user,
+    artistsCount: contextUserProfile?.artists?.length || 0,
     allowNoContextForDashboard,
-    selectedContextId,
+    currentArtistId,
     isRedirecting
   });
 
-  // Server auth already provides user and bands data
-  const userProfile: UserProfile | null = user ? {
-    user: {
-      id: user.id,
-      supabaseId: user.cognitoId, // For compatibility
-      email: user.email,
-      phone: null,
-      firstName: user.firstName || null,
-      lastName: user.lastName || null,
-      displayName: user.displayName || user.username,
-      hometown: user.hometown || null,
-      instrument: user.instrument || null,
-      avatarUrl: user.avatarUrl || null,
-      platformAdmin: false,
-      profileCompleted: user.profileCompleted || false, // Use actual value from backend
-      createdAt: user.createdAt,
-      updatedAt: user.createdAt,
-    },
-    bands: bands.map(band => ({
-      id: band.id,
-      userId: user?.id || '',
-      bandId: band.id,
-      role: band.role,
-      status: band.status as 'active' | 'inactive' | 'pending',
-      joinedAt: new Date().toISOString(),
-      permissions: [],
-      band: {
-        id: band.id,
-        name: band.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        profileImage: null,
-        bio: null,
-        hometown: null,
-        socials: {},
-        genres: [],
-        spotifyArtistId: null,
-        appleMusicArtistId: null,
-      }
-    }))
-  } : null;
-
-  // Check localStorage for selected band on mount
-  useEffect(() => {
-    const savedContextId = localStorage.getItem('bndy-selected-context-id');
-    if (savedContextId && userProfile?.bands?.some(b => b.bandId === savedContextId)) {
-      setSelectedContextId(savedContextId);
-    }
-  }, [userProfile]);
-
-  // Auto-select single band
-  useEffect(() => {
-    if (userProfile?.bands?.length === 1 && !selectedContextId) {
-      const contextId = userProfile.bands[0].bandId;
-      setSelectedContextId(contextId);
-      localStorage.setItem('bndy-selected-context-id', contextId);
-    }
-  }, [userProfile, selectedContextId]);
+  // Use data from user-context (already fetched and managed)
+  const userProfile = contextUserProfile;
 
   // Handle authentication redirects
   useEffect(() => {
     console.log('🔧 MEMBER GATE: Authentication redirect check triggered');
     console.log('🔧 MEMBER GATE: Auth state details:', {
       authLoading,
-      profileLoading: false,
+      contextLoading,
       isAuthenticated,
-      hasSession: !!session,
-      hasUser: !!user,
+      hasUser: !!userProfile?.user,
       isRedirecting
     });
 
     // Only redirect if we're absolutely sure the user is not authenticated
     if (!authLoading && !isAuthenticated) {
       console.log('🔧 MEMBER GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
-      console.log('🔧 MEMBER GATE: Redirect reason: authLoading=false, isAuthenticated=false');
       setIsRedirecting(true);
       setLocation('/login');
     } else {
       console.log('🔧 MEMBER GATE: ✅ Not redirecting to login');
       console.log('🔧 MEMBER GATE: Stay reason:', {
         authLoading: authLoading ? 'still loading' : 'done',
-        profileLoading: 'done',
+        contextLoading: contextLoading ? 'still loading' : 'done',
         isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
       });
     }
-  }, [authLoading, isAuthenticated, setLocation, session, user, isRedirecting]);
-
-  // Handle profile completion redirect
-  useEffect(() => {
-    if (userProfile && userProfile.user && !userProfile.user.profileCompleted) {
-      setIsRedirecting(true);
-      setLocation('/profile');
-    }
-  }, [userProfile, setLocation]);
-
-  // No longer redirect to onboarding for users with no bands
-  // They should be able to access dashboard without an active band
-
-  // Handle band selection reset
-  useEffect(() => {
-    if (selectedContextId && userProfile && !userProfile.bands.find(b => b.bandId === selectedContextId)) {
-      setSelectedContextId(null);
-      localStorage.removeItem('bndy-selected-context-id');
-    }
-  }, [selectedContextId, userProfile]);
-
-  const handleContextSelect = (contextId: string) => {
-    setSelectedContextId(contextId);
-    localStorage.setItem('bndy-selected-context-id', contextId);
-  };
-
-  const handleLogout = async () => {
-    // Clear localStorage
-    localStorage.removeItem('bndy-selected-context-id');
-    localStorage.removeItem('bndy-current-user');
-    
-    // Redirect to login
-    setLocation('/login');
-  };
+  }, [authLoading, isAuthenticated, setLocation, isRedirecting, contextLoading, userProfile]);
 
   // Show loading state
-  if (authLoading || isRedirecting) {
+  if (authLoading || contextLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
@@ -194,14 +103,9 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     return null;
   }
 
-  // Error fetching profile is now handled by useServerAuth
-  // No need for explicit error handling here as auth errors are handled in the auth hook
-
-  // Users with no bands can access dashboard without active band context
-  // Remove this blocking check
-
-  // Multiple bands but none selected - show band selector unless dashboard allows no band
-  if (userProfile && userProfile.bands.length > 1 && !selectedContextId && !allowNoContextForDashboard) {
+  // User-context already handles artist selection and auto-select logic
+  // Just pass through the current state to children
+  if (userProfile && userProfile.artists.length > 1 && !currentArtistId && !allowNoContextForDashboard) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center max-w-md w-full">
@@ -215,26 +119,26 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
             </div>
           </div>
           
-          <h2 className="text-2xl font-serif text-white mb-6">Select Your Band</h2>
-          
+          <h2 className="text-2xl font-serif text-white mb-6">Select Your Artist</h2>
+
           <div className="space-y-3 mb-6">
-            {userProfile.bands.map((membership) => (
+            {userProfile.artists.map((membership) => (
               <button
-                key={membership.bandId}
-                onClick={() => handleContextSelect(membership.bandId)}
+                key={membership.artist_id}
+                onClick={() => setLocation('/dashboard')}
                 className="w-full bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
-                data-testid={`button-select-context-${membership.bandId}`}
+                data-testid={`button-select-context-${membership.artist_id}`}
               >
                 <div className="flex items-center gap-3">
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: membership.color }}
                   >
                     <i className={`fas ${membership.icon} text-white text-lg`}></i>
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <h3 className="text-lg font-sans font-semibold text-brand-primary leading-tight">{membership.band.name}</h3>
-                    <p className="text-sm text-gray-600 leading-tight">{membership.displayName} • {membership.role}</p>
+                    <h3 className="text-lg font-sans font-semibold text-brand-primary leading-tight">{membership.artist?.name || membership.name}</h3>
+                    <p className="text-sm text-gray-600 leading-tight">{membership.resolved_display_name} • {membership.role}</p>
                   </div>
                 </div>
               </button>
@@ -262,24 +166,14 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     );
   }
 
-  // Find the selected band membership
-  const selectedMembership = selectedContextId
-    ? userProfile?.bands.find(b => b.bandId === selectedContextId) || null
-    : null;
-  
-  // If no context selected but we have a selectedContextId, handle the error
-  if (selectedContextId && !selectedMembership) {
-    // Band not found, will be handled by useEffect
-    return null;
-  }
-
-  // Render children with band context (could be null for dashboard)
+  // Render children with artist context (could be null for dashboard)
+  // user-context already handles finding the current membership
   return (
     <>
-      {children({ 
-        contextId: selectedContextId, 
-        membership: selectedMembership, 
-        userProfile: userProfile || null 
+      {children({
+        contextId: currentArtistId,
+        membership: currentMembership,
+        userProfile: userProfile || null
       })}
     </>
   );
