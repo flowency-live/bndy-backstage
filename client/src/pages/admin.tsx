@@ -74,7 +74,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
   }, [artistData]);
 
   // Get artist members
-  const { data: artistMembers = [], isLoading } = useQuery<ArtistMembership[]>({
+  const { data: membersResponse, isLoading } = useQuery({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session) {
@@ -82,10 +82,15 @@ export default function Admin({ artistId, membership }: AdminProps) {
       }
 
       const response = await apiRequest("GET", `/api/artists/${artistId}/members`);
-      return response.json();
+      const data = await response.json();
+      // Handle both array and object responses
+      return Array.isArray(data) ? data : (data?.members || []);
     },
     enabled: !!session && !!artistId,
   });
+
+  // Ensure artistMembers is always an array
+  const artistMembers = Array.isArray(membersResponse) ? membersResponse : [];
 
   // Spotify queries
   const { data: playlistsResponse } = useQuery({
@@ -189,8 +194,8 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
       const response = await apiRequest("PUT", `/api/artists/${artistId}`, {
         name: settings.name,
-        description: settings.description,
-        avatarUrl: settings.avatar,
+        bio: settings.description,
+        profileImageUrl: settings.avatar,
         allowedEventTypes: settings.allowedEventTypes,
       });
 
@@ -201,8 +206,10 @@ export default function Admin({ artistId, membership }: AdminProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId] });
       toast({
         title: "Success",
-        description: "Band settings updated successfully",
+        description: "Artist settings updated successfully",
       });
+      // Navigate back to dashboard and refresh
+      setLocation("/dashboard");
     },
     onError: (error: any) => {
       toast({
