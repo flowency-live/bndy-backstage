@@ -32,6 +32,8 @@ export default function GodmodePage() {
   const [editingVenue, setEditingVenue] = useState<string | null>(null);
   const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
   const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
+  const [venuePage, setVenuePage] = useState(1);
+  const venuesPerPage = 25;
 
   // Artists State
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -42,6 +44,8 @@ export default function GodmodePage() {
   const [editingArtist, setEditingArtist] = useState<string | null>(null);
   const [artistEditForm, setArtistEditForm] = useState<Artist | null>(null);
   const [deletingArtist, setDeletingArtist] = useState<string | null>(null);
+  const [artistPage, setArtistPage] = useState(1);
+  const artistsPerPage = 25;
 
   // Songs State
   const [songs, setSongs] = useState<Song[]>([]);
@@ -52,6 +56,8 @@ export default function GodmodePage() {
   const [editingSong, setEditingSong] = useState<string | null>(null);
   const [songEditForm, setSongEditForm] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<string | null>(null);
+  const [songPage, setSongPage] = useState(1);
+  const songsPerPage = 25;
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -229,6 +235,19 @@ export default function GodmodePage() {
     return true;
   });
 
+  // Pagination
+  const venueTotalPages = Math.ceil(filteredVenues.length / venuesPerPage);
+  const venueStartIndex = (venuePage - 1) * venuesPerPage;
+  const paginatedVenues = filteredVenues.slice(venueStartIndex, venueStartIndex + venuesPerPage);
+
+  const artistTotalPages = Math.ceil(filteredArtists.length / artistsPerPage);
+  const artistStartIndex = (artistPage - 1) * artistsPerPage;
+  const paginatedArtists = filteredArtists.slice(artistStartIndex, artistStartIndex + artistsPerPage);
+
+  const songTotalPages = Math.ceil(filteredSongs.length / songsPerPage);
+  const songStartIndex = (songPage - 1) * songsPerPage;
+  const paginatedSongs = filteredSongs.slice(songStartIndex, songStartIndex + songsPerPage);
+
   // Stats
   const venueStats = {
     total: venues.length,
@@ -351,7 +370,7 @@ export default function GodmodePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {filteredVenues.map(venue => (
+                    {paginatedVenues.map(venue => (
                       <tr key={venue.id} className="hover:bg-muted/50">
                         <td className="px-4 py-3">
                           {venue.validated ?
@@ -420,6 +439,36 @@ export default function GodmodePage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Venues Pagination */}
+              {venueTotalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {venueStartIndex + 1}-{Math.min(venueStartIndex + venuesPerPage, filteredVenues.length)} of {filteredVenues.length} venues
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVenuePage(p => Math.max(1, p - 1))}
+                      disabled={venuePage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-sm">Page {venuePage} of {venueTotalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVenuePage(p => Math.min(venueTotalPages, p + 1))}
+                      disabled={venuePage === venueTotalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </TabsContent>
@@ -484,7 +533,7 @@ export default function GodmodePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {filteredArtists.map(artist => (
+                    {paginatedArtists.map(artist => (
                       <tr key={artist.id} className="hover:bg-muted/50">
                         <td className="px-4 py-3">
                           {editingArtist === artist.id ? (
@@ -538,6 +587,36 @@ export default function GodmodePage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Artists Pagination */}
+              {artistTotalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {artistStartIndex + 1}-{Math.min(artistStartIndex + artistsPerPage, filteredArtists.length)} of {filteredArtists.length} artists
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setArtistPage(p => Math.max(1, p - 1))}
+                      disabled={artistPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-sm">Page {artistPage} of {artistTotalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setArtistPage(p => Math.min(artistTotalPages, p + 1))}
+                      disabled={artistPage === artistTotalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </TabsContent>
@@ -617,7 +696,7 @@ export default function GodmodePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {filteredSongs.map(song => (
+                    {paginatedSongs.map(song => (
                       <tr key={song.id} className="hover:bg-muted/50">
                         <td className="px-4 py-3">
                           {editingSong === song.id ? (
@@ -669,6 +748,36 @@ export default function GodmodePage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Songs Pagination */}
+              {songTotalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {songStartIndex + 1}-{Math.min(songStartIndex + songsPerPage, filteredSongs.length)} of {filteredSongs.length} songs
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSongPage(p => Math.max(1, p - 1))}
+                      disabled={songPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-sm">Page {songPage} of {songTotalPages}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSongPage(p => Math.min(songTotalPages, p + 1))}
+                      disabled={songPage === songTotalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </TabsContent>
