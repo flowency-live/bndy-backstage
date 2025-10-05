@@ -589,25 +589,13 @@ export default function Admin({ artistId, membership }: AdminProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          name: settings.name,
-          description: settings.description,
-          avatarUrl: settings.avatar,
-          allowedEventTypes: settings.allowedEventTypes,
-        }),
+      const response = await apiRequest("PATCH", `/api/artists/${artistId}`, {
+        name: settings.name,
+        description: settings.description,
+        avatarUrl: settings.avatar,
+        allowedEventTypes: settings.allowedEventTypes,
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update band");
-      }
-      
+
       return response.json();
     },
     onSuccess: () => {
