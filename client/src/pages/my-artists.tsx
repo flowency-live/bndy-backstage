@@ -16,13 +16,13 @@ interface ArtistTileProps {
 function ArtistTile({ artist, membership, onClick }: ArtistTileProps) {
   return (
     <Card
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up hover-lift-subtle aspect-square"
+      className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up hover-lift-subtle overflow-hidden"
       onClick={onClick}
       data-testid={`artist-tile-${artist.id}`}
     >
-      <CardContent className="p-0 h-full flex flex-col">
-        {/* Artist Image - Takes most of the space */}
-        <div className="flex-1 relative overflow-hidden rounded-t-lg">
+      <CardContent className="p-0">
+        {/* Artist Image - Square aspect ratio, fills width */}
+        <div className="aspect-square relative overflow-hidden">
           {artist.profileImageUrl ? (
             <img
               src={artist.profileImageUrl}
@@ -34,17 +34,17 @@ function ArtistTile({ artist, membership, onClick }: ArtistTileProps) {
               className="w-full h-full flex items-center justify-center"
               style={{ backgroundColor: membership.color }}
             >
-              <i className={`fas ${membership.icon} text-white text-6xl`}></i>
+              <i className={`fas ${membership.icon} text-white text-5xl sm:text-6xl`}></i>
             </div>
           )}
         </div>
 
-        {/* Artist Info - Bottom section */}
-        <div className="p-4 text-center">
-          <h3 className="text-lg font-serif font-semibold text-foreground mb-1 truncate">
+        {/* Artist Info - Below image */}
+        <div className="p-3 sm:p-4 bg-card">
+          <h3 className="text-base sm:text-lg font-serif font-semibold text-foreground mb-1 truncate">
             {artist.name}
           </h3>
-          <p className="text-sm text-muted-foreground capitalize">
+          <p className="text-xs sm:text-sm text-muted-foreground capitalize">
             {membership.role}
           </p>
         </div>
@@ -102,38 +102,41 @@ export default function MyArtists() {
                 />
               ))}
 
-              {/* Create New Artist Tile - Orange DashboardTile style */}
+              {/* Create New Artist Tile - Orange gradient, matches other tiles */}
               <Card
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up hover-lift-subtle aspect-square"
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up hover-lift-subtle overflow-hidden"
                 onClick={() => setShowingCreateForm(true)}
                 data-testid="create-new-artist-tile"
               >
-                <CardContent className="p-0 h-full">
+                <CardContent className="p-0">
+                  {/* Orange gradient section - same aspect ratio as artist images */}
                   <div
-                    className="h-full rounded-lg relative overflow-hidden transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center"
+                    className="aspect-square relative overflow-hidden transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(24, 95%, 53%) 0%, color-mix(in hsl, hsl(24, 95%, 53%) 80%, transparent 20%) 50%, color-mix(in hsl, hsl(24, 95%, 53%) 90%, transparent 10%) 100%)',
-                      backgroundSize: '200% 200%',
-                      backgroundPosition: '0% 0%'
+                      background: 'linear-gradient(135deg, hsl(24, 95%, 53%) 0%, hsl(24, 95%, 48%) 50%, hsl(24, 95%, 53%) 100%)',
                     }}
                   >
                     {/* Background Icon */}
-                    <div className="absolute top-2 right-2 text-white/20 text-6xl">
-                      <Plus className="h-16 w-16" />
+                    <div className="absolute top-2 right-2 text-white/20">
+                      <Plus className="h-12 w-12 sm:h-16 sm:w-16" />
                     </div>
 
                     {/* Content */}
-                    <div className="relative text-center p-6">
-                      <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
-                        <Plus className="h-10 w-10 text-white" />
+                    <div className="relative text-center px-4">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <Plus className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                       </div>
-                      <h3 className="text-xl font-serif font-semibold text-white drop-shadow-lg mb-2">
+                      <h3 className="text-lg sm:text-xl font-serif font-semibold text-white drop-shadow-lg">
                         Create New
                       </h3>
-                      <p className="text-white/90 text-sm drop-shadow-md">
-                        Start your artist profile
-                      </p>
                     </div>
+                  </div>
+
+                  {/* Info section below - matches artist tiles */}
+                  <div className="p-3 sm:p-4 bg-card">
+                    <p className="text-xs sm:text-sm text-muted-foreground text-center">
+                      Start your artist profile
+                    </p>
                   </div>
                 </CardContent>
               </Card>

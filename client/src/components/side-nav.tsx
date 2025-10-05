@@ -52,8 +52,10 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   };
 
   const handleArtistSwitch = (artistId: string) => {
-    localStorage.setItem('bndy-selected-artist-id', artistId);
-    window.location.href = '/dashboard'; // Direct to dashboard with new context
+    selectArtist(artistId);
+    setLocation('/dashboard');
+    setIsBandDropdownOpen(false);
+    onClose();
   };
 
   const handleCreateArtist = () => {

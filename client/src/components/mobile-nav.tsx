@@ -150,8 +150,9 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                             <DropdownMenuItem
                               key={membership.artist_id}
                               onClick={() => {
-                                localStorage.setItem('bndy-selected-artist-id', membership.artist_id);
-                                window.location.href = '/dashboard'; // Direct to dashboard with new context
+                                selectArtist(membership.artist_id);
+                                setLocation('/dashboard');
+                                setIsOpen(false);
                               }}
                               className="flex items-center gap-3 p-3"
                             >
