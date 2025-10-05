@@ -548,7 +548,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await apiRequest("PATCH", `/api/artists/${artistId}`, {
+      const response = await apiRequest("PUT", `/api/artists/${artistId}`, {
         name: settings.name,
         description: settings.description,
         avatarUrl: settings.avatar,
