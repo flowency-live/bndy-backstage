@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X } from "lucide-react";
-import type { Event, Song, UserBand, Band, User } from "@/types/api";
+import type { Event, Song, ArtistMembership, Artist, User } from "@/types/api";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import ImageUpload from "@/components/ui/image-upload";
@@ -34,12 +34,12 @@ const ICONS = [
 
 interface UserProfile {
   user: User;
-  bands: (UserBand & { band: Band })[];
+  artists: ArtistMembership[];
 }
 
 interface DashboardProps {
   bandId: string | null;
-  membership: (UserBand & { band: Band }) | null;
+  membership: ArtistMembership | null;
   userProfile: UserProfile | null;
 }
 
@@ -553,27 +553,27 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
   );
 }
 
-function BandTile({ band, membership, onClick }: { 
-  band: Band, 
-  membership: UserBand & { band: Band },
-  onClick: () => void 
+function ArtistTile({ artist, membership, onClick }: {
+  artist: Artist,
+  membership: ArtistMembership,
+  onClick: () => void
 }) {
   return (
-    <Card 
+    <Card
       className="cursor-pointer hover:shadow-lg transition-all duration-200 animate-fade-in-up"
       onClick={onClick}
-      data-testid={`band-tile-${band.id}`}
+      data-testid={`artist-tile-${artist.id}`}
     >
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
-          {band.avatarUrl ? (
+          {artist.profileImageUrl ? (
             <img
-              src={band.avatarUrl}
-              alt={`${band.name} avatar`}
+              src={artist.profileImageUrl}
+              alt={`${artist.name} avatar`}
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div 
+            <div
               className="w-12 h-12 rounded-full flex items-center justify-center"
               style={{ backgroundColor: membership.color }}
             >
@@ -581,9 +581,9 @@ function BandTile({ band, membership, onClick }: {
             </div>
           )}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-foreground">{band.name}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{artist.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {membership.displayName} • {membership.role}
+              {membership.resolved_display_name} • {membership.role}
             </p>
           </div>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -711,16 +711,16 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
           <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
             <div className="max-w-4xl mx-auto">
               {/* Existing artists - show as tiles */}
-              {userProfile?.bands && userProfile.bands.length > 0 && (
+              {userProfile?.artists && userProfile.artists.length > 0 && (
                 <div className="grid gap-4 max-w-2xl mx-auto mb-6">
-                  {userProfile.bands.map((bandMembership) => (
-                    <BandTile
-                      key={bandMembership.bandId}
-                      band={bandMembership.band}
-                      membership={bandMembership}
+                  {userProfile.artists.map((artistMembership) => (
+                    <ArtistTile
+                      key={artistMembership.artist_id}
+                      artist={artistMembership.artist!}
+                      membership={artistMembership}
                       onClick={() => {
-                        selectArtist(bandMembership.bandId);
-                        // The page will automatically reload due to band selection
+                        selectArtist(artistMembership.artist_id);
+                        // The page will automatically reload due to artist selection
                       }}
                     />
                   ))}
