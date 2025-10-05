@@ -19,11 +19,11 @@ import {
   LogOut,
   Bug
 } from "lucide-react";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership } from "@/types/api";
 
 interface MobileNavProps {
-  currentBandId?: string;
-  currentMembership?: UserBand & { band: Band };
+  currentArtistId?: string;
+  currentMembership?: ArtistMembership;
   isLoading?: boolean;
 }
 
@@ -34,10 +34,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [isOpen, setIsOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
   const { toast } = useToast();
-  const { clearBandSelection, userProfile, selectBand, currentBandId } = useUser();
+  const { clearArtistSelection, userProfile, selectArtist, currentArtistId } = useUser();
 
-  const handleExitBand = () => {
-    clearBandSelection();
+  const handleExitArtist = () => {
+    clearArtistSelection();
     setLocation('/dashboard');
     setIsOpen(false);
   };
@@ -53,7 +53,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
       {/* Mobile Header - Always visible on mobile */}
       <header className="sticky top-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-b border-border h-16">
         <div className="flex items-center justify-between h-full">
-          {/* Left: Band Avatar or Menu Button */}
+          {/* Left: Artist Avatar or Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button
@@ -62,14 +62,14 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                 data-testid="mobile-nav-trigger"
               >
                 {currentMembership ? (
-                  currentMembership.band.avatarUrl ? (
+                  currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url ? (
                     <img
-                      src={currentMembership.band.avatarUrl}
-                      alt={`${currentMembership.band.name} avatar`}
+                      src={currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url || ''}
+                      alt={`${currentMembership.artist?.name || currentMembership.name} avatar`}
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <div 
+                    <div
                       className="w-full h-full rounded-full flex items-center justify-center"
                       style={{ backgroundColor: currentMembership.color }}
                     >
@@ -91,20 +91,20 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                     <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" />
                   </div>
 
-                  {/* Band Info - Clickable for switching */}
+                  {/* Artist Info - Clickable for switching */}
                   {currentMembership && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <div className="bg-muted rounded-lg p-3 cursor-pointer hover:bg-muted/80 transition-colors">
                           <div className="flex items-center gap-3">
-                            {currentMembership.band.avatarUrl ? (
+                            {currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url ? (
                               <img
-                                src={currentMembership.band.avatarUrl}
-                                alt={`${currentMembership.band.name} avatar`}
+                                src={currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url || ''}
+                                alt={`${currentMembership.artist?.name || currentMembership.name} avatar`}
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (
-                              <div 
+                              <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center"
                                 style={{ backgroundColor: currentMembership.color }}
                               >
@@ -113,10 +113,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="font-semibold text-foreground truncate">
-                                {currentMembership.band.name}
+                                {currentMembership.artist?.name || currentMembership.name}
                               </div>
                               <div className="text-sm text-muted-foreground truncate">
-                                {currentMembership.displayName} • {currentMembership.role}
+                                {currentMembership.resolved_display_name || currentMembership.display_name} • {currentMembership.role}
                               </div>
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -124,25 +124,25 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" side="bottom" className="w-56">
-                        {userProfile?.bands
-                          ?.filter(membership => membership.bandId !== currentBandId) // Don't show current band
+                        {userProfile?.artists
+                          ?.filter(membership => membership.artist_id !== currentArtistId) // Don't show current artist
                           ?.map((membership) => (
                             <DropdownMenuItem
-                              key={membership.bandId}
+                              key={membership.artist_id}
                               onClick={() => {
-                                localStorage.setItem('bndy-selected-band-id', membership.bandId);
+                                localStorage.setItem('bndy-selected-artist-id', membership.artist_id);
                                 window.location.reload(); // Force full page reload like desktop nav
                               }}
                               className="flex items-center gap-3 p-3"
                             >
-                              {membership.band.avatarUrl ? (
+                              {membership.artist?.profileImageUrl || membership.resolved_avatar_url ? (
                                 <img
-                                  src={membership.band.avatarUrl}
-                                  alt={`${membership.band.name} avatar`}
+                                  src={membership.artist?.profileImageUrl || membership.resolved_avatar_url || ''}
+                                  alt={`${membership.artist?.name || membership.name} avatar`}
                                   className="w-8 h-8 rounded-full object-cover"
                                 />
                               ) : (
-                                <div 
+                                <div
                                   className="w-8 h-8 rounded-full flex items-center justify-center"
                                   style={{ backgroundColor: membership.color }}
                                 >
@@ -151,10 +151,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-foreground truncate">
-                                  {membership.band.name}
+                                  {membership.artist?.name || membership.name}
                                 </div>
                                 <div className="text-sm text-muted-foreground truncate">
-                                  {membership.displayName} • {membership.role}
+                                  {membership.resolved_display_name || membership.display_name} • {membership.role}
                                 </div>
                               </div>
                             </DropdownMenuItem>
@@ -230,16 +230,16 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                   {currentMembership && (
                     <Button
                       variant="ghost"
-                      onClick={handleExitBand}
+                      onClick={handleExitArtist}
                       className="w-full justify-start text-muted-foreground hover:text-foreground"
-                      data-testid="button-exit-band"
+                      data-testid="button-exit-artist"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
-                      Exit Band
+                      Exit Artist
                     </Button>
                   )}
                   <div className="text-center text-xs text-muted-foreground">
-                    bndy • Band Management Platform
+                    bndy • Artist Management Platform
                   </div>
                 </div>
               </div>

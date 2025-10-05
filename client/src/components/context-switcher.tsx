@@ -11,25 +11,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Plus, LogOut, Settings, Users } from "lucide-react";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership } from "@/types/api";
 
 interface UserProfile {
   user: {
     id: string;
-    supabaseId: string;
+    supabaseId?: string;
     email: string | null;
-    phone: string | null;
+    phone?: string | null;
     displayName: string | null;
     avatarUrl: string | null;
     createdAt: string;
     updatedAt: string;
   };
-  bands: (UserBand & { band: Band })[];
+  artists: ArtistMembership[];
 }
 
 interface ContextSwitcherProps {
-  currentContextId: string;  // Was currentBandId
-  currentMembership: UserBand & { band: Band };  // Will evolve to support venues etc
+  currentContextId: string;  // Artist ID
+  currentMembership: ArtistMembership;
 }
 
 export default function ContextSwitcher({ currentContextId, currentMembership }: ContextSwitcherProps) {
@@ -37,32 +37,25 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
   const { session, signOut } = useServerAuth();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Get user profile and all bands
+  // Get user profile and all artists
   const { data: userProfile } = useQuery<UserProfile>({
-    queryKey: ["/api/me"],
+    queryKey: ["/api/memberships/me"],
     queryFn: async () => {
-      if (!session?.tokens?.idToken) {
-        throw new Error("No access token");
-      }
-      
-      const response = await fetch("/api/me", {
-        headers: {
-          "Authorization": `Bearer ${session.tokens.idToken}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch("https://api.bndy.co.uk/api/memberships/me", {
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
-        throw new Error("Failed to fetch user profile");
+        throw new Error("Failed to fetch user memberships");
       }
-      
+
       return response.json();
     },
-    enabled: !!session?.tokens?.idToken,
+    enabled: !!session,
   });
 
-  const handleContextSwitch = (contextId: string) => {
-    localStorage.setItem('bndy-selected-context-id', contextId);
+  const handleContextSwitch = (artistId: string) => {
+    localStorage.setItem('bndy-selected-artist-id', artistId);
     window.location.reload(); // Force a full page reload to switch context
   };
 
@@ -71,13 +64,14 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
   };
 
   const handleSignOut = async () => {
-    localStorage.removeItem('bndy-selected-context-id');
-    localStorage.removeItem('bndy-current-user');
+    localStorage.removeItem('bndy-selected-artist-id');
+    localStorage.removeItem('bndy-selected-context-id'); // Legacy cleanup
+    localStorage.removeItem('bndy-current-user'); // Legacy cleanup
     await signOut();
     setLocation('/login');
   };
 
-  const otherContexts = userProfile?.bands.filter(band => band.bandId !== currentContextId) || [];
+  const otherContexts = userProfile?.artists.filter(membership => membership.artist_id !== currentContextId) || [];
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -95,8 +89,8 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
               <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
             </div>
             <div className="text-left min-w-0 flex-1">
-              <div className="font-medium text-sm truncate">{currentMembership.band.name}</div>
-              <div className="text-xs text-white/70 truncate">{currentMembership.displayName}</div>
+              <div className="font-medium text-sm truncate">{currentMembership.artist?.name || currentMembership.name}</div>
+              <div className="text-xs text-white/70 truncate">{currentMembership.resolved_display_name || currentMembership.display_name}</div>
             </div>
           </div>
           <ChevronDown className="h-4 w-4 text-white/70" />
@@ -117,9 +111,9 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
               <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
             </div>
             <div className="text-left min-w-0 flex-1">
-              <div className="font-medium text-sm truncate">{currentMembership.band.name}</div>
+              <div className="font-medium text-sm truncate">{currentMembership.artist?.name || currentMembership.name}</div>
               <div className="text-xs text-gray-500 truncate">
-                {currentMembership.displayName} • {currentMembership.role}
+                {currentMembership.resolved_display_name || currentMembership.display_name} • {currentMembership.role}
               </div>
             </div>
           </div>
@@ -132,24 +126,24 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
             <div className="px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50">
               Switch to
             </div>
-            {otherContexts.map((context) => (
+            {otherContexts.map((membership) => (
               <DropdownMenuItem
-                key={context.bandId}
-                onClick={() => handleContextSwitch(context.bandId)}
+                key={membership.artist_id}
+                onClick={() => handleContextSwitch(membership.artist_id)}
                 className="py-3 cursor-pointer"
-                data-testid={`button-switch-to-context-${context.bandId}`}
+                data-testid={`button-switch-to-context-${membership.artist_id}`}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <div 
+                  <div
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: context.color }}
+                    style={{ backgroundColor: membership.color }}
                   >
-                    <i className={`fas ${context.icon} text-white text-sm`}></i>
+                    <i className={`fas ${membership.icon} text-white text-sm`}></i>
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">{context.band.name}</div>
+                    <div className="font-medium text-sm truncate">{membership.artist?.name || membership.name}</div>
                     <div className="text-xs text-gray-500 truncate">
-                      {context.displayName} • {context.role}
+                      {membership.resolved_display_name || membership.display_name} • {membership.role}
                     </div>
                   </div>
                 </div>
@@ -163,7 +157,7 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
         {/* Actions */}
         <DropdownMenuItem onClick={handleCreateContext} className="cursor-pointer" data-testid="button-create-new-context">
           <Plus className="h-4 w-4 mr-2" />
-          Create New Context
+          Create New Artist
         </DropdownMenuItem>
         
         <DropdownMenuItem onClick={() => setLocation('/admin')} className="cursor-pointer" data-testid="button-context-settings">

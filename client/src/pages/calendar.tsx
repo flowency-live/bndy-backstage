@@ -6,7 +6,7 @@ import { useServerAuth } from "@/hooks/useServerAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
-import type { Event, UserBand, Band, EVENT_TYPES } from "@/types/api";
+import type { Event, ArtistMembership, EVENT_TYPES } from "@/types/api";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 import EventModal from "@/components/event-modal";
 import EventDetails from "@/components/event-details";
@@ -24,20 +24,20 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import FloatingActionButton from "@/components/floating-action-button";
 
 interface CalendarProps {
-  bandId?: string | null;
-  membership?: (UserBand & { band: Band }) | null;
+  artistId?: string | null;
+  membership?: ArtistMembership | null;
 }
 
-export default function Calendar({ bandId, membership }: CalendarProps) {
+export default function Calendar({ artistId, membership }: CalendarProps) {
   // Apply calendar theme
   useSectionTheme('calendar');
-  
+
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
-  const { currentBandId, currentMembership, userProfile } = useUser();
-  
+  const { currentArtistId, currentMembership, userProfile } = useUser();
+
   // Use context values if props aren't provided (for standalone usage)
-  const effectiveBandId = bandId ?? currentBandId;
+  const effectiveArtistId = artistId ?? currentArtistId;
   const effectiveMembership = membership ?? currentMembership;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
@@ -50,7 +50,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
   
   // Simple toggle controls for the unified calendar view
-  const [showBandEvents, setShowBandEvents] = useState(true);
+  const [showArtistEvents, setShowArtistEvents] = useState(true);
   const [showMyEvents, setShowMyEvents] = useState(true);
   
   const { toast } = useToast();
@@ -80,32 +80,30 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
 
   // Get unified calendar data - separate arrays for different event types
   const { data: calendarData } = useQuery<{
-    bandEvents: Event[];
+    artistEvents: Event[];
     userEvents: Event[];
-    otherBandEvents: (Event & { bandName: string })[];
+    otherArtistEvents: (Event & { artistName: string })[];
   } | Event[]>({
-    queryKey: effectiveBandId 
-      ? ["/api/bands", effectiveBandId, "calendar", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
+    queryKey: effectiveArtistId
+      ? ["/api/artists", effectiveArtistId, "calendar", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
       : ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
-      
+
       let url: string;
-      if (effectiveBandId) {
-        // Band context: get unified calendar with all event types
-        url = `/api/bands/${effectiveBandId}/calendar?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+      if (effectiveArtistId) {
+        // Artist context: get unified calendar with all event types
+        url = `https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       } else {
-        // No band context: get user's personal events from all bands (legacy endpoint)
-        url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+        // No artist context: get user's personal events from all artists
+        url = `https://api.bndy.co.uk/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       }
-      
+
+
       const response = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
+        credentials: "include",
       });
       
       if (!response.ok) {
@@ -118,66 +116,59 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   });
 
   // Extract events from the unified calendar response or fallback to legacy format
-  const allEvents: Event[] = calendarData 
-    ? Array.isArray(calendarData) 
-      ? calendarData // Legacy format (no band context)
+  const allEvents: Event[] = calendarData
+    ? Array.isArray(calendarData)
+      ? calendarData // Legacy format (no artist context)
       : [
-          ...calendarData.bandEvents,
+          ...calendarData.artistEvents,
           ...calendarData.userEvents,
-          ...calendarData.otherBandEvents.map(event => ({ 
-            ...event, 
-            // Add visual indicator for cross-band events
-            title: event.title ? `${event.title} (${event.bandName})` : `${event.type} (${event.bandName})`
+          ...calendarData.otherArtistEvents.map(event => ({
+            ...event,
+            // Add visual indicator for cross-artist events
+            title: event.title ? `${event.title} (${event.artistName})` : `${event.eventType} (${event.artistName})`
           }))
         ]
     : [];
 
   // Apply toggle filters based on user's preferences
   const events = allEvents.filter(event => {
-    // Personal/unavailable events (including cross-band events)
-    if (event.type === 'unavailable' || !event.bandId) {
+    // Personal/unavailable events (including cross-artist events)
+    if (event.eventType === 'unavailable' || !event.artistId) {
       return showMyEvents;
     }
-    
-    // Band events for current band context
-    if (effectiveBandId && event.bandId === effectiveBandId) {
-      return showBandEvents;
+
+    // Artist events for current artist context
+    if (effectiveArtistId && event.artistId === effectiveArtistId) {
+      return showArtistEvents;
     }
-    
-    // Events from other bands (when no band context, show if band events enabled)
-    if (!effectiveBandId) {
-      return showBandEvents;
+
+    // Events from other artists (when no artist context, show if artist events enabled)
+    if (!effectiveArtistId) {
+      return showArtistEvents;
     }
-    
-    // Other band events in band context (shown as part of "My Events" for cross-band privacy)
+
+    // Other artist events in artist context (shown as part of "My Events" for cross-artist privacy)
     return showMyEvents;
   });
 
-  // Get band members using new band-scoped API (only when band context exists)
-  const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
-    queryKey: ["/api/bands", effectiveBandId, "members"],
+  // Get artist members using new artist-scoped API (only when artist context exists)
+  const { data: artistMembers = [] } = useQuery<ArtistMembership[]>({
+    queryKey: ["/api/artists", effectiveArtistId, "members"],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-      
-      const response = await fetch(`/api/bands/${effectiveBandId}/members`, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/members`, {
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
-        throw new Error("Failed to fetch band members");
+        throw new Error("Failed to fetch artist members");
       }
-      
+
       return response.json();
     },
-    enabled: !!session?.access_token && !!effectiveBandId,
+    enabled: !!effectiveArtistId,
   });
 
-  // Get next upcoming band event (only practices and gigs, not unavailability)
+  // Get next upcoming artist event (only practices and gigs, not unavailability)
   const upcomingEvents = events
     .filter(event => {
       if (event.type === "unavailable") return false;
@@ -234,7 +225,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   const getUnavailableMembers = (dateEvents: Event[]) => {
     const unavailableEvents = dateEvents.filter(e => e.type === "unavailable");
     return unavailableEvents.map(event => 
-      bandMembers.find(member => member.id === event.membershipId)
+      artistMembers.find(member => member.membership_id === event.membershipId)
     ).filter(Boolean);
   };
 
@@ -245,7 +236,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
     if (event.type === "unavailable") {
       if (event.membershipId) {
         // Legacy band member unavailable event
-        const member = bandMembers.find(member => member.id === event.membershipId || member.userId === event.membershipId);
+        const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
         // For unavailable events, prefer the user's display name over the membership display name
         eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
       } else if (event.ownerUserId) {
@@ -258,9 +249,9 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
     
-    // Add band prefix when not in band context if bandName is available
-    if (!effectiveBandId && event.bandName) {
-      return `${event.bandName} - ${eventName}`;
+    // Add artist prefix when not in artist context if artistName is available
+    if (!effectiveArtistId && event.artistName) {
+      return `${event.artistName} - ${eventName}`;
     }
     
     return eventName;
@@ -312,15 +303,15 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
   // Handle delete from details modal
   const handleDeleteFromDetails = async (event: Event) => {
     try {
-      await apiRequest("DELETE", `/api/bands/${bandId}/events/${event.id}`);
-      
+      await apiRequest("DELETE", `https://api.bndy.co.uk/api/artists/${effectiveArtistId}/events/${event.id}`);
+
       // Invalidate all calendar and events queries for immediate UI update
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
-          return Array.isArray(queryKey) && 
-                 queryKey[0] === '/api/bands' && 
-                 queryKey[1] === bandId && 
+          return Array.isArray(queryKey) &&
+                 queryKey[0] === '/api/artists' &&
+                 queryKey[1] === effectiveArtistId &&
                  (queryKey[2] === 'events' || queryKey[2] === 'calendar');
         }
       });
@@ -393,7 +384,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       if (includePrivate) params.append('includePrivate', 'true');
       if (memberOnly) params.append('memberOnly', 'true');
 
-      const response = await fetch(`/api/bands/${bandId}/calendar/export/ical?${params.toString()}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/export/ical?${params.toString()}`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -444,7 +435,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         return;
       }
 
-      const response = await fetch(`/api/bands/${bandId}/calendar/url`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/url`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -598,22 +589,22 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
       <div className="bg-brand-primary-light px-4 py-3 border-t">
         <div className="flex flex-wrap items-center gap-4">
           
-          {/* Band Events Toggle */}
-          {(effectiveBandId || userProfile?.bands?.length) && (
+          {/* Artist Events Toggle */}
+          {(effectiveArtistId || userProfile?.artists?.length) && (
             <button
-              onClick={() => setShowBandEvents(!showBandEvents)}
+              onClick={() => setShowArtistEvents(!showArtistEvents)}
               className={`
                 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
-                ${showBandEvents 
-                  ? 'bg-brand-accent text-white border-brand-accent shadow-md' 
+                ${showArtistEvents
+                  ? 'bg-brand-accent text-white border-brand-accent shadow-md'
                   : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
                 }
               `}
-              data-testid="toggle-band-events"
+              data-testid="toggle-artist-events"
             >
               <i className="fas fa-users mr-2 text-xs"></i>
-              Band Events
-              {showBandEvents && (
+              Artist Events
+              {showArtistEvents && (
                 <i className="fas fa-check ml-2 text-xs"></i>
               )}
             </button>
@@ -870,8 +861,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         )}
       </div>
 
-      {/* Event Modal - show when band context exists with membership */}
-      {showEventModal && effectiveBandId && effectiveMembership && (
+      {/* Event Modal - show when artist context exists with membership */}
+      {showEventModal && effectiveArtistId && effectiveMembership && (
         <EventModal
           isOpen={showEventModal}
           onClose={() => {
@@ -883,7 +874,7 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
           selectedEvent={selectedEvent}
           eventType={eventType}
           currentUser={effectiveMembership}
-          bandId={effectiveBandId}
+          artistId={effectiveArtistId}
         />
       )}
 
@@ -897,8 +888,8 @@ export default function Calendar({ bandId, membership }: CalendarProps) {
         }}
         onEdit={handleEditFromDetails}
         onDelete={handleDeleteFromDetails}
-        bandMembers={bandMembers}
-        currentMembershipId={effectiveMembership?.id || null}
+        artistMembers={artistMembers}
+        currentMembershipId={effectiveMembership?.membership_id || null}
         canEdit={canEdit}
       />
 

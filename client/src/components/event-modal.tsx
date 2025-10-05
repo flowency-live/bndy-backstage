@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { UserBand, Band, InsertEvent, Event } from "@/types/api";
+import type { ArtistMembership, InsertEvent, Event } from "@/types/api";
 import { EVENT_TYPES, EVENT_TYPE_CONFIG } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +21,11 @@ interface EventModalProps {
   selectedDate: string;
   selectedEvent?: Event | null;
   eventType: EventType;
-  currentUser: UserBand & { band: Band };
-  bandId: string;
+  currentUser: ArtistMembership;
+  artistId: string;
 }
 
-export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, bandId }: EventModalProps) {
+export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId }: EventModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
@@ -57,7 +57,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
       membershipId?: string;
       excludeEventId?: string;
     }) => {
-      const response = await apiRequest("POST", `/api/bands/${bandId}/events/check-conflicts`, data);
+      const response = await apiRequest("POST", `https://api.bndy.co.uk/api/artists/${artistId}/events/check-conflicts`, data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -132,12 +132,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const createEventMutation = useMutation({
     mutationFn: async (event: InsertEvent) => {
-      return apiRequest("POST", `/api/bands/${bandId}/events`, event);
+      return apiRequest("POST", `https://api.bndy.co.uk/api/artists/${artistId}/events`, event);
     },
     onSuccess: () => {
       // Invalidate both events and calendar queries to ensure immediate display
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "calendar"] });
       toast({
         title: "Success",
         description: "Event created successfully",
@@ -155,12 +155,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const updateEventMutation = useMutation({
     mutationFn: async ({ id, ...event }: { id: string } & Partial<InsertEvent>) => {
-      return apiRequest("PATCH", `/api/bands/${bandId}/events/${id}`, event);
+      return apiRequest("PATCH", `https://api.bndy.co.uk/api/artists/${artistId}/events/${id}`, event);
     },
     onSuccess: () => {
       // Invalidate both events and calendar queries to ensure immediate display
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "calendar"] });
       toast({
         title: "Success",
         description: "Event updated successfully",
@@ -178,12 +178,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const deleteEventMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/bands/${bandId}/events/${id}`);
+      return apiRequest("DELETE", `https://api.bndy.co.uk/api/artists/${artistId}/events/${id}`);
     },
     onSuccess: () => {
       // Invalidate both events and calendar queries to ensure immediate display
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "calendar"] });
       toast({
         title: "Success",
         description: "Event deleted successfully",

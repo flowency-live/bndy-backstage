@@ -5,11 +5,11 @@ import type { Event } from "@/types/api";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 
 interface GigAlertBannerProps {
-  bandId: string;
+  artistId: string;
   className?: string;
 }
 
-export default function GigAlertBanner({ bandId, className = "" }: GigAlertBannerProps) {
+export default function GigAlertBanner({ artistId, className = "" }: GigAlertBannerProps) {
   const { session } = useServerAuth();
   
   // Get today's date in YYYY-MM-DD format
@@ -17,13 +17,13 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
   
   // Fetch today's events
   const { data: todayEvents = [] } = useQuery<Event[]>({
-    queryKey: ["/api/bands", bandId, "events", "today", today],
+    queryKey: ["/api/artists", artistId, "events", "today", today],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/events?startDate=${today}&endDate=${today}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/events?startDate=${today}&endDate=${today}`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export default function GigAlertBanner({ bandId, className = "" }: GigAlertBanne
         event.date === today
       );
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && !!artistId,
   });
 
   // Don't render if no gigs today

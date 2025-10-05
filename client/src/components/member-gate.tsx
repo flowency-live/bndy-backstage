@@ -37,7 +37,7 @@ interface MemberGateProps {
 export default function MemberGate({ children, allowNoContextForDashboard = false }: MemberGateProps) {
   const [, setLocation] = useLocation();
   const { loading: authLoading, isAuthenticated, checkAuth } = useServerAuth();
-  const { currentArtistId, currentMembership, userProfile: contextUserProfile, isLoading: contextLoading } = useUser();
+  const { currentArtistId, currentMembership, userProfile: contextUserProfile, isLoading: contextLoading, logout } = useUser();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Trigger auth check when MemberGate mounts (lazy auth check)
@@ -154,7 +154,7 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
               Create New Band
             </button>
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="text-white/70 hover:text-white/50 font-sans text-sm"
               data-testid="button-logout"
             >

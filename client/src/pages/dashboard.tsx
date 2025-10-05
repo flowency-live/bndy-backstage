@@ -29,7 +29,7 @@ const ICONS = [
   { icon: "fa-piano", color: "#4169E1", label: "Keyboardist" },
   { icon: "fa-music", color: "#708090", label: "Multi-instrumentalist" },
   { icon: "fa-headphones", color: "#FF6347", label: "Producer" },
-  { icon: "fa-crown", color: "#f59e0b", label: "Band Leader" },
+  { icon: "fa-crown", color: "#f59e0b", label: "Artist Leader" },
 ];
 
 interface UserProfile {
@@ -38,7 +38,7 @@ interface UserProfile {
 }
 
 interface DashboardProps {
-  bandId: string | null;
+  artistId: string | null;
   membership: ArtistMembership | null;
   userProfile: UserProfile | null;
 }
@@ -360,7 +360,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
 
     if (!formData.bandName.trim()) {
       toast({
-        title: "Band name required",
+        title: "Artist name required",
         description: "Please enter a name for your band",
         variant: "destructive",
       });
@@ -393,7 +393,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-serif">Create Your Band</CardTitle>
+            <CardTitle className="text-2xl font-serif">Create Your Artist</CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -542,7 +542,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
                     Creating...
                   </>
                 ) : (
-                  "Create Band"
+                  "Create Artist"
                 )}
               </Button>
             </div>
@@ -593,7 +593,7 @@ function ArtistTile({ artist, membership, onClick }: {
   );
 }
 
-export default function Dashboard({ bandId, membership, userProfile }: DashboardProps) {
+export default function Dashboard({ artistId, membership, userProfile }: DashboardProps) {
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
   const { selectArtist } = useUser();
@@ -603,7 +603,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
 
   // Get upcoming events for this band - moved to top to avoid hooks violation
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
-    queryKey: ["/api/bands", bandId, "events", "upcoming"],
+    queryKey: ["/api/artists", artistId, "events", "upcoming"],
     queryFn: async () => {
       if (!session) {
         throw new Error("Not authenticated");
@@ -613,7 +613,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       const nextMonth = new Date();
       nextMonth.setMonth(today.getMonth() + 1);
 
-      const response = await fetch(`/api/bands/${bandId}/events?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/events?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -641,18 +641,18 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
           return dateA.getTime() - dateB.getTime();
         });
     },
-    enabled: !!session && !!bandId,
+    enabled: !!session && !!artistId,
   });
 
   // Get songs for this band
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
-    queryKey: ["/api/bands", bandId, "songs"],
+    queryKey: ["/api/artists", artistId, "songs"],
     queryFn: async () => {
       if (!session) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`/api/bands/${bandId}/songs`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -665,18 +665,18 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session && !!bandId,
+    enabled: !!session && !!artistId,
   });
 
   // Get band members
   const { data: bandMembers = [], isLoading: membersLoading } = useQuery<any[]>({
-    queryKey: ["/api/bands", bandId, "members"],
+    queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`/api/bands/${bandId}/members`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -689,7 +689,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       
       return response.json();
     },
-    enabled: !!session && !!bandId,
+    enabled: !!session && !!artistId,
   });
 
   // Calculate some stats
@@ -698,7 +698,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
   const nextUpEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
 
   // Handle no band selected case - show band tiles (after hooks are called)
-  if (!bandId || !membership || !userProfile) {
+  if (!artistId || !membership || !userProfile) {
     return (
       <>
         {showingCreateForm && (
@@ -759,7 +759,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
         {/* Gig Alert Banner */}
-        <GigAlertBanner bandId={bandId} className="mb-3 sm:mb-4" />
+        <GigAlertBanner artistId={artistId} className="mb-3 sm:mb-4" />
         
         {/* Next Up Card */}
         {nextUpEvent && (
@@ -939,7 +939,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
             </div>
 
             <DashboardTile
-              title="Band Members"
+              title="Members"
               subtitle="Manage your team"
               icon={<Users />}
               color="hsl(142, 71%, 45%)"
@@ -960,7 +960,7 @@ export default function Dashboard({ bandId, membership, userProfile }: Dashboard
             </div>
 
             <DashboardTile
-              title="Band Settings"
+              title="Settings"
               subtitle="Configure your band"
               icon={<Settings />}
               color="hsl(220, 13%, 51%)"

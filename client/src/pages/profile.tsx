@@ -64,7 +64,7 @@ export default function Profile() {
 
       // If this was profile creation, redirect to dashboard or band selection
       if (mode === "create") {
-        if (userProfile?.bands && userProfile.bands.length > 0) {
+        if (userProfile?.artists && userProfile.artists.length > 0) {
           setLocation("/dashboard");
         } else {
           setLocation("/onboarding");

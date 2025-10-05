@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership } from "@/types/api";
 import { EVENT_TYPES, EVENT_TYPE_CONFIG } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,14 +44,14 @@ interface MagicLink {
 }
 
 interface AdminProps {
-  bandId: string;
-  membership: UserBand & { band: Band };
+  artistId: string;
+  membership: ArtistMembership;
 }
 
-function AvatarUploadModal({ membershipId, member, bandId, session, onClose, onSuccess }: {
+function AvatarUploadModal({ membershipId, member, artistId, session, onClose, onSuccess }: {
   membershipId: string;
   member: any;
-  bandId: string;
+  artistId: string;
   session: any;
   onClose: () => void;
   onSuccess: () => void;
@@ -66,7 +66,7 @@ function AvatarUploadModal({ membershipId, member, bandId, session, onClose, onS
         throw new Error('No access token');
       }
       
-      const response = await fetch(`/api/bands/${bandId}/members/${membershipId}/avatar`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/${membershipId}/avatar`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -186,20 +186,20 @@ function AvatarUploadModal({ membershipId, member, bandId, session, onClose, onS
   );
 }
 
-function ActiveMagicLinks({ bandId, session, toast }: {
-  bandId: string;
+function ActiveMagicLinks({ artistId, session, toast }: {
+  artistId: string;
   session: any;
   toast: any;
 }) {
   // Query for active magic links
   const { data: magicLinks = [], isLoading: linksLoading, refetch: refetchLinks } = useQuery<MagicLink[]>({
-    queryKey: ['/api/bands', bandId, 'invites'],
+    queryKey: ['/api/artists', artistId, 'invites'],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error('No access token');
       }
       
-      const response = await fetch(`/api/bands/${bandId}/invites`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -212,7 +212,7 @@ function ActiveMagicLinks({ bandId, session, toast }: {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId
+    enabled: !!session?.access_token && !!artistId
   });
   
   // Mutation for revoking magic links
@@ -222,7 +222,7 @@ function ActiveMagicLinks({ bandId, session, toast }: {
         throw new Error('No access token');
       }
       
-      const response = await fetch(`/api/bands/${bandId}/invites/${linkId}/revoke`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/${linkId}/revoke`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -386,7 +386,7 @@ function ActiveMagicLinks({ bandId, session, toast }: {
   );
 }
 
-export default function Admin({ bandId, membership }: AdminProps) {
+export default function Admin({ artistId, membership }: AdminProps) {
   // Apply band theme for admin/management pages
   useSectionTheme('band');
   
@@ -418,13 +418,13 @@ export default function Admin({ bandId, membership }: AdminProps) {
 
   // Get band members using new band-scoped API
   const { data: bandMembers = [], isLoading } = useQuery<(UserBand & { user: any })[]>({
-    queryKey: ["/api/bands", bandId, "members"],
+    queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/members`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -437,7 +437,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && !!artistId,
   });
 
   // Spotify queries
@@ -503,7 +503,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/members/invite`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/invite`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -520,7 +520,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "members"] });
       setNewMember({ email: "", role: "", displayName: "", icon: "fa-music", color: "#708090" });
       toast({
         title: "Success",
@@ -542,7 +542,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/members/${membershipId}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members/${membershipId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -556,8 +556,8 @@ export default function Admin({ bandId, membership }: AdminProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "members"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "members"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "events"] });
       toast({
         title: "Success",
         description: "Band member removed successfully",
@@ -579,7 +579,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -602,7 +602,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/me"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId] });
       toast({
         title: "Success",
         description: "Band settings updated successfully",
@@ -700,7 +700,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
       let addedCount = 0;
       for (const item of tracks) {
         try {
-          const addResponse = await fetch(`/api/bands/${bandId}/songs`, {
+          const addResponse = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
             method: "POST",
             headers: { 
               "Authorization": `Bearer ${session.access_token}`,
@@ -731,7 +731,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
         description: `Added ${addedCount} new songs from your Spotify playlist`
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
     } catch (error) {
       toast({
         title: "Import failed",
@@ -801,7 +801,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
       
       {/* Gig Alert Banner */}
       <div className="px-4">
-        <GigAlertBanner bandId={bandId} className="mb-4" />
+        <GigAlertBanner artistId={artistId} className="mb-4" />
       </div>
       
       <div className="p-4">
@@ -1092,7 +1092,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                         <Button
                           onClick={async () => {
                             try {
-                              const response = await fetch(`/api/bands/${bandId}/invites/general`, {
+                              const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/general`, {
                                 method: 'POST',
                                 headers: {
                                   'Authorization': `Bearer ${session?.access_token}`,
@@ -1162,7 +1162,7 @@ export default function Admin({ bandId, membership }: AdminProps) {
                             }
                             
                             try {
-                              const response = await fetch(`/api/bands/${bandId}/invites/phone`, {
+                              const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/invites/phone`, {
                                 method: 'POST',
                                 headers: {
                                   'Authorization': `Bearer ${session?.access_token}`,

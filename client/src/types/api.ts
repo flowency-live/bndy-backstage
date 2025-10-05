@@ -77,7 +77,8 @@ export type UserBand = ArtistMembership;
 
 export interface Event {
   id: string;
-  bandId: string;
+  /** Artist ID - Optional: undefined for user-only events, defined for artist events */
+  artistId?: string;
   title: string;
   description?: string | null;
   eventType: string;
@@ -93,8 +94,9 @@ export interface Event {
 
 export interface Song {
   id: string;
-  bandId: string;
+  artistId: string;
   title: string;
+  /** Original artist (Elvis, Beatles, etc.) - NOT bndy artist context */
   artist?: string | null;
   spotifyId?: string | null;
   youtubeId?: string | null;
