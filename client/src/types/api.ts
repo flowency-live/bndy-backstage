@@ -115,7 +115,10 @@ export const EVENT_TYPES = [
   'rehearsal',
   'recording',
   'meeting',
-  'other'
+  'other',
+  'practice',
+  'public_gig',
+  'unavailable'
 ] as const;
 
 export type EventType = typeof EVENT_TYPES[number];
@@ -145,6 +148,21 @@ export const EVENT_TYPE_CONFIG = {
     label: 'Other',
     color: '#6b7280',
     icon: '📅'
+  },
+  practice: {
+    label: 'Practice',
+    color: '#f59e0b',
+    icon: '🎸'
+  },
+  public_gig: {
+    label: 'Public Gig',
+    color: '#10b981',
+    icon: '🎤'
+  },
+  unavailable: {
+    label: 'Unavailable',
+    color: '#ef4444',
+    icon: '🚫'
   }
 } as const;
 
