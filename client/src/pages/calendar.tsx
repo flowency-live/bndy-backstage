@@ -88,31 +88,23 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       ? ["/api/artists", effectiveArtistId, "calendar", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")]
       : ["/api/me/events", format(monthStart, "yyyy-MM-dd"), format(monthEnd, "yyyy-MM-dd")],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
 
       let url: string;
       if (effectiveArtistId) {
         // Artist context: get unified calendar with all event types
-        url = `https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+        url = `/api/artists/${effectiveArtistId}/calendar?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       } else {
         // No artist context: get user's personal events from all artists
-        url = `https://api.bndy.co.uk/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
+        url = `/api/me/events?startDate=${format(monthStart, "yyyy-MM-dd")}&endDate=${format(monthEnd, "yyyy-MM-dd")}`;
       }
 
-
-      const response = await fetch(url, {
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch events");
-      }
-      
+      const response = await apiRequest("GET", url);
       return response.json();
     },
-    enabled: !!session?.access_token,
+    enabled: !!session,
   });
 
   // Extract events from the unified calendar response or fallback to legacy format
@@ -155,14 +147,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   const { data: artistMembers = [] } = useQuery<ArtistMembership[]>({
     queryKey: ["/api/artists", effectiveArtistId, "members"],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/members`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch artist members");
-      }
-
+      const response = await apiRequest("GET", `/api/artists/${effectiveArtistId}/members`);
       return response.json();
     },
     enabled: !!effectiveArtistId,
@@ -273,7 +258,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     return true;
   };
 
-  const getBandEvents = (dateEvents: Event[]) => {
+  const getArtistEvents = (dateEvents: Event[]) => {
     return dateEvents.filter(e => e.type !== "unavailable");
   };
 
@@ -303,7 +288,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   // Handle delete from details modal
   const handleDeleteFromDetails = async (event: Event) => {
     try {
-      await apiRequest("DELETE", `https://api.bndy.co.uk/api/artists/${effectiveArtistId}/events/${event.id}`);
+      await apiRequest("DELETE", `/api/artists/${effectiveArtistId}/events/${event.id}`);
 
       // Invalidate all calendar and events queries for immediate UI update
       queryClient.invalidateQueries({
@@ -683,7 +668,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 const dayEvents = getEventsForDate(day);
                 const startingEvents = getEventsStartingOnDate(day);
                 const extendingEvents = getEventsExtendingToDate(day);
-                const bandEvents = getBandEvents(dayEvents);
+                const artistEvents = getArtistEvents(dayEvents);
                 const unavailableMembers = getUnavailableMembers(dayEvents);
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isToday_ = isToday(day);
