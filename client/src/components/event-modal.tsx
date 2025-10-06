@@ -311,9 +311,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                 {(() => {
                   // Always include 'unavailable' regardless of artist settings since it's a personal action
                   const artistEventTypes = currentUser.artist?.allowedEventTypes || ['practice', 'public_gig'];
-                  // Ensure it's an array (defensive coding)
-                  const typesArray = Array.isArray(artistEventTypes) ? artistEventTypes : ['practice', 'public_gig'];
-                  const allAvailableTypes = [...typesArray];
+                  const allAvailableTypes = [...artistEventTypes];
                   if (!allAvailableTypes.includes('unavailable')) {
                     allAvailableTypes.push('unavailable');
                   }
