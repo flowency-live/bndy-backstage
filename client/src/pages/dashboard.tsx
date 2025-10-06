@@ -686,8 +686,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       if (!response.ok) {
         throw new Error("Failed to fetch band members");
       }
-      
-      return response.json();
+
+      const data = await response.json();
+      return data.members;
     },
     enabled: !!session && !!artistId,
   });
