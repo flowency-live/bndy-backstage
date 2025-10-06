@@ -32,8 +32,8 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
-    bandName: "",
-    bandDescription: "",
+    artistName: "",
+    artistDescription: "",
     bandAvatar: null as string | null,
     displayName: "",
     role: "",
@@ -51,8 +51,8 @@ export default function Onboarding() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: data.bandName,
-          bio: data.bandDescription,
+          name: data.artistName,
+          bio: data.artistDescription,
           artistType: "band", // Explicitly set as band type
           profileImageUrl: data.bandAvatar,
 
@@ -81,7 +81,7 @@ export default function Onboarding() {
 
       toast({
         title: "Welcome to your band!",
-        description: `${formData.bandName} has been created successfully.`,
+        description: `${formData.artistName} has been created successfully.`,
       });
 
       // Redirect to calendar
@@ -99,7 +99,7 @@ export default function Onboarding() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.bandName.trim()) {
+    if (!formData.artistName.trim()) {
       toast({
         title: "Band name required",
         description: "Please enter a name for your band",
@@ -155,12 +155,12 @@ export default function Onboarding() {
             <h2 className="text-xl font-semibold text-card-foreground mb-1">Band Information</h2>
             
             <div>
-              <Label htmlFor="bandName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
+              <Label htmlFor="artistName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
               <Input
-                id="bandName"
+                id="artistName"
                 type="text"
-                value={formData.bandName}
-                onChange={(e) => setFormData(prev => ({ ...prev, bandName: e.target.value }))}
+                value={formData.artistName}
+                onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
                 placeholder="Enter your band name"
                 className="mt-2"
                 data-testid="input-band-name"
@@ -169,11 +169,11 @@ export default function Onboarding() {
             </div>
 
             <div>
-              <Label htmlFor="bandDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
+              <Label htmlFor="artistDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
               <Textarea
-                id="bandDescription"
-                value={formData.bandDescription}
-                onChange={(e) => setFormData(prev => ({ ...prev, bandDescription: e.target.value }))}
+                id="artistDescription"
+                value={formData.artistDescription}
+                onChange={(e) => setFormData(prev => ({ ...prev, artistDescription: e.target.value }))}
                 placeholder="Tell us about your band..."
                 className="mt-2 resize-none"
                 data-testid="input-band-description"

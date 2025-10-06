@@ -460,9 +460,9 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
                   {/* Artist Name */}
                   <div>
-                    <Label htmlFor="bandName" className="text-card-foreground font-semibold mb-2 block">Artist Name *</Label>
+                    <Label htmlFor="artistName" className="text-card-foreground font-semibold mb-2 block">Artist Name *</Label>
                     <Input
-                      id="bandName"
+                      id="artistName"
                       type="text"
                       value={artistSettings.name}
                       onChange={(e) => setArtistSettings(prev => ({ ...prev, name: e.target.value }))}
@@ -475,9 +475,9 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
                   {/* Band Description */}
                   <div>
-                    <Label htmlFor="bandDescription" className="text-card-foreground font-semibold mb-2 block">Description</Label>
+                    <Label htmlFor="artistDescription" className="text-card-foreground font-semibold mb-2 block">Description</Label>
                     <Textarea
-                      id="bandDescription"
+                      id="artistDescription"
                       value={artistSettings.description}
                       onChange={(e) => setArtistSettings(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Tell us about your artist..."

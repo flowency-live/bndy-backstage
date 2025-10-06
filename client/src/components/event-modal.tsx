@@ -39,13 +39,13 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [timePickerType, setTimePickerType] = useState<"start" | "end">("start");
   const [conflicts, setConflicts] = useState<{
-    bandEventConflicts: Event[];
+    artistEventConflicts: Event[];
     unavailabilityConflicts: Event[];
-    affectedBandEvents: Event[];
+    affectedArtistEvents: Event[];
   }>({
-    bandEventConflicts: [],
+    artistEventConflicts: [],
     unavailabilityConflicts: [],
-    affectedBandEvents: []
+    affectedArtistEvents: []
   });
 
   // Check for conflicts when date/type changes
@@ -62,9 +62,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     },
     onSuccess: (data) => {
       setConflicts({
-        bandEventConflicts: data.bandEventConflicts || [],
+        artistEventConflicts: data.artistEventConflicts || [],
         unavailabilityConflicts: data.unavailabilityConflicts || [],
-        affectedBandEvents: data.affectedBandEvents || []
+        affectedArtistEvents: data.affectedArtistEvents || []
       });
     },
   });
@@ -517,18 +517,18 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             </div>
 
             {/* Conflict Warnings */}
-            {(conflicts.bandEventConflicts.length > 0 || 
+            {(conflicts.artistEventConflicts.length > 0 || 
               conflicts.unavailabilityConflicts.length > 0 || 
-              conflicts.affectedBandEvents.length > 0) && (
+              conflicts.affectedArtistEvents.length > 0) && (
               <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                 <div className="flex items-start space-x-3">
                   <i className="fas fa-exclamation-triangle text-yellow-600 text-lg mt-1"></i>
                   <div className="space-y-2">
                     <h4 className="font-sans font-semibold text-yellow-800">Scheduling Warnings</h4>
                     
-                    {conflicts.bandEventConflicts.length > 0 && (
+                    {conflicts.artistEventConflicts.length > 0 && (
                       <p className="text-sm text-yellow-700">
-                        <strong>Existing band events:</strong> {conflicts.bandEventConflicts.map(event => 
+                        <strong>Existing artist events:</strong> {conflicts.artistEventConflicts.map(event => 
                           event.title || (event.type === "gig" ? "Gig" : "Practice")
                         ).join(", ")} already scheduled for this date.
                       </p>
@@ -540,12 +540,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                       </p>
                     )}
                     
-                    {conflicts.affectedBandEvents.length > 0 && (
+                    {conflicts.affectedArtistEvents.length > 0 && (
                       <div className="text-sm text-yellow-700">
                         <p className="mb-2">
                           <strong>This affects existing events:</strong>
                         </p>
-                        {conflicts.affectedBandEvents.map((event, idx) => (
+                        {conflicts.affectedArtistEvents.map((event, idx) => (
                           <div key={idx} className="flex items-center justify-between bg-white rounded p-2 mb-1">
                             <span>
                               {event.title || (event.type === "gig" ? "Gig" : "Practice")} on {format(new Date(event.date + 'T00:00:00'), "MMM d")}

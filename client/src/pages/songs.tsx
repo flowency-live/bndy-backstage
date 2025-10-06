@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
-import type { UserBand, Band } from "@/types/api";
+import type { ArtistMembership, Artist } from "@/types/api";
 
 interface SongWithDetails {
   id: string;
@@ -36,11 +36,11 @@ interface SongWithDetails {
 }
 
 interface SongsProps {
-  bandId: string;
-  membership: UserBand & { band: Band };
+  artistId: string;
+  membership: ArtistMembership & { artist: Artist };
 }
 
-export default function Songs({ bandId, membership }: SongsProps) {
+export default function Songs({ artistId, membership }: SongsProps) {
   // Apply songs theme
   useSectionTheme('songs');
   
@@ -60,13 +60,13 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
   // Get songs for this band using new band-scoped API
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
-    queryKey: ["/api/bands", bandId, "songs"],
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/songs`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -79,31 +79,32 @@ export default function Songs({ bandId, membership }: SongsProps) {
       
       return response.json();
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && !!artistId,
   });
 
   // Get band members using new band-scoped API
-  const { data: bandMembers = [] } = useQuery<(UserBand & { user: any })[]>({
-    queryKey: ["/api/bands", bandId, "members"],
+  const { data: artistMembers = [] } = useQuery<(ArtistMembership & { user: any })[]>({
+    queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session?.access_token) {
         throw new Error("No access token");
       }
-      
-      const response = await fetch(`/api/bands/${bandId}/members`, {
+
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
+        credentials: 'include',
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
-        throw new Error("Failed to fetch band members");
+        throw new Error("Failed to fetch artist members");
       }
-      
-      return response.json();
+
+      const data = await response.json();
+      return data.members;
     },
-    enabled: !!session?.access_token && !!bandId,
+    enabled: !!session?.access_token && !!artistId,
   });
 
   const updateReadinessMutation = useMutation({
@@ -112,7 +113,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/songs/${songId}/readiness`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/readiness`, {
         method: "POST",
         headers: { 
           "Authorization": `Bearer ${session.access_token}`,
@@ -124,7 +125,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update readiness", variant: "destructive" });
@@ -138,7 +139,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
       }
       
       if (hasVeto) {
-        const response = await fetch(`/api/bands/${bandId}/songs/${songId}/veto/${membership.id}`, {
+        const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/veto/${membership.id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${session.access_token}`,
@@ -146,7 +147,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
         });
         if (!response.ok) throw new Error("Failed to remove veto");
       } else {
-        const response = await fetch(`/api/bands/${bandId}/songs/${songId}/veto`, {
+        const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/veto`, {
           method: "POST",
           headers: { 
             "Authorization": `Bearer ${session.access_token}`,
@@ -158,7 +159,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update", variant: "destructive" });
@@ -171,7 +172,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
         throw new Error("No access token");
       }
       
-      const response = await fetch(`/api/bands/${bandId}/songs/${songData.songId}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songData.songId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -186,7 +187,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bands", bandId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
       toast({ title: "Song removed from practice list and Spotify playlist" });
     },
     onError: () => {
@@ -430,9 +431,9 @@ export default function Songs({ bandId, membership }: SongsProps) {
 
                         {/* All member statuses */}
                         <div>
-                          <span className="font-sans font-semibold text-foreground block mb-2">Band readiness:</span>
+                          <span className="font-sans font-semibold text-foreground block mb-2">Member readiness:</span>
                           <div className="grid grid-cols-2 gap-2">
-                            {bandMembers.map((member) => {
+                            {artistMembers.map((member) => {
                               const memberReadiness = song.readiness.find(r => r.membershipId === member.id);
                               const memberVeto = song.vetos.find(v => v.membershipId === member.id);
                               
@@ -498,7 +499,7 @@ export default function Songs({ bandId, membership }: SongsProps) {
       <AddSongModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        bandId={bandId}
+        artistId={artistId}
         membership={membership}
       />
     </div>

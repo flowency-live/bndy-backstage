@@ -296,8 +296,8 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
   const { selectArtist } = useUser();
 
   const [formData, setFormData] = useState({
-    bandName: "",
-    bandDescription: "",
+    artistName: "",
+    artistDescription: "",
     bandAvatar: null as string | null,
     displayName: "",
     role: "",
@@ -314,8 +314,8 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: data.bandName,
-          bio: data.bandDescription,
+          name: data.artistName,
+          bio: data.artistDescription,
           artistType: "band",
           profileImageUrl: data.bandAvatar,
           memberDisplayName: data.displayName || null,
@@ -339,7 +339,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
 
       toast({
         title: "Welcome to your band!",
-        description: `${formData.bandName} has been created successfully.`,
+        description: `${formData.artistName} has been created successfully.`,
       });
 
       // Select the new band
@@ -358,7 +358,7 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.bandName.trim()) {
+    if (!formData.artistName.trim()) {
       toast({
         title: "Artist name required",
         description: "Please enter a name for your band",
@@ -411,12 +411,12 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
               <h2 className="text-xl font-semibold text-card-foreground mb-1">Band Information</h2>
 
               <div>
-                <Label htmlFor="bandName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
+                <Label htmlFor="artistName" className="text-card-foreground font-medium mb-1 block">Band Name *</Label>
                 <Input
-                  id="bandName"
+                  id="artistName"
                   type="text"
-                  value={formData.bandName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bandName: e.target.value }))}
+                  value={formData.artistName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
                   placeholder="Enter your band name"
                   className="mt-2"
                   data-testid="input-band-name"
@@ -425,11 +425,11 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
               </div>
 
               <div>
-                <Label htmlFor="bandDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
+                <Label htmlFor="artistDescription" className="text-card-foreground font-medium mb-1 block">Description (Optional)</Label>
                 <Textarea
-                  id="bandDescription"
-                  value={formData.bandDescription}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bandDescription: e.target.value }))}
+                  id="artistDescription"
+                  value={formData.artistDescription}
+                  onChange={(e) => setFormData(prev => ({ ...prev, artistDescription: e.target.value }))}
                   placeholder="Tell us about your band..."
                   className="mt-2 resize-none"
                   data-testid="input-band-description"
@@ -669,7 +669,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   });
 
   // Get band members
-  const { data: bandMembers = [], isLoading: membersLoading } = useQuery<any[]>({
+  const { data: artistMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
       if (!session) {
@@ -962,7 +962,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               subtitle="Manage your team"
               icon={<Users />}
               color="hsl(142, 71%, 45%)"
-              count={bandMembers.length}
+              count={artistMembers.length}
               actionLabel="Manage"
               onClick={() => setLocation("/admin")}
               className="animate-stagger-4"

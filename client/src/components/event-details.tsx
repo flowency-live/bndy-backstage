@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { EVENT_TYPE_CONFIG } from "@/types/api"
-import type { Event, UserBand } from "@/types/api"
+import type { Event, ArtistMembership } from "@/types/api"
 
 interface EventDetailsProps {
   event: Event | null
@@ -13,7 +13,7 @@ interface EventDetailsProps {
   onClose: () => void
   onEdit: (event: Event) => void
   onDelete: (event: Event) => void
-  bandMembers: Array<UserBand & { user: { id: string, displayName: string | null } }>
+  artistMembers: Array<ArtistMembership & { user: { id: string, displayName: string | null } }>
   currentMembershipId: string | null
   canEdit: (event: Event) => boolean
 }
@@ -24,7 +24,7 @@ export default function EventDetails({
   onClose,
   onEdit,
   onDelete,
-  bandMembers,
+  artistMembers,
   currentMembershipId,
   canEdit
 }: EventDetailsProps) {
@@ -33,7 +33,7 @@ export default function EventDetails({
   if (!event) return null
 
   const eventConfig = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice
-  const eventMember = event.membershipId ? bandMembers.find(m => m.id === event.membershipId || m.userId === event.membershipId) : null
+  const eventMember = event.membershipId ? artistMembers.find(m => m.membership_id === event.membershipId || m.user_id === event.membershipId) : null
   const canEditEvent = canEdit(event)
   const isOwner = event.membershipId === currentMembershipId
   
