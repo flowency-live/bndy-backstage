@@ -132,9 +132,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
 
   const createEventMutation = useMutation({
     mutationFn: async (event: InsertEvent) => {
-      // Route to /events/user for unavailability (user events), /events for artist events
+      // Route to artist-agnostic endpoint for unavailability, artist context for events
       const endpoint = event.type === 'unavailable'
-        ? `https://api.bndy.co.uk/api/artists/${artistId}/events/user`
+        ? `https://api.bndy.co.uk/api/users/me/unavailability`
         : `https://api.bndy.co.uk/api/artists/${artistId}/events`;
       return apiRequest("POST", endpoint, event);
     },
