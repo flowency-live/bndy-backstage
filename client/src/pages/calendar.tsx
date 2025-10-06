@@ -148,7 +148,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     queryKey: ["/api/artists", effectiveArtistId, "members"],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/artists/${effectiveArtistId}/members`);
-      return response.json();
+      const data = await response.json();
+      return data.members;
     },
     enabled: !!effectiveArtistId,
   });
