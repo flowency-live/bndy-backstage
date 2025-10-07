@@ -36,23 +36,38 @@ export async function searchGooglePlaces(
   }
 
   try {
+    console.log('[Google Places] Searching for:', query);
+
     // Create a dummy div for the Places service
     const dummyDiv = document.createElement('div');
     const service = new google.maps.places.PlacesService(dummyDiv);
 
+    // UK center for location bias
+    const ukCenter = new google.maps.LatLng(54.5, -2.0);
+
     const results = await new Promise<google.maps.places.PlaceResult[]>((resolve) => {
       service.textSearch(
         {
-          query: query,
-          type: 'establishment',
+          query: `${query} music venue OR bar OR pub OR nightclub OR entertainment`,
+          location: ukCenter,
+          radius: 500000, // 500km radius from UK center
         },
         (results, status) => {
+          console.log('[Google Places] Status:', status);
+          console.log('[Google Places] Results count:', results?.length || 0);
+
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            console.log('[Google Places] First 3 results:', results.slice(0, 3).map(r => ({
+              name: r.name,
+              address: r.formatted_address,
+              placeId: r.place_id
+            })));
             resolve(results);
           } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            console.log('[Google Places] Zero results returned');
             resolve([]);
           } else {
-            console.warn(`Places API error: ${status}`);
+            console.warn(`[Google Places] Error: ${status}`);
             resolve([]); // Return empty array instead of rejecting
           }
         }
@@ -61,7 +76,7 @@ export async function searchGooglePlaces(
 
     return results;
   } catch (error) {
-    console.error('Error searching places:', error);
+    console.error('[Google Places] Error searching places:', error);
     return [];
   }
 }
