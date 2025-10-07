@@ -4,6 +4,7 @@ import { MapPin, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { searchLocationAutocomplete } from '@/lib/services/places-service';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
+import { useTheme } from '@/contexts/theme-context';
 
 interface LocationAutocompleteProps {
   value: string;
@@ -22,12 +23,17 @@ export default function LocationAutocomplete({
   required = false,
   autoFocus = false,
 }: LocationAutocompleteProps) {
+  const { theme } = useTheme();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState(value);
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Theme-aware colors
+  const textColor = theme === 'dark' ? 'hsl(0, 0%, 100%)' : 'hsl(222.2, 84%, 4.9%)';
+  const secondaryColor = theme === 'dark' ? 'hsl(214, 15%, 66%)' : 'hsl(215.4, 16.3%, 35%)';
 
   // Sync external value changes
   useEffect(() => {
@@ -136,11 +142,11 @@ export default function LocationAutocomplete({
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground truncate">
+                  <div className="font-medium truncate" style={{ color: textColor }}>
                     {prediction.structured_formatting.main_text}
                   </div>
                   {prediction.structured_formatting.secondary_text && (
-                    <div className="text-sm text-muted-foreground mt-1 truncate">
+                    <div className="text-sm mt-1 truncate" style={{ color: secondaryColor }}>
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   )}
