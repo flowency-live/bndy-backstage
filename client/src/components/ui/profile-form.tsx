@@ -1,5 +1,4 @@
-/// <reference types="@types/google.maps" />
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -7,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader } from "@googlemaps/js-api-loader";
 import { insertUserProfileSchema, updateUserProfileSchema, INSTRUMENT_OPTIONS, type InsertUserProfile, type UpdateUserProfile } from "@/types/api";
 import { cn } from "@/lib/utils";
-import { User, Camera, MapPin, Music } from "lucide-react";
+import { MapPin, Music } from "lucide-react";
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
 import ImageUpload from "@/components/ui/image-upload";
+import LocationAutocomplete from "@/components/ui/location-autocomplete";
 
 interface ProfileFormProps {
   initialData?: Partial<UpdateUserProfile & { oauthProfilePicture?: string | null }>;
@@ -31,16 +30,12 @@ export default function ProfileForm({
 }: ProfileFormProps) {
   // Force dark mode for consistency
   useForceDarkMode();
-  
+
   const { toast } = useToast();
-  const [placesLoaded, setPlacesLoaded] = useState(false);
-  const [placesError, setPlacesError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialData?.avatarUrl || null);
 
   // Use OAuth profile picture as fallback if no custom avatar is set
   const displayAvatarUrl = avatarUrl || initialData?.oauthProfilePicture || null;
-  const hometownInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   // Use appropriate schema based on mode
   const schema = mode === "create" ? insertUserProfileSchema : updateUserProfileSchema;
@@ -56,62 +51,6 @@ export default function ProfileForm({
     },
   });
 
-  // Initialize Google Places Autocomplete
-  useEffect(() => {
-    const initializePlaces = async () => {
-      try {
-        // Check if GOOGLE_MAPS_API_KEY is available
-        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        if (!apiKey) {
-          setPlacesError("Google Maps API key not configured");
-          return;
-        }
-
-        const loader = new Loader({
-          apiKey,
-          version: "weekly",
-          libraries: ["places"],
-        });
-
-        await loader.load();
-
-        if (hometownInputRef.current) {
-          const autocomplete = new google.maps.places.Autocomplete(
-            hometownInputRef.current,
-            {
-              types: ["(cities)"],
-              componentRestrictions: { country: "GB" }, // Restrict to UK
-              fields: ["name", "formatted_address", "address_components"],
-            }
-          );
-
-          autocomplete.addListener("place_changed", () => {
-            const place = autocomplete.getPlace();
-            if (place.name) {
-              form.setValue("hometown", place.name);
-            } else if (place.formatted_address) {
-              form.setValue("hometown", place.formatted_address);
-            }
-          });
-
-          autocompleteRef.current = autocomplete;
-          setPlacesLoaded(true);
-        }
-      } catch (error) {
-        console.error("Failed to load Google Places:", error);
-        setPlacesError("Failed to load location services");
-        // Continue without autocomplete - user can still type manually
-      }
-    };
-
-    initializePlaces();
-
-    return () => {
-      if (autocompleteRef.current) {
-        google.maps.event.clearInstanceListeners(autocompleteRef.current);
-      }
-    };
-  }, [form]);
 
   const handleSubmit = async (data: InsertUserProfile | UpdateUserProfile) => {
     try {
@@ -214,25 +153,14 @@ export default function ProfileForm({
                       <FormLabel className="text-slate-400 font-medium text-sm flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-orange-400" />
                         Hometown
-                        {placesLoaded && (
-                          <span className="text-orange-400 text-xs font-normal">
-                            (Start typing for suggestions)
-                          </span>
-                        )}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          ref={hometownInputRef}
-                          placeholder="London, Manchester, Birmingham..."
-                          data-testid="input-hometown"
+                        <LocationAutocomplete
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          placeholder="e.g., Manchester, London, Birmingham"
                         />
                       </FormControl>
-                      {placesError && (
-                        <p className="text-orange-400 text-xs mt-1">
-                          {placesError} - You can still type your hometown manually
-                        </p>
-                      )}
                       <FormMessage className="text-orange-400" />
                     </FormItem>
                   )}

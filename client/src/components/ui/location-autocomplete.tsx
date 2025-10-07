@@ -28,15 +28,24 @@ export default function LocationAutocomplete({
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const userInteractedRef = useRef(false);
 
   // Sync external value changes
   useEffect(() => {
     setSearchTerm(value);
+    // Reset interaction flag when external value changes
+    userInteractedRef.current = false;
   }, [value]);
 
   // Handle search with debouncing
   useEffect(() => {
     console.log('[LocationAutocomplete] Search term changed:', searchTerm, 'Length:', searchTerm?.length);
+
+    // Don't search if user hasn't interacted yet (initial load with existing value)
+    if (!userInteractedRef.current) {
+      console.log('[LocationAutocomplete] User has not interacted yet, skipping search');
+      return;
+    }
 
     if (!searchTerm || searchTerm.length < 2) {
       console.log('[LocationAutocomplete] Search term too short, clearing predictions');
@@ -99,6 +108,8 @@ export default function LocationAutocomplete({
   };
 
   const handleInputChange = (newValue: string) => {
+    // Mark that user has interacted with the input
+    userInteractedRef.current = true;
     setSearchTerm(newValue);
     if (newValue !== value) {
       onChange(newValue); // Update parent immediately for form validation
