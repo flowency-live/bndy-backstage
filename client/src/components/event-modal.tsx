@@ -265,14 +265,14 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
   };
 
   const selectEventType = (type: EventType) => {
-    // If public_gig is selected and callback exists, trigger the wizard
-    if (type === "public_gig" && onPublicGigSelected) {
+    // If gig or public_gig is selected and callback exists, trigger the wizard
+    if ((type === "gig" || type === "public_gig") && onPublicGigSelected) {
       onPublicGigSelected();
       return;
     }
 
     // Determine if event should be public by default based on type
-    const defaultPublic = type === "public_gig" || type === "festival";
+    const defaultPublic = type === "gig" || type === "public_gig" || type === "festival";
 
     setFormData(prev => ({
       ...prev,
