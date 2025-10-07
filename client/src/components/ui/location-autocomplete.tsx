@@ -126,28 +126,28 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
-          <div className="max-h-[300px] overflow-y-auto p-1">
-            {predictions.map((prediction) => (
-              <div
-                key={prediction.place_id}
-                onClick={() => handleSelect(prediction)}
-                className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-              >
-                <MapPin className="mr-2 h-4 w-4" />
+        <div className="absolute z-50 w-full mt-1 border rounded-lg overflow-hidden max-h-[300px] overflow-y-auto bg-background shadow-md">
+          {predictions.map((prediction) => (
+            <div
+              key={prediction.place_id}
+              onClick={() => handleSelect(prediction)}
+              className="w-full p-3 text-left hover:bg-accent border-b last:border-b-0 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">
+                  <div className="font-medium text-foreground truncate">
                     {prediction.structured_formatting.main_text}
                   </div>
                   {prediction.structured_formatting.secondary_text && (
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-sm text-muted-foreground mt-1 truncate">
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
