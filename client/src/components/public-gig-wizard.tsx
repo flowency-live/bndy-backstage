@@ -231,12 +231,14 @@ export default function PublicGigWizard({
       <div className="bg-background w-full h-full md:h-auto md:max-w-2xl md:max-h-[90vh] md:rounded-2xl flex flex-col shadow-xl">
 
         {/* Header with progress */}
-        <div className="bg-primary text-primary-foreground p-4 md:p-6 md:rounded-t-2xl flex-shrink-0">
+        <div className="bg-orange-500 text-white p-4 md:p-6 md:rounded-t-2xl flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl md:text-2xl font-serif">Create Public Gig</h2>
+            <h2 className="text-xl md:text-2xl font-serif">
+              {formData.venueName ? `${artistName} @ ${formData.venueName}` : 'Create Public Gig'}
+            </h2>
             <button
               onClick={handleClose}
-              className="text-primary-foreground hover:text-primary-foreground/80"
+              className="text-white hover:text-white/80"
               aria-label="Close wizard"
             >
               <X className="w-6 h-6" />
@@ -244,9 +246,9 @@ export default function PublicGigWizard({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-primary-foreground/20 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden">
             <div
-              className="bg-primary-foreground h-full transition-all duration-300"
+              className="bg-white h-full transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -259,20 +261,20 @@ export default function PublicGigWizard({
                 onClick={() => goToStep(step.id)}
                 className={`flex flex-col items-center text-xs md:text-sm ${
                   step.id === currentStep
-                    ? 'text-primary-foreground font-semibold'
+                    ? 'text-white font-semibold'
                     : step.id < currentStep
-                    ? 'text-primary-foreground/80'
-                    : 'text-primary-foreground/50'
+                    ? 'text-white/80'
+                    : 'text-white/50'
                 }`}
                 disabled={step.id > currentStep + 1}
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
                     step.id < currentStep
-                      ? 'bg-primary-foreground text-primary'
+                      ? 'bg-white text-orange-500'
                       : step.id === currentStep
-                      ? 'bg-primary-foreground text-primary border-2 border-primary-foreground'
-                      : 'bg-primary-foreground/30'
+                      ? 'bg-white text-orange-500 border-2 border-white'
+                      : 'bg-white/30'
                   }`}
                 >
                   {step.id < currentStep ? (
@@ -363,10 +365,9 @@ export default function PublicGigWizard({
             {currentStep < STEPS.length ? (
               <Button
                 type="button"
-                variant="action"
                 onClick={goToNextStep}
                 disabled={!canProceedFromStep(currentStep)}
-                className="min-h-[56px] md:min-h-[44px] flex-1 md:flex-none"
+                className="min-h-[56px] md:min-h-[44px] flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-2" />
@@ -374,10 +375,9 @@ export default function PublicGigWizard({
             ) : (
               <Button
                 type="button"
-                variant="action"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !canProceedFromStep(currentStep)}
-                className="min-h-[56px] md:min-h-[44px] flex-1 md:flex-none"
+                className="min-h-[56px] md:min-h-[44px] flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {isSubmitting ? (
                   <>
