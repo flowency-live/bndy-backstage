@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import ImageUpload from "@/components/ui/image-upload";
+import LocationAutocomplete from "@/components/ui/location-autocomplete";
 
 interface AdminProps {
   artistId: string;
@@ -490,14 +491,10 @@ export default function Admin({ artistId, membership }: AdminProps) {
                   {/* Artist Location */}
                   <div>
                     <Label htmlFor="artistLocation" className="text-card-foreground font-semibold mb-2 block">Location</Label>
-                    <Input
-                      id="artistLocation"
-                      type="text"
+                    <LocationAutocomplete
                       value={artistSettings.location}
-                      onChange={(e) => setArtistSettings(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="e.g., Stoke-on-Trent, Manchester, London"
+                      onChange={(location) => setArtistSettings(prev => ({ ...prev, location }))}
                       className="focus:border-brand-primary focus:ring-brand-primary"
-                      data-testid="input-artist-location"
                     />
                     <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based. Used for venue search and duplicate checking.</p>
                   </div>

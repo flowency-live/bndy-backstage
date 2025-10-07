@@ -138,3 +138,47 @@ export function placeResultToVenueData(place: google.maps.places.PlaceResult) {
     source: 'google_places',
   };
 }
+
+// Search for locations (cities/regions) with Google Places Autocomplete
+export async function searchLocationAutocomplete(
+  query: string
+): Promise<google.maps.places.AutocompletePrediction[]> {
+  // Check if Google Maps is available
+  if (!googleMapsAvailable) {
+    googleMapsAvailable = initGoogleMapsCheck();
+  }
+
+  // If Google Maps is not available, return empty array
+  if (!googleMapsAvailable) {
+    console.warn("Google Maps Places API is not available for location autocomplete");
+    return [];
+  }
+
+  try {
+    const autocompleteService = new google.maps.places.AutocompleteService();
+    const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
+      autocompleteService.getPlacePredictions(
+        {
+          input: query,
+          types: ['(cities)'], // Cities and towns
+          componentRestrictions: { country: 'gb' } // UK only
+        },
+        (predictions, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+            resolve(predictions);
+          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            resolve([]);
+          } else {
+            console.warn(`Location Autocomplete API error: ${status}`);
+            resolve([]); // Return empty array instead of rejecting
+          }
+        }
+      );
+    });
+
+    return predictions;
+  } catch (error) {
+    console.error('Error with location autocomplete:', error);
+    return [];
+  }
+}

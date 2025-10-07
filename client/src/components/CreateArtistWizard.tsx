@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, ArrowLeft, ArrowRight, Globe } from "lucide-react";
 import ImageUpload from "@/components/ui/image-upload";
+import LocationAutocomplete from "@/components/ui/location-autocomplete";
 import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
 
@@ -383,14 +384,11 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                 <label className="block text-sm font-medium mb-2">
                   Location {existingArtists.length > 0 && <span className="text-amber-600">(Recommended)</span>}
                 </label>
-                <input
-                  type="text"
+                <LocationAutocomplete
                   value={wizardData.location}
-                  onChange={(e) => setWizardData(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="e.g., Stoke-on-Trent, Manchester, London"
-                  className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+                  onChange={(location) => setWizardData(prev => ({ ...prev, location }))}
                   autoFocus={existingArtists.length > 0}
-                  data-testid="input-location"
+                  className="w-full px-4 py-3 border-2 border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
                 />
                 <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based</p>
               </div>
