@@ -172,7 +172,6 @@ export async function searchLocationAutocomplete(
       autocompleteService.getPlacePredictions(
         {
           input: query,
-          types: ['(cities)'], // Cities and towns
           componentRestrictions: { country: 'gb' } // UK only
         },
         (predictions, status) => {
