@@ -132,21 +132,51 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 border rounded-lg overflow-hidden max-h-[300px] overflow-y-auto bg-background shadow-md">
+        <div style={{
+          position: 'absolute',
+          zIndex: 50,
+          width: '100%',
+          marginTop: '0.25rem',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
           {predictions.map((prediction) => (
             <div
               key={prediction.place_id}
               onClick={() => handleSelect(prediction)}
-              className="w-full p-3 text-left hover:bg-accent border-b last:border-b-0 transition-colors cursor-pointer"
+              style={{
+                padding: '0.75rem',
+                cursor: 'pointer',
+                borderBottom: '1px solid #f3f4f6'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate" style={{ color: textColor }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin style={{ width: '1rem', height: '1rem', color: '#6b7280', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontWeight: 500,
+                    color: '#111827',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
                     {prediction.structured_formatting.main_text}
                   </div>
                   {prediction.structured_formatting.secondary_text && (
-                    <div className="text-sm mt-1 truncate" style={{ color: secondaryColor }}>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      color: '#6b7280',
+                      marginTop: '0.25rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   )}
