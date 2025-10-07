@@ -111,14 +111,6 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
         </div>
       </div>
 
-      {/* Helper Text */}
-      <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4">
-        <p className="font-medium mb-2">💡 Tip</p>
-        <p className="text-xs">
-          End time defaults to <strong>Midnight</strong> if your gig runs late. You can change it if needed.
-        </p>
-      </div>
-
       {/* Date Picker Modal */}
       {showDatePicker && (
         <DatePickerModal

@@ -889,6 +889,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
           }}
           artistId={effectiveArtistId}
           currentUser={effectiveMembership}
+          initialData={selectedDate ? { date: selectedDate } : undefined}
         />
       )}
 
