@@ -1,6 +1,6 @@
 // VenueSearchStep - Search venues from DB + Google Places
 import { useState, useEffect, useCallback } from 'react';
-import { Search, MapPin, Loader2, Building2, Globe } from 'lucide-react';
+import { Search, MapPin, Loader2, Building2, Globe, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
@@ -74,8 +74,9 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
         { credentials: 'include' }
       );
 
+      let venues: any[] = [];
       if (dbResponse.ok) {
-        const venues = await dbResponse.json();
+        venues = await dbResponse.json();
         setDbResults(
           venues.map((v: any) => ({
             ...v,
@@ -84,8 +85,8 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
         );
       }
 
-      // If no DB results and Google Maps loaded, search Google Places
-      if (dbResults.length === 0) {
+      // If no DB results, search Google Places
+      if (venues.length === 0) {
         // Load Google Maps if not already loaded
         if (!googleMapsLoaded) {
           await loadGoogleMaps();
@@ -105,6 +106,9 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
           };
         });
         setGoogleResults(googleVenues);
+      } else {
+        // Clear Google results if we have DB results
+        setGoogleResults([]);
       }
     } catch (error) {
       console.error('Venue search error:', error);
@@ -116,10 +120,14 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
     } finally {
       setLoading(false);
     }
-  }, [dbResults.length, googleMapsLoaded, loadGoogleMaps, toast]);
+  }, [googleMapsLoaded, loadGoogleMaps, toast]);
 
   const handleVenueSelect = async (venue: Venue) => {
     setSelectedVenue(venue);
+    // Clear search term to show selected venue display
+    setSearchTerm('');
+    setDbResults([]);
+    setGoogleResults([]);
 
     // If venue is from Google Places, create/find in DB via find-or-create endpoint
     if (venue.source === 'google_places') {
@@ -217,17 +225,18 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
 
       {/* Selected Venue Display */}
       {selectedVenue && !searchTerm && (
-        <div className="border-2 border-primary bg-primary/5 rounded-xl p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
+        <div className="border-2 border-green-500 bg-green-50 dark:bg-green-950 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <MapPin className="w-4 h-4 text-primary" />
-                <h4 className="font-semibold text-foreground">{selectedVenue.name}</h4>
+                <h4 className="font-semibold text-foreground">✓ Venue Selected</h4>
               </div>
-              <p className="text-sm text-muted-foreground">{selectedVenue.address}</p>
+              <div className="font-medium text-foreground mt-2">{selectedVenue.name}</div>
+              <p className="text-sm text-muted-foreground mt-1">{selectedVenue.address}</p>
             </div>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => {
                 setSelectedVenue(null);
@@ -240,6 +249,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
                   googlePlaceId: undefined,
                 });
               }}
+              className="flex-shrink-0"
             >
               Change
             </Button>
