@@ -163,6 +163,12 @@ export async function searchLocationAutocomplete(
     console.log('[Location Autocomplete] Service created, making request...');
 
     const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
+      // Add timeout to detect hanging requests
+      const timeoutId = setTimeout(() => {
+        console.error('[Location Autocomplete] Request timed out after 10 seconds - check billing and API restrictions');
+        resolve([]);
+      }, 10000);
+
       autocompleteService.getPlacePredictions(
         {
           input: query,
@@ -170,6 +176,7 @@ export async function searchLocationAutocomplete(
           componentRestrictions: { country: 'gb' } // UK only
         },
         (predictions, status) => {
+          clearTimeout(timeoutId);
           console.log('[Location Autocomplete] API Response - Status:', status);
           console.log('[Location Autocomplete] API Response - Predictions count:', predictions?.length || 0);
 
@@ -181,6 +188,9 @@ export async function searchLocationAutocomplete(
             resolve(predictions);
           } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
             console.log('[Location Autocomplete] Zero results returned');
+            resolve([]);
+          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+            console.error('[Location Autocomplete] REQUEST_DENIED - Check API key permissions and billing');
             resolve([]);
           } else {
             console.warn(`[Location Autocomplete] Error status: ${status}`);
