@@ -123,7 +123,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-muted-foreground mb-1">Venue</div>
               <div className="font-semibold text-foreground">{formData.venueName}</div>
               <div className="text-sm text-muted-foreground mt-1">{formData.venueAddress}</div>
             </div>
@@ -136,7 +135,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-1">Date</div>
                 <div className="font-semibold text-foreground">
                   {formData.date
                     ? format(new Date(formData.date + 'T00:00:00'), 'EEEE, dd MMMM yyyy')
@@ -148,7 +146,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             <div className="flex items-start gap-3">
               <Clock className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-1">Time</div>
                 <div className="text-sm">
                   <span className="font-medium">
                     {formatTime(formData.startTime)}
@@ -171,7 +168,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             <div className="flex items-start gap-3">
               <FileText className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-muted-foreground mb-1">Title</div>
                 <div className="font-semibold text-foreground break-words">
                   {formData.title || `${artistName} @ ${formData.venueName}`}
                 </div>
@@ -180,7 +176,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
 
             {formData.description && (
               <div className="pl-8">
-                <div className="text-sm text-muted-foreground mb-1">Description</div>
                 <div className="text-sm text-foreground whitespace-pre-wrap break-words">
                   {formData.description}
                 </div>
@@ -197,7 +192,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
                 <div className="flex items-start gap-3">
                   <PoundSterling className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="text-sm text-muted-foreground mb-1">Price</div>
                     <div className="font-medium text-foreground">{formData.ticketPrice}</div>
                   </div>
                 </div>
@@ -207,7 +201,6 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
                 <div className="flex items-start gap-3">
                   <Ticket className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-muted-foreground mb-1">Tickets</div>
                     <a
                       href={formData.ticketUrl}
                       target="_blank"

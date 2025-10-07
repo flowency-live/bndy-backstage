@@ -218,7 +218,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
           <span className="ml-2 text-muted-foreground">Searching venues...</span>
         </div>
       )}

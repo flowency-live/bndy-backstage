@@ -292,59 +292,35 @@ export default function PublicGigWizard({
         {/* Step content - scrollable */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {currentStep === 1 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Step 1: Find Venue</h3>
-              <p className="text-muted-foreground mb-4">
-                Search for the venue where your gig will take place
-              </p>
-              <VenueSearchStep
-                formData={formData}
-                onUpdate={updateFormData}
-                artistName={artistName}
-              />
-            </div>
+            <VenueSearchStep
+              formData={formData}
+              onUpdate={updateFormData}
+              artistName={artistName}
+            />
           )}
 
           {currentStep === 2 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Step 2: Date & Time</h3>
-              <p className="text-muted-foreground mb-4">
-                When is your gig happening?
-              </p>
-              <DateTimeStep
-                formData={formData}
-                onUpdate={updateFormData}
-              />
-            </div>
+            <DateTimeStep
+              formData={formData}
+              onUpdate={updateFormData}
+            />
           )}
 
           {currentStep === 3 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Step 3: Event Details</h3>
-              <p className="text-muted-foreground mb-4">
-                Add more information about your gig
-              </p>
-              <DetailsStep
-                formData={formData}
-                onUpdate={updateFormData}
-                artistName={artistName}
-              />
-            </div>
+            <DetailsStep
+              formData={formData}
+              onUpdate={updateFormData}
+              artistName={artistName}
+            />
           )}
 
           {currentStep === 4 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Step 4: Review & Confirm</h3>
-              <p className="text-muted-foreground mb-4">
-                Review your gig details before creating
-              </p>
-              <ReviewStep
-                formData={formData}
-                artistId={artistId}
-                artistName={artistName}
-                onUpdate={updateFormData}
-              />
-            </div>
+            <ReviewStep
+              formData={formData}
+              artistId={artistId}
+              artistName={artistName}
+              onUpdate={updateFormData}
+            />
           )}
         </div>
 
