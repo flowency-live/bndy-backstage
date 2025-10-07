@@ -23,9 +23,10 @@ interface EventModalProps {
   eventType: EventType;
   currentUser: ArtistMembership;
   artistId: string;
+  onPublicGigSelected?: () => void;
 }
 
-export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId }: EventModalProps) {
+export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId, onPublicGigSelected }: EventModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
@@ -264,11 +265,17 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
   };
 
   const selectEventType = (type: EventType) => {
+    // If public_gig is selected and callback exists, trigger the wizard
+    if (type === "public_gig" && onPublicGigSelected) {
+      onPublicGigSelected();
+      return;
+    }
+
     // Determine if event should be public by default based on type
     const defaultPublic = type === "public_gig" || type === "festival";
-    
-    setFormData(prev => ({ 
-      ...prev, 
+
+    setFormData(prev => ({
+      ...prev,
       type,
       membershipId: type === "unavailable" ? currentUser.id : undefined,
       startTime: type === "unavailable" ? undefined : prev.startTime,

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServerAuthProvider } from "@/hooks/useServerAuth";
 import { UserProvider } from "@/lib/user-context";
 import { ThemeProvider } from "@/contexts/theme-context";
+import { GoogleMapsProvider } from "@/components/providers/google-maps-provider";
 import MemberGate from "@/components/member-gate";
 import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
@@ -117,15 +118,17 @@ function App() {
         <ThemeProvider defaultTheme="dark" storageKey="bndy-ui-theme">
           <ServerAuthProvider>
             <UserProvider>
-              <Layout>
-                <div className="min-h-screen flex flex-col">
-                  <div className="flex-1">
-                    <Router />
+              <GoogleMapsProvider>
+                <Layout>
+                  <div className="min-h-screen flex flex-col">
+                    <div className="flex-1">
+                      <Router />
+                    </div>
+                    <Footer />
                   </div>
-                  <Footer />
-                </div>
-                <Toaster />
-              </Layout>
+                  <Toaster />
+                </Layout>
+              </GoogleMapsProvider>
             </UserProvider>
         </ServerAuthProvider>
       </ThemeProvider>

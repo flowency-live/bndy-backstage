@@ -10,6 +10,7 @@ import type { Event, ArtistMembership, EVENT_TYPES } from "@/types/api";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 import EventModal from "@/components/event-modal";
 import EventDetails from "@/components/event-details";
+import PublicGigWizard from "@/components/public-gig-wizard";
 import { PageHeader } from "@/components/layout";
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   const effectiveMembership = membership ?? currentMembership;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showPublicGigWizard, setShowPublicGigWizard] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -861,6 +863,32 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
           eventType={eventType}
           currentUser={effectiveMembership}
           artistId={effectiveArtistId}
+          onPublicGigSelected={() => {
+            setShowEventModal(false);
+            setShowPublicGigWizard(true);
+          }}
+        />
+      )}
+
+      {/* Public Gig Wizard - full screen wizard for creating public gigs */}
+      {showPublicGigWizard && effectiveArtistId && effectiveMembership && (
+        <PublicGigWizard
+          isOpen={showPublicGigWizard}
+          onClose={() => {
+            setShowPublicGigWizard(false);
+            // Refresh calendar data after creating gig
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const queryKey = query.queryKey;
+                return Array.isArray(queryKey) &&
+                       queryKey[0] === '/api/artists' &&
+                       queryKey[1] === effectiveArtistId &&
+                       (queryKey[2] === 'events' || queryKey[2] === 'calendar');
+              }
+            });
+          }}
+          artistId={effectiveArtistId}
+          currentUser={effectiveMembership}
         />
       )}
 
