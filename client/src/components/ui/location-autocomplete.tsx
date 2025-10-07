@@ -36,29 +36,40 @@ export default function LocationAutocomplete({
 
   // Handle search with debouncing
   useEffect(() => {
+    console.log('[LocationAutocomplete] Search term changed:', searchTerm, 'Length:', searchTerm?.length);
+
     if (!searchTerm || searchTerm.length < 2) {
+      console.log('[LocationAutocomplete] Search term too short, clearing predictions');
       setPredictions([]);
       setShowDropdown(false);
       return;
     }
 
+    console.log('[LocationAutocomplete] Setting up debounced search...');
+
     const searchLocations = async () => {
+      console.log('[LocationAutocomplete] Starting search, Google Maps loaded:', googleMapsLoaded);
       setLoading(true);
 
       // Load Google Maps if not already loaded
       if (!googleMapsLoaded) {
+        console.log('[LocationAutocomplete] Loading Google Maps...');
         await loadGoogleMaps();
+        console.log('[LocationAutocomplete] Google Maps loaded');
       }
 
       try {
+        console.log('[LocationAutocomplete] Calling searchLocationAutocomplete with:', searchTerm);
         const results = await searchLocationAutocomplete(searchTerm);
+        console.log('[LocationAutocomplete] Got results:', results.length);
         setPredictions(results);
         setShowDropdown(results.length > 0);
       } catch (error) {
-        console.error('Location search error:', error);
+        console.error('[LocationAutocomplete] Search error:', error);
         setPredictions([]);
         setShowDropdown(false);
       } finally {
+        console.log('[LocationAutocomplete] Search complete, setting loading to false');
         setLoading(false);
       }
     };

@@ -143,6 +143,8 @@ export function placeResultToVenueData(place: google.maps.places.PlaceResult) {
 export async function searchLocationAutocomplete(
   query: string
 ): Promise<google.maps.places.AutocompletePrediction[]> {
+  console.log('[Location Autocomplete] Starting search for:', query);
+
   // Check if Google Maps is available
   if (!googleMapsAvailable) {
     googleMapsAvailable = initGoogleMapsCheck();
@@ -150,12 +152,16 @@ export async function searchLocationAutocomplete(
 
   // If Google Maps is not available, return empty array
   if (!googleMapsAvailable) {
-    console.warn("Google Maps Places API is not available for location autocomplete");
+    console.warn("[Location Autocomplete] Google Maps Places API is not available");
     return [];
   }
 
+  console.log('[Location Autocomplete] Google Maps API available, creating service...');
+
   try {
     const autocompleteService = new google.maps.places.AutocompleteService();
+    console.log('[Location Autocomplete] Service created, making request...');
+
     const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
       autocompleteService.getPlacePredictions(
         {
@@ -164,12 +170,20 @@ export async function searchLocationAutocomplete(
           componentRestrictions: { country: 'gb' } // UK only
         },
         (predictions, status) => {
+          console.log('[Location Autocomplete] API Response - Status:', status);
+          console.log('[Location Autocomplete] API Response - Predictions count:', predictions?.length || 0);
+
           if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+            console.log('[Location Autocomplete] First 3 results:', predictions.slice(0, 3).map(p => ({
+              description: p.description,
+              mainText: p.structured_formatting.main_text
+            })));
             resolve(predictions);
           } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            console.log('[Location Autocomplete] Zero results returned');
             resolve([]);
           } else {
-            console.warn(`Location Autocomplete API error: ${status}`);
+            console.warn(`[Location Autocomplete] Error status: ${status}`);
             resolve([]); // Return empty array instead of rejecting
           }
         }
@@ -178,7 +192,7 @@ export async function searchLocationAutocomplete(
 
     return predictions;
   } catch (error) {
-    console.error('Error with location autocomplete:', error);
+    console.error('[Location Autocomplete] Exception caught:', error);
     return [];
   }
 }
