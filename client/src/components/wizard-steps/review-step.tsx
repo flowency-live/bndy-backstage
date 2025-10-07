@@ -121,7 +121,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
         {/* Venue */}
         <div className="bg-accent/30 rounded-xl p-4 border border-border">
           <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <MapPin className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-sm text-muted-foreground mb-1">Venue</div>
               <div className="font-semibold text-foreground">{formData.venueName}</div>
@@ -134,7 +134,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
         <div className="bg-accent/30 rounded-xl p-4 border border-border">
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <Calendar className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <div className="text-sm text-muted-foreground mb-1">Date</div>
                 <div className="font-semibold text-foreground">
@@ -146,7 +146,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             </div>
 
             <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <Clock className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <div className="text-sm text-muted-foreground mb-1">Time</div>
                 <div className="text-sm">
@@ -169,7 +169,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
         <div className="bg-accent/30 rounded-xl p-4 border border-border">
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <FileText className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-muted-foreground mb-1">Title</div>
                 <div className="font-semibold text-foreground break-words">
@@ -195,7 +195,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             <div className="space-y-3">
               {formData.ticketPrice && (
                 <div className="flex items-start gap-3">
-                  <PoundSterling className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <PoundSterling className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <div className="text-sm text-muted-foreground mb-1">Price</div>
                     <div className="font-medium text-foreground">{formData.ticketPrice}</div>
@@ -205,7 +205,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
 
               {formData.ticketUrl && (
                 <div className="flex items-start gap-3">
-                  <Ticket className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <Ticket className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-muted-foreground mb-1">Tickets</div>
                     <a

@@ -211,7 +211,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
           placeholder="Search for venue (e.g., The Ritz, Manchester)"
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
-          className="pl-10 pr-4 h-14 text-base" // 56px height for mobile touch
+          className="pl-10 pr-4 h-14 text-base focus:border-orange-500 focus:ring-orange-500" // 56px height for mobile touch
         />
       </div>
 
@@ -225,9 +225,9 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
 
       {/* Selected Venue Display */}
       {selectedVenue && !searchTerm && (
-        <div className="border-2 border-green-500 bg-green-50 dark:bg-green-950 rounded-xl p-4 shadow-sm">
+        <div className="border-2 border-orange-500 bg-orange-50 dark:bg-orange-950 rounded-xl p-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-6 h-6 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-semibold text-foreground">✓ Venue Selected</h4>

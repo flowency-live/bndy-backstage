@@ -61,7 +61,7 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
         <button
           type="button"
           onClick={() => setShowDatePicker(true)}
-          className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-20 transition-colors relative flex items-center gap-3"
+          className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-orange-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20 transition-colors relative flex items-center gap-3"
         >
           <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0" />
           <span className="text-base">
@@ -83,7 +83,7 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
             <button
               type="button"
               onClick={() => openTimePicker('start')}
-              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-3"
+              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-orange-500 focus:border-orange-500 transition-colors relative flex items-center gap-3"
             >
               <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               <span className="text-base font-medium">
@@ -100,7 +100,7 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
             <button
               type="button"
               onClick={() => openTimePicker('end')}
-              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-3"
+              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-orange-500 focus:border-orange-500 transition-colors relative flex items-center gap-3"
             >
               <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               <span className="text-base font-medium">

@@ -37,7 +37,7 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
             value={formData.title || defaultTitle}
             onChange={(e) => onUpdate({ title: e.target.value })}
             placeholder={`e.g., ${defaultTitle}`}
-            className="pl-10 pr-4 min-h-[56px] md:min-h-[44px] text-base"
+            className="pl-10 pr-4 min-h-[56px] md:min-h-[44px] text-base focus:border-orange-500 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
             onChange={(e) => onUpdate({ description: e.target.value })}
             placeholder="Tell people about your gig..."
             rows={5}
-            className="resize-none text-base"
+            className="resize-none text-base focus:border-orange-500 focus:ring-orange-500"
           />
           <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
             {formData.description?.length || 0}/500
@@ -87,7 +87,7 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
                 value={formData.ticketUrl || ''}
                 onChange={(e) => onUpdate({ ticketUrl: e.target.value })}
                 placeholder="https://example.com/tickets"
-                className="text-base min-h-[56px] md:min-h-[44px]"
+                className="text-base min-h-[56px] md:min-h-[44px] focus:border-orange-500 focus:ring-orange-500"
               />
             </div>
 
@@ -103,7 +103,7 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
                   value={formData.ticketPrice || ''}
                   onChange={(e) => onUpdate({ ticketPrice: e.target.value })}
                   placeholder="Free / £10 / £5-£15"
-                  className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px]"
+                  className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px] focus:border-orange-500 focus:ring-orange-500"
                 />
               </div>
             </div>
