@@ -28,19 +28,17 @@ export default function LocationAutocomplete({
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const userInteractedRef = useRef(false);
+  const initialValue = useRef(value);
 
   // Sync external value changes
   useEffect(() => {
     setSearchTerm(value);
-    // Reset interaction flag when external value changes
-    userInteractedRef.current = false;
   }, [value]);
 
   // Handle search with debouncing
   useEffect(() => {
-    // Don't search if user hasn't interacted yet (initial load with existing value)
-    if (!userInteractedRef.current) {
+    // Don't search on initial mount with existing value
+    if (searchTerm === initialValue.current && initialValue.current) {
       return;
     }
 
@@ -96,8 +94,6 @@ export default function LocationAutocomplete({
   };
 
   const handleInputChange = (newValue: string) => {
-    // Mark that user has interacted with the input
-    userInteractedRef.current = true;
     setSearchTerm(newValue);
     if (newValue !== value) {
       onChange(newValue); // Update parent immediately for form validation
