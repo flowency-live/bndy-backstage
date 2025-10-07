@@ -39,6 +39,9 @@ export interface PublicGigFormData {
   ticketUrl?: string;
   ticketPrice?: string;
 
+  // Step 4: Visibility
+  isPublic?: boolean; // Default true
+
   // Metadata
   lastSavedAt?: string;
   completedSteps?: number[];
@@ -174,6 +177,7 @@ export default function PublicGigWizard({
             description: formData.description,
             ticketUrl: formData.ticketUrl,
             ticketPrice: formData.ticketPrice,
+            isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
             source: 'backstage_wizard',
           }),
         }
@@ -338,6 +342,7 @@ export default function PublicGigWizard({
                 formData={formData}
                 artistId={artistId}
                 artistName={artistName}
+                onUpdate={updateFormData}
               />
             </div>
           )}

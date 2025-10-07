@@ -19,9 +19,10 @@ interface ReviewStepProps {
   formData: PublicGigFormData;
   artistId: string;
   artistName: string;
+  onUpdate: (data: Partial<PublicGigFormData>) => void;
 }
 
-export default function ReviewStep({ formData, artistId, artistName }: ReviewStepProps) {
+export default function ReviewStep({ formData, artistId, artistName, onUpdate }: ReviewStepProps) {
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [checkingConflicts, setCheckingConflicts] = useState(true);
 
@@ -222,11 +223,33 @@ export default function ReviewStep({ formData, artistId, artistName }: ReviewSte
         )}
       </div>
 
+      {/* Visibility Toggle */}
+      <div className="bg-accent/30 rounded-xl p-4 border border-border">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!formData.isPublic && formData.isPublic !== undefined}
+            onChange={(e) => onUpdate({ isPublic: !e.target.checked })}
+            className="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <div className="flex-1">
+            <div className="font-medium text-foreground">Private Event (Not visible on bndy.live)</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Keep this gig off the public calendar. It will only appear in your Backstage calendar.
+            </div>
+          </div>
+        </label>
+      </div>
+
       {/* Confirmation Message */}
       <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4">
         <p className="font-medium mb-2">✓ Ready to create</p>
         <p className="text-xs">
-          This gig will appear on <strong>bndy.live</strong> for fans to discover.
+          {formData.isPublic === false ? (
+            <>This gig will be <strong>private</strong> and only visible in your Backstage calendar.</>
+          ) : (
+            <>This gig will appear on <strong>bndy.live</strong> for fans to discover.</>
+          )}
           {conflicts.length > 0 && (
             <span className="text-yellow-600 dark:text-yellow-400 block mt-1">
               ⚠️ Note: You have scheduling conflicts - double check your calendar!
