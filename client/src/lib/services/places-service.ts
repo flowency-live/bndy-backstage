@@ -36,8 +36,6 @@ export async function searchGooglePlaces(
   }
 
   try {
-    console.log('[Google Places] Searching for:', query);
-
     // Create a dummy div for the Places service
     const dummyDiv = document.createElement('div');
     const service = new google.maps.places.PlacesService(dummyDiv);
@@ -49,18 +47,9 @@ export async function searchGooglePlaces(
           type: 'establishment',
         },
         (results, status) => {
-          console.log('[Google Places] Status:', status);
-          console.log('[Google Places] Results count:', results?.length || 0);
-
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            console.log('[Google Places] First 3 results:', results.slice(0, 3).map(r => ({
-              name: r.name,
-              address: r.formatted_address,
-              placeId: r.place_id
-            })));
             resolve(results);
           } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            console.log('[Google Places] Zero results returned');
             resolve([]);
           } else {
             console.warn(`[Google Places] Error: ${status}`);
@@ -143,8 +132,6 @@ export function placeResultToVenueData(place: google.maps.places.PlaceResult) {
 export async function searchLocationAutocomplete(
   query: string
 ): Promise<google.maps.places.AutocompletePrediction[]> {
-  console.log('[Location Autocomplete] Starting search for:', query);
-
   // Check if Google Maps is available
   if (!googleMapsAvailable) {
     googleMapsAvailable = initGoogleMapsCheck();
@@ -156,13 +143,9 @@ export async function searchLocationAutocomplete(
     return [];
   }
 
-  console.log('[Location Autocomplete] Google Maps API available, using newer AutocompleteSuggestion API...');
-
   try {
     // Try the newer AutocompleteSuggestion API first (recommended as of March 2025)
     if (google.maps.places.AutocompleteSuggestion) {
-      console.log('[Location Autocomplete] Using new AutocompleteSuggestion API');
-
       const request: google.maps.places.AutocompleteSuggestionRequest = {
         input: query,
         includedRegionCodes: ['gb'], // UK only
@@ -171,18 +154,12 @@ export async function searchLocationAutocomplete(
 
       const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
-      console.log('[Location Autocomplete] Got suggestions:', suggestions?.length || 0);
-      console.log('[Location Autocomplete] RAW first suggestion:', JSON.stringify(suggestions?.[0], null, 2));
-
       if (!suggestions || suggestions.length === 0) {
-        console.log('[Location Autocomplete] No suggestions returned');
         return [];
       }
 
       // Convert suggestions to AutocompletePrediction format for compatibility
       const predictions = suggestions.map((suggestion: any) => {
-        console.log('[Location Autocomplete] Processing suggestion:', suggestion);
-
         const description = suggestion.placePrediction?.text?.text || '';
 
         // Try to get structured format, but fallback to splitting description if empty
@@ -196,7 +173,7 @@ export async function searchLocationAutocomplete(
           secondaryText = parts.slice(1).join(', ') || '';
         }
 
-        const prediction = {
+        return {
           description,
           place_id: suggestion.placePrediction?.placeId || '',
           structured_formatting: {
@@ -204,23 +181,16 @@ export async function searchLocationAutocomplete(
             secondary_text: secondaryText,
           },
         };
-
-        console.log('[Location Autocomplete] Mapped to prediction:', prediction);
-        return prediction;
       }) as google.maps.places.AutocompletePrediction[];
-
-      console.log('[Location Autocomplete] Final predictions:', predictions.slice(0, 3));
 
       return predictions;
     } else {
       // Fallback to older AutocompleteService if new API not available
-      console.log('[Location Autocomplete] Falling back to AutocompleteService (deprecated)');
       const autocompleteService = new google.maps.places.AutocompleteService();
-      console.log('[Location Autocomplete] Service created, making request...');
 
       const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
         const timeoutId = setTimeout(() => {
-          console.error('[Location Autocomplete] Request timed out after 10 seconds');
+          console.error('[Location Autocomplete] Request timed out');
           resolve([]);
         }, 10000);
 
@@ -232,10 +202,8 @@ export async function searchLocationAutocomplete(
           },
           (predictions, status) => {
             clearTimeout(timeoutId);
-            console.log('[Location Autocomplete] API Response - Status:', status);
 
             if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-              console.log('[Location Autocomplete] Got results:', predictions.length);
               resolve(predictions);
             } else {
               console.warn(`[Location Autocomplete] Error status: ${status}`);
@@ -248,7 +216,7 @@ export async function searchLocationAutocomplete(
       return predictions;
     }
   } catch (error) {
-    console.error('[Location Autocomplete] Exception caught:', error);
+    console.error('[Location Autocomplete] Error:', error);
     return [];
   }
 }
