@@ -132,55 +132,23 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && predictions.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          zIndex: 50,
-          width: '100%',
-          marginTop: '0.25rem',
-          backgroundColor: '#ffffff',
-          border: '1px solid #e5e7eb',
-          borderRadius: '0.5rem',
-          maxHeight: '300px',
-          overflowY: 'auto',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
+        <div className="absolute z-50 w-full mt-1 overflow-hidden rounded-md border bg-popover p-1 shadow-md">
           {predictions.map((prediction) => (
             <div
               key={prediction.place_id}
               onClick={() => handleSelect(prediction)}
-              style={{
-                padding: '0.75rem',
-                cursor: 'pointer',
-                borderBottom: '1px solid #f3f4f6'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin style={{ width: '1rem', height: '1rem', color: '#6b7280', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontWeight: 500,
-                    color: '#111827',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {prediction.structured_formatting.main_text}
-                  </div>
-                  {prediction.structured_formatting.secondary_text && (
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#6b7280',
-                      marginTop: '0.25rem',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {prediction.structured_formatting.secondary_text}
-                    </div>
-                  )}
+              <MapPin className="h-4 w-4 text-gray-500" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                  {prediction.structured_formatting.main_text}
                 </div>
+                {prediction.structured_formatting.secondary_text && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {prediction.structured_formatting.secondary_text}
+                  </div>
+                )}
               </div>
             </div>
           ))}
