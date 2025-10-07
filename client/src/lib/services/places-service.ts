@@ -183,12 +183,25 @@ export async function searchLocationAutocomplete(
       const predictions = suggestions.map((suggestion: any) => {
         console.log('[Location Autocomplete] Processing suggestion:', suggestion);
 
+        const description = suggestion.placePrediction?.text?.text || '';
+
+        // Try to get structured format, but fallback to splitting description if empty
+        let mainText = suggestion.placePrediction?.structuredFormat?.mainText?.text || '';
+        let secondaryText = suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '';
+
+        // If structured format is empty but we have a description, split it
+        if (!mainText && description) {
+          const parts = description.split(',').map((p: string) => p.trim());
+          mainText = parts[0] || description;
+          secondaryText = parts.slice(1).join(', ') || '';
+        }
+
         const prediction = {
-          description: suggestion.placePrediction?.text?.text || '',
+          description,
           place_id: suggestion.placePrediction?.placeId || '',
           structured_formatting: {
-            main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
-            secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
+            main_text: mainText,
+            secondary_text: secondaryText,
           },
         };
 
