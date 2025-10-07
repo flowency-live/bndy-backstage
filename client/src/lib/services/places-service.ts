@@ -172,6 +172,7 @@ export async function searchLocationAutocomplete(
       const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
       console.log('[Location Autocomplete] Got suggestions:', suggestions?.length || 0);
+      console.log('[Location Autocomplete] RAW first suggestion:', JSON.stringify(suggestions?.[0], null, 2));
 
       if (!suggestions || suggestions.length === 0) {
         console.log('[Location Autocomplete] No suggestions returned');
@@ -179,19 +180,23 @@ export async function searchLocationAutocomplete(
       }
 
       // Convert suggestions to AutocompletePrediction format for compatibility
-      const predictions = suggestions.map((suggestion: any) => ({
-        description: suggestion.placePrediction?.text?.text || '',
-        place_id: suggestion.placePrediction?.placeId || '',
-        structured_formatting: {
-          main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
-          secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
-        },
-      })) as google.maps.places.AutocompletePrediction[];
+      const predictions = suggestions.map((suggestion: any) => {
+        console.log('[Location Autocomplete] Processing suggestion:', suggestion);
 
-      console.log('[Location Autocomplete] First 3 results:', predictions.slice(0, 3).map(p => ({
-        description: p.description,
-        mainText: p.structured_formatting.main_text
-      })));
+        const prediction = {
+          description: suggestion.placePrediction?.text?.text || '',
+          place_id: suggestion.placePrediction?.placeId || '',
+          structured_formatting: {
+            main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
+            secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
+          },
+        };
+
+        console.log('[Location Autocomplete] Mapped to prediction:', prediction);
+        return prediction;
+      }) as google.maps.places.AutocompletePrediction[];
+
+      console.log('[Location Autocomplete] Final predictions:', predictions.slice(0, 3));
 
       return predictions;
     } else {
