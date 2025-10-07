@@ -128,24 +128,23 @@ export default function LocationAutocomplete({
       {showDropdown && predictions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
           {predictions.map((prediction) => (
-            <button
+            <div
               key={prediction.place_id}
-              type="button"
               onClick={() => handleSelect(prediction)}
-              className="w-full p-3 text-left hover:bg-gray-100 dark:hover:bg-slate-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0 transition-colors"
+              className="w-full p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <div className="font-medium truncate" style={{ color: 'rgb(17, 24, 39)' }}>
                     {prediction.structured_formatting.main_text}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                  <div className="text-sm truncate" style={{ color: 'rgb(75, 85, 99)' }}>
                     {prediction.structured_formatting.secondary_text}
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
