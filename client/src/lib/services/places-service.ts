@@ -156,50 +156,77 @@ export async function searchLocationAutocomplete(
     return [];
   }
 
-  console.log('[Location Autocomplete] Google Maps API available, creating service...');
+  console.log('[Location Autocomplete] Google Maps API available, using newer AutocompleteSuggestion API...');
 
   try {
-    const autocompleteService = new google.maps.places.AutocompleteService();
-    console.log('[Location Autocomplete] Service created, making request...');
+    // Try the newer AutocompleteSuggestion API first (recommended as of March 2025)
+    if (google.maps.places.AutocompleteSuggestion) {
+      console.log('[Location Autocomplete] Using new AutocompleteSuggestion API');
 
-    const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
-      // Add timeout to detect hanging requests
-      const timeoutId = setTimeout(() => {
-        console.error('[Location Autocomplete] Request timed out after 10 seconds - check billing and API restrictions');
-        resolve([]);
-      }, 10000);
+      const request: google.maps.places.AutocompleteSuggestionRequest = {
+        input: query,
+        includedRegionCodes: ['gb'], // UK only
+      };
 
-      autocompleteService.getPlacePredictions(
-        {
-          input: query,
-          componentRestrictions: { country: 'gb' } // UK only
+      const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+      console.log('[Location Autocomplete] Got suggestions:', suggestions?.length || 0);
+
+      if (!suggestions || suggestions.length === 0) {
+        console.log('[Location Autocomplete] No suggestions returned');
+        return [];
+      }
+
+      // Convert suggestions to AutocompletePrediction format for compatibility
+      const predictions = suggestions.map((suggestion: any) => ({
+        description: suggestion.placePrediction?.text?.text || '',
+        place_id: suggestion.placePrediction?.placeId || '',
+        structured_formatting: {
+          main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
+          secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
         },
-        (predictions, status) => {
-          clearTimeout(timeoutId);
-          console.log('[Location Autocomplete] API Response - Status:', status);
-          console.log('[Location Autocomplete] API Response - Predictions count:', predictions?.length || 0);
+      })) as google.maps.places.AutocompletePrediction[];
 
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-            console.log('[Location Autocomplete] First 3 results:', predictions.slice(0, 3).map(p => ({
-              description: p.description,
-              mainText: p.structured_formatting.main_text
-            })));
-            resolve(predictions);
-          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            console.log('[Location Autocomplete] Zero results returned');
-            resolve([]);
-          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-            console.error('[Location Autocomplete] REQUEST_DENIED - Check API key permissions and billing');
-            resolve([]);
-          } else {
-            console.warn(`[Location Autocomplete] Error status: ${status}`);
-            resolve([]); // Return empty array instead of rejecting
+      console.log('[Location Autocomplete] First 3 results:', predictions.slice(0, 3).map(p => ({
+        description: p.description,
+        mainText: p.structured_formatting.main_text
+      })));
+
+      return predictions;
+    } else {
+      // Fallback to older AutocompleteService if new API not available
+      console.log('[Location Autocomplete] Falling back to AutocompleteService (deprecated)');
+      const autocompleteService = new google.maps.places.AutocompleteService();
+      console.log('[Location Autocomplete] Service created, making request...');
+
+      const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          console.error('[Location Autocomplete] Request timed out after 10 seconds');
+          resolve([]);
+        }, 10000);
+
+        autocompleteService.getPlacePredictions(
+          {
+            input: query,
+            componentRestrictions: { country: 'gb' }
+          },
+          (predictions, status) => {
+            clearTimeout(timeoutId);
+            console.log('[Location Autocomplete] API Response - Status:', status);
+
+            if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+              console.log('[Location Autocomplete] Got results:', predictions.length);
+              resolve(predictions);
+            } else {
+              console.warn(`[Location Autocomplete] Error status: ${status}`);
+              resolve([]);
+            }
           }
-        }
-      );
-    });
+        );
+      });
 
-    return predictions;
+      return predictions;
+    }
   } catch (error) {
     console.error('[Location Autocomplete] Exception caught:', error);
     return [];
