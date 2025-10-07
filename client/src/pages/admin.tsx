@@ -57,6 +57,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
   const [artistSettings, setArtistSettings] = useState({
     name: artistData?.name || membership.artist?.name || membership.name || '',
     description: artistData?.bio || membership.artist?.bio || '',
+    location: artistData?.location || membership.artist?.location || '',
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
   });
 
@@ -66,6 +67,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
       setArtistSettings({
         name: artistData.name || '',
         description: artistData.bio || '',
+        location: artistData.location || '',
         avatar: artistData.profileImageUrl || null,
       });
     }
@@ -193,6 +195,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
       const response = await apiRequest("PUT", `/api/artists/${artistId}`, {
         name: settings.name,
         bio: settings.description,
+        location: settings.location,
         profileImageUrl: settings.avatar,
       });
 
@@ -482,6 +485,21 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       data-testid="input-band-description"
                       rows={4}
                     />
+                  </div>
+
+                  {/* Artist Location */}
+                  <div>
+                    <Label htmlFor="artistLocation" className="text-card-foreground font-semibold mb-2 block">Location</Label>
+                    <Input
+                      id="artistLocation"
+                      type="text"
+                      value={artistSettings.location}
+                      onChange={(e) => setArtistSettings(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g., Stoke-on-Trent, Manchester, London"
+                      className="focus:border-brand-primary focus:ring-brand-primary"
+                      data-testid="input-artist-location"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based. Used for venue search and duplicate checking.</p>
                   </div>
 
                   {/* Action Buttons */}

@@ -147,11 +147,11 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => setLocation('/dashboard')}
+              onClick={() => setLocation('/my-artists')}
               className="text-white hover:text-white/80 font-sans underline text-sm bg-white/20 px-4 py-2 rounded"
-              data-testid="button-create-new-band"
+              data-testid="button-create-new-artist"
             >
-              Create New Band
+              Create New Artist
             </button>
             <button
               onClick={logout}
