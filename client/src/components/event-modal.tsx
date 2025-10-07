@@ -265,14 +265,14 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
   };
 
   const selectEventType = (type: EventType) => {
-    // If gig or public_gig is selected and callback exists, trigger the wizard
-    if ((type === "gig" || type === "public_gig") && onPublicGigSelected) {
+    // If gig is selected and callback exists, trigger the wizard
+    if (type === "gig" && onPublicGigSelected) {
       onPublicGigSelected();
       return;
     }
 
     // Determine if event should be public by default based on type
-    const defaultPublic = type === "gig" || type === "public_gig" || type === "festival";
+    const defaultPublic = type === "gig" || type === "festival";
 
     setFormData(prev => ({
       ...prev,
@@ -354,48 +354,6 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                 })}
               </div>
             </div>
-
-            {/* Public/Private Toggle (for non-unavailable events) */}
-            {formData.type !== "unavailable" && (
-              <div className="mb-6">
-                <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">Visibility</label>
-                <div className="flex space-x-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, isPublic: false, venue: undefined }))}
-                    className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                      !formData.isPublic
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
-                    }`}
-                    data-testid="button-private-event"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>🔒</span>
-                      <span className="font-semibold">Private</span>
-                    </div>
-                    <div className="text-xs mt-1">Internal band event</div>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, isPublic: true, location: undefined }))}
-                    className={`flex-1 p-3 rounded-lg border-2 text-center transition-all duration-200 ${
-                      formData.isPublic
-                        ? "border-brand-accent bg-brand-accent/10 text-brand-accent dark:text-brand-accent"
-                        : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
-                    }`}
-                    data-testid="button-public-event"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>🌍</span>
-                      <span className="font-semibold">Public</span>
-                    </div>
-                    <div className="text-xs mt-1">Open to the public</div>
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Title (for most event types) */}
             {formData.type !== "unavailable" && (

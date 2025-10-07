@@ -168,7 +168,7 @@ export default function PublicGigWizard({
           },
           body: JSON.stringify({
             venueId: formData.venueId,
-            type: 'public_gig',
+            type: 'gig',
             date: formData.date,
             startTime: formData.startTime,
             endTime: formData.endTime,

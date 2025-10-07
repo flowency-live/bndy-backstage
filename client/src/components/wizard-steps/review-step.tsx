@@ -43,7 +43,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               date: formData.date,
-              type: 'public_gig',
+              type: 'gig',
               startTime: formData.startTime,
               endTime: formData.endTime,
             }),
