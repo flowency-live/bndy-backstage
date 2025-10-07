@@ -58,7 +58,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
     name: artistData?.name || membership.artist?.name || membership.name || '',
     description: artistData?.bio || membership.artist?.bio || '',
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
-    allowedEventTypes: artistData?.allowedEventTypes || membership.artist?.allowedEventTypes || ['practice', 'public_gig'],
   });
 
   // Update form when artist data loads
@@ -68,7 +67,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
         name: artistData.name || '',
         description: artistData.bio || '',
         avatar: artistData.profileImageUrl || null,
-        allowedEventTypes: artistData.allowedEventTypes || ['practice', 'public_gig'],
       });
     }
   }, [artistData]);
@@ -196,7 +194,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
         name: settings.name,
         bio: settings.description,
         profileImageUrl: settings.avatar,
-        allowedEventTypes: settings.allowedEventTypes,
       });
 
       return response.json();
@@ -485,61 +482,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       data-testid="input-band-description"
                       rows={4}
                     />
-                  </div>
-
-                  {/* Event Types Configuration */}
-                  <div>
-                    <Label className="text-card-foreground font-semibold mb-3 block">Allowed Event Types</Label>
-                    <p className="text-sm text-muted-foreground mb-4">Choose which event types your artist uses. Members will only see these options when creating events.</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                      {EVENT_TYPES.filter(type => type !== 'unavailable').map((type) => {
-                        const config = EVENT_TYPE_CONFIG[type];
-                        const isSelected = artistSettings.allowedEventTypes.includes(type);
-                        
-                        return (
-                          <button 
-                            key={type}
-                            type="button"
-                            onClick={() => {
-                              setArtistSettings(prev => {
-                                const newTypes = isSelected 
-                                  ? prev.allowedEventTypes.filter(t => t !== type)
-                                  : [...prev.allowedEventTypes, type];
-                                
-                                // Prevent deselecting all types - must have at least one
-                                if (newTypes.length === 0) {
-                                  return prev;
-                                }
-                                
-                                return { ...prev, allowedEventTypes: newTypes };
-                              });
-                            }}
-                            className={`p-3 rounded-lg border-2 text-center transition-all duration-200 relative ${
-                              isSelected
-                                ? `border-2 shadow-lg transform scale-[1.02]`
-                                : "border-border hover:border-border/80 hover:shadow-sm"
-                            }`}
-                            style={{
-                              borderColor: isSelected ? config.color : undefined,
-                              backgroundColor: isSelected ? `${config.color}25` : undefined,
-                            }}
-                            data-testid={`button-event-type-${type}`}
-                          >
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center">
-                                <i className="fas fa-check text-xs" style={{ color: config.color }}></i>
-                              </div>
-                            )}
-                            <div className="text-xl mb-1">{config.icon}</div>
-                            <div className={`text-xs font-sans font-semibold ${
-                              isSelected ? "text-card-foreground" : "text-muted-foreground"
-                            }`} style={{
-                              color: isSelected ? config.color : undefined,
-                            }}>{config.label}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
 
                   {/* Action Buttons */}

@@ -113,11 +113,7 @@ export interface Song {
 export const EVENT_TYPES = [
   'gig',
   'rehearsal',
-  'recording',
-  'meeting',
   'other',
-  'practice',
-  'public_gig',
   'unavailable'
 ] as const;
 
@@ -134,30 +130,10 @@ export const EVENT_TYPE_CONFIG = {
     color: '#f59e0b',
     icon: '🎤'
   },
-  recording: {
-    label: 'Recording',
-    color: '#ef4444',
-    icon: '🎙️'
-  },
-  meeting: {
-    label: 'Meeting',
-    color: '#8b5cf6',
-    icon: '💬'
-  },
   other: {
     label: 'Other',
     color: '#6b7280',
     icon: '📅'
-  },
-  practice: {
-    label: 'Practice',
-    color: '#f59e0b',
-    icon: '🎸'
-  },
-  public_gig: {
-    label: 'Public Gig',
-    color: '#10b981',
-    icon: '🎤'
   },
   unavailable: {
     label: 'Unavailable',
