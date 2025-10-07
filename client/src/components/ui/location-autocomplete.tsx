@@ -4,7 +4,6 @@ import { MapPin, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { searchLocationAutocomplete } from '@/lib/services/places-service';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
-import { useTheme } from '@/contexts/theme-context';
 
 interface LocationAutocompleteProps {
   value: string;
@@ -23,17 +22,12 @@ export default function LocationAutocomplete({
   required = false,
   autoFocus = false,
 }: LocationAutocompleteProps) {
-  const { theme } = useTheme();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState(value);
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // Theme-aware colors
-  const textColor = theme === 'dark' ? 'hsl(0, 0%, 100%)' : 'hsl(222.2, 84%, 4.9%)';
-  const secondaryColor = theme === 'dark' ? 'hsl(214, 15%, 66%)' : 'hsl(215.4, 16.3%, 35%)';
 
   // Sync external value changes
   useEffect(() => {
@@ -139,13 +133,13 @@ export default function LocationAutocomplete({
               onClick={() => handleSelect(prediction)}
               className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
             >
-              <MapPin className="h-4 w-4 text-gray-500" />
+              <MapPin className="h-4 w-4 text-muted-foreground" />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
-                  {prediction.structured_formatting.main_text}
+                <div className="font-medium text-sm text-foreground truncate">
+                  {prediction.structured_formatting?.main_text || prediction.description}
                 </div>
-                {prediction.structured_formatting.secondary_text && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {prediction.structured_formatting?.secondary_text && (
+                  <div className="text-xs text-muted-foreground truncate">
                     {prediction.structured_formatting.secondary_text}
                   </div>
                 )}
