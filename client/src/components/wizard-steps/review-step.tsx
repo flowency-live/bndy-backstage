@@ -68,6 +68,10 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
 
   const formatTime = (time?: string) => {
     if (!time) return null;
+    // Special display for midnight
+    if (time === '00:00') {
+      return 'Midnight';
+    }
     const [hours, minutes] = time.split(':');
     const hour24 = parseInt(hours);
     const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
@@ -144,20 +148,17 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
             <div className="flex items-start gap-3">
               <Clock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground mb-1">Times</div>
-                <div className="space-y-1">
-                  {formData.doorsTime && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Doors:</span>{' '}
-                      <span className="font-medium">{formatTime(formData.doorsTime)}</span>
-                    </div>
-                  )}
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Set:</span>{' '}
-                    <span className="font-medium">
-                      {formatTime(formData.startTime)} - {formatTime(formData.endTime)}
-                    </span>
-                  </div>
+                <div className="text-sm text-muted-foreground mb-1">Time</div>
+                <div className="text-sm">
+                  <span className="font-medium">
+                    {formatTime(formData.startTime)}
+                    {formData.endTime && formData.endTime !== '00:00' && (
+                      <> - {formatTime(formData.endTime)}</>
+                    )}
+                    {(!formData.endTime || formData.endTime === '00:00') && (
+                      <> - Midnight</>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>

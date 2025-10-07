@@ -1,5 +1,5 @@
 // DateTimeStep - Calendar and time pickers for gig scheduling
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,21 @@ interface DateTimeStepProps {
 export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [timePickerType, setTimePickerType] = useState<'start' | 'end' | 'doors'>('start');
+  const [timePickerType, setTimePickerType] = useState<'start' | 'end'>('start');
+
+  // Default end time to midnight if not set
+  useEffect(() => {
+    if (!formData.endTime) {
+      onUpdate({ endTime: '00:00' });
+    }
+  }, []);
 
   const formatTime = (time?: string) => {
     if (!time) return null;
+    // Special display for midnight
+    if (time === '00:00') {
+      return 'Midnight';
+    }
     const [hours, minutes] = time.split(':');
     const hour24 = parseInt(hours);
     const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
@@ -26,7 +37,7 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
     return `${hour12}:${minutes} ${period}`;
   };
 
-  const openTimePicker = (type: 'start' | 'end' | 'doors') => {
+  const openTimePicker = (type: 'start' | 'end') => {
     setTimePickerType(type);
     setShowTimePicker(true);
   };
@@ -34,10 +45,8 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
   const handleTimeSelect = (time: string) => {
     if (timePickerType === 'start') {
       onUpdate({ startTime: time });
-    } else if (timePickerType === 'end') {
-      onUpdate({ endTime: time });
     } else {
-      onUpdate({ doorsTime: time });
+      onUpdate({ endTime: time });
     }
     setShowTimePicker(false);
   };
@@ -65,100 +74,49 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
 
       {/* Time Selection Grid */}
       <div className="space-y-4">
-        <label className="block text-sm font-semibold text-foreground">
-          Times *
-        </label>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Doors Time (Optional) */}
-          <div>
-            <label className="block text-xs text-muted-foreground mb-2">
-              Doors Open (Optional)
-            </label>
-            <button
-              type="button"
-              onClick={() => openTimePicker('doors')}
-              className="w-full min-h-[56px] md:min-h-[44px] p-3 border border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-2"
-            >
-              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm">
-                {formData.doorsTime ? formatTime(formData.doorsTime) : 'Not set'}
-              </span>
-            </button>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Start Time */}
           <div>
-            <label className="block text-xs text-muted-foreground mb-2">
+            <label className="block text-sm font-semibold text-foreground mb-3">
               Start Time *
             </label>
             <button
               type="button"
               onClick={() => openTimePicker('start')}
-              className="w-full min-h-[56px] md:min-h-[44px] p-3 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-2"
+              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-3"
             >
-              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm font-medium">
+              <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <span className="text-base font-medium">
                 {formData.startTime ? formatTime(formData.startTime) : 'Select time'}
               </span>
             </button>
           </div>
 
-          {/* End Time */}
+          {/* End Time (Optional) */}
           <div>
-            <label className="block text-xs text-muted-foreground mb-2">
-              End Time *
+            <label className="block text-sm font-semibold text-foreground mb-3">
+              End Time <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
             </label>
             <button
               type="button"
               onClick={() => openTimePicker('end')}
-              className="w-full min-h-[56px] md:min-h-[44px] p-3 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-2"
+              className="w-full min-h-[56px] md:min-h-[44px] p-4 border-2 border-input rounded-xl text-left bg-background hover:border-primary focus:border-primary transition-colors relative flex items-center gap-3"
             >
-              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm font-medium">
-                {formData.endTime ? formatTime(formData.endTime) : 'Select time'}
+              <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <span className="text-base font-medium">
+                {formData.endTime ? formatTime(formData.endTime) : 'Not set'}
               </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Duration Display (if both times set) */}
-      {formData.startTime && formData.endTime && (
-        <div className="bg-accent/50 rounded-xl p-4 border border-border">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Duration:</span>
-            <span className="font-semibold text-foreground">
-              {(() => {
-                const [startHour, startMin] = formData.startTime.split(':').map(Number);
-                const [endHour, endMin] = formData.endTime.split(':').map(Number);
-                const startMinutes = startHour * 60 + startMin;
-                const endMinutes = endHour * 60 + endMin;
-                const duration = endMinutes - startMinutes;
-                const hours = Math.floor(duration / 60);
-                const minutes = duration % 60;
-
-                if (duration < 0) {
-                  return 'End time must be after start time';
-                }
-
-                return hours > 0
-                  ? `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`
-                  : `${minutes}m`;
-              })()}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Helper Text */}
       <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4">
         <p className="font-medium mb-2">💡 Tip</p>
-        <ul className="space-y-1 text-xs">
-          <li>• <strong>Doors time</strong> is when the venue opens (optional)</li>
-          <li>• <strong>Start time</strong> is when your set begins</li>
-          <li>• <strong>End time</strong> is when your set finishes</li>
-        </ul>
+        <p className="text-xs">
+          End time defaults to <strong>Midnight</strong> if your gig runs late. You can change it if needed.
+        </p>
       </div>
 
       {/* Date Picker Modal */}
@@ -181,20 +139,10 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
           isOpen={showTimePicker}
           onClose={() => setShowTimePicker(false)}
           selectedTime={
-            timePickerType === 'start'
-              ? formData.startTime
-              : timePickerType === 'end'
-              ? formData.endTime
-              : formData.doorsTime
+            timePickerType === 'start' ? formData.startTime : formData.endTime
           }
           onSelectTime={handleTimeSelect}
-          title={`Select ${
-            timePickerType === 'start'
-              ? 'Start'
-              : timePickerType === 'end'
-              ? 'End'
-              : 'Doors'
-          } Time`}
+          title={`Select ${timePickerType === 'start' ? 'Start' : 'End'} Time`}
         />
       )}
     </div>

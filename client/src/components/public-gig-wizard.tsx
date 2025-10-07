@@ -30,8 +30,7 @@ export interface PublicGigFormData {
   // Step 2: Date & Time
   date?: string; // YYYY-MM-DD
   startTime?: string; // HH:mm
-  endTime?: string; // HH:mm
-  doorsTime?: string; // HH:mm
+  endTime?: string; // HH:mm (optional, defaults to 00:00)
 
   // Step 3: Details
   title?: string;
@@ -142,7 +141,7 @@ export default function PublicGigWizard({
       case 1: // Venue step
         return !!(formData.venueId && formData.venueName);
       case 2: // Date & Time step
-        return !!(formData.date && formData.startTime && formData.endTime);
+        return !!(formData.date && formData.startTime); // endTime is optional
       case 3: // Details step
         return true; // All fields optional
       case 4: // Review step
@@ -171,8 +170,7 @@ export default function PublicGigWizard({
             type: 'gig',
             date: formData.date,
             startTime: formData.startTime,
-            endTime: formData.endTime,
-            doorsTime: formData.doorsTime,
+            endTime: formData.endTime || '00:00', // Default to midnight if not set
             title: formData.title,
             description: formData.description,
             ticketUrl: formData.ticketUrl,
