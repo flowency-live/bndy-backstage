@@ -126,26 +126,28 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
-          {predictions.map((prediction) => (
-            <div
-              key={prediction.place_id}
-              onClick={() => handleSelect(prediction)}
-              className="w-full p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+        <div className="absolute z-50 w-full mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+          <div className="max-h-[300px] overflow-y-auto p-1">
+            {predictions.map((prediction) => (
+              <div
+                key={prediction.place_id}
+                onClick={() => handleSelect(prediction)}
+                className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate" style={{ color: 'rgb(17, 24, 39)' }}>
+                  <div className="font-medium truncate">
                     {prediction.structured_formatting.main_text}
                   </div>
-                  <div className="text-sm truncate" style={{ color: 'rgb(75, 85, 99)' }}>
-                    {prediction.structured_formatting.secondary_text}
-                  </div>
+                  {prediction.structured_formatting.secondary_text && (
+                    <div className="text-xs text-muted-foreground truncate">
+                      {prediction.structured_formatting.secondary_text}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
