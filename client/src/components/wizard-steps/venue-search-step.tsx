@@ -22,9 +22,10 @@ interface VenueSearchStepProps {
   formData: PublicGigFormData;
   onUpdate: (data: Partial<PublicGigFormData>) => void;
   artistName: string;
+  artistLocation: string | null;
 }
 
-export default function VenueSearchStep({ formData, onUpdate, artistName }: VenueSearchStepProps) {
+export default function VenueSearchStep({ formData, onUpdate, artistName, artistLocation }: VenueSearchStepProps) {
   const { toast } = useToast();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,8 +93,8 @@ export default function VenueSearchStep({ formData, onUpdate, artistName }: Venu
           await loadGoogleMaps();
         }
 
-        // Search Google Places
-        const googlePlaces = await searchGooglePlaces(term);
+        // Search Google Places with location bias
+        const googlePlaces = await searchGooglePlaces(term, artistLocation);
         const googleVenues: Venue[] = googlePlaces.map((place) => {
           const venueData = placeResultToVenueData(place);
           return {

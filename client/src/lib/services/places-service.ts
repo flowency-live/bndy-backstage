@@ -22,7 +22,8 @@ export function initGoogleMapsCheck() {
 
 // Search venues using Google Places Text Search
 export async function searchGooglePlaces(
-  query: string
+  query: string,
+  artistLocation?: string | null
 ): Promise<google.maps.places.PlaceResult[]> {
   // First check if Google Maps is available
   if (!googleMapsAvailable) {
@@ -36,6 +37,36 @@ export async function searchGooglePlaces(
   }
 
   try {
+    // Get location bias
+    let locationBias: google.maps.LatLng | undefined;
+
+    if (artistLocation) {
+      // Try to geocode the artist location
+      const geocoder = new google.maps.Geocoder();
+      try {
+        const geocodeResult = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+          geocoder.geocode({ address: artistLocation, componentRestrictions: { country: 'GB' } }, (results, status) => {
+            if (status === 'OK' && results) {
+              resolve(results);
+            } else {
+              reject(status);
+            }
+          });
+        });
+
+        if (geocodeResult.length > 0) {
+          locationBias = geocodeResult[0].geometry.location;
+        }
+      } catch (error) {
+        console.warn('[Google Places] Failed to geocode artist location:', artistLocation);
+      }
+    }
+
+    // Fallback to center of UK if no location bias
+    if (!locationBias) {
+      locationBias = new google.maps.LatLng(54.0, -2.5); // Center of UK
+    }
+
     // Create a dummy div for the Places service
     const dummyDiv = document.createElement('div');
     const service = new google.maps.places.PlacesService(dummyDiv);
@@ -45,6 +76,8 @@ export async function searchGooglePlaces(
         {
           query: query,
           type: 'establishment',
+          location: locationBias,
+          radius: 80000, // 50 miles in meters (80km)
         },
         (results, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {

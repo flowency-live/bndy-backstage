@@ -66,8 +66,9 @@ export default function PublicGigWizard({
   const [formData, setFormData] = useState<PublicGigFormData>(initialData || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Extract artist name from membership
+  // Extract artist name and location from membership
   const artistName = currentUser.artist?.name || 'Artist';
+  const artistLocation = currentUser.artist?.location || null;
 
   // LocalStorage key for auto-save
   const STORAGE_KEY = `public-gig-draft-${artistId}`;
@@ -296,6 +297,7 @@ export default function PublicGigWizard({
               formData={formData}
               onUpdate={updateFormData}
               artistName={artistName}
+              artistLocation={artistLocation}
             />
           )}
 
