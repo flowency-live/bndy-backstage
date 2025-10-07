@@ -126,18 +126,18 @@ export default function LocationAutocomplete({
 
       {/* Dropdown */}
       {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
           {predictions.map((prediction) => (
             <button
               key={prediction.place_id}
               type="button"
               onClick={() => handleSelect(prediction)}
-              className="w-full p-3 text-left hover:bg-accent border-b last:border-b-0 transition-colors"
+              className="w-full p-3 text-left hover:bg-accent hover:text-accent-foreground border-b border-border last:border-b-0 transition-colors text-popover-foreground"
             >
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground truncate">
+                  <div className="font-medium truncate">
                     {prediction.structured_formatting.main_text}
                   </div>
                   <div className="text-sm text-muted-foreground truncate">

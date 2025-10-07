@@ -166,6 +166,7 @@ export async function searchLocationAutocomplete(
       const request: google.maps.places.AutocompleteSuggestionRequest = {
         input: query,
         includedRegionCodes: ['gb'], // UK only
+        includedPrimaryTypes: ['locality', 'administrative_area_level_3'], // Cities and towns
       };
 
       const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
@@ -208,6 +209,7 @@ export async function searchLocationAutocomplete(
         autocompleteService.getPlacePredictions(
           {
             input: query,
+            types: ['(cities)'], // Cities and towns
             componentRestrictions: { country: 'gb' }
           },
           (predictions, status) => {
