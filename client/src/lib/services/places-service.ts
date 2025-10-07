@@ -42,15 +42,11 @@ export async function searchGooglePlaces(
     const dummyDiv = document.createElement('div');
     const service = new google.maps.places.PlacesService(dummyDiv);
 
-    // UK center for location bias
-    const ukCenter = new google.maps.LatLng(54.5, -2.0);
-
     const results = await new Promise<google.maps.places.PlaceResult[]>((resolve) => {
       service.textSearch(
         {
-          query: `${query} music venue OR bar OR pub OR nightclub OR entertainment`,
-          location: ukCenter,
-          radius: 500000, // 500km radius from UK center
+          query: query,
+          type: 'establishment',
         },
         (results, status) => {
           console.log('[Google Places] Status:', status);
