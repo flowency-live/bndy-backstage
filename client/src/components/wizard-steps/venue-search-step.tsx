@@ -58,6 +58,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
   }, []);
 
   const handleSearch = useCallback(async (term: string) => {
+    console.log('[VenueSearch] Starting search for:', term);
     setSearchTerm(term);
 
     if (!term || term.length < 2) {
@@ -70,6 +71,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
 
     try {
       // Search DB venues first
+      console.log('[VenueSearch] Searching bndy-venues database...');
       const dbResponse = await fetch(
         `https://api.bndy.co.uk/api/venues?search=${encodeURIComponent(term)}`,
         { credentials: 'include' }
@@ -78,23 +80,46 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
       let venues: any[] = [];
       if (dbResponse.ok) {
         venues = await dbResponse.json();
+        console.log(`[VenueSearch] Found ${venues.length} venues in database`);
         setDbResults(
           venues.map((v: any) => ({
             ...v,
             source: 'db' as const,
           }))
         );
+      } else {
+        console.warn('[VenueSearch] DB search failed:', dbResponse.status, dbResponse.statusText);
       }
 
       // If no DB results, search Google Places
       if (venues.length === 0) {
+        console.log('[VenueSearch] No DB results, searching Google Places...');
+        console.log('[VenueSearch] Google Maps loaded?', googleMapsLoaded);
+        console.log('[VenueSearch] Artist location:', artistLocation);
+
         // Load Google Maps if not already loaded
         if (!googleMapsLoaded) {
-          await loadGoogleMaps();
+          console.log('[VenueSearch] Loading Google Maps API...');
+          const loaded = await loadGoogleMaps();
+          console.log('[VenueSearch] Google Maps load result:', loaded);
+
+          if (!loaded) {
+            console.error('[VenueSearch] Failed to load Google Maps API');
+            toast({
+              title: 'Google Maps unavailable',
+              description: 'Unable to search external venues. Please try again.',
+              variant: 'destructive',
+            });
+            setLoading(false);
+            return;
+          }
         }
 
         // Search Google Places with location bias
+        console.log('[VenueSearch] Calling searchGooglePlaces...');
         const googlePlaces = await searchGooglePlaces(term, artistLocation);
+        console.log(`[VenueSearch] Google Places returned ${googlePlaces.length} results`);
+
         const googleVenues: Venue[] = googlePlaces.map((place) => {
           const venueData = placeResultToVenueData(place);
           return {
@@ -107,21 +132,24 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
           };
         });
         setGoogleResults(googleVenues);
+        console.log('[VenueSearch] Set Google results:', googleVenues.length);
       } else {
         // Clear Google results if we have DB results
+        console.log('[VenueSearch] DB results found, skipping Google Places');
         setGoogleResults([]);
       }
     } catch (error) {
-      console.error('Venue search error:', error);
+      console.error('[VenueSearch] Search error:', error);
       toast({
         title: 'Search error',
         description: 'Failed to search venues. Please try again.',
         variant: 'destructive',
       });
     } finally {
+      console.log('[VenueSearch] Search complete, setting loading to false');
       setLoading(false);
     }
-  }, [googleMapsLoaded, loadGoogleMaps, toast]);
+  }, [googleMapsLoaded, loadGoogleMaps, toast, artistLocation]);
 
   const handleVenueSelect = async (venue: Venue) => {
     setSelectedVenue(venue);

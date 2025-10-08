@@ -25,27 +25,38 @@ export async function searchGooglePlaces(
   query: string,
   artistLocation?: string | null
 ): Promise<google.maps.places.PlaceResult[]> {
+  console.log('[Google Places] searchGooglePlaces called with query:', query, 'location:', artistLocation);
+
   // First check if Google Maps is available
   if (!googleMapsAvailable) {
+    console.log('[Google Places] Checking if Google Maps is available...');
     googleMapsAvailable = initGoogleMapsCheck();
+    console.log('[Google Places] initGoogleMapsCheck result:', googleMapsAvailable);
   }
 
   // If Google Maps is not available, return empty array
   if (!googleMapsAvailable) {
-    console.warn('Google Maps Places API is not available for venue search');
+    console.warn('[Google Places] Google Maps Places API is not available for venue search');
+    console.warn('[Google Places] window.google:', typeof window.google);
+    console.warn('[Google Places] window.google.maps:', typeof window.google?.maps);
+    console.warn('[Google Places] window.google.maps.places:', typeof window.google?.maps?.places);
     return [];
   }
+
+  console.log('[Google Places] Google Maps API is available, proceeding with search');
 
   try {
     // Get location bias
     let locationBias: google.maps.LatLng | undefined;
 
     if (artistLocation) {
+      console.log('[Google Places] Geocoding artist location:', artistLocation);
       // Try to geocode the artist location
       const geocoder = new google.maps.Geocoder();
       try {
         const geocodeResult = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
           geocoder.geocode({ address: artistLocation, componentRestrictions: { country: 'GB' } }, (results, status) => {
+            console.log('[Google Places] Geocode status:', status, 'results count:', results?.length || 0);
             if (status === 'OK' && results) {
               resolve(results);
             } else {
@@ -56,20 +67,33 @@ export async function searchGooglePlaces(
 
         if (geocodeResult.length > 0) {
           locationBias = geocodeResult[0].geometry.location;
+          console.log('[Google Places] Geocoded to:', locationBias.lat(), locationBias.lng());
         }
       } catch (error) {
-        console.warn('[Google Places] Failed to geocode artist location:', artistLocation);
+        console.warn('[Google Places] Failed to geocode artist location:', artistLocation, error);
       }
+    } else {
+      console.log('[Google Places] No artist location provided');
     }
 
     // Fallback to center of UK if no location bias
     if (!locationBias) {
       locationBias = new google.maps.LatLng(54.0, -2.5); // Center of UK
+      console.log('[Google Places] Using UK center as fallback:', locationBias.lat(), locationBias.lng());
     }
 
     // Create a dummy div for the Places service
+    console.log('[Google Places] Creating PlacesService...');
     const dummyDiv = document.createElement('div');
     const service = new google.maps.places.PlacesService(dummyDiv);
+    console.log('[Google Places] PlacesService created successfully');
+
+    console.log('[Google Places] Calling textSearch with params:', {
+      query,
+      type: 'establishment',
+      location: { lat: locationBias.lat(), lng: locationBias.lng() },
+      radius: 80000
+    });
 
     const results = await new Promise<google.maps.places.PlaceResult[]>((resolve) => {
       service.textSearch(
@@ -80,21 +104,25 @@ export async function searchGooglePlaces(
           radius: 80000, // 50 miles in meters (80km)
         },
         (results, status) => {
+          console.log('[Google Places] textSearch callback - Status:', status, 'Results:', results?.length || 0);
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            console.log('[Google Places] Search successful, returning', results.length, 'results');
             resolve(results);
           } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            console.log('[Google Places] Zero results returned');
             resolve([]);
           } else {
-            console.warn(`[Google Places] Error: ${status}`);
+            console.warn(`[Google Places] Search error - Status: ${status}`);
             resolve([]); // Return empty array instead of rejecting
           }
         }
       );
     });
 
+    console.log('[Google Places] Returning', results.length, 'results');
     return results;
   } catch (error) {
-    console.error('[Google Places] Error searching places:', error);
+    console.error('[Google Places] Exception during search:', error);
     return [];
   }
 }
