@@ -81,15 +81,15 @@ export default function DatePickerModal({
             
             {/* Day Headers */}
             <div className="grid grid-cols-7 gap-1 text-xs text-muted-foreground mb-2">
-              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-                <div key={`day-header-${index}`} className="p-2">{day}</div>
+              {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
+                <div key={`day-header-${index}`} className={`p-2 ${index >= 5 ? 'font-bold' : ''}`}>{day}</div>
               ))}
             </div>
-            
+
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1">
-              {/* Empty cells for month start */}
-              {Array.from({ length: monthStart.getDay() }, (_, i) => (
+              {/* Empty cells for month start (adjusted for Monday start) */}
+              {Array.from({ length: (monthStart.getDay() + 6) % 7 }, (_, i) => (
                 <div key={`empty-${i}`} className="p-2"></div>
               ))}
               
@@ -98,9 +98,15 @@ export default function DatePickerModal({
                 const isCurrentMonth = isSameMonth(day, currentDate);
                 const isTodayDate = isToday(day);
                 const isSelected = tempSelectedDate === dateStr;
+                const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
                 let buttonClasses = "p-2 text-sm rounded hover:bg-muted transition-colors ";
-                
+
+                // Weekend days are bold
+                if (isWeekend) {
+                  buttonClasses += "font-bold ";
+                }
+
                 if (!isCurrentMonth) {
                   buttonClasses += "text-muted-foreground/50 ";
                 } else if (isSelected) {
