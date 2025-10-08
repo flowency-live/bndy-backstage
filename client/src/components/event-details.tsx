@@ -111,11 +111,26 @@ export default function EventDetails({
             </p>
           </div>
 
-          {/* Location */}
+          {/* Location/Venue */}
           {(event.location || event.venue) && (
             <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Location</h4>
-              <p className="text-sm">{event.location || event.venue}</p>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">
+                {event.type === 'gig' ? 'Venue' : 'Location'}
+              </h4>
+              {event.type === 'gig' && event.venue ? (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  <i className="fas fa-map-marker-alt"></i>
+                  {event.venue}
+                  <i className="fas fa-external-link-alt text-xs"></i>
+                </a>
+              ) : (
+                <p className="text-sm">{event.location || event.venue}</p>
+              )}
             </div>
           )}
 

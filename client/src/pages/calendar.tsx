@@ -296,7 +296,13 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     setEventType(event.type as typeof EVENT_TYPES[number]);
     setIsEditingEvent(true);
     setShowEventDetails(false);
-    setShowEventModal(true);
+
+    // For gigs, open the wizard; for other events, open normal modal
+    if (event.type === 'gig') {
+      setShowPublicGigWizard(true);
+    } else {
+      setShowEventModal(true);
+    }
   };
 
   // Handle delete from details modal
