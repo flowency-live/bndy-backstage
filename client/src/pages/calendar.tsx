@@ -953,6 +953,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
           isOpen={showPublicGigWizard}
           onClose={() => {
             setShowPublicGigWizard(false);
+            setSelectedEvent(null);
+            setIsEditingEvent(false);
             // Refresh calendar data after creating gig
             queryClient.invalidateQueries({
               predicate: (query) => {
@@ -966,7 +968,23 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
           }}
           artistId={effectiveArtistId}
           currentUser={effectiveMembership}
-          initialData={selectedDate ? { date: selectedDate } : undefined}
+          editingEventId={isEditingEvent && selectedEvent ? selectedEvent.id : undefined}
+          initialData={
+            isEditingEvent && selectedEvent
+              ? {
+                  venueId: selectedEvent.venueId || undefined,
+                  venueName: selectedEvent.venue || undefined,
+                  date: selectedEvent.date,
+                  startTime: selectedEvent.startTime || undefined,
+                  endTime: selectedEvent.endTime || undefined,
+                  title: selectedEvent.title,
+                  description: selectedEvent.description || undefined,
+                  isPublic: selectedEvent.isPublic !== undefined ? selectedEvent.isPublic : true,
+                }
+              : selectedDate
+              ? { date: selectedDate }
+              : undefined
+          }
         />
       )}
 

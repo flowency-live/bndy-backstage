@@ -52,6 +52,7 @@ interface PublicGigWizardProps {
   artistId: string;
   currentUser: ArtistMembership;
   initialData?: PublicGigFormData;
+  editingEventId?: string; // If provided, update this event instead of creating new
 }
 
 export default function PublicGigWizard({
@@ -60,6 +61,7 @@ export default function PublicGigWizard({
   artistId,
   currentUser,
   initialData,
+  editingEventId,
 }: PublicGigWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
@@ -197,51 +199,54 @@ export default function PublicGigWizard({
         console.log('[PublicGigWizard] Venue saved with ID:', venueId);
       }
 
-      // Now create the event with the venueId
-      const response = await fetch(
-        `https://api.bndy.co.uk/api/artists/${artistId}/public-gigs`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            venueId: venueId,
-            type: 'gig',
-            date: formData.date,
-            startTime: formData.startTime,
-            endTime: formData.endTime || '00:00', // Default to midnight if not set
-            title: formData.title,
-            description: formData.description,
-            ticketUrl: formData.ticketUrl,
-            ticketPrice: formData.ticketPrice,
-            isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
-            source: 'backstage_wizard',
-          }),
-        }
-      );
+      // Determine if we're creating or updating
+      const isEditing = !!editingEventId;
+      const method = isEditing ? 'PUT' : 'POST';
+      const url = isEditing
+        ? `https://api.bndy.co.uk/api/artists/${artistId}/events/${editingEventId}`
+        : `https://api.bndy.co.uk/api/artists/${artistId}/public-gigs`;
+
+      const response = await fetch(url, {
+        method,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          venueId: venueId,
+          type: 'gig',
+          date: formData.date,
+          startTime: formData.startTime,
+          endTime: formData.endTime || '00:00', // Default to midnight if not set
+          title: formData.title,
+          description: formData.description,
+          ticketUrl: formData.ticketUrl,
+          ticketPrice: formData.ticketPrice,
+          isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
+          source: 'backstage_wizard',
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create public gig');
+        throw new Error(error.error || `Failed to ${isEditing ? 'update' : 'create'} public gig`);
       }
 
-      const createdEvent = await response.json();
+      const savedEvent = await response.json();
 
       // Clear localStorage draft
       localStorage.removeItem(STORAGE_KEY);
 
       toast({
         title: 'Success!',
-        description: 'Public gig created successfully',
+        description: `Public gig ${isEditing ? 'updated' : 'created'} successfully`,
       });
 
       onClose();
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create public gig',
+        description: error.message || `Failed to ${editingEventId ? 'update' : 'create'} public gig`,
         variant: 'destructive',
       });
     } finally {
@@ -275,7 +280,7 @@ export default function PublicGigWizard({
         <div className="bg-orange-500 text-white p-4 md:p-6 md:rounded-t-2xl flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl md:text-2xl font-serif">
-              {formData.venueName ? `${artistName} @ ${formData.venueName}` : 'Create Public Gig'}
+              {formData.venueName ? `${artistName} @ ${formData.venueName}` : editingEventId ? 'Edit Gig' : 'Create Public Gig'}
             </h2>
             <button
               onClick={handleClose}
@@ -402,12 +407,12 @@ export default function PublicGigWizard({
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Creating...
+                    {editingEventId ? 'Updating...' : 'Creating...'}
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-2" />
-                    Create Gig
+                    {editingEventId ? 'Update Gig' : 'Create Gig'}
                   </>
                 )}
               </Button>
