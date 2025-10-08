@@ -91,6 +91,8 @@ export interface Event {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  /** Display name for unavailability events (enriched by backend) */
+  displayName?: string;
 }
 
 export interface Song {

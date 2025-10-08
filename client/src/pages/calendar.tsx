@@ -218,17 +218,20 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   };
 
   // Helper function to get display name for an event
-  const getEventDisplayName = (event: Event & { bandName?: string }) => {
+  const getEventDisplayName = (event: Event & { bandName?: string; displayName?: string }) => {
     let eventName = "";
-    
+
     if (event.type === "unavailable") {
-      if (event.membershipId) {
+      // Check if backend enriched the event with displayName (new system)
+      if (event.displayName) {
+        eventName = event.displayName;
+      } else if (event.membershipId) {
         // Legacy band member unavailable event
         const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
         // For unavailable events, prefer the user's display name over the membership display name
         eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
       } else if (event.ownerUserId) {
-        // User personal unavailable event - use the user's profile display name
+        // Fallback for events not yet enriched
         eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
       } else {
         eventName = "Unavailable";
@@ -236,12 +239,12 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     } else {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
-    
+
     // Add artist prefix when not in artist context if artistName is available
     if (!effectiveArtistId && event.artistName) {
       return `${event.artistName} - ${eventName}`;
     }
-    
+
     return eventName;
   };
 
@@ -733,6 +736,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-${event.id}`}
                           >
+                            {event.type === 'unavailable' && <span className="mr-1">✗</span>}
                             {event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event)}
                           </div>
                         );
@@ -778,6 +782,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
+                            {event.type === 'unavailable' && <span className="mr-1">✗</span>}
                             {getEventDisplayName(event)}
                           </div>
                         );
@@ -829,6 +834,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-sans font-semibold text-card-foreground">
+                        {event.type === 'unavailable' && <span className="mr-1 text-red-500">✗</span>}
                         {getEventDisplayName(event)}
                       </h4>
                       <p className="text-muted-foreground">
