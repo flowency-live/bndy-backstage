@@ -236,6 +236,14 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       } else {
         eventName = "Unavailable";
       }
+    } else if (event.type === "gig") {
+      // Format: Time, Venue, Title
+      const parts = [];
+      if (event.startTime) parts.push(event.startTime);
+      if (event.venue) parts.push(event.venue);
+      if (event.title) parts.push(event.title);
+      eventName = parts.join(" ");
+      if (!eventName) eventName = "Gig";
     } else {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
@@ -555,11 +563,11 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-sans font-semibold text-card-foreground">
-                    Next Up - {EVENT_TYPE_CONFIG[nextEvent.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}{nextEvent.location ? ` - ${nextEvent.location}` : ''}
+                    Next Up - {EVENT_TYPE_CONFIG[nextEvent.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}{nextEvent.venue ? ` - ${nextEvent.venue}` : nextEvent.location ? ` - ${nextEvent.location}` : ''}
                   </h3>
                   <p className="text-card-foreground">
-                    {format(new Date(nextEvent.date + 'T00:00:00'), "EEEE, MMMM do")}
-                    {nextEvent.startTime && ` at ${nextEvent.startTime}`}
+                    {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}
+                    {nextEvent.startTime && ` ${nextEvent.startTime}`}
                   </p>
                 </div>
               </div>
@@ -695,10 +703,6 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 <i className="fas fa-chevron-left text-xl"></i>
               </button>
               <div className="flex items-center space-x-2">
-                <div className="text-xs text-slate-600 dark:text-primary-foreground opacity-75">
-                  <i className="fas fa-hand-point-left mr-1"></i>
-                  Swipe to navigate
-                </div>
                 <div className="flex flex-col items-center">
                   <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
                     {format(currentDate, "MMMM yyyy")}

@@ -808,7 +808,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 subtitle="All scheduled events"
                 icon={<Calendar />}
                 color="hsl(271, 91%, 65%)"
-                count={upcomingEvents.length}
                 actionLabel="View Calendar"
                 onClick={() => setLocation("/calendar")}
                 className="animate-stagger-1"
