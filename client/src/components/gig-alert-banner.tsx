@@ -41,15 +41,11 @@ export default function GigAlertBanner({ artistId, className = "" }: GigAlertBan
 
       const data = await response.json();
 
-      // Calendar returns nested structure - combine all events
-      const allEvents = [
-        ...(data.artistEvents || []),
-        ...(data.userEvents || []),
-        ...(data.otherArtistEvents || [])
-      ];
+      // Banner shows only THIS artist's gigs (not other artists)
+      const artistEvents = data.artistEvents || [];
 
       // Filter for gigs only (today or tomorrow)
-      return allEvents.filter((event: Event) =>
+      return artistEvents.filter((event: Event) =>
         event.type === "gig" &&
         (event.date === todayStr || event.date === tomorrowStr)
       );

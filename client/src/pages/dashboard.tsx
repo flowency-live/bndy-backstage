@@ -627,15 +627,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
       const data = await response.json();
 
-      // Calendar returns nested structure - combine all events
-      const allEvents = [
-        ...(data.artistEvents || []),
-        ...(data.userEvents || []),
-        ...(data.otherArtistEvents || [])
-      ];
+      // Dashboard shows only THIS artist's events (not user unavailability or other artists)
+      const artistEvents = data.artistEvents || [];
 
       // Filter and sort upcoming events (practices and gigs only)
-      return allEvents
+      return artistEvents
         .filter((event: Event) => {
           if (event.type === "unavailable") return false;
           const eventDate = new Date(event.date + 'T00:00:00');
