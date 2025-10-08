@@ -80,19 +80,31 @@ export interface Event {
   id: string;
   /** Artist ID - Optional: undefined for user-only events, defined for artist events */
   artistId?: string;
+  /** Owner User ID (cognito_id) - For user unavailability events */
+  ownerUserId?: string;
+  /** Membership ID - For artist-specific events */
+  membershipId?: string;
+  /** Event type - gig, rehearsal, other, unavailable */
+  type: string;
   title: string;
   description?: string | null;
-  eventType: string;
-  startDateTime: string;
-  endDateTime?: string | null;
+  notes?: string | null;
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  endDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  isAllDay?: boolean;
+  isPublic?: boolean;
   location?: string | null;
-  isRecurring: boolean;
-  recurringPattern?: string | null;
-  createdBy: string;
+  venue?: string | null;
+  venueId?: string | null;
   createdAt: string;
   updatedAt: string;
   /** Display name for unavailability events (enriched by backend) */
   displayName?: string;
+  /** Artist name for cross-artist events */
+  artistName?: string;
 }
 
 export interface Song {
