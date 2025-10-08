@@ -96,11 +96,23 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
               You have {conflicts.length} existing event(s) on this date:
             </p>
             <ul className="text-sm mt-2 space-y-1">
-              {conflicts.map((conflict, idx) => (
-                <li key={idx}>
-                  • {conflict.title || conflict.type} ({conflict.startTime || 'all day'})
-                </li>
-              ))}
+              {conflicts.map((conflict, idx) => {
+                // Format conflict description
+                let description = conflict.title || conflict.type;
+
+                // If unavailability, show user's display name
+                if (conflict.type === 'unavailability' && conflict.displayName) {
+                  description = `${conflict.displayName} unavailable`;
+                }
+
+                const timeInfo = conflict.startTime || 'all day';
+
+                return (
+                  <li key={idx}>
+                    • {description} ({timeInfo})
+                  </li>
+                );
+              })}
             </ul>
             <p className="text-sm mt-2 font-medium">
               You can still create this gig, but be aware of the conflict.

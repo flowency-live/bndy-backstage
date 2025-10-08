@@ -17,8 +17,11 @@ export default function DateTimeStep({ formData, onUpdate }: DateTimeStepProps) 
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [timePickerType, setTimePickerType] = useState<'start' | 'end'>('start');
 
-  // Default end time to midnight if not set
+  // Default start time to 9pm and end time to midnight if not set
   useEffect(() => {
+    if (!formData.startTime) {
+      onUpdate({ startTime: '21:00' });
+    }
     if (!formData.endTime) {
       onUpdate({ endTime: '00:00' });
     }
