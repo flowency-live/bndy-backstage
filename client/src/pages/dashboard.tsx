@@ -56,15 +56,15 @@ interface TileProps {
 
 function DashboardTile({ title, subtitle, icon, color, onClick, className = "", count, actionLabel }: TileProps) {
   return (
-    <Card 
-      className={`h-32 sm:h-36 lg:h-40 cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
+    <Card
+      className={`aspect-square sm:aspect-auto sm:h-36 lg:h-40 cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
       onClick={onClick}
       data-testid={`tile-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <CardContent className="p-0 h-full">
-        <div 
+        <div
           className="h-full rounded-lg relative overflow-hidden transition-all duration-300 group-hover:scale-105"
-          style={{ 
+          style={{
             background: `linear-gradient(135deg, ${color} 0%, color-mix(in hsl, ${color} 80%, transparent 20%) 50%, color-mix(in hsl, ${color} 90%, transparent 10%) 100%)`,
             backgroundSize: '200% 200%',
             backgroundPosition: '0% 0%'
@@ -81,25 +81,25 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
           />
           
           {/* Background Icon - Responsive sizing */}
-          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 text-white/20 text-4xl sm:text-5xl lg:text-6xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 text-white/20 text-3xl sm:text-5xl lg:text-6xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
-          
+
           {/* Content - Mobile responsive padding - High contrast white text */}
-          <div className="relative p-3 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
+          <div className="relative p-2 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
             <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
-              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-1 text-white drop-shadow-lg">{title}</h3>
+              <h3 className="font-serif text-sm sm:text-lg lg:text-xl font-semibold mb-0.5 sm:mb-1 text-white drop-shadow-lg leading-tight">{title}</h3>
               {subtitle && (
-                <p className="text-white/90 text-xs sm:text-sm drop-shadow-md">{subtitle}</p>
+                <p className="text-white/90 text-[10px] sm:text-sm drop-shadow-md line-clamp-1">{subtitle}</p>
               )}
             </div>
-            
+
             <div className="flex items-center justify-between">
               {count !== undefined && (
-                <div className="text-lg sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft text-white drop-shadow-lg">{count}</div>
+                <div className="text-base sm:text-xl lg:text-2xl font-serif font-bold animate-bounce-soft text-white drop-shadow-lg">{count}</div>
               )}
               {actionLabel && (
-                <div className="text-xs sm:text-sm bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300 text-white drop-shadow-md">
+                <div className="text-[10px] sm:text-sm bg-white/20 px-1.5 py-0.5 sm:px-3 sm:py-1 rounded-full backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-105 transition-all duration-300 text-white drop-shadow-md whitespace-nowrap">
                   {actionLabel}
                 </div>
               )}
@@ -811,7 +811,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           </div>
 
           {calendarExpanded && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
               <DashboardTile
                 title="Calendar"
                 subtitle="All scheduled events"
@@ -822,7 +822,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 onClick={() => setLocation("/calendar")}
                 className="animate-stagger-1"
               />
-              
+
               <DashboardTile
                 title="Gigs"
                 subtitle="Performance schedule"
@@ -878,7 +878,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           </div>
 
           {songExpanded && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
               <DashboardTile
                 title="Playbook"
                 subtitle="Complete song repertoire"
@@ -889,7 +889,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 onClick={() => setLocation("/songs")}
                 className="animate-stagger-1"
               />
-              
+
               <DashboardTile
                 title="Setlists"
                 subtitle="Ready-to-perform sets"
@@ -900,7 +900,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 onClick={() => setLocation("/songs")}
                 className="animate-stagger-2"
               />
-              
+
               <DashboardTile
                 title="Song Pipeline"
                 subtitle="Active practice & new suggestions"
@@ -916,7 +916,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         </div>
 
         {/* Profile & Members Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Profile Section */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
