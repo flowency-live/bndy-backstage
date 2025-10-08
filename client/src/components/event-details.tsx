@@ -15,6 +15,7 @@ interface EventDetailsProps {
   onDelete: (event: Event) => void
   artistMembers: Array<ArtistMembership & { user: { id: string, displayName: string | null } }>
   currentMembershipId: string | null
+  currentUserId: string | null
   canEdit: (event: Event) => boolean
 }
 
@@ -26,6 +27,7 @@ export default function EventDetails({
   onDelete,
   artistMembers,
   currentMembershipId,
+  currentUserId,
   canEdit
 }: EventDetailsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -35,7 +37,10 @@ export default function EventDetails({
   const eventConfig = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice
   const eventMember = event.membershipId ? artistMembers.find(m => m.membership_id === event.membershipId || m.user_id === event.membershipId) : null
   const canEditEvent = canEdit(event)
-  const isOwner = event.membershipId === currentMembershipId
+  // For unavailability events, check ownerUserId; for others, check membershipId
+  const isOwner = event.type === 'unavailable'
+    ? event.ownerUserId === currentUserId
+    : event.membershipId === currentMembershipId
   
   const formatEventDate = (date: string, endDate?: string, startTime?: string, endTime?: string) => {
     // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
@@ -80,10 +85,12 @@ export default function EventDetails({
             <span className="text-2xl">{eventConfig.icon}</span>
             <div>
               <div className="font-serif text-xl">
-                {event.title || eventConfig.label}
+                {event.type === 'unavailable' && event.displayName
+                  ? `${event.displayName} - Unavailable`
+                  : event.title || eventConfig.label}
               </div>
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="text-xs mt-1"
                 style={{ backgroundColor: eventConfig.color + '20', color: eventConfig.color }}
               >
@@ -111,19 +118,25 @@ export default function EventDetails({
           )}
 
           {/* Member (for unavailability) */}
-          {event.type === 'unavailable' && eventMember && (
+          {event.type === 'unavailable' && (eventMember || event.displayName) && (
             <div>
               <h4 className="text-sm font-semibold text-muted-foreground mb-1">Member</h4>
               <div className="flex items-center gap-2">
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
-                  style={{ backgroundColor: eventMember.color }}
-                >
-                  <i className={`fas ${eventMember.icon}`}></i>
-                </div>
-                <span className="text-sm">
-                  {eventMember.user?.displayName?.trim() || eventMember.displayName}
-                </span>
+                {eventMember ? (
+                  <>
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
+                      style={{ backgroundColor: eventMember.color }}
+                    >
+                      <i className={`fas ${eventMember.icon}`}></i>
+                    </div>
+                    <span className="text-sm">
+                      {eventMember.user?.displayName?.trim() || eventMember.displayName}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm">{event.displayName}</span>
+                )}
               </div>
             </div>
           )}
@@ -185,7 +198,7 @@ export default function EventDetails({
             {!canEditEvent && event.type === 'unavailable' && !isOwner && (
               <div className="text-xs text-muted-foreground italic flex-1">
                 <i className="fas fa-lock mr-1"></i>
-                Only {eventMember?.user?.displayName?.trim() || eventMember?.displayName || 'the member'} can edit this unavailability
+                Only {event.displayName || eventMember?.user?.displayName?.trim() || eventMember?.displayName || 'the member'} can edit this unavailability
               </div>
             )}
           </div>

@@ -254,12 +254,12 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     if (event.type === "unavailable") {
       // User personal unavailable event - check if owned by current user
       if (event.ownerUserId) {
-        return event.ownerUserId === userProfile?.user?.id;
+        return event.ownerUserId === session?.userId;
       }
       // Legacy band member unavailable event - check membership
       return event.membershipId === effectiveMembership?.id;
     }
-    
+
     // For other events, all band members can edit (could be extended with role-based permissions later)
     return true;
   };
@@ -972,6 +972,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
         onDelete={handleDeleteFromDetails}
         artistMembers={artistMembers}
         currentMembershipId={effectiveMembership?.membership_id || null}
+        currentUserId={session?.userId || null}
         canEdit={canEdit}
       />
 
