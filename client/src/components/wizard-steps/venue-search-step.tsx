@@ -246,11 +246,13 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
         />
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - Fixed height to prevent jumping */}
       {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
-          <span className="ml-2 text-muted-foreground">Searching venues...</span>
+        <div className="h-[280px] flex items-center justify-center">
+          <div className="flex items-center">
+            <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+            <span className="ml-2 text-muted-foreground">Searching venues...</span>
+          </div>
         </div>
       )}
 
@@ -288,13 +290,13 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
         </div>
       )}
 
-      {/* Search Results */}
+      {/* Search Results - Fixed height container to prevent modal jumping */}
       {!loading && searchTerm.length >= 2 && totalResults > 0 && (
-        <div className="border rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+        <div className="border rounded-xl overflow-hidden h-[280px] overflow-y-auto">
           {/* DB Results Section */}
           {dbResults.length > 0 && (
             <div>
-              <div className="bg-primary/10 px-4 py-2 flex items-center gap-2 sticky top-0">
+              <div className="bg-primary/10 px-4 py-2 flex items-center gap-2 sticky top-0 z-10">
                 <Building2 className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold text-primary">bndy Venues</span>
               </div>
@@ -314,7 +316,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
           {/* Google Places Results Section */}
           {googleResults.length > 0 && (
             <div>
-              <div className="bg-secondary/10 px-4 py-2 flex items-center gap-2 sticky top-0">
+              <div className="bg-secondary/10 px-4 py-2 flex items-center gap-2 sticky top-0 z-10">
                 <Globe className="w-4 h-4 text-secondary" />
                 <span className="text-sm font-semibold text-secondary">From Google Places</span>
               </div>
@@ -333,21 +335,25 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
         </div>
       )}
 
-      {/* No Results */}
+      {/* No Results - Fixed height to prevent jumping */}
       {!loading && searchTerm.length >= 2 && totalResults === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No venues found matching "{searchTerm}"</p>
-          <p className="text-sm mt-2">Try a different search term or check spelling</p>
+        <div className="h-[280px] flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>No venues found matching "{searchTerm}"</p>
+            <p className="text-sm mt-2">Try a different search term or check spelling</p>
+          </div>
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State - Fixed height to prevent jumping */}
       {!loading && !searchTerm && !selectedVenue && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>Start typing to search for venues</p>
-          <p className="text-sm mt-2">Searches bndy database and Google Places</p>
+        <div className="h-[280px] flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Start typing to search for venues</p>
+            <p className="text-sm mt-2">Searches bndy database and Google Places</p>
+          </div>
         </div>
       )}
     </div>
