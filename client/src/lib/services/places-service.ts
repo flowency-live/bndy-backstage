@@ -20,7 +20,7 @@ export function initGoogleMapsCheck() {
   return googleMapsAvailable;
 }
 
-// Search venues using Google Places Text Search
+// Search venues using Google Places API (New) - matches location autocomplete approach
 export async function searchGooglePlaces(
   query: string,
   artistLocation?: string | null
@@ -46,81 +46,55 @@ export async function searchGooglePlaces(
   console.log('[Google Places] Google Maps API is available, proceeding with search');
 
   try {
-    // Get location bias
-    let locationBias: google.maps.LatLng | undefined;
+    // Try the newer Place API (matches location autocomplete approach)
+    if (google.maps.places.Place && (google.maps.places.Place as any).searchByText) {
+      console.log('[Google Places] Using new Place.searchByText API');
 
-    if (artistLocation) {
-      console.log('[Google Places] Geocoding artist location:', artistLocation);
-      // Try to geocode the artist location
-      const geocoder = new google.maps.Geocoder();
-      try {
-        const geocodeResult = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
-          geocoder.geocode({ address: artistLocation, componentRestrictions: { country: 'GB' } }, (results, status) => {
-            console.log('[Google Places] Geocode status:', status, 'results count:', results?.length || 0);
-            if (status === 'OK' && results) {
-              resolve(results);
-            } else {
-              reject(status);
-            }
-          });
-        });
+      // Build request - use UK region filtering (no geocoding needed)
+      const request: any = {
+        textQuery: query,
+        fields: ['displayName', 'formattedAddress', 'location', 'id'],
+        includedType: 'establishment',
+        maxResultCount: 20,
+        regionCode: 'gb', // UK region for relevance ranking
+      };
 
-        if (geocodeResult.length > 0) {
-          locationBias = geocodeResult[0].geometry.location;
-          console.log('[Google Places] Geocoded to:', locationBias.lat(), locationBias.lng());
-        }
-      } catch (error) {
-        console.warn('[Google Places] Failed to geocode artist location:', artistLocation, error);
+      // If artist location provided, append it to the query for better results
+      if (artistLocation) {
+        console.log('[Google Places] Enhancing query with location:', artistLocation);
+        request.textQuery = `${query} near ${artistLocation}`;
       }
-    } else {
-      console.log('[Google Places] No artist location provided');
-    }
 
-    // Fallback to center of UK if no location bias
-    if (!locationBias) {
-      locationBias = new google.maps.LatLng(54.0, -2.5); // Center of UK
-      console.log('[Google Places] Using UK center as fallback:', locationBias.lat(), locationBias.lng());
-    }
+      console.log('[Google Places] Calling Place.searchByText with request:', request);
 
-    // Create a dummy div for the Places service
-    console.log('[Google Places] Creating PlacesService...');
-    const dummyDiv = document.createElement('div');
-    const service = new google.maps.places.PlacesService(dummyDiv);
-    console.log('[Google Places] PlacesService created successfully');
+      const { places } = await (google.maps.places.Place as any).searchByText(request);
 
-    console.log('[Google Places] Calling textSearch with params:', {
-      query,
-      type: 'establishment',
-      location: { lat: locationBias.lat(), lng: locationBias.lng() },
-      radius: 80000
-    });
+      if (!places || places.length === 0) {
+        console.log('[Google Places] No results from searchByText');
+        return [];
+      }
 
-    const results = await new Promise<google.maps.places.PlaceResult[]>((resolve) => {
-      service.textSearch(
-        {
-          query: query,
-          type: 'establishment',
-          location: locationBias,
-          radius: 80000, // 50 miles in meters (80km)
+      console.log('[Google Places] searchByText returned', places.length, 'results');
+
+      // Convert new API format to PlaceResult format for compatibility
+      const results: google.maps.places.PlaceResult[] = places.map((place: any) => ({
+        name: place.displayName,
+        formatted_address: place.formattedAddress,
+        place_id: place.id,
+        geometry: {
+          location: place.location,
         },
-        (results, status) => {
-          console.log('[Google Places] textSearch callback - Status:', status, 'Results:', results?.length || 0);
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            console.log('[Google Places] Search successful, returning', results.length, 'results');
-            resolve(results);
-          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            console.log('[Google Places] Zero results returned');
-            resolve([]);
-          } else {
-            console.warn(`[Google Places] Search error - Status: ${status}`);
-            resolve([]); // Return empty array instead of rejecting
-          }
-        }
-      );
-    });
+      }));
 
-    console.log('[Google Places] Returning', results.length, 'results');
-    return results;
+      console.log('[Google Places] Returning', results.length, 'converted results');
+      return results;
+    } else {
+      console.warn('[Google Places] New Place API not available, falling back to basic region search');
+
+      // Fallback: If new API not available, return empty (requires Maps JavaScript API)
+      // This prevents the ApiNotActivatedMapError
+      return [];
+    }
   } catch (error) {
     console.error('[Google Places] Exception during search:', error);
     return [];
