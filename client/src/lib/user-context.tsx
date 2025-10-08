@@ -51,7 +51,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to fetch user profile");
       }
 
-      return response.json();
+      const data = await response.json();
+      return data.user; // Extract user from { user: {...} } response
     },
     enabled: isAuthenticated,
   });
