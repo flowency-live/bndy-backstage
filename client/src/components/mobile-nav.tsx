@@ -59,27 +59,37 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-full w-16 p-0 overflow-hidden rounded-none"
+                className="h-full w-20 p-0 flex-shrink-0 rounded-none relative"
                 data-testid="mobile-nav-trigger"
               >
-                {currentMembership ? (
-                  currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url ? (
-                    <img
-                      src={currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url || ''}
-                      alt={`${currentMembership.artist?.name || currentMembership.name} avatar`}
-                      className="w-full h-full rounded-full object-cover"
-                    />
+                <div className="relative w-12 h-12 flex-shrink-0">
+                  {currentMembership ? (
+                    currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url ? (
+                      <img
+                        src={currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url || ''}
+                        alt={`${currentMembership.artist?.name || currentMembership.name} avatar`}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: currentMembership.color }}
+                      >
+                        <i className={`fas ${currentMembership.icon} text-white text-xl`}></i>
+                      </div>
+                    )
                   ) : (
-                    <div
-                      className="w-full h-full rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: currentMembership.color }}
-                    >
-                      <i className={`fas ${currentMembership.icon} text-white text-xl`}></i>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Menu className="h-6 w-6" />
                     </div>
-                  )
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
+                  )}
+                  {/* Dropdown Indicator */}
+                  {currentMembership && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
+                      <ChevronDown className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
               </Button>
             </SheetTrigger>
 
@@ -318,42 +328,9 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             )}
           </div>
 
-          {/* Right: Godmode, Issue Report, Theme Toggle & Action Badge */}
+          {/* Right: Theme Toggle only on mobile */}
           <div className="flex items-center gap-2 pr-4">
-            {/* Godmode Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.open('/godmode', '_blank')}
-              className="h-8 w-8 p-0 hover:bg-accent"
-              data-testid="button-godmode"
-              title="Admin Godmode"
-            >
-              <Shield className="h-4 w-4" />
-            </Button>
-
-            {/* Issue Report Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsIssueFormOpen(true)}
-              className="h-8 w-8 p-0 hover:bg-accent"
-              data-testid="button-report-issue"
-              title="Report Issue"
-            >
-              <Bug className="h-4 w-4" />
-            </Button>
-
             <ThemeToggle size="sm" />
-            {currentMembership && (
-              <Badge
-                variant="secondary"
-                className="h-6 px-2 text-xs"
-                style={{ backgroundColor: `${currentMembership.color}20`, color: currentMembership.color }}
-              >
-                {currentMembership.role[0].toUpperCase()}
-              </Badge>
-            )}
           </div>
         </div>
       </header>
