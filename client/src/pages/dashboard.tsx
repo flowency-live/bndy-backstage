@@ -600,6 +600,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const [calendarExpanded, setCalendarExpanded] = React.useState(true);
   const [songExpanded, setSongExpanded] = React.useState(true);
   const [showingCreateForm, setShowingCreateForm] = React.useState(false);
+  const [fabMenuOpen, setFabMenuOpen] = React.useState(false);
 
   // Get upcoming events for this band - moved to top to avoid hooks violation
   const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery<Event[]>({
@@ -782,12 +783,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
-              <p className="text-muted-foreground text-sm sm:text-base">Schedule and manage your events</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setCalendarExpanded(!calendarExpanded)}
                 className="text-primary hover:text-primary/80"
                 data-testid="button-toggle-calendar"
@@ -797,15 +797,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-              </Button>
-              <Button 
-                onClick={() => setLocation("/calendar")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-                size="sm"
-                data-testid="button-add-event"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Event
               </Button>
             </div>
           </div>
@@ -849,12 +840,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Lists</h2>
-              <p className="text-muted-foreground text-sm sm:text-base">Playbook, setlists & pipeline management</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSongExpanded(!songExpanded)}
                 className="text-primary hover:text-primary/80"
                 data-testid="button-toggle-songs"
@@ -864,15 +854,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-              </Button>
-              <Button 
-                onClick={() => setLocation("/songs")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-                size="sm"
-                data-testid="button-add-song"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Song
               </Button>
             </div>
           </div>
@@ -946,15 +927,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                   {membership?.artist?.name || membership?.name} Members
                 </h2>
               </div>
-              <Button
-                onClick={() => setLocation("/admin")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground self-start sm:self-auto"
-                size="sm"
-                data-testid="button-invite-member"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Invite
-              </Button>
             </div>
 
             <DashboardTile
@@ -970,15 +942,67 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           </div>
         </div>
 
-        {/* Mobile Floating Action Button */}
+        {/* Mobile Floating Action Button with Menu */}
         <div className="fixed bottom-6 right-4 sm:right-6 md:hidden">
-          <Button 
+          {/* Menu Options */}
+          {fabMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/20 z-40"
+                onClick={() => setFabMenuOpen(false)}
+              />
+
+              {/* Menu Items */}
+              <div className="absolute bottom-16 right-0 flex flex-col gap-2 z-50">
+                <Button
+                  size="sm"
+                  className="bg-card hover:bg-accent text-foreground shadow-lg rounded-full px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+                  onClick={() => {
+                    setLocation("/calendar");
+                    setFabMenuOpen(false);
+                  }}
+                  data-testid="fab-menu-add-event"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Add Event
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-card hover:bg-accent text-foreground shadow-lg rounded-full px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+                  onClick={() => {
+                    setLocation("/songs");
+                    setFabMenuOpen(false);
+                  }}
+                  data-testid="fab-menu-add-song"
+                >
+                  <Music className="h-4 w-4" />
+                  Add Song
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-card hover:bg-accent text-foreground shadow-lg rounded-full px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+                  onClick={() => {
+                    setLocation("/admin");
+                    setFabMenuOpen(false);
+                  }}
+                  data-testid="fab-menu-invite-user"
+                >
+                  <Users className="h-4 w-4" />
+                  Invite User
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Main FAB Button */}
+          <Button
             size="lg"
-            className="rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg animate-float hover-lift hover-glow-orange transition-all duration-300 group"
-            onClick={() => setLocation("/songs")}
+            className="rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg animate-float hover-lift hover-glow-orange transition-all duration-300 group z-50 relative"
+            onClick={() => setFabMenuOpen(!fabMenuOpen)}
             data-testid="fab-add"
           >
-            <Plus className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:rotate-90" />
+            <Plus className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 ${fabMenuOpen ? 'rotate-45' : 'group-hover:rotate-90'}`} />
           </Button>
         </div>
       </div>
