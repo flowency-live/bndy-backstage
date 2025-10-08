@@ -89,13 +89,15 @@ export default function EventDetails({
                   ? `${event.displayName} - Unavailable`
                   : event.title || eventConfig.label}
               </div>
-              <Badge
-                variant="secondary"
-                className="text-xs mt-1"
-                style={{ backgroundColor: eventConfig.color + '20', color: eventConfig.color }}
-              >
-                {eventConfig.label}
-              </Badge>
+              {event.type !== 'unavailable' && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs mt-1"
+                  style={{ backgroundColor: eventConfig.color + '20', color: eventConfig.color }}
+                >
+                  {eventConfig.label}
+                </Badge>
+              )}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -117,29 +119,6 @@ export default function EventDetails({
             </div>
           )}
 
-          {/* Member (for unavailability) */}
-          {event.type === 'unavailable' && (eventMember || event.displayName) && (
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Member</h4>
-              <div className="flex items-center gap-2">
-                {eventMember ? (
-                  <>
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
-                      style={{ backgroundColor: eventMember.color }}
-                    >
-                      <i className={`fas ${eventMember.icon}`}></i>
-                    </div>
-                    <span className="text-sm">
-                      {eventMember.user?.displayName?.trim() || eventMember.displayName}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-sm">{event.displayName}</span>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Notes */}
           {event.notes && (
