@@ -62,7 +62,6 @@ export async function searchGooglePlaces(
       const request: any = {
         textQuery: searchQuery,
         fields: ['displayName', 'formattedAddress', 'location', 'id'],
-        includedType: 'establishment',
         maxResultCount: 20,
       };
 
