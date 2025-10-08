@@ -50,20 +50,17 @@ export async function searchGooglePlaces(
     if (google.maps.places.Place && (google.maps.places.Place as any).searchByText) {
       console.log('[Google Places] Using new Place.searchByText API');
 
-      // Build request - use text query with location for geographic bias
-      let searchQuery = query;
-
-      // If artist location provided, append it to the query for better results
-      if (artistLocation) {
-        console.log('[Google Places] Enhancing query with location:', artistLocation);
-        searchQuery = `${query} near ${artistLocation}`;
-      }
-
+      // Build request - keep query simple to avoid fuzzy match confusion
       const request: any = {
-        textQuery: searchQuery,
+        textQuery: query, // Use query alone - adding location confuses Google's fuzzy matching
         fields: ['displayName', 'formattedAddress', 'location', 'id'],
-        maxResultCount: 20,
+        maxResultCount: 50, // Increased to get more diverse results (Google filters aggressively)
       };
+
+      // Note: Removed location bias to fix fuzzy matching issues
+      // "malban near Stockport" returns bizarre unrelated results
+      // "malban" alone returns better matches
+      // TODO: Add proper locationBias with geocoded lat/lng if needed
 
       console.log('[Google Places] Calling Place.searchByText with request:', request);
 
