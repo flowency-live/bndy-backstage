@@ -781,17 +781,19 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
                             case 'gig':
                             case 'public_gig':
-                              return 'border-purple-500 bg-purple-50 text-purple-800 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200';
+                              return 'text-white dark:text-white'; // Only text color for gigs, border/bg set inline
                             case 'festival':
                               return 'border-green-500 bg-green-50 text-green-800 dark:border-green-400 dark:bg-green-500/20 dark:text-green-200';
                             default:
                               return 'border-gray-500 bg-gray-50 text-gray-800 dark:border-gray-400 dark:bg-gray-500/20 dark:text-gray-200';
                           }
                         };
-                        
+
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
                         const eventColors = getEventColors(event.type);
-                        
+                        const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                        const isGig = event.type === 'gig' || event.type === 'public_gig';
+
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
@@ -803,6 +805,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: isMultiDayEvent(event) ? `${20 + (eventIndex * 16)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
+                              ...(isGig && {
+                                borderLeftColor: artistDisplayColour,
+                                backgroundColor: artistDisplayColour,
+                              }),
                             }}
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-${event.id}`}
@@ -823,22 +829,24 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
                             case 'gig':
                             case 'public_gig':
-                              return 'border-purple-500 bg-purple-50 text-purple-800 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200';
+                              return 'text-white dark:text-white'; // Only text color for gigs, border/bg set inline
                             case 'festival':
                               return 'border-green-500 bg-green-50 text-green-800 dark:border-green-400 dark:bg-green-500/20 dark:text-green-200';
                             default:
                               return 'border-gray-500 bg-gray-50 text-gray-800 dark:border-gray-400 dark:bg-gray-500/20 dark:text-gray-200';
                           }
                         };
-                        
+
                         const remainingDays = getRemainingDaysInWeek(index);
                         const eventEndDate = new Date(event.endDate + 'T00:00:00');
                         const currentWeekEnd = new Date(day.getTime() + (remainingDays - 1) * 24 * 60 * 60 * 1000);
-                        const spanDays = eventEndDate <= currentWeekEnd ? 
-                          Math.ceil((eventEndDate.getTime() - day.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 
+                        const spanDays = eventEndDate <= currentWeekEnd ?
+                          Math.ceil((eventEndDate.getTime() - day.getTime()) / (1000 * 60 * 60 * 24)) + 1 :
                           remainingDays;
                         const eventColors = getEventColors(event.type);
-                        
+                        const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                        const isGig = event.type === 'gig' || event.type === 'public_gig';
+
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
@@ -849,6 +857,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: `${20 + (eventIndex * 16)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
+                              ...(isGig && {
+                                borderLeftColor: artistDisplayColour,
+                                backgroundColor: artistDisplayColour,
+                              }),
                             }}
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-extending-${event.id}`}
@@ -891,7 +903,12 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 <p className="text-muted-foreground">Add some practices or gigs to get started</p>
               </div>
             ) : (
-              getAgendaEvents().map((event) => (
+              getAgendaEvents().map((event) => {
+                const isGig = event.type === 'gig' || event.type === 'public_gig';
+                const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                const backgroundColor = isGig ? artistDisplayColour : (EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color);
+
+                return (
                 <div
                   key={event.id}
                   className="bg-card rounded-lg p-4 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
@@ -900,7 +917,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground"
-                         style={{ backgroundColor: EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color }}>
+                         style={{ backgroundColor }}>
                       <span className="text-xl">{EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
                     </div>
                     <div className="flex-1">
@@ -920,7 +937,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

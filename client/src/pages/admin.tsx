@@ -62,6 +62,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
     locationLat: artistData?.locationLat || membership.artist?.locationLat || undefined,
     locationLng: artistData?.locationLng || membership.artist?.locationLng || undefined,
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
+    displayColour: artistData?.displayColour || membership.artist?.displayColour || '#f97316', // Orange 500
   });
 
   // Update form when artist data loads
@@ -74,6 +75,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLat: artistData.locationLat || undefined,
         locationLng: artistData.locationLng || undefined,
         avatar: artistData.profileImageUrl || null,
+        displayColour: artistData.displayColour || '#f97316', // Orange 500
       });
     }
   }, [artistData]);
@@ -204,6 +206,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLat: settings.locationLat,
         locationLng: settings.locationLng,
         profileImageUrl: settings.avatar,
+        displayColour: settings.displayColour,
       });
 
       return response.json();
@@ -503,6 +506,49 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       className="focus:border-brand-primary focus:ring-brand-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based. Used for venue search and duplicate checking.</p>
+                  </div>
+
+                  {/* Display Colour */}
+                  <div>
+                    <Label htmlFor="displayColour" className="text-card-foreground font-semibold mb-2 block">Display Colour</Label>
+                    <p className="text-sm text-muted-foreground mb-3">Colour used for your gig events on the calendar</p>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="displayColour"
+                        type="color"
+                        value={artistSettings.displayColour}
+                        onChange={(e) => setArtistSettings(prev => ({ ...prev, displayColour: e.target.value }))}
+                        className="h-10 w-20 rounded border border-input cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={artistSettings.displayColour}
+                        onChange={(e) => setArtistSettings(prev => ({ ...prev, displayColour: e.target.value }))}
+                        placeholder="#f97316"
+                        className="flex-1 font-mono text-sm"
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      {[
+                        { name: 'Orange', color: '#f97316' },
+                        { name: 'Red', color: '#ef4444' },
+                        { name: 'Pink', color: '#ec4899' },
+                        { name: 'Purple', color: '#a855f7' },
+                        { name: 'Blue', color: '#3b82f6' },
+                        { name: 'Green', color: '#10b981' },
+                        { name: 'Yellow', color: '#eab308' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.color}
+                          type="button"
+                          onClick={() => setArtistSettings(prev => ({ ...prev, displayColour: preset.color }))}
+                          className="w-8 h-8 rounded border-2 border-input hover:border-primary transition-colors"
+                          style={{ backgroundColor: preset.color }}
+                          title={preset.name}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}

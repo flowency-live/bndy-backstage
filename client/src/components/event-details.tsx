@@ -80,8 +80,8 @@ export default function EventDetails({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md" data-testid="event-details-modal">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className={event.type === 'unavailable' ? 'bg-red-50 dark:bg-red-950/30 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg' : ''}>
+          <DialogTitle className={`flex items-center gap-2 ${event.type === 'unavailable' ? 'text-red-900 dark:text-red-100' : ''}`}>
             <span className="text-2xl">{eventConfig.icon}</span>
             <div>
               <div className="font-serif text-xl">

@@ -15,6 +15,7 @@ import MyArtists from "@/pages/my-artists";
 import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
+import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
 import Issues from "@/pages/issues";
 import Godmode from "@/pages/godmode";
@@ -67,6 +68,18 @@ function Router() {
             return (
               <AppLayout artistId={contextId} membership={membership}>
                 <Calendar artistId={contextId} membership={membership} />
+              </AppLayout>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/gigs">
+        <MemberGate>
+          {({ contextId, membership }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <AppLayout artistId={contextId} membership={membership}>
+                <Gigs artistId={contextId} />
               </AppLayout>
             );
           }}

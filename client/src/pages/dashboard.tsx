@@ -804,7 +804,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 color="hsl(24, 95%, 53%)"
                 count={upcomingGigs}
                 actionLabel="View Gigs"
-                onClick={() => setLocation("/calendar")}
+                onClick={() => setLocation("/gigs")}
                 className="animate-stagger-2"
               />
             </div>
