@@ -34,16 +34,6 @@ export default function EventDetails({
 
   if (!event) return null
 
-  // Debug logging
-  console.log('EVENT_DETAILS: Event data', {
-    type: event.type,
-    displayName: event.displayName,
-    ownerUserId: event.ownerUserId,
-    membershipId: event.membershipId,
-    currentUserId,
-    currentMembershipId
-  });
-
   const eventConfig = EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] || EVENT_TYPE_CONFIG.practice
   const eventMember = event.membershipId ? artistMembers.find(m => m.membership_id === event.membershipId || m.user_id === event.membershipId) : null
   const canEditEvent = canEdit(event)
