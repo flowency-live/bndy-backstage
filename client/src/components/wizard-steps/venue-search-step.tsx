@@ -160,73 +160,21 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
     setDbResults([]);
     setGoogleResults([]);
 
-    // If venue is from Google Places, create/find in DB via find-or-create endpoint
-    if (venue.source === 'google_places') {
-      try {
-        const response = await fetch('https://api.bndy.co.uk/api/venues/find-or-create', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: venue.name,
-            address: venue.address,
-            latitude: venue.latitude,
-            longitude: venue.longitude,
-            googlePlaceId: venue.googlePlaceId,
-            source: 'backstage_wizard',
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create/find venue');
-        }
-
-        const resolvedVenue = await response.json();
-
-        // Show match confidence if not 100%
-        if (resolvedVenue.matchConfidence && resolvedVenue.matchConfidence < 100) {
-          toast({
-            title: `Matched existing venue (${resolvedVenue.matchConfidence}% confidence)`,
-            description: `Using "${resolvedVenue.name}" from database`,
-          });
-        }
-
-        // Update form with resolved venue ID
-        onUpdate({
-          venueId: resolvedVenue.id,
-          venueName: resolvedVenue.name,
-          venueAddress: resolvedVenue.address,
-          venueLocation: {
-            lat: resolvedVenue.latitude,
-            lng: resolvedVenue.longitude,
-          },
-          googlePlaceId: resolvedVenue.googlePlaceId,
-          // Auto-generate title: [artistname] @ [venuename]
-          title: `${artistName} @ ${resolvedVenue.name}`,
-        });
-      } catch (error) {
-        console.error('Venue resolution error:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to save venue. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } else {
-      // DB venue - use directly
-      onUpdate({
-        venueId: venue.id,
-        venueName: venue.name,
-        venueAddress: venue.address,
-        venueLocation: {
-          lat: venue.latitude,
-          lng: venue.longitude,
-        },
-        googlePlaceId: venue.googlePlaceId,
-        // Auto-generate title: [artistname] @ [venuename]
-        title: `${artistName} @ ${venue.name}`,
-      });
-    }
+    // Store venue data in formData
+    // For DB venues, we have venueId immediately
+    // For Google Places venues, venueId will be undefined and created on final submit
+    onUpdate({
+      venueId: venue.source === 'db' ? venue.id : undefined,
+      venueName: venue.name,
+      venueAddress: venue.address,
+      venueLocation: {
+        lat: venue.latitude,
+        lng: venue.longitude,
+      },
+      googlePlaceId: venue.googlePlaceId,
+      // Auto-generate title: [artistname] @ [venuename]
+      title: `${artistName} @ ${venue.name}`,
+    });
   };
 
   const totalResults = dbResults.length + googleResults.length;

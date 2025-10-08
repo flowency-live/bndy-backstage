@@ -142,7 +142,7 @@ export default function PublicGigWizard({
   const canProceedFromStep = useCallback((step: number): boolean => {
     switch (step) {
       case 1: // Venue step
-        return !!(formData.venueId && formData.venueName);
+        return !!(formData.venueName && formData.venueLocation); // venueId may not exist yet for Google Places
       case 2: // Date & Time step
         return !!(formData.date && formData.startTime); // endTime is optional
       case 3: // Details step
@@ -159,7 +159,45 @@ export default function PublicGigWizard({
     setIsSubmitting(true);
 
     try {
-      // Call the public-gigs endpoint
+      let venueId = formData.venueId;
+
+      // If venue is from Google Places (no venueId yet), save it first via find-or-create
+      if (!venueId && formData.venueName && formData.venueLocation) {
+        console.log('[PublicGigWizard] Saving Google Places venue before creating event');
+
+        const venueResponse = await fetch('https://api.bndy.co.uk/api/venues/find-or-create', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.venueName,
+            address: formData.venueAddress,
+            latitude: formData.venueLocation.lat,
+            longitude: formData.venueLocation.lng,
+            googlePlaceId: formData.googlePlaceId,
+            source: 'backstage_wizard',
+          }),
+        });
+
+        if (!venueResponse.ok) {
+          throw new Error('Failed to save venue');
+        }
+
+        const savedVenue = await venueResponse.json();
+        venueId = savedVenue.id;
+
+        // Show match confidence if venue was deduplicated
+        if (savedVenue.matchConfidence && savedVenue.matchConfidence < 100) {
+          toast({
+            title: `Matched existing venue (${savedVenue.matchConfidence}% confidence)`,
+            description: `Using "${savedVenue.name}" from database`,
+          });
+        }
+
+        console.log('[PublicGigWizard] Venue saved with ID:', venueId);
+      }
+
+      // Now create the event with the venueId
       const response = await fetch(
         `https://api.bndy.co.uk/api/artists/${artistId}/public-gigs`,
         {
@@ -169,7 +207,7 @@ export default function PublicGigWizard({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            venueId: formData.venueId,
+            venueId: venueId,
             type: 'gig',
             date: formData.date,
             startTime: formData.startTime,
