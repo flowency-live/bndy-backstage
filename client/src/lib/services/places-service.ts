@@ -50,20 +50,21 @@ export async function searchGooglePlaces(
     if (google.maps.places.Place && (google.maps.places.Place as any).searchByText) {
       console.log('[Google Places] Using new Place.searchByText API');
 
-      // Build request - use UK region filtering (no geocoding needed)
-      const request: any = {
-        textQuery: query,
-        fields: ['displayName', 'formattedAddress', 'location', 'id'],
-        includedType: 'establishment',
-        maxResultCount: 20,
-        regionCode: 'gb', // UK region for relevance ranking
-      };
+      // Build request - use text query with location for geographic bias
+      let searchQuery = query;
 
       // If artist location provided, append it to the query for better results
       if (artistLocation) {
         console.log('[Google Places] Enhancing query with location:', artistLocation);
-        request.textQuery = `${query} near ${artistLocation}`;
+        searchQuery = `${query} near ${artistLocation}`;
       }
+
+      const request: any = {
+        textQuery: searchQuery,
+        fields: ['displayName', 'formattedAddress', 'location', 'id'],
+        includedType: 'establishment',
+        maxResultCount: 20,
+      };
 
       console.log('[Google Places] Calling Place.searchByText with request:', request);
 
