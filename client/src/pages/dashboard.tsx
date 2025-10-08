@@ -761,26 +761,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
         {/* Gig Alert Banner */}
         <GigAlertBanner artistId={artistId} className="mb-3 sm:mb-4" />
-        
-        {/* Next Up Card */}
-        {nextUpEvent && (
-          <div className="mb-6 sm:mb-8">
-            <NextUpCard 
-              event={nextUpEvent} 
-              onClick={() => setLocation('/calendar')} 
-            />
-          </div>
-        )}
-        
-        {/* Upcoming Events Agenda */}
-        {upcomingEvents.length > 1 && (
-          <AgendaSection 
-            events={upcomingEvents.slice(1, 6)} 
-            onEventClick={() => setLocation('/calendar')}
-            className="mb-6 sm:mb-8"
-          />
-        )}
-        
+
         {/* Calendar & Gigs Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
