@@ -614,21 +614,28 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       const nextMonth = new Date();
       nextMonth.setMonth(today.getMonth() + 1);
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/events?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/calendar?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch events");
       }
-      
-      const events = await response.json();
-      
+
+      const data = await response.json();
+
+      // Calendar returns nested structure - combine all events
+      const allEvents = [
+        ...(data.artistEvents || []),
+        ...(data.userEvents || []),
+        ...(data.otherArtistEvents || [])
+      ];
+
       // Filter and sort upcoming events (practices and gigs only)
-      return events
+      return allEvents
         .filter((event: Event) => {
           if (event.type === "unavailable") return false;
           const eventDate = new Date(event.date + 'T00:00:00');

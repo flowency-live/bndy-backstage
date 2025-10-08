@@ -28,7 +28,7 @@ export default function GigAlertBanner({ artistId, className = "" }: GigAlertBan
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/events?startDate=${todayStr}&endDate=${tomorrowStr}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/calendar?startDate=${todayStr}&endDate=${tomorrowStr}`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -39,10 +39,17 @@ export default function GigAlertBanner({ artistId, className = "" }: GigAlertBan
         throw new Error("Failed to fetch events");
       }
 
-      const events = await response.json();
+      const data = await response.json();
+
+      // Calendar returns nested structure - combine all events
+      const allEvents = [
+        ...(data.artistEvents || []),
+        ...(data.userEvents || []),
+        ...(data.otherArtistEvents || [])
+      ];
 
       // Filter for gigs only (today or tomorrow)
-      return events.filter((event: Event) =>
+      return allEvents.filter((event: Event) =>
         event.type === "gig" &&
         (event.date === todayStr || event.date === tomorrowStr)
       );

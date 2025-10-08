@@ -99,6 +99,11 @@ export interface Event {
   location?: string | null;
   venue?: string | null;
   venueId?: string | null;
+  /** Venue details enriched from bndy-venues table */
+  venueAddress?: string | null;
+  venueLatitude?: number | null;
+  venueLongitude?: number | null;
+  venueGooglePlaceId?: string | null;
   createdAt: string;
   updatedAt: string;
   /** Display name for unavailability events (enriched by backend) */

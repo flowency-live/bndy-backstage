@@ -119,7 +119,13 @@ export default function EventDetails({
               </h4>
               {event.type === 'gig' && event.venue ? (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue)}`}
+                  href={
+                    event.venueGooglePlaceId
+                      ? `https://www.google.com/maps/place/?q=place_id:${event.venueGooglePlaceId}`
+                      : event.venueLatitude && event.venueLongitude
+                      ? `https://www.google.com/maps/search/?api=1&query=${event.venueLatitude},${event.venueLongitude}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue)}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline inline-flex items-center gap-1"

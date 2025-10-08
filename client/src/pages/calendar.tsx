@@ -974,6 +974,11 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
               ? {
                   venueId: selectedEvent.venueId || undefined,
                   venueName: selectedEvent.venue || undefined,
+                  venueAddress: selectedEvent.venueAddress || undefined,
+                  venueLocation: selectedEvent.venueLatitude && selectedEvent.venueLongitude
+                    ? { lat: selectedEvent.venueLatitude, lng: selectedEvent.venueLongitude }
+                    : undefined,
+                  googlePlaceId: selectedEvent.venueGooglePlaceId || undefined,
                   date: selectedEvent.date,
                   startTime: selectedEvent.startTime || undefined,
                   endTime: selectedEvent.endTime || undefined,
