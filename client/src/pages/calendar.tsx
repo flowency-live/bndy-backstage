@@ -808,7 +808,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             data-testid={`event-${event.id}`}
                           >
                             {event.type === 'unavailable' && <span className="mr-1">✗</span>}
-                            {event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event)}
+                            {event.type === 'gig' ? getEventDisplayName(event) : (event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event))}
                           </div>
                         );
                       })}
