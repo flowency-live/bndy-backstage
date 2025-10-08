@@ -69,6 +69,8 @@ export default function PublicGigWizard({
   // Extract artist name and location from membership
   const artistName = currentUser.artist?.name || 'Artist';
   const artistLocation = currentUser.artist?.location || null;
+  const artistLocationLat = currentUser.artist?.locationLat;
+  const artistLocationLng = currentUser.artist?.locationLng;
 
   // LocalStorage key for auto-save
   const STORAGE_KEY = `public-gig-draft-${artistId}`;
@@ -298,6 +300,8 @@ export default function PublicGigWizard({
               onUpdate={updateFormData}
               artistName={artistName}
               artistLocation={artistLocation}
+              artistLocationLat={artistLocationLat}
+              artistLocationLng={artistLocationLng}
             />
           )}
 

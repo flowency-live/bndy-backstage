@@ -23,9 +23,11 @@ interface VenueSearchStepProps {
   onUpdate: (data: Partial<PublicGigFormData>) => void;
   artistName: string;
   artistLocation: string | null;
+  artistLocationLat?: number;
+  artistLocationLng?: number;
 }
 
-export default function VenueSearchStep({ formData, onUpdate, artistName, artistLocation }: VenueSearchStepProps) {
+export default function VenueSearchStep({ formData, onUpdate, artistName, artistLocation, artistLocationLat, artistLocationLng }: VenueSearchStepProps) {
   const { toast } = useToast();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState('');
@@ -115,9 +117,9 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
           }
         }
 
-        // Search Google Places with location bias
+        // Search Google Places with location bias (using stored lat/lng)
         console.log('[VenueSearch] Calling searchGooglePlaces...');
-        const googlePlaces = await searchGooglePlaces(term, artistLocation);
+        const googlePlaces = await searchGooglePlaces(term, artistLocation, artistLocationLat, artistLocationLng);
         console.log(`[VenueSearch] Google Places returned ${googlePlaces.length} results`);
 
         const googleVenues: Venue[] = googlePlaces.map((place) => {
@@ -149,7 +151,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
       console.log('[VenueSearch] Search complete, setting loading to false');
       setLoading(false);
     }
-  }, [googleMapsLoaded, loadGoogleMaps, toast, artistLocation]);
+  }, [googleMapsLoaded, loadGoogleMaps, toast, artistLocation, artistLocationLat, artistLocationLng]);
 
   const handleVenueSelect = async (venue: Venue) => {
     setSelectedVenue(venue);

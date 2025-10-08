@@ -20,12 +20,14 @@ export function initGoogleMapsCheck() {
   return googleMapsAvailable;
 }
 
-// Search venues using Google Places API (New) - matches location autocomplete approach
+// Search venues using Google Places API (New) with stored lat/lng for location bias
 export async function searchGooglePlaces(
   query: string,
-  artistLocation?: string | null
+  artistLocation?: string | null,
+  artistLocationLat?: number,
+  artistLocationLng?: number
 ): Promise<google.maps.places.PlaceResult[]> {
-  console.log('[Google Places] searchGooglePlaces called with query:', query, 'location:', artistLocation);
+  console.log('[Google Places] searchGooglePlaces called with query:', query, 'location:', artistLocation, 'lat:', artistLocationLat, 'lng:', artistLocationLng);
 
   // First check if Google Maps is available
   if (!googleMapsAvailable) {
@@ -50,17 +52,25 @@ export async function searchGooglePlaces(
     if (google.maps.places.Place && (google.maps.places.Place as any).searchByText) {
       console.log('[Google Places] Using new Place.searchByText API');
 
-      // Build request - keep query simple to avoid fuzzy match confusion
+      // Build request - simple query with structured location bias
       const request: any = {
-        textQuery: query, // Use query alone - adding location confuses Google's fuzzy matching
+        textQuery: query, // Simple query - no location text to avoid fuzzy match confusion
         fields: ['displayName', 'formattedAddress', 'location', 'id'],
-        maxResultCount: 50, // Increased to get more diverse results (Google filters aggressively)
+        maxResultCount: 50, // Get diverse results
       };
 
-      // Note: Removed location bias to fix fuzzy matching issues
-      // "malban near Stockport" returns bizarre unrelated results
-      // "malban" alone returns better matches
-      // TODO: Add proper locationBias with geocoded lat/lng if needed
+      // Add location bias if stored lat/lng available
+      if (artistLocationLat && artistLocationLng) {
+        console.log('[Google Places] Adding locationBias with stored coordinates:', artistLocationLat, artistLocationLng);
+        request.locationBias = {
+          circle: {
+            center: { latitude: artistLocationLat, longitude: artistLocationLng },
+            radius: 80000.0, // 80km radius for UK coverage
+          }
+        };
+      } else {
+        console.log('[Google Places] No stored coordinates, searching without location bias');
+      }
 
       console.log('[Google Places] Calling Place.searchByText with request:', request);
 

@@ -59,6 +59,8 @@ export default function Admin({ artistId, membership }: AdminProps) {
     name: artistData?.name || membership.artist?.name || membership.name || '',
     description: artistData?.bio || membership.artist?.bio || '',
     location: artistData?.location || membership.artist?.location || '',
+    locationLat: artistData?.locationLat || membership.artist?.locationLat || undefined,
+    locationLng: artistData?.locationLng || membership.artist?.locationLng || undefined,
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
   });
 
@@ -69,6 +71,8 @@ export default function Admin({ artistId, membership }: AdminProps) {
         name: artistData.name || '',
         description: artistData.bio || '',
         location: artistData.location || '',
+        locationLat: artistData.locationLat || undefined,
+        locationLng: artistData.locationLng || undefined,
         avatar: artistData.profileImageUrl || null,
       });
     }
@@ -197,6 +201,8 @@ export default function Admin({ artistId, membership }: AdminProps) {
         name: settings.name,
         bio: settings.description,
         location: settings.location,
+        locationLat: settings.locationLat,
+        locationLng: settings.locationLng,
         profileImageUrl: settings.avatar,
       });
 
@@ -493,7 +499,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                     <Label htmlFor="artistLocation" className="text-card-foreground font-semibold mb-2 block">Location</Label>
                     <LocationAutocomplete
                       value={artistSettings.location}
-                      onChange={(location) => setArtistSettings(prev => ({ ...prev, location }))}
+                      onChange={(location, lat, lng) => setArtistSettings(prev => ({ ...prev, location, locationLat: lat, locationLng: lng }))}
                       className="focus:border-brand-primary focus:ring-brand-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based. Used for venue search and duplicate checking.</p>

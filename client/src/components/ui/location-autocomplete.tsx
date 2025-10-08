@@ -5,9 +5,15 @@ import { Input } from '@/components/ui/input';
 import { searchLocationAutocomplete } from '@/lib/services/places-service';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
 
+interface LocationData {
+  location: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface LocationAutocompleteProps {
   value: string;
-  onChange: (location: string) => void;
+  onChange: (location: string, lat?: number, lng?: number) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
@@ -85,12 +91,38 @@ export default function LocationAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (prediction: google.maps.places.AutocompletePrediction) => {
+  const handleSelect = async (prediction: google.maps.places.AutocompletePrediction) => {
     const location = prediction.description;
     setSearchTerm(location);
-    onChange(location);
     setShowDropdown(false);
     setPredictions([]);
+
+    // Geocode the selected location using REST API
+    console.log('[LocationAutocomplete] Geocoding selected location:', location);
+    try {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        console.warn('[LocationAutocomplete] API key not configured, returning without coordinates');
+        onChange(location);
+        return;
+      }
+
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&region=gb&key=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry.location;
+        console.log('[LocationAutocomplete] Geocoded to:', lat, lng);
+        onChange(location, lat, lng);
+      } else {
+        console.warn('[LocationAutocomplete] Geocoding failed:', data.status);
+        onChange(location);
+      }
+    } catch (error) {
+      console.error('[LocationAutocomplete] Geocoding error:', error);
+      onChange(location);
+    }
   };
 
   const handleInputChange = (newValue: string) => {
