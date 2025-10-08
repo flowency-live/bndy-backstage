@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 :root {
+  /* Safe area insets for iOS notch/home indicator */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
   /* Light mode theme - improved contrast */
   --background: hsl(210, 20%, 96%); /* Slightly darker background for better contrast */
   --foreground: hsl(222.2, 84%, 4.9%); /* slate-950 */
