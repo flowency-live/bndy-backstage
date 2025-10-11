@@ -247,10 +247,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
         eventName = "Unavailable";
       }
     } else if (event.type === "gig") {
-      // Format: Time, Venue, Title
+      // Format: Venue, Time, Title
       const parts = [];
-      if (event.startTime) parts.push(event.startTime);
       if (event.venue) parts.push(event.venue);
+      if (event.startTime) parts.push(event.startTime);
       if (event.title) parts.push(event.title);
       eventName = parts.join(" ");
       if (!eventName) eventName = "Gig";
@@ -741,15 +741,20 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
           <div ref={swipeRef} className="select-none">
             {/* Week headers */}
             <div className="grid grid-cols-7 bg-brand-neutral dark:bg-gray-800">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div key={day} className="p-2 sm:p-3 text-center text-sm sm:text-base font-sans font-semibold text-brand-primary dark:text-gray-300">
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
+                <div
+                  key={`${day}-${index}`}
+                  className={`p-2 sm:p-3 text-center text-sm sm:text-base font-sans text-brand-primary dark:text-gray-300 ${
+                    index === 4 || index === 5 || index === 6 ? 'font-bold' : 'font-semibold'
+                  }`}
+                >
                   {day}
                 </div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 divide-x divide-y divide-slate-300 dark:divide-slate-700 bg-white dark:bg-slate-900">
+            <div className="grid grid-cols-7 divide-x divide-slate-300 dark:divide-slate-700 bg-white dark:bg-slate-900">
               {calendarDays.map((day, index) => {
                 const dateStr = format(day, "yyyy-MM-dd");
                 const dayEvents = getEventsForDate(day);
@@ -763,17 +768,17 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-20 relative ${
+                    className={`min-h-24 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number - centered at top */}
                     <div className="flex justify-center pt-1">
-                      <div className={`text-sm font-semibold ${
+                      <div className={`text-xs font-semibold ${
                         isCurrentMonth
                           ? isToday_
-                            ? 'bg-brand-accent text-white rounded-full w-7 h-7 flex items-center justify-center'
+                            ? 'bg-brand-accent text-white rounded-full w-6 h-6 flex items-center justify-center'
                             : 'text-slate-800 dark:text-slate-200'
                           : 'text-slate-400 dark:text-slate-500'
                       }`}>
