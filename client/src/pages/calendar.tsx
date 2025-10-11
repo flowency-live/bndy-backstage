@@ -763,20 +763,22 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-20 p-1 relative ${
+                    className={`min-h-20 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
-                    {/* Date number */}
-                    <div className={`absolute top-1 right-1 text-xs font-medium ${
-                      isCurrentMonth 
-                        ? isToday_ 
-                          ? 'bg-brand-accent text-white rounded px-1' 
-                          : 'text-slate-800 dark:text-slate-200'
-                        : 'text-slate-400 dark:text-slate-500'
-                    }`}>
-                      {format(day, 'd')}
+                    {/* Date number - centered at top */}
+                    <div className="flex justify-center pt-1">
+                      <div className={`text-sm font-semibold ${
+                        isCurrentMonth
+                          ? isToday_
+                            ? 'bg-brand-accent text-white rounded-full w-7 h-7 flex items-center justify-center'
+                            : 'text-slate-800 dark:text-slate-200'
+                          : 'text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {format(day, 'd')}
+                      </div>
                     </div>
 
                     {/* Events */}
@@ -807,14 +809,20 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`start-${event.id}-${eventIndex}`}
-                            className={`mt-0.5 w-full rounded-sm px-1 py-0.5 text-[10px] leading-tight truncate border-l-2 cursor-pointer ${eventColors}`}
+                            className={`mt-0.5 w-full rounded-sm px-1 py-0.5 text-[10px] leading-tight border-l-2 cursor-pointer ${eventColors}`}
                             style={{
                               position: isMultiDayEvent(event) ? 'absolute' : 'relative',
                               left: isMultiDayEvent(event) ? '4px' : 'auto',
                               right: isMultiDayEvent(event) ? spanDays < getRemainingDaysInWeek(index) ? 'auto' : '4px' : 'auto',
                               zIndex: 10 + eventIndex,
-                              top: isMultiDayEvent(event) ? `${20 + (eventIndex * 16)}px` : 'auto',
+                              top: isMultiDayEvent(event) ? `${36 + (eventIndex * 26)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
+                              whiteSpace: 'normal',
+                              wordWrap: 'break-word',
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
                               ...(isGig && {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
@@ -860,13 +868,19 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                         return (
                           <div
                             key={`extend-${event.id}-${eventIndex}`}
-                            className={`mt-0.5 rounded-sm px-1 py-0.5 text-[10px] leading-tight truncate border-l-2 cursor-pointer absolute ${eventColors}`}
+                            className={`mt-0.5 rounded-sm px-1 py-0.5 text-[10px] leading-tight border-l-2 cursor-pointer absolute ${eventColors}`}
                             style={{
                               left: '4px',
                               right: spanDays < remainingDays ? 'auto' : '4px',
                               zIndex: 10 + eventIndex,
-                              top: `${20 + (eventIndex * 16)}px`,
+                              top: `${36 + (eventIndex * 26)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
+                              whiteSpace: 'normal',
+                              wordWrap: 'break-word',
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
                               ...(isGig && {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
