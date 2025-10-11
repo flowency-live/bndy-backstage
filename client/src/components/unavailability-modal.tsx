@@ -393,7 +393,8 @@ export default function UnavailabilityModal({
                       </span>
                     </label>
                   </div>
-                  </div>
+                </div>
+              )}
                 </>
               )}
             </div>
