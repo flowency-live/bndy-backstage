@@ -156,6 +156,16 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     enabled: !!effectiveArtistId,
   });
 
+  // Get full artist data for display settings (displayColour, etc.)
+  const { data: artistData } = useQuery<{ displayColour?: string }>({
+    queryKey: ["/api/artists", effectiveArtistId],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/artists/${effectiveArtistId}`);
+      return response.json();
+    },
+    enabled: !!effectiveArtistId,
+  });
+
   // Get next upcoming artist event (only practices and gigs, not unavailability)
   const upcomingEvents = events
     .filter(event => {
@@ -791,7 +801,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
 
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
                         const eventColors = getEventColors(event.type);
-                        const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                        const artistDisplayColour = artistData?.displayColour || '#f97316';
                         const isGig = event.type === 'gig' || event.type === 'public_gig';
 
                         return (
@@ -844,7 +854,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                           Math.ceil((eventEndDate.getTime() - day.getTime()) / (1000 * 60 * 60 * 24)) + 1 :
                           remainingDays;
                         const eventColors = getEventColors(event.type);
-                        const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                        const artistDisplayColour = artistData?.displayColour || '#f97316';
                         const isGig = event.type === 'gig' || event.type === 'public_gig';
 
                         return (
@@ -905,7 +915,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
             ) : (
               getAgendaEvents().map((event) => {
                 const isGig = event.type === 'gig' || event.type === 'public_gig';
-                const artistDisplayColour = effectiveMembership?.artist?.displayColour || '#f97316';
+                const artistDisplayColour = artistData?.displayColour || '#f97316';
                 const backgroundColor = isGig ? artistDisplayColour : (EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color);
 
                 return (
