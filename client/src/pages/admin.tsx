@@ -18,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import GigAlertBanner from "@/components/gig-alert-banner";
 import ImageUpload from "@/components/ui/image-upload";
 import LocationAutocomplete from "@/components/ui/location-autocomplete";
 
@@ -388,12 +387,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      
-      {/* Gig Alert Banner */}
-      <div className="px-4">
-        <GigAlertBanner artistId={artistId} className="mb-4" />
-      </div>
-      
       <div className="p-4">
         <div className="max-w-4xl mx-auto">
           {/* Tab Navigation */}
