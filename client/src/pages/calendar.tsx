@@ -822,18 +822,15 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: isMultiDayEvent(event) ? `${36 + (eventIndex * 26)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
-                              // Gig events: allow wrapping. Other events: single line with ellipsis
+                              // Gig events: allow wrapping with artist color. Other events: single line with type-based color
                               whiteSpace: isGig ? 'normal' : 'nowrap',
                               wordWrap: isGig ? 'break-word' : 'normal',
                               overflow: 'hidden',
                               textOverflow: isGig ? 'clip' : 'ellipsis',
-                              ...(isGig ? {
+                              ...(isGig && {
                                 display: '-webkit-box',
                                 WebkitLineClamp: 3,
                                 WebkitBoxOrient: 'vertical',
-                                borderLeftColor: artistDisplayColour,
-                                backgroundColor: artistDisplayColour,
-                              } : {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
                               }),
@@ -885,18 +882,15 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: `${36 + (eventIndex * 26)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
-                              // Gig events: allow wrapping. Other events: single line with ellipsis
+                              // Gig events: allow wrapping with artist color. Other events: single line with type-based color
                               whiteSpace: isGig ? 'normal' : 'nowrap',
                               wordWrap: isGig ? 'break-word' : 'normal',
                               overflow: 'hidden',
                               textOverflow: isGig ? 'clip' : 'ellipsis',
-                              ...(isGig ? {
+                              ...(isGig && {
                                 display: '-webkit-box',
                                 WebkitLineClamp: 3,
                                 WebkitBoxOrient: 'vertical',
-                                borderLeftColor: artistDisplayColour,
-                                backgroundColor: artistDisplayColour,
-                              } : {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
                               }),
