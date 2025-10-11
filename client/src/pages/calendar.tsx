@@ -822,13 +822,18 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: isMultiDayEvent(event) ? `${36 + (eventIndex * 26)}px` : 'auto',
                               width: isMultiDayEvent(event) ? `calc(${spanDays * 100}% - 8px)` : 'auto',
-                              whiteSpace: 'normal',
-                              wordWrap: 'break-word',
+                              // Gig events: allow wrapping. Other events: single line with ellipsis
+                              whiteSpace: isGig ? 'normal' : 'nowrap',
+                              wordWrap: isGig ? 'break-word' : 'normal',
                               overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              ...(isGig && {
+                              textOverflow: isGig ? 'clip' : 'ellipsis',
+                              ...(isGig ? {
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                borderLeftColor: artistDisplayColour,
+                                backgroundColor: artistDisplayColour,
+                              } : {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
                               }),
@@ -880,13 +885,18 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               zIndex: 10 + eventIndex,
                               top: `${36 + (eventIndex * 26)}px`,
                               width: `calc(${spanDays * 100}% - 8px)`,
-                              whiteSpace: 'normal',
-                              wordWrap: 'break-word',
+                              // Gig events: allow wrapping. Other events: single line with ellipsis
+                              whiteSpace: isGig ? 'normal' : 'nowrap',
+                              wordWrap: isGig ? 'break-word' : 'normal',
                               overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              ...(isGig && {
+                              textOverflow: isGig ? 'clip' : 'ellipsis',
+                              ...(isGig ? {
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical',
+                                borderLeftColor: artistDisplayColour,
+                                backgroundColor: artistDisplayColour,
+                              } : {
                                 borderLeftColor: artistDisplayColour,
                                 backgroundColor: artistDisplayColour,
                               }),
