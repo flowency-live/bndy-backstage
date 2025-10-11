@@ -71,6 +71,15 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     trackMouse: false,
   });
 
+  // Swipe to dismiss banner
+  const bannerSwipeRef = useSwipe({
+    onSwipeLeft: () => setDismissedHighlight(true),
+    onSwipeRight: () => setDismissedHighlight(true),
+  }, {
+    threshold: 50,
+    trackMouse: false,
+  });
+
   // Scroll to top when component loads
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -578,7 +587,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
 
       {/* Upcoming Event Highlight */}
       {nextEvent && !dismissedHighlight && (
-        <div className="max-w-7xl mx-auto px-4 py-4 animate-fade-in-up">
+        <div ref={bannerSwipeRef} className="max-w-7xl mx-auto px-4 py-4 animate-fade-in-up touch-pan-y">
           <div className="bg-card rounded-2xl p-6 shadow-lg border-l-4 border-brand-accent animate-pulse-soft hover-lift-subtle">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
