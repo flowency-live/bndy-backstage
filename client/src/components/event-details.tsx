@@ -121,7 +121,7 @@ export default function EventDetails({
                 <a
                   href={
                     event.venueGooglePlaceId
-                      ? `https://www.google.com/maps/place/?q=place_id:${event.venueGooglePlaceId}`
+                      ? `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${event.venueGooglePlaceId}`
                       : event.venueLatitude && event.venueLongitude
                       ? `https://www.google.com/maps/search/?api=1&query=${event.venueLatitude},${event.venueLongitude}`
                       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue)}`
