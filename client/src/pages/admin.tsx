@@ -164,6 +164,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
     }
   }, [profile]);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
 
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {
