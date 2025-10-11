@@ -394,6 +394,16 @@ export default function Admin({ artistId, membership }: AdminProps) {
     <div className="min-h-screen bg-gradient-subtle">
       <div className="p-4">
         <div className="max-w-4xl mx-auto">
+          {/* Back Link - consistent across all tabs */}
+          <button
+            onClick={() => setLocation("/dashboard")}
+            className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
+            data-testid="button-back"
+          >
+            <i className="fas fa-arrow-left text-xs"></i>
+            Back
+          </button>
+
           {/* Tab Navigation */}
           <div className="bg-card rounded-t-2xl border-b border-border">
             <div className="flex space-x-0 px-1 pt-1">
@@ -441,20 +451,18 @@ export default function Admin({ artistId, membership }: AdminProps) {
             {/* Artist Settings Tab */}
             {activeTab === 'artist' && (
               <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-serif font-bold text-brand-primary mb-2">Artist Profile</h2>
-                  <p className="text-muted-foreground">Any artist member can edit these details to keep your artist's profile up to date.</p>
+                <div className="mb-4">
+                  <h2 className="text-2xl font-serif font-bold text-brand-primary">Artist Profile</h2>
                 </div>
-                
+
                 <form onSubmit={(e) => {
                   e.preventDefault();
                   updateArtistMutation.mutate(artistSettings);
-                }} className="space-y-6">
+                }} className="space-y-4">
                   
                   {/* Artist Avatar */}
                   <div>
                     <Label className="text-card-foreground font-semibold mb-3 block">Artist Avatar</Label>
-                    <p className="text-sm text-muted-foreground mb-4">Upload a logo or image for your artist</p>
                     <div className="flex justify-center">
                       <ImageUpload
                         value={artistSettings.avatar || undefined}
@@ -503,13 +511,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       onChange={(location, lat, lng) => setArtistSettings(prev => ({ ...prev, location, locationLat: lat, locationLng: lng }))}
                       className="focus:border-brand-primary focus:ring-brand-primary"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">City or region where this artist is based. Used for venue search and duplicate checking.</p>
                   </div>
 
                   {/* Display Colour */}
                   <div>
                     <Label htmlFor="displayColour" className="text-card-foreground font-semibold mb-2 block">Display Colour</Label>
-                    <p className="text-sm text-muted-foreground mb-3">Colour used for your gig events on the calendar</p>
                     <div className="flex items-center gap-3">
                       <input
                         id="displayColour"
@@ -584,13 +590,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
             {/* Members Tab */}
             {activeTab === 'members' && (
               <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-serif font-bold text-brand-primary mb-2">Members</h2>
-                  <p className="text-muted-foreground">View and manage your artist members. {(membership.role === 'admin' || membership.role === 'owner') ? 'You can invite new members and remove existing ones.' : 'Contact an admin to invite new members.'}</p>
+                <div className="mb-4">
+                  <h2 className="text-2xl font-serif font-bold text-brand-primary">Members</h2>
                 </div>
 
                 {/* Current Members */}
-                <div className="mb-8">
+                <div className="mb-6">
                   <h3 className="text-xl font-sans font-semibold text-card-foreground mb-4">Current Members ({artistMembers.length})</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {artistMembers.map((member) => (
@@ -656,14 +661,14 @@ export default function Admin({ artistId, membership }: AdminProps) {
                   </div>
                 </div>
                 
-                
+
                 {/* Magic Link Invites - only for admins and owners */}
                 {(membership.role === 'admin' || membership.role === 'owner') && (
-                  <div className="border-t pt-6 mb-8">
+                  <div className="border-t pt-4">
                     <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Magic Link Invites</h3>
-                    
+
                     {/* General Invite Link */}
-                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                    <div className="mb-4 p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <h4 className="font-semibold text-foreground">General Invite Link</h4>
@@ -702,7 +707,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                     </div>
 
                     {/* Specific Member Invite */}
-                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                    <div className="mb-4 p-4 bg-muted/50 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <h4 className="font-semibold text-foreground">Send Specific Invite</h4>
@@ -760,11 +765,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
                         </Button>
                       </div>
                     </div>
-                    
+
                     {/* TODO: Active Magic Links List - backend storage not implemented yet */}
-                    <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                    <div className="p-4 bg-muted/50 rounded-lg">
                       <h4 className="font-semibold text-foreground mb-2">Active Magic Links</h4>
-                      <p className="text-sm text-muted-foreground">Magic link management is in development. Generated links are temporary and not stored.</p>
+                      <p className="text-sm text-muted-foreground">Generated links are temporary and not stored.</p>
                     </div>
                   </div>
                 )}
@@ -773,15 +778,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
             
             {/* Spotify Tab */}
             {activeTab === 'spotify' && (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h3 className="text-2xl font-serif font-bold text-brand-primary mb-2">
+              <div className="space-y-4">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-serif font-bold text-brand-primary">
                     <i className="fab fa-spotify mr-2"></i>
                     Spotify Integration
-                  </h3>
-                  <p className="text-gray-600">
-                    Connect your Spotify account for real-time playlist synchronisation
-                  </p>
+                  </h2>
                 </div>
               
                 {accessToken ? (
@@ -871,14 +873,9 @@ export default function Admin({ artistId, membership }: AdminProps) {
                 ) : (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center space-x-2 text-gray-500 mb-2">
-                          <i className="fas fa-times-circle"></i>
-                          <span className="font-medium">Not connected to Spotify</span>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          Connect your Spotify account for real-time playlist synchronisation with your practice list.
-                        </p>
+                      <div className="flex items-center space-x-2 text-gray-500">
+                        <i className="fas fa-times-circle"></i>
+                        <span className="font-medium">Not connected</span>
                       </div>
                       <button
                         onClick={handleSpotifyLogin}
@@ -886,7 +883,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                         data-testid="button-spotify-connect"
                       >
                         <i className="fab fa-spotify"></i>
-                        <span>Connect Spotify</span>
+                        <span>Connect</span>
                       </button>
                     </div>
                   </div>
