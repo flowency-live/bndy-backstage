@@ -5,7 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import DateRangePickerModal from "./date-range-picker-modal";
+import DatePickerModal from "./date-picker-modal";
 
 interface UnavailabilityModalProps {
   isOpen: boolean;
@@ -16,34 +18,8 @@ interface UnavailabilityModalProps {
   artistId?: string;
 }
 
-type RecurringPattern =
-  | "never"
-  | "weekly"
-  | "biweekly"
-  | "weekends"
-  | "first_weekend"
-  | "every_monday"
-  | "every_tuesday"
-  | "every_wednesday"
-  | "every_thursday"
-  | "every_friday"
-  | "every_saturday"
-  | "every_sunday";
-
-const RECURRING_OPTIONS: { value: RecurringPattern; label: string }[] = [
-  { value: "never", label: "One time" },
-  { value: "weekly", label: "Weekly" },
-  { value: "biweekly", label: "Every 2 weeks" },
-  { value: "weekends", label: "Weekends" },
-  { value: "first_weekend", label: "First weekend" },
-  { value: "every_monday", label: "Every Monday" },
-  { value: "every_tuesday", label: "Every Tuesday" },
-  { value: "every_wednesday", label: "Every Wednesday" },
-  { value: "every_thursday", label: "Every Thursday" },
-  { value: "every_friday", label: "Every Friday" },
-  { value: "every_saturday", label: "Every Saturday" },
-  { value: "every_sunday", label: "Every Sunday" },
-];
+type RecurringType = "none" | "day" | "week" | "month" | "year";
+type DurationType = "forever" | "count" | "until";
 
 export default function UnavailabilityModal({
   isOpen,
@@ -57,14 +33,26 @@ export default function UnavailabilityModal({
   const [startDate, setStartDate] = useState(selectedDate);
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
   const [notes, setNotes] = useState("");
-  const [recurring, setRecurring] = useState<RecurringPattern>("never");
+
+  // Recurring pattern state (Google Calendar style)
+  const [recurringType, setRecurringType] = useState<RecurringType>("none");
+  const [recurringInterval, setRecurringInterval] = useState(1);
+  const [durationType, setDurationType] = useState<DurationType>("forever");
+  const [durationCount, setDurationCount] = useState(1);
+  const [durationUntilDate, setDurationUntilDate] = useState<string>("");
+
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [showUntilDatePicker, setShowUntilDatePicker] = useState(false);
 
   useEffect(() => {
     setStartDate(selectedDate);
     setEndDate(undefined);
     setNotes("");
-    setRecurring("never");
+    setRecurringType("none");
+    setRecurringInterval(1);
+    setDurationType("forever");
+    setDurationCount(1);
+    setDurationUntilDate("");
   }, [selectedDate, isOpen]);
 
   const createUnavailabilityMutation = useMutation({
@@ -72,14 +60,14 @@ export default function UnavailabilityModal({
       date: string;
       endDate?: string;
       notes?: string;
-      recurring?: RecurringPattern;
+      recurring?: any;
     }) => {
       return apiRequest("POST", `https://api.bndy.co.uk/api/users/me/unavailability`, {
         type: "unavailable",
         date: data.date,
         endDate: data.endDate,
         notes: data.notes,
-        recurring: data.recurring !== "never" ? data.recurring : undefined,
+        recurring: data.recurring,
         isAllDay: true,
       });
     },
@@ -90,7 +78,7 @@ export default function UnavailabilityModal({
       }
       toast({
         title: "Unavailability marked",
-        description: recurring !== "never" ? "Recurring unavailability saved" : "Date(s) marked unavailable",
+        description: recurringType !== "none" ? "Recurring unavailability saved" : "Date(s) marked unavailable",
       });
       onClose();
     },
@@ -115,11 +103,23 @@ export default function UnavailabilityModal({
       return;
     }
 
+    // Build recurring object if not "none"
+    let recurringData = undefined;
+    if (recurringType !== "none") {
+      recurringData = {
+        type: recurringType,
+        interval: recurringInterval,
+        duration: durationType,
+        ...(durationType === "count" && { count: durationCount }),
+        ...(durationType === "until" && { until: durationUntilDate }),
+      };
+    }
+
     createUnavailabilityMutation.mutate({
       date: startDate,
       endDate: endDate && endDate !== startDate ? endDate : undefined,
       notes: notes.trim() || undefined,
-      recurring: recurring !== "never" ? recurring : undefined,
+      recurring: recurringData,
     });
   };
 
@@ -168,22 +168,208 @@ export default function UnavailabilityModal({
               </button>
             </div>
 
-            {/* Recurring Pattern */}
+            {/* Recurring Pattern - Google Calendar Style */}
             <div>
-              <label className="block text-sm font-sans font-semibold text-card-foreground mb-2">
+              <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">
                 Repeat
               </label>
-              <select
-                value={recurring}
-                onChange={(e) => setRecurring(e.target.value as RecurringPattern)}
-                className="w-full p-3 border border-input rounded-xl bg-background text-foreground hover:border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-colors"
-              >
-                {RECURRING_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                {/* Don't repeat */}
+                <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurring"
+                    value="none"
+                    checked={recurringType === "none"}
+                    onChange={() => setRecurringType("none")}
+                    className="mr-3 accent-red-500"
+                  />
+                  <span className="text-sm">Don't repeat</span>
+                </label>
+
+                {/* Every X day */}
+                <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurring"
+                    value="day"
+                    checked={recurringType === "day"}
+                    onChange={() => setRecurringType("day")}
+                    className="mr-3 accent-red-500"
+                  />
+                  <span className="text-sm flex items-center gap-2">
+                    Every
+                    <Input
+                      type="number"
+                      min={1}
+                      value={recurringInterval}
+                      onChange={(e) => setRecurringInterval(parseInt(e.target.value) || 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRecurringType("day");
+                      }}
+                      className="w-16 h-8 text-center px-2"
+                    />
+                    day{recurringInterval !== 1 ? "s" : ""}
+                  </span>
+                </label>
+
+                {/* Every X week */}
+                <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurring"
+                    value="week"
+                    checked={recurringType === "week"}
+                    onChange={() => setRecurringType("week")}
+                    className="mr-3 accent-red-500"
+                  />
+                  <span className="text-sm flex items-center gap-2">
+                    Every
+                    <Input
+                      type="number"
+                      min={1}
+                      value={recurringInterval}
+                      onChange={(e) => setRecurringInterval(parseInt(e.target.value) || 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRecurringType("week");
+                      }}
+                      className="w-16 h-8 text-center px-2"
+                    />
+                    week{recurringInterval !== 1 ? "s" : ""}
+                  </span>
+                </label>
+
+                {/* Every X month */}
+                <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurring"
+                    value="month"
+                    checked={recurringType === "month"}
+                    onChange={() => setRecurringType("month")}
+                    className="mr-3 accent-red-500"
+                  />
+                  <span className="text-sm flex items-center gap-2">
+                    Every
+                    <Input
+                      type="number"
+                      min={1}
+                      value={recurringInterval}
+                      onChange={(e) => setRecurringInterval(parseInt(e.target.value) || 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRecurringType("month");
+                      }}
+                      className="w-16 h-8 text-center px-2"
+                    />
+                    month{recurringInterval !== 1 ? "s" : ""}
+                  </span>
+                </label>
+
+                {/* Every X year */}
+                <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurring"
+                    value="year"
+                    checked={recurringType === "year"}
+                    onChange={() => setRecurringType("year")}
+                    className="mr-3 accent-red-500"
+                  />
+                  <span className="text-sm flex items-center gap-2">
+                    Every
+                    <Input
+                      type="number"
+                      min={1}
+                      value={recurringInterval}
+                      onChange={(e) => setRecurringInterval(parseInt(e.target.value) || 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRecurringType("year");
+                      }}
+                      className="w-16 h-8 text-center px-2"
+                    />
+                    year{recurringInterval !== 1 ? "s" : ""}
+                  </span>
+                </label>
+              </div>
+
+              {/* Duration (only show if recurring is active) */}
+              {recurringType !== "none" && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">
+                    Duration
+                  </label>
+                  <div className="space-y-2">
+                    {/* Forever */}
+                    <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                      <input
+                        type="radio"
+                        name="duration"
+                        value="forever"
+                        checked={durationType === "forever"}
+                        onChange={() => setDurationType("forever")}
+                        className="mr-3 accent-red-500"
+                      />
+                      <span className="text-sm">Forever</span>
+                    </label>
+
+                    {/* Specific number of times */}
+                    <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                      <input
+                        type="radio"
+                        name="duration"
+                        value="count"
+                        checked={durationType === "count"}
+                        onChange={() => setDurationType("count")}
+                        className="mr-3 accent-red-500"
+                      />
+                      <span className="text-sm flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          value={durationCount}
+                          onChange={(e) => setDurationCount(parseInt(e.target.value) || 1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDurationType("count");
+                          }}
+                          className="w-16 h-8 text-center px-2"
+                        />
+                        time{durationCount !== 1 ? "s" : ""}
+                      </span>
+                    </label>
+
+                    {/* Until date */}
+                    <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                      <input
+                        type="radio"
+                        name="duration"
+                        value="until"
+                        checked={durationType === "until"}
+                        onChange={() => setDurationType("until")}
+                        className="mr-3 accent-red-500"
+                      />
+                      <span className="text-sm flex items-center gap-2">
+                        Until
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDurationType("until");
+                            setShowUntilDatePicker(true);
+                          }}
+                          className="px-3 py-1 border border-input rounded-lg bg-background hover:border-red-500 transition-colors text-sm"
+                        >
+                          {durationUntilDate ? format(new Date(durationUntilDate + "T00:00:00"), "dd/MM/yyyy") : "Select date"}
+                        </button>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Notes */}
@@ -238,6 +424,17 @@ export default function UnavailabilityModal({
           setEndDate(start === end ? undefined : end);
         }}
         initialDate={startDate}
+      />
+
+      {/* Until Date Picker Modal */}
+      <DatePickerModal
+        isOpen={showUntilDatePicker}
+        onClose={() => setShowUntilDatePicker(false)}
+        onDateSelect={(date) => {
+          setDurationUntilDate(date);
+          setShowUntilDatePicker(false);
+        }}
+        initialDate={durationUntilDate || startDate}
       />
     </>
   );
