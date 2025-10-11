@@ -35,6 +35,7 @@ export default function UnavailabilityModal({
   const [notes, setNotes] = useState("");
 
   // Recurring pattern state (Google Calendar style)
+  const [showRecurring, setShowRecurring] = useState(false);
   const [recurringType, setRecurringType] = useState<RecurringType>("none");
   const [recurringInterval, setRecurringInterval] = useState(1);
   const [durationType, setDurationType] = useState<DurationType>("forever");
@@ -48,6 +49,7 @@ export default function UnavailabilityModal({
     setStartDate(selectedDate);
     setEndDate(undefined);
     setNotes("");
+    setShowRecurring(false);
     setRecurringType("none");
     setRecurringInterval(1);
     setDurationType("forever");
@@ -170,10 +172,33 @@ export default function UnavailabilityModal({
 
             {/* Recurring Pattern - Google Calendar Style */}
             <div>
-              <label className="block text-sm font-sans font-semibold text-card-foreground mb-3">
-                Repeat
-              </label>
-              <div className="space-y-2">
+              {!showRecurring ? (
+                <button
+                  type="button"
+                  onClick={() => setShowRecurring(true)}
+                  className="w-full p-3 border border-input rounded-xl text-left bg-background text-muted-foreground hover:text-foreground hover:border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-colors flex items-center gap-2"
+                >
+                  <i className="fas fa-repeat"></i>
+                  <span className="text-sm">Add repeat</span>
+                </button>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-sans font-semibold text-card-foreground">
+                      Repeat
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRecurring(false);
+                        setRecurringType("none");
+                      }}
+                      className="text-xs text-red-500 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="space-y-2">
                 {/* Don't repeat */}
                 <label className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors">
                   <input
@@ -368,7 +393,8 @@ export default function UnavailabilityModal({
                       </span>
                     </label>
                   </div>
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
@@ -430,11 +456,11 @@ export default function UnavailabilityModal({
       <DatePickerModal
         isOpen={showUntilDatePicker}
         onClose={() => setShowUntilDatePicker(false)}
-        onDateSelect={(date) => {
+        onSelectDate={(date) => {
           setDurationUntilDate(date);
-          setShowUntilDatePicker(false);
         }}
-        initialDate={durationUntilDate || startDate}
+        selectedDate={durationUntilDate || startDate}
+        title="Repeat until"
       />
     </>
   );
