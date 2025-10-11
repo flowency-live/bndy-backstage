@@ -11,6 +11,7 @@ import { EVENT_TYPE_CONFIG } from "@/types/api";
 import EventModal from "@/components/event-modal";
 import EventDetails from "@/components/event-details";
 import PublicGigWizard from "@/components/public-gig-wizard";
+import UnavailabilityModal from "@/components/unavailability-modal";
 import { PageHeader } from "@/components/layout";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [showPublicGigWizard, setShowPublicGigWizard] = useState(false);
+  const [showUnavailabilityModal, setShowUnavailabilityModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -290,7 +292,13 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     setSelectedDate(date);
     setSelectedEvent(null);
     setEventType(type);
-    setShowEventModal(true);
+
+    // Route unavailable to dedicated modal
+    if (type === 'unavailable') {
+      setShowUnavailabilityModal(true);
+    } else {
+      setShowEventModal(true);
+    }
   };
 
   // Show event details (read-only first)
@@ -1041,6 +1049,21 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
               ? { date: selectedDate }
               : undefined
           }
+        />
+      )}
+
+      {/* Unavailability Modal - dedicated modal for marking unavailability */}
+      {showUnavailabilityModal && session?.user && (
+        <UnavailabilityModal
+          isOpen={showUnavailabilityModal}
+          onClose={() => {
+            setShowUnavailabilityModal(false);
+            setSelectedEvent(null);
+          }}
+          selectedDate={selectedDate}
+          userDisplayName={userProfile?.user?.displayName || session.user.displayName || session.user.email || "User"}
+          userId={session.user.cognitoId}
+          artistId={effectiveArtistId || undefined}
         />
       )}
 
