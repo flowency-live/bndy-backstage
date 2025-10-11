@@ -1003,6 +1003,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
             setShowEventModal(false);
             setShowPublicGigWizard(true);
           }}
+          onUnavailableSelected={() => {
+            setShowEventModal(false);
+            setShowUnavailabilityModal(true);
+          }}
         />
       )}
 

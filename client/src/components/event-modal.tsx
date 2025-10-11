@@ -24,9 +24,10 @@ interface EventModalProps {
   currentUser: ArtistMembership;
   artistId: string;
   onPublicGigSelected?: () => void;
+  onUnavailableSelected?: () => void;
 }
 
-export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId, onPublicGigSelected }: EventModalProps) {
+export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId, onPublicGigSelected, onUnavailableSelected }: EventModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
@@ -268,6 +269,12 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     // If gig is selected and callback exists, trigger the wizard
     if (type === "gig" && onPublicGigSelected) {
       onPublicGigSelected();
+      return;
+    }
+
+    // If unavailable is selected and callback exists, trigger the dedicated modal
+    if (type === "unavailable" && onUnavailableSelected) {
+      onUnavailableSelected();
       return;
     }
 
