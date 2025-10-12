@@ -832,7 +832,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     className={`min-h-24 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''} ${
-                      index % 7 === 6 && index < calendarDays.length - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
+                      index < calendarDays.length - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
                     }`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
