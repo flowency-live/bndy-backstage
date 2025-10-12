@@ -99,6 +99,7 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Show loading state
   if (authLoading || contextLoading || isRedirecting) {
+    console.log('🔄 MemberGate: Loading state', { authLoading, contextLoading, isRedirecting });
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
@@ -179,6 +180,13 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Render children with artist context (could be null for dashboard)
   // user-context already handles finding the current membership
+  console.log('✅ MemberGate: Rendering children', {
+    currentArtistId,
+    hasMembership: !!currentMembership,
+    hasUserProfile: !!userProfile,
+    artistsCount: userProfile?.artists?.length || 0
+  });
+
   return (
     <>
       {children({
