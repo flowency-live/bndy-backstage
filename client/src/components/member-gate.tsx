@@ -45,46 +45,51 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     checkAuth();
   }, []);
 
-  // Debug current auth state
-  console.log('🔧 MEMBER GATE: Current state:', {
-    authLoading,
-    contextLoading,
-    isAuthenticated,
-    hasUser: !!contextUserProfile?.user,
-    artistsCount: contextUserProfile?.artists?.length || 0,
-    allowNoContextForDashboard,
-    currentArtistId,
-    isRedirecting
-  });
 
   // Use data from user-context (already fetched and managed)
   const userProfile = contextUserProfile;
 
-  // Handle authentication redirects
+  // Handle authentication and profile completion redirects
   useEffect(() => {
-    console.log('🔧 MEMBER GATE: Authentication redirect check triggered');
-    console.log('🔧 MEMBER GATE: Auth state details:', {
-      authLoading,
-      contextLoading,
-      isAuthenticated,
-      hasUser: !!userProfile?.user,
-      isRedirecting
-    });
-
-    // Only redirect if we're absolutely sure the user is not authenticated
+    // Step 1: Check authentication
     if (!authLoading && !isAuthenticated) {
-      console.log('🔧 MEMBER GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
+      console.log('🔐 MemberGate: Not authenticated, redirecting to login');
       setIsRedirecting(true);
       setLocation('/login');
-    } else {
-      console.log('🔧 MEMBER GATE: ✅ Not redirecting to login');
-      console.log('🔧 MEMBER GATE: Stay reason:', {
-        authLoading: authLoading ? 'still loading' : 'done',
-        contextLoading: contextLoading ? 'still loading' : 'done',
-        isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
-      });
+      return;
     }
-  }, [authLoading, isAuthenticated, setLocation, isRedirecting, contextLoading, userProfile]);
+
+    // Step 2: Check profile completion (after auth confirmed)
+    if (!authLoading && !contextLoading && isAuthenticated && userProfile?.user) {
+      const currentPath = window.location.pathname;
+
+      // Skip profile check if already on profile page or logout
+      if (currentPath === '/profile' || currentPath === '/logout') {
+        return;
+      }
+
+      // Check if profile has required fields
+      const hasRequiredFields =
+        userProfile.user.firstName &&
+        userProfile.user.lastName &&
+        userProfile.user.displayName;
+
+      const profileComplete = userProfile.user.profileCompleted || hasRequiredFields;
+
+      if (!profileComplete) {
+        console.log('👤 MemberGate: Profile incomplete, redirecting to /profile', {
+          firstName: !!userProfile.user.firstName,
+          lastName: !!userProfile.user.lastName,
+          displayName: !!userProfile.user.displayName
+        });
+        setIsRedirecting(true);
+        setLocation('/profile');
+        return;
+      }
+
+      console.log('✅ MemberGate: Profile complete, allowing access');
+    }
+  }, [authLoading, contextLoading, isAuthenticated, userProfile, setLocation, isRedirecting]);
 
   // Show loading state
   if (authLoading || contextLoading || isRedirecting) {

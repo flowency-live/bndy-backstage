@@ -56,11 +56,20 @@ export default function Profile() {
     onSuccess: (response) => {
       // Invalidate and refetch user profile
       queryClient.invalidateQueries({ queryKey: ["/api/me"] });
-      
+
       toast({
         title: "Profile Updated",
         description: response.message || "Your profile has been updated successfully.",
       });
+
+      // Check for pending invite token (user completing profile after invite)
+      const pendingInvite = localStorage.getItem('pendingInvite');
+
+      if (pendingInvite) {
+        console.log('🔧 PROFILE: Found pending invite, redirecting to /invite/' + pendingInvite);
+        setLocation(`/invite/${pendingInvite}`);
+        return;
+      }
 
       // If this was profile creation, redirect to dashboard or band selection
       if (mode === "create") {
@@ -88,7 +97,21 @@ export default function Profile() {
   };
 
   const handleCancel = () => {
-    // Always return to dashboard (user is already logged in)
+    // Check if profile is complete - block navigation if not
+    const hasRequiredFields = userProfile?.user.firstName &&
+                             userProfile?.user.lastName &&
+                             userProfile?.user.displayName;
+
+    if (!hasRequiredFields) {
+      toast({
+        title: "Profile Required",
+        description: "Please complete your profile to continue using bndy",
+        variant: "destructive"
+      });
+      return; // Block navigation
+    }
+
+    // Profile complete - allow navigation
     setLocation("/dashboard");
   };
 
@@ -147,15 +170,17 @@ export default function Profile() {
           {/* Profile Form Card with integrated back button */}
           <Card className="shadow-xl">
             <CardContent className="p-6">
-              {/* Subtle back link at top */}
-              <button
-                onClick={handleCancel}
-                className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
-                data-testid="button-back"
-              >
-                <i className="fas fa-arrow-left text-xs"></i>
-                Back
-              </button>
+              {/* Only show back button if profile is complete (edit mode) */}
+              {mode === "edit" && (
+                <button
+                  onClick={handleCancel}
+                  className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
+                  data-testid="button-back"
+                >
+                  <i className="fas fa-arrow-left text-xs"></i>
+                  Back
+                </button>
+              )}
               <ProfileForm
                 initialData={userProfile?.user ? {
                   firstName: userProfile.user.firstName || "",

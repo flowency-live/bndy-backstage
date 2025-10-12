@@ -26,15 +26,29 @@ export default function Login() {
   // Server auth handles authentication server-side
   const { toast } = useToast()
 
-  // TODO: Implement proper OTP service - currently stubbed
   const sendOTP = async (phone: string) => {
-    console.warn('OTP functionality not yet implemented for server auth')
-    return { error: new Error('OTP not available - use Google login') }
+    try {
+      await authService.requestPhoneOTP(phone)
+      return { error: null }
+    } catch (error: any) {
+      return { error }
+    }
   }
 
   const verifyOTP = async (phone: string, otp: string) => {
-    console.warn('OTP functionality not yet implemented for server auth')
-    return { data: null, error: new Error('OTP not available - use Google login') }
+    try {
+      const result = await authService.verifyPhoneOTP(phone, otp)
+
+      if (result.requiresOnboarding) {
+        // User doesn't exist yet - needs to complete onboarding
+        return { data: { requiresOnboarding: true }, error: null }
+      }
+
+      // User exists and is logged in
+      return { data: result, error: null }
+    } catch (error: any) {
+      return { data: null, error }
+    }
   }
 
   const formatPhoneNumber = (value: string) => {
@@ -105,31 +119,35 @@ export default function Login() {
     }
 
     setLoading(true)
-    
+
     const digits = phone.replace(/\D/g, '')
     // UK mobile numbers start with 07, convert to +44 7
     const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
 
     try {
-      console.log('🔍 CLAUDE DEBUG: Login calling verifyOTP', { e164Phone, otp })
       const { data, error } = await verifyOTP(e164Phone, otp)
-      console.log('🔍 CLAUDE DEBUG: Login verifyOTP result', { data, error })
 
       if (error) {
         throw error
       }
 
-      console.log('🔍 CLAUDE DEBUG: Login success')
-
+      // Successful authentication - check for pending invite
       toast({
         title: "Signed in successfully!",
         description: "Welcome to bndy",
         variant: "default"
       })
 
-      console.log('🔍 CLAUDE DEBUG: About to redirect to /dashboard')
-      setLocation('/dashboard')
-      console.log('🔍 CLAUDE DEBUG: setLocation called with /dashboard')
+      // Check for pending invite token
+      const pendingInvite = localStorage.getItem('pendingInvite')
+
+      if (pendingInvite) {
+        console.log('📱 LOGIN: Found pending invite, redirecting to /invite/' + pendingInvite)
+        setLocation(`/invite/${pendingInvite}`)
+      } else {
+        // No pending invite - MemberGate will handle profile check
+        setLocation('/dashboard')
+      }
     } catch (error: any) {
       toast({
         title: "Invalid code",

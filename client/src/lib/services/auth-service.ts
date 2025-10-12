@@ -159,6 +159,124 @@ class AuthService {
            !!user.lastName &&
            !!user.instrument;
   }
+
+  /**
+   * Request OTP for phone authentication
+   */
+  async requestPhoneOTP(phone: string): Promise<{ success: boolean; requestId: string; expiresIn: number }> {
+    const response = await this.apiRequest<{
+      success: boolean;
+      requestId: string;
+      expiresIn: number;
+      message?: string;
+      warning?: string;
+    }>('/auth/phone/request-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+    return response;
+  }
+
+  /**
+   * Verify phone OTP - logs in existing users or indicates new user needs onboarding
+   */
+  async verifyPhoneOTP(phone: string, otp: string): Promise<{
+    success: boolean;
+    phoneVerified?: boolean;
+    requiresOnboarding?: boolean;
+    user?: {
+      id: string;
+      phone: string;
+      displayName: string;
+      profileCompleted: boolean;
+    };
+  }> {
+    const response = await this.apiRequest<{
+      success: boolean;
+      phoneVerified?: boolean;
+      requiresOnboarding?: boolean;
+      phone?: string;
+      user?: {
+        id: string;
+        phone: string;
+        displayName: string;
+        profileCompleted: boolean;
+      };
+    }>('/auth/phone/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp }),
+    });
+    return response;
+  }
+
+  /**
+   * Verify phone OTP and complete onboarding for new users
+   */
+  async verifyAndOnboard(
+    phone: string,
+    otp: string,
+    firstName: string,
+    lastName: string,
+    hometown: string
+  ): Promise<{
+    success: boolean;
+    user: {
+      id: string;
+      phone: string;
+      displayName: string;
+      hometown: string;
+      profileCompleted: boolean;
+    };
+  }> {
+    const response = await this.apiRequest<{
+      success: boolean;
+      user: {
+        id: string;
+        phone: string;
+        displayName: string;
+        hometown: string;
+        profileCompleted: boolean;
+      };
+    }>('/auth/phone/verify-and-onboard', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp, firstName, lastName, hometown }),
+    });
+    return response;
+  }
+
+  /**
+   * Accept an artist invitation
+   */
+  async acceptInvite(token: string): Promise<{
+    success: boolean;
+    membership: {
+      id: string;
+      artistId: string;
+      role: string;
+      joinedAt: string;
+    };
+    artist: {
+      id: string;
+      name: string;
+    };
+  }> {
+    const response = await this.apiRequest<{
+      success: boolean;
+      membership: {
+        id: string;
+        artistId: string;
+        role: string;
+        joinedAt: string;
+      };
+      artist: {
+        id: string;
+        name: string;
+      };
+    }>(`/api/invites/${token}/accept`, {
+      method: 'POST',
+    });
+    return response;
+  }
 }
 
 // Export singleton instance
