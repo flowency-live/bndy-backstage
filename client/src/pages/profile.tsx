@@ -53,9 +53,14 @@ export default function Profile() {
     mutationFn: async (data: InsertUserProfile | UpdateUserProfile) => {
       return usersService.updateProfile(data);
     },
-    onSuccess: (response) => {
-      // Invalidate and refetch user profile
-      queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+    onSuccess: async (response) => {
+      // Update cache immediately with the returned user data
+      if (response.user) {
+        queryClient.setQueryData(["/api/me"], { user: response.user, bands: [] });
+      }
+
+      // Also invalidate to ensure fresh data on next load
+      await queryClient.invalidateQueries({ queryKey: ["/api/me"] });
 
       toast({
         title: "Profile Updated",
