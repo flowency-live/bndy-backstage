@@ -53,9 +53,11 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
   useEffect(() => {
     // Step 1: Check authentication
     if (!authLoading && !isAuthenticated) {
-      console.log('🔐 MemberGate: Not authenticated, redirecting to login');
-      setIsRedirecting(true);
-      setLocation('/login');
+      if (!isRedirecting) {
+        console.log('🔐 MemberGate: Not authenticated, redirecting to login');
+        setIsRedirecting(true);
+        setLocation('/login');
+      }
       return;
     }
 
@@ -88,6 +90,10 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
       }
 
       console.log('✅ MemberGate: Profile complete, allowing access');
+      // Reset redirecting state when all checks pass
+      if (isRedirecting) {
+        setIsRedirecting(false);
+      }
     }
   }, [authLoading, contextLoading, isAuthenticated, userProfile, setLocation, isRedirecting]);
 
