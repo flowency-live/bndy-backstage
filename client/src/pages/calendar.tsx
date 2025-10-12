@@ -265,26 +265,21 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     const isCrossArtist = (event as any).crossArtistEvent ||
                           (effectiveArtistId && event.artistId && event.artistId !== effectiveArtistId);
 
-    if (event.type === "unavailable" || isCrossArtist) {
-      // For unavailability or cross-artist events, exclude time
-      if (event.type === "unavailable") {
-        // Check if backend enriched the event with displayName (new system)
-        if (event.displayName) {
-          eventName = event.displayName;
-        } else if (event.membershipId) {
-          // Legacy band member unavailable event
-          const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
-          // For unavailable events, prefer the user's display name over the membership display name
-          eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
-        } else if (event.ownerUserId) {
-          // Fallback for events not yet enriched
-          eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
-        } else {
-          eventName = "Unavailable";
-        }
-      } else if (isCrossArtist) {
-        // Cross-artist events: show only the user's display name
-        eventName = event.displayName || "Unavailable";
+    if (event.type === "unavailable") {
+      // For unavailability events only, apply privacy protection
+      // Check if backend enriched the event with displayName (new system)
+      if (event.displayName) {
+        eventName = event.displayName;
+      } else if (event.membershipId) {
+        // Legacy band member unavailable event
+        const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
+        // For unavailable events, prefer the user's display name over the membership display name
+        eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
+      } else if (event.ownerUserId) {
+        // Fallback for events not yet enriched
+        eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
+      } else {
+        eventName = "Unavailable";
       }
     } else if (event.type === "gig") {
       // Format: Venue, Time, Title
