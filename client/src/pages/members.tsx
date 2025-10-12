@@ -62,6 +62,50 @@ export default function Members({ artistId, membership }: MembersProps) {
   const { toast } = useToast();
   const [invitePhone, setInvitePhone] = useState("");
 
+  // Share invite link using native share dialog (mobile-first)
+  const shareInviteLink = async (inviteLink: string, artistName: string) => {
+    const shareData = {
+      title: `Join ${artistName} on bndy`,
+      text: `You've been invited to join ${artistName}! Click the link to accept:`,
+      url: inviteLink
+    };
+
+    // Check if Web Share API is supported (mobile devices)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared!",
+          description: "Invite link shared successfully"
+        });
+        return true;
+      } catch (error: any) {
+        // User cancelled share dialog - not an error
+        if (error.name === 'AbortError') {
+          return false;
+        }
+        console.error('Share failed:', error);
+      }
+    }
+
+    // Fallback to clipboard copy for desktop
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      toast({
+        title: "Link copied!",
+        description: "Invite link copied to clipboard. Share it with your team."
+      });
+      return true;
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Please try again",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   // Get artist members
   const { data: membersResponse, isLoading: membersLoading } = useQuery({
     queryKey: ["/api/artists", artistId, "members"],
@@ -427,17 +471,14 @@ export default function Members({ artistId, membership }: MembersProps) {
                             const response = await apiRequest("POST", `/api/artists/${artistId}/invites/general`);
                             const data = await response.json();
 
-                            // Copy to clipboard
-                            await navigator.clipboard.writeText(data.inviteLink);
-
                             // Refresh invites list
                             queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
 
-                            toast({
-                              title: "Invite link generated!",
-                              description: "Link has been copied to your clipboard. Share it with people you want to invite.",
-                              variant: "default"
-                            });
+                            // Immediately trigger share dialog
+                            await shareInviteLink(
+                              data.inviteLink,
+                              membership?.artist?.name || membership?.name || 'your band'
+                            );
                           } catch (error: any) {
                             toast({
                               title: "Error generating link",
@@ -450,8 +491,8 @@ export default function Members({ artistId, membership }: MembersProps) {
                         size="sm"
                         data-testid="button-generate-general-link"
                       >
-                        <i className="fas fa-link mr-2"></i>
-                        Generate Link
+                        <i className="fas fa-share-nodes mr-2"></i>
+                        Generate & Share
                       </Button>
                     </div>
                   </div>
@@ -573,7 +614,7 @@ export default function Members({ artistId, membership }: MembersProps) {
                                   Expires {format(expiryDate, 'dd/MM/yyyy')}
                                 </p>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 mb-3">
                                   <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate">
                                     {inviteLink}
                                   </code>
@@ -588,21 +629,34 @@ export default function Members({ artistId, membership }: MembersProps) {
                                       });
                                     }}
                                     data-testid={`button-copy-${invite.token}`}
+                                    title="Copy link"
                                   >
                                     <i className="fas fa-copy"></i>
                                   </Button>
                                 </div>
+
+                                {/* Share Button - Mobile First */}
+                                <Button
+                                  onClick={() => shareInviteLink(inviteLink, invite.metadata.artistName)}
+                                  variant="default"
+                                  size="sm"
+                                  className="w-full"
+                                  data-testid={`button-share-${invite.token}`}
+                                >
+                                  <i className="fas fa-share-nodes mr-2"></i>
+                                  Share Invite
+                                </Button>
                               </div>
 
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button
                                     size="sm"
-                                    variant="destructive"
+                                    variant="ghost"
                                     data-testid={`button-disable-invite-${invite.token}`}
+                                    title="Disable invite"
                                   >
-                                    <i className="fas fa-ban mr-2"></i>
-                                    Disable
+                                    <i className="fas fa-ban"></i>
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
