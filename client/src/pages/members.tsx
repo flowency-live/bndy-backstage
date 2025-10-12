@@ -79,6 +79,7 @@ export default function Members({ artistId, membership }: MembersProps) {
   });
 
   // Get active invites
+  // Note: Backend checks admin/owner permissions, so we don't need to gate the query here
   const { data: invitesData, isLoading: invitesLoading } = useQuery<Invite[]>({
     queryKey: ["/api/artists", artistId, "invites"],
     queryFn: async () => {
@@ -90,12 +91,16 @@ export default function Members({ artistId, membership }: MembersProps) {
       const response = await apiRequest("GET", `/api/artists/${artistId}/invites`);
 
       if (!response.ok) {
+        // 403 means not admin/owner - that's fine, just return empty array
+        if (response.status === 403) {
+          return [];
+        }
         throw new Error("Failed to fetch invites");
       }
 
       return response.json();
     },
-    enabled: !!session && !!artistId && (membership.role === 'admin' || membership.role === 'owner'),
+    enabled: !!session && !!artistId,
   });
 
   // Ensure artistMembers is always an array
