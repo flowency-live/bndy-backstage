@@ -45,7 +45,7 @@ function Router() {
         </AppLayout>
       </Route>
       <Route path="/dashboard">
-        <MemberGate>
+        <MemberGate allowNoContextForDashboard={true}>
           {({ contextId, membership, userProfile }) => (
             <ProfileGate userProfile={userProfile}>
               <AppLayout artistId={contextId} membership={membership}>
@@ -56,7 +56,7 @@ function Router() {
         </MemberGate>
       </Route>
       <Route path="/my-artists">
-        <MemberGate>
+        <MemberGate allowNoContextForDashboard={true}>
           {({ userProfile }) => (
             <ProfileGate userProfile={userProfile}>
               <AppLayout>

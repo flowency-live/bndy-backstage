@@ -736,12 +736,28 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       );
     }
 
-    // Has artists but none selected
+    // Has artists but none selected - show artist selection tiles IN dashboard
     if (userProfile?.artists && userProfile.artists.length > 0) {
-      console.log('🎯 DASHBOARD: Multiple artists, no selection - returning null to let MemberGate show selector');
-      // Return null to allow MemberGate to show artist selector
-      // MemberGate will handle showing the "Select Your Artist" screen
-      return null;
+      console.log('🎯 DASHBOARD: Has artists, no selection - showing artist selection tiles');
+      return (
+        <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+          <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">Select Your Artist</h2>
+              <div className="space-y-3">
+                {userProfile.artists.map((membership) => (
+                  <ArtistTile
+                    key={membership.artist_id}
+                    artist={membership.artist!}
+                    membership={membership}
+                    onClick={() => selectArtist(membership.artist_id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // Still loading userProfile - show spinner
