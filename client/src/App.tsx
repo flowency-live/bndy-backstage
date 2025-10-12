@@ -8,6 +8,7 @@ import { UserProvider } from "@/lib/user-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { GoogleMapsProvider } from "@/components/providers/google-maps-provider";
 import MemberGate from "@/components/member-gate";
+import ProfileGate from "@/components/profile-gate";
 import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -44,67 +45,79 @@ function Router() {
         </AppLayout>
       </Route>
       <Route path="/dashboard">
-        <MemberGate allowNoContextForDashboard={true}>
-          {({ contextId, membership, userProfile }) => (
-            <AppLayout artistId={contextId} membership={membership}>
-              <Dashboard artistId={contextId} membership={membership} userProfile={userProfile} />
-            </AppLayout>
-          )}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ contextId, membership, userProfile }) => (
+              <AppLayout artistId={contextId} membership={membership}>
+                <Dashboard artistId={contextId} membership={membership} userProfile={userProfile} />
+              </AppLayout>
+            )}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/my-artists">
-        <MemberGate allowNoContextForDashboard={true}>
-          {({ userProfile }) => (
-            <AppLayout>
-              <MyArtists />
-            </AppLayout>
-          )}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ userProfile }) => (
+              <AppLayout>
+                <MyArtists />
+              </AppLayout>
+            )}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/calendar">
-        <MemberGate>
-          {({ contextId, membership }) => (
-            <AppLayout artistId={contextId} membership={membership}>
-              <Calendar artistId={contextId} membership={membership} />
-            </AppLayout>
-          )}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ contextId, membership }) => (
+              <AppLayout artistId={contextId} membership={membership}>
+                <Calendar artistId={contextId} membership={membership} />
+              </AppLayout>
+            )}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/gigs">
-        <MemberGate>
-          {({ contextId, membership }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <AppLayout artistId={contextId} membership={membership}>
-                <Gigs artistId={contextId} />
-              </AppLayout>
-            );
-          }}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ contextId, membership }) => {
+              if (!contextId || !membership) return null;
+              return (
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Gigs artistId={contextId} />
+                </AppLayout>
+              );
+            }}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/songs">
-        <MemberGate>
-          {({ contextId, membership }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <AppLayout artistId={contextId} membership={membership}>
-                <Songs artistId={contextId} membership={membership} />
-              </AppLayout>
-            );
-          }}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ contextId, membership }) => {
+              if (!contextId || !membership) return null;
+              return (
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Songs artistId={contextId} membership={membership} />
+                </AppLayout>
+              );
+            }}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/admin">
-        <MemberGate>
-          {({ contextId, membership }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <AppLayout artistId={contextId} membership={membership}>
-                <Admin artistId={contextId} membership={membership} />
-              </AppLayout>
-            );
-          }}
-        </MemberGate>
+        <ProfileGate>
+          <MemberGate>
+            {({ contextId, membership }) => {
+              if (!contextId || !membership) return null;
+              return (
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Admin artistId={contextId} membership={membership} />
+                </AppLayout>
+              );
+            }}
+          </MemberGate>
+        </ProfileGate>
       </Route>
       <Route path="/issues">
         <AppLayout>

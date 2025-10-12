@@ -736,14 +736,16 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       );
     }
 
-    // Has artists but none selected - show loading while user-context handles auto-selection
-    // User-context will auto-select if user has single artist, or show artist selector if multiple
-    // Dashboard should not redirect - just wait for context to be established
+    // Has artists but none selected
     if (userProfile?.artists && userProfile.artists.length > 0) {
-      return <BndySpinnerOverlay />;
+      console.log('🎯 DASHBOARD: Multiple artists, no selection - returning null to let MemberGate show selector');
+      // Return null to allow MemberGate to show artist selector
+      // MemberGate will handle showing the "Select Your Artist" screen
+      return null;
     }
 
     // Still loading userProfile - show spinner
+    console.log('🎯 DASHBOARD: User profile still loading');
     return <BndySpinnerOverlay />;
   }
 

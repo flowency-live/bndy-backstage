@@ -31,10 +31,9 @@ interface MemberGateProps {
     membership: ArtistMembership | null,
     userProfile: UserProfile | null
   }) => React.ReactNode;
-  allowNoContextForDashboard?: boolean;
 }
 
-export default function MemberGate({ children, allowNoContextForDashboard = false }: MemberGateProps) {
+export default function MemberGate({ children }: MemberGateProps) {
   const [, setLocation] = useLocation();
   const { loading: authLoading, isAuthenticated, checkAuth } = useServerAuth();
   const { currentArtistId, currentMembership, userProfile: contextUserProfile, isLoading: contextLoading, logout } = useUser();
@@ -52,7 +51,6 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     isAuthenticated,
     hasUser: !!contextUserProfile?.user,
     artistsCount: contextUserProfile?.artists?.length || 0,
-    allowNoContextForDashboard,
     currentArtistId,
     isRedirecting
   });
@@ -104,8 +102,8 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
   }
 
   // User-context already handles artist selection and auto-select logic
-  // Just pass through the current state to children
-  if (userProfile && userProfile.artists.length > 1 && !currentArtistId && !allowNoContextForDashboard) {
+  // ALWAYS show artist selector if multiple artists and none selected
+  if (userProfile && userProfile.artists.length > 1 && !currentArtistId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center max-w-md w-full">
