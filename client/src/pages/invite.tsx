@@ -67,6 +67,24 @@ export default function Invite() {
                            authResponse?.user?.displayName;
   const profileComplete = authResponse?.user?.profileCompleted || hasRequiredFields;
 
+  // Auto-accept invite after profile completion (returning from /profile)
+  useEffect(() => {
+    const shouldAutoAccept =
+      token &&
+      isAuthenticated &&
+      profileComplete &&
+      !accepting &&
+      !loadingInvite &&
+      !loadingAuth &&
+      inviteDetails &&
+      localStorage.getItem('pendingInvite') === token;
+
+    if (shouldAutoAccept) {
+      console.log('🎫 INVITE: Auto-accepting invite after profile completion');
+      handleAcceptInvite();
+    }
+  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, inviteDetails]);
+
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {
       // Not logged in - redirect to login (token already in localStorage)
