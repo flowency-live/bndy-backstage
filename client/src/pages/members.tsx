@@ -286,7 +286,7 @@ export default function Members({ artistId, membership }: MembersProps) {
 
   if (membersLoading) {
     return (
-      <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-brand-primary font-sans">Loading...</p>
@@ -297,40 +297,36 @@ export default function Members({ artistId, membership }: MembersProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="p-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Back Link */}
-          <button
-            onClick={() => setLocation("/dashboard")}
-            className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
-            data-testid="button-back"
-          >
-            <i className="fas fa-arrow-left text-xs"></i>
-            Back
-          </button>
+      {/* Page Header - with padding */}
+      <div className="px-4 pt-4 pb-3 border-b border-border/40">
+        <button
+          onClick={() => setLocation("/dashboard")}
+          className="text-muted-foreground hover:text-foreground transition-colors mb-3 flex items-center gap-2 text-sm"
+          data-testid="button-back"
+        >
+          <i className="fas fa-arrow-left text-xs"></i>
+          Back
+        </button>
+        <h1 className="text-2xl font-serif font-bold text-brand-primary mb-1">
+          {membership?.artist?.name || membership?.name} Members
+        </h1>
+        <p className="text-sm text-muted-foreground">Manage your team and invite new members</p>
+      </div>
 
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-serif font-bold text-brand-primary mb-2">
-              {membership?.artist?.name || membership?.name} Members
-            </h1>
-            <p className="text-muted-foreground">Manage your team and invite new members</p>
-          </div>
-
-          {/* Current Members Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-2xl font-serif">Current Members ({artistMembers.length})</CardTitle>
-              <CardDescription>Your active team members</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {artistMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="bg-muted rounded-xl p-4"
-                    data-testid={`member-card-${member.id}`}
-                  >
+      {/* Current Members Section */}
+      <div className="border-b border-border/40">
+        <div className="px-4 py-3">
+          <h2 className="text-lg font-serif font-semibold text-foreground">
+            Current Members ({artistMembers.length})
+          </h2>
+        </div>
+        <div>
+          {artistMembers.map((member) => (
+            <div
+              key={member.id}
+              className="px-4 py-3 border-t border-border/40 first:border-t-0"
+              data-testid={`member-card-${member.id}`}
+            >
                     <div className="flex items-start gap-4">
                       {/* Avatar */}
                       <div className="relative group flex-shrink-0">
@@ -466,253 +462,242 @@ export default function Members({ artistId, membership }: MembersProps) {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Invites Section - only for admins and owners */}
-          {(membership.role === 'admin' || membership.role === 'owner') && (
-            <>
-              {/* Generate Invites Card */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-serif">Invite New Members</CardTitle>
-                  <CardDescription>Generate shareable invite links</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* General Invite Link */}
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-foreground">General Invite Link</h4>
-                        <p className="text-sm text-muted-foreground">Share this link to invite anyone to join</p>
-                      </div>
-                      <Button
-                        onClick={async () => {
-                          try {
-                            const response = await apiRequest("POST", `/api/artists/${artistId}/invites/general`);
-                            const data = await response.json();
-
-                            // Refresh invites list
-                            queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
-
-                            // Immediately trigger share dialog
-                            await shareInviteLink(
-                              data.inviteLink,
-                              membership?.artist?.name || membership?.name || 'your band'
-                            );
-                          } catch (error: any) {
-                            toast({
-                              title: "Error generating link",
-                              description: error.message || "Please try again",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
-                        variant="outline"
-                        size="sm"
-                        data-testid="button-generate-general-link"
-                      >
-                        <i className="fas fa-share-nodes mr-2"></i>
-                        Generate & Share
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Specific Member Invite */}
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-foreground">Send Specific Invite</h4>
-                        <p className="text-sm text-muted-foreground">Send a personalized magic link to someone's phone</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Input
-                        type="tel"
-                        placeholder="+44 7xxx xxx xxx"
-                        className="flex-1"
-                        data-testid="input-invite-phone"
-                        value={invitePhone}
-                        onChange={(e) => setInvitePhone(e.target.value)}
-                      />
-                      <Button
-                        onClick={async () => {
-                          if (!invitePhone.trim()) {
-                            toast({
-                              title: "Phone number required",
-                              description: "Please enter a phone number to send the invite",
-                              variant: "destructive"
-                            });
-                            return;
-                          }
-
-                          try {
-                            const response = await apiRequest("POST", `/api/artists/${artistId}/invites/phone`, {
-                              phone: invitePhone
-                            });
-                            const data = await response.json();
-
-                            // Refresh invites list
-                            queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
-
-                            toast({
-                              title: "Invite sent!",
-                              description: `Magic link sent to ${invitePhone}`,
-                              variant: "default"
-                            });
-
-                            setInvitePhone("");
-                          } catch (error: any) {
-                            toast({
-                              title: "Error sending invite",
-                              description: error.message || "Please try again",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
-                        variant="action"
-                        data-testid="button-send-invite"
-                        disabled={!invitePhone.trim()}
-                      >
-                        <i className="fas fa-paper-plane mr-2"></i>
-                        Send Invite
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Active Invites List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl font-serif">Active Invite Links ({activeInvites.length})</CardTitle>
-                  <CardDescription>Manage your pending invitations</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {invitesLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
-                      <p className="text-sm text-muted-foreground">Loading invites...</p>
-                    </div>
-                  ) : activeInvites.length === 0 ? (
-                    <div className="text-center py-8">
-                      <i className="fas fa-envelope-open text-4xl text-muted-foreground mb-3"></i>
-                      <p className="text-muted-foreground">No active invite links</p>
-                      <p className="text-sm text-muted-foreground">Generate a new invite link above to get started</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {activeInvites.map((invite) => {
-                        const expiryDate = new Date(invite.expiresAt * 1000);
-                        const inviteLink = `https://backstage.bndy.co.uk/invite/${invite.token}`;
-
-                        return (
-                          <div
-                            key={invite.token}
-                            className="p-4 bg-muted rounded-lg"
-                            data-testid={`invite-card-${invite.token}`}
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant={invite.inviteType === 'general' ? 'default' : 'secondary'}>
-                                    {invite.inviteType === 'general' ? 'General Link' : 'Phone-Specific'}
-                                  </Badge>
-                                  <Badge variant="outline" className="text-green-600">
-                                    Active
-                                  </Badge>
-                                </div>
-
-                                {invite.phone && (
-                                  <p className="text-sm text-muted-foreground mb-1">
-                                    Sent to: {invite.phone}
-                                  </p>
-                                )}
-
-                                <p className="text-xs text-muted-foreground mb-2">
-                                  Created {format(new Date(invite.createdAt), 'd MMM yyyy HH:mm')} •
-                                  Expires {format(expiryDate, 'd MMM yyyy')}
-                                </p>
-
-                                <div className="flex items-center gap-2 mb-3">
-                                  <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate">
-                                    {inviteLink}
-                                  </code>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={async () => {
-                                      await navigator.clipboard.writeText(inviteLink);
-                                      toast({
-                                        title: "Copied!",
-                                        description: "Invite link copied to clipboard",
-                                      });
-                                    }}
-                                    data-testid={`button-copy-${invite.token}`}
-                                    title="Copy link"
-                                  >
-                                    <i className="fas fa-copy"></i>
-                                  </Button>
-                                </div>
-
-                                {/* Share Button - Mobile First */}
-                                <Button
-                                  onClick={() => shareInviteLink(inviteLink, invite.metadata.artistName)}
-                                  variant="default"
-                                  size="sm"
-                                  className="w-full"
-                                  data-testid={`button-share-${invite.token}`}
-                                >
-                                  <i className="fas fa-share-nodes mr-2"></i>
-                                  Share Invite
-                                </Button>
-                              </div>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    data-testid={`button-disable-invite-${invite.token}`}
-                                    title="Disable invite"
-                                  >
-                                    <i className="fas fa-ban"></i>
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Disable Invite Link</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to disable this invite link? It will no longer work and cannot be re-enabled.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => disableInviteMutation.mutate(invite.token)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Disable
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </>
-          )}
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Invites Section - only for admins and owners */}
+      {(membership.role === 'admin' || membership.role === 'owner') && (
+        <>
+          {/* Generate Invites */}
+          <div className="border-b border-border/40 px-4 py-4">
+            <h2 className="text-lg font-serif font-semibold text-foreground mb-3">
+              Invite New Members
+            </h2>
+
+            {/* General Invite Link */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-foreground">General Invite Link</h3>
+                <p className="text-sm text-muted-foreground">Share with anyone to join</p>
+              </div>
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await apiRequest("POST", `/api/artists/${artistId}/invites/general`);
+                    const data = await response.json();
+
+                    // Refresh invites list
+                    queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
+
+                    // Immediately trigger share dialog
+                    await shareInviteLink(
+                      data.inviteLink,
+                      membership?.artist?.name || membership?.name || 'your band'
+                    );
+                  } catch (error: any) {
+                    toast({
+                      title: "Error generating link",
+                      description: error.message || "Please try again",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                data-testid="button-generate-general-link"
+              >
+                <i className="fas fa-share-nodes mr-2"></i>
+                Generate & Share
+              </Button>
+            </div>
+
+            {/* Specific Member Invite */}
+            <div>
+              <div className="mb-2">
+                <h3 className="font-semibold text-foreground">Send Specific Invite</h3>
+                <p className="text-sm text-muted-foreground">Send a magic link to someone's phone</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  type="tel"
+                  placeholder="+44 7xxx xxx xxx"
+                  className="flex-1"
+                  data-testid="input-invite-phone"
+                  value={invitePhone}
+                  onChange={(e) => setInvitePhone(e.target.value)}
+                />
+                <Button
+                  onClick={async () => {
+                    if (!invitePhone.trim()) {
+                      toast({
+                        title: "Phone number required",
+                        description: "Please enter a phone number to send the invite",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+
+                    try {
+                      const response = await apiRequest("POST", `/api/artists/${artistId}/invites/phone`, {
+                        phone: invitePhone
+                      });
+                      const data = await response.json();
+
+                      // Refresh invites list
+                      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
+
+                      toast({
+                        title: "Invite sent!",
+                        description: `Magic link sent to ${invitePhone}`,
+                        variant: "default"
+                      });
+
+                      setInvitePhone("");
+                    } catch (error: any) {
+                      toast({
+                        title: "Error sending invite",
+                        description: error.message || "Please try again",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  variant="action"
+                  data-testid="button-send-invite"
+                  disabled={!invitePhone.trim()}
+                >
+                  <i className="fas fa-paper-plane mr-2"></i>
+                  Send Invite
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Invites List */}
+          <div>
+            <div className="px-4 py-3 border-b border-border/40">
+              <h2 className="text-lg font-serif font-semibold text-foreground">
+                Active Invite Links ({activeInvites.length})
+              </h2>
+            </div>
+
+            {invitesLoading ? (
+              <div className="text-center py-8 px-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Loading invites...</p>
+              </div>
+            ) : activeInvites.length === 0 ? (
+              <div className="text-center py-8 px-4">
+                <i className="fas fa-envelope-open text-4xl text-muted-foreground mb-3"></i>
+                <p className="text-muted-foreground">No active invite links</p>
+                <p className="text-sm text-muted-foreground">Generate a new invite link above to get started</p>
+              </div>
+            ) : (
+              <div>
+                {activeInvites.map((invite) => {
+                  const expiryDate = new Date(invite.expiresAt * 1000);
+                  const inviteLink = `https://backstage.bndy.co.uk/invite/${invite.token}`;
+
+                  return (
+                    <div
+                      key={invite.token}
+                      className="px-4 py-3 border-t border-border/40 first:border-t-0"
+                      data-testid={`invite-card-${invite.token}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={invite.inviteType === 'general' ? 'default' : 'secondary'} className="text-xs">
+                          {invite.inviteType === 'general' ? 'General' : 'Phone'}
+                        </Badge>
+                        <Badge variant="outline" className="text-green-600 text-xs">
+                          Active
+                        </Badge>
+                      </div>
+
+                      {invite.phone && (
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Sent to: {invite.phone}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Created {format(new Date(invite.createdAt), 'd MMM yyyy HH:mm')} •
+                        Expires {format(expiryDate, 'd MMM yyyy')}
+                      </p>
+
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate">
+                          {inviteLink}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(inviteLink);
+                            toast({
+                              title: "Copied!",
+                              description: "Invite link copied to clipboard",
+                            });
+                          }}
+                          data-testid={`button-copy-${invite.token}`}
+                          title="Copy link"
+                        >
+                          <i className="fas fa-copy"></i>
+                        </Button>
+                      </div>
+
+                      {/* Share Button - Mobile First */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => shareInviteLink(inviteLink, invite.metadata.artistName)}
+                          variant="default"
+                          size="sm"
+                          className="flex-1"
+                          data-testid={`button-share-${invite.token}`}
+                        >
+                          <i className="fas fa-share-nodes mr-2"></i>
+                          Share Invite
+                        </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              data-testid={`button-disable-invite-${invite.token}`}
+                              title="Disable invite"
+                            >
+                              <i className="fas fa-ban"></i>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Disable Invite Link</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to disable this invite link? It will no longer work and cannot be re-enabled.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => disableInviteMutation.mutate(invite.token)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Disable
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
