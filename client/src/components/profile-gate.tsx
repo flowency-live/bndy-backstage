@@ -1,37 +1,34 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useUser } from "@/lib/user-context";
+import type { User, ArtistMembership } from "@/types/api";
+
+interface UserProfile {
+  user: User;
+  artists: ArtistMembership[];
+}
 
 interface ProfileGateProps {
   children: React.ReactNode;
+  userProfile: UserProfile | null;
 }
 
 /**
- * ProfileGate - Ensures user has completed their profile
+ * ProfileGate - Simple redirect guard for profile completion
  *
  * Separation of Concerns:
- * - MemberGate: Authentication and artist selection
- * - ProfileGate: Profile completion validation
+ * - MemberGate: Authentication, loading states, artist selection
+ * - ProfileGate: Profile completion validation (redirect only, no loading UI)
  *
- * Redirects to /profile if required fields are missing
+ * NOTE: ProfileGate must be used INSIDE MemberGate's children function.
+ * MemberGate handles all loading states - ProfileGate just checks and redirects.
  */
-export default function ProfileGate({ children }: ProfileGateProps) {
+export default function ProfileGate({ children, userProfile }: ProfileGateProps) {
   const [, setLocation] = useLocation();
-  const { userProfile, isLoading } = useUser();
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  console.log('🔒 PROFILE GATE: Checking profile completion', {
-    isLoading,
-    hasUserProfile: !!userProfile,
-    hasUser: !!userProfile?.user
-  });
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // Wait for user data to load
-    if (isLoading || !userProfile?.user) {
-      console.log('🔒 PROFILE GATE: Waiting for user data...');
-      return;
-    }
+    // Only check once when userProfile is available
+    if (!userProfile?.user || hasChecked) return;
 
     const user = userProfile.user;
 
@@ -44,38 +41,25 @@ export default function ProfileGate({ children }: ProfileGateProps) {
 
     const profileComplete = user.profileCompleted || hasRequiredFields;
 
-    console.log('🔒 PROFILE GATE: Profile status', {
+    console.log('🔒 PROFILE GATE: Checking profile', {
       firstName: !!user.firstName,
       lastName: !!user.lastName,
       displayName: !!user.displayName,
-      profileCompleted: user.profileCompleted,
-      hasRequiredFields,
       profileComplete
     });
 
     // Redirect to profile page if incomplete
-    if (!profileComplete && !isRedirecting) {
+    if (!profileComplete) {
       console.log('🔒 PROFILE GATE: ❌ Profile incomplete - redirecting to /profile');
-      setIsRedirecting(true);
       setLocation('/profile');
-    } else if (profileComplete) {
+    } else {
       console.log('🔒 PROFILE GATE: ✅ Profile complete - allowing access');
     }
-  }, [userProfile, isLoading, setLocation, isRedirecting]);
 
-  // Show loading while checking profile
-  if (isLoading || isRedirecting) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-foreground mx-auto mb-4"></div>
-          <p className="text-primary-foreground font-sans">Checking profile...</p>
-        </div>
-      </div>
-    );
-  }
+    setHasChecked(true);
+  }, [userProfile, hasChecked, setLocation]);
 
-  // Profile incomplete - will be handled by useEffect redirect
+  // If no userProfile yet, render nothing (MemberGate shows loading)
   if (!userProfile?.user) {
     return null;
   }
@@ -88,6 +72,7 @@ export default function ProfileGate({ children }: ProfileGateProps) {
   );
   const profileComplete = user.profileCompleted || hasRequiredFields;
 
+  // If profile incomplete, render nothing (redirect will happen in useEffect)
   if (!profileComplete) {
     return null;
   }

@@ -45,79 +45,79 @@ function Router() {
         </AppLayout>
       </Route>
       <Route path="/dashboard">
-        <ProfileGate>
-          <MemberGate>
-            {({ contextId, membership, userProfile }) => (
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => (
+            <ProfileGate userProfile={userProfile}>
               <AppLayout artistId={contextId} membership={membership}>
                 <Dashboard artistId={contextId} membership={membership} userProfile={userProfile} />
               </AppLayout>
-            )}
-          </MemberGate>
-        </ProfileGate>
+            </ProfileGate>
+          )}
+        </MemberGate>
       </Route>
       <Route path="/my-artists">
-        <ProfileGate>
-          <MemberGate>
-            {({ userProfile }) => (
+        <MemberGate>
+          {({ userProfile }) => (
+            <ProfileGate userProfile={userProfile}>
               <AppLayout>
                 <MyArtists />
               </AppLayout>
-            )}
-          </MemberGate>
-        </ProfileGate>
+            </ProfileGate>
+          )}
+        </MemberGate>
       </Route>
       <Route path="/calendar">
-        <ProfileGate>
-          <MemberGate>
-            {({ contextId, membership }) => (
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => (
+            <ProfileGate userProfile={userProfile}>
               <AppLayout artistId={contextId} membership={membership}>
                 <Calendar artistId={contextId} membership={membership} />
               </AppLayout>
-            )}
-          </MemberGate>
-        </ProfileGate>
+            </ProfileGate>
+          )}
+        </MemberGate>
       </Route>
       <Route path="/gigs">
-        <ProfileGate>
-          <MemberGate>
-            {({ contextId, membership }) => {
-              if (!contextId || !membership) return null;
-              return (
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Gigs artistId={contextId} />
                 </AppLayout>
-              );
-            }}
-          </MemberGate>
-        </ProfileGate>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
       </Route>
       <Route path="/songs">
-        <ProfileGate>
-          <MemberGate>
-            {({ contextId, membership }) => {
-              if (!contextId || !membership) return null;
-              return (
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Songs artistId={contextId} membership={membership} />
                 </AppLayout>
-              );
-            }}
-          </MemberGate>
-        </ProfileGate>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
       </Route>
       <Route path="/admin">
-        <ProfileGate>
-          <MemberGate>
-            {({ contextId, membership }) => {
-              if (!contextId || !membership) return null;
-              return (
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Admin artistId={contextId} membership={membership} />
                 </AppLayout>
-              );
-            }}
-          </MemberGate>
-        </ProfileGate>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
       </Route>
       <Route path="/issues">
         <AppLayout>
