@@ -41,6 +41,14 @@ export default function EventDetails({
   const isOwner = event.type === 'unavailable'
     ? event.ownerUserId === currentUserId
     : event.membershipId === currentMembershipId
+
+  // Check if this is a cross-artist unavailability event (member unavailable due to another artist's event)
+  // These events should hide time, location, and public badge to maintain privacy
+  const isCrossArtistUnavailability = event.type === 'unavailable' && (
+    (event as any).crossArtistEvent === true ||
+    // If unavailability has venue/location info, it's likely a cross-artist event
+    !!(event.venue || (event.location && event.startTime))
+  )
   
   const formatEventDate = (date: string, endDate?: string, startTime?: string, endTime?: string) => {
     // UK DATE FORMAT RULE: Always use dd/MM/yyyy format for consistency across the entire app
@@ -103,16 +111,18 @@ export default function EventDetails({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Date and time */}
+          {/* Date and time - hide time for cross-artist unavailability */}
           <div>
             <h4 className="text-sm font-semibold text-muted-foreground mb-1">Date & Time</h4>
             <p className="text-sm">
-              {formatEventDate(event.date, event.endDate || undefined, event.startTime || undefined, event.endTime || undefined)}
+              {isCrossArtistUnavailability
+                ? formatEventDate(event.date, event.endDate || undefined)
+                : formatEventDate(event.date, event.endDate || undefined, event.startTime || undefined, event.endTime || undefined)}
             </p>
           </div>
 
-          {/* Location/Venue */}
-          {(event.location || event.venue) && (
+          {/* Location/Venue - hide for cross-artist unavailability */}
+          {!isCrossArtistUnavailability && (event.location || event.venue) && (
             <div>
               <h4 className="text-sm font-semibold text-muted-foreground mb-1">
                 {event.type === 'gig' ? 'Venue' : 'Location'}
@@ -149,8 +159,8 @@ export default function EventDetails({
             </div>
           )}
 
-          {/* Public indicator */}
-          {event.isPublic && (
+          {/* Public indicator - hide for cross-artist unavailability */}
+          {!isCrossArtistUnavailability && event.isPublic && (
             <div>
               <Badge variant="outline" className="text-xs">
                 <i className="fas fa-globe mr-1"></i>
