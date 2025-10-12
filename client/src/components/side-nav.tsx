@@ -64,12 +64,20 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   };
 
   const handleSignOut = async () => {
+    console.log('Side Nav: Sign out button clicked');
+
+    // Clear localStorage
     localStorage.removeItem('bndy-selected-artist-id');
     localStorage.removeItem('bndy-selected-band-id');
     localStorage.removeItem('bndy-current-user');
-    await signOut();
-    setLocation('/login');
+
+    // Close the dropdown
     onClose();
+
+    // Call signOut (which handles redirect)
+    await signOut();
+
+    // Note: No need to call setLocation as signOut() does window.location.href redirect
   };
 
   const navigateTo = (path: string) => {

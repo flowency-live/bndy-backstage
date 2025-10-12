@@ -56,22 +56,33 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
   };
 
   const signOut = async () => {
+    console.log('🔧 SERVER AUTH: Sign out initiated');
+
+    // Clear client-side state immediately
+    setUser(null);
+    setBands([]);
+    setSession(null);
+
     try {
-      console.log('🔧 SERVER AUTH: Signing out');
+      console.log('🔧 SERVER AUTH: Calling logout API');
 
-      await authService.signOut();
+      // Call logout API with explicit timeout
+      await Promise.race([
+        authService.signOut(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Logout timeout')), 5000)
+        )
+      ]);
 
-      setUser(null);
-      setBands([]);
-      setSession(null);
-
-      // Redirect to login
-      window.location.href = '/login';
+      console.log('🔧 SERVER AUTH: Logout API completed successfully');
     } catch (error) {
-      console.error('🔧 SERVER AUTH: Logout failed:', error);
-      // Force redirect even if logout request failed
-      window.location.href = '/login';
+      console.error('🔧 SERVER AUTH: Logout API failed:', error);
+      // Continue to redirect even if API call failed
     }
+
+    // Always redirect to login after attempting logout
+    console.log('🔧 SERVER AUTH: Redirecting to login');
+    window.location.href = '/login';
   };
 
   // Removed automatic checkAuth on mount - auth is checked lazily when needed by protected routes
