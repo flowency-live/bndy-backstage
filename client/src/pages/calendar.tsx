@@ -138,8 +138,16 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
 
   // Apply toggle filters based on user's preferences
   const events = allEvents.filter(event => {
-    // Personal/unavailable events (including cross-artist events)
-    if (event.eventType === 'unavailable' || !event.artistId) {
+    // Check if this is a cross-artist unavailability event
+    const isCrossArtistUnavailability = event.type === 'unavailable' && (event as any).crossArtistEvent;
+
+    // Cross-artist unavailability should be treated as artist events (other members' unavailability)
+    if (isCrossArtistUnavailability) {
+      return showArtistEvents;
+    }
+
+    // Personal unavailable events - user's own unavailability
+    if (event.type === 'unavailable' || !event.artistId) {
       return showMyEvents;
     }
 
@@ -153,8 +161,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       return showArtistEvents;
     }
 
-    // Other artist events in artist context - only show if "All Artists" toggle is enabled
-    return showAllArtists;
+    // Other artist events - only show if BOTH "All Artists" AND "Artist Events" are enabled
+    return showAllArtists && showArtistEvents;
   });
 
   // Get artist members using new artist-scoped API (only when artist context exists)
@@ -597,12 +605,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-sans font-semibold text-card-foreground">
-                    Next Up - {getEventDisplayName(nextEvent)}
+                    Next - {(nextEvent as any).artistName || effectiveMembership?.artistName || 'Event'} - {nextEvent.venue || nextEvent.location || 'TBC'} - {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}{nextEvent.startTime && ` ${nextEvent.startTime}`}
                   </h3>
-                  <p className="text-card-foreground">
-                    {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}
-                    {nextEvent.startTime && ` ${nextEvent.startTime}`}
-                  </p>
                 </div>
               </div>
               <button 
@@ -677,8 +681,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
               <i className="fas fa-user text-xs"></i>
             </button>
 
-            {/* All Artists Toggle - Icon only on mobile - only show when in artist context */}
-            {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && (
+            {/* All Artists Toggle - Icon only on mobile - only show when in artist context, user has multiple artists, AND artist events is enabled */}
+            {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && showArtistEvents && (
               <button
                 onClick={() => setShowAllArtists(!showAllArtists)}
                 className={`
@@ -742,8 +746,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 )}
               </button>
 
-              {/* All Artists Toggle - only show when in artist context and user has multiple artists */}
-              {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && (
+              {/* All Artists Toggle - only show when in artist context, user has multiple artists, AND artist events is enabled */}
+              {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && showArtistEvents && (
                 <button
                   onClick={() => setShowAllArtists(!showAllArtists)}
                   className={`
