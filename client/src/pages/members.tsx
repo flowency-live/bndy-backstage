@@ -60,6 +60,7 @@ export default function Members({ artistId, membership }: MembersProps) {
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
   const { toast } = useToast();
+  const [invitePhone, setInvitePhone] = useState("");
 
   // Share invite link using native share dialog (mobile-first)
   const shareInviteLink = async (inviteLink: string, artistName: string) => {
@@ -351,64 +352,43 @@ export default function Members({ artistId, membership }: MembersProps) {
 
                       {/* Member Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-sans font-semibold text-lg text-card-foreground mb-2" data-testid={`member-name-${member.id}`}>
+                            <h4 className="font-sans font-semibold text-lg text-card-foreground truncate" data-testid={`member-name-${member.id}`}>
                               {member.displayName}
                             </h4>
-
-                            {/* Compact badges row */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {/* Role Badge */}
-                              {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') ? (
-                                <Select
-                                  value={member.role}
-                                  onValueChange={(newRole) => updateRoleMutation.mutate({ membershipId: member.id, role: newRole })}
-                                >
-                                  <SelectTrigger className="h-7 w-24 text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="member">Member</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    {membership.role === 'owner' && <SelectItem value="owner">Owner</SelectItem>}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Badge variant="secondary" className="text-xs">
-                                  {member.role}
-                                </Badge>
-                              )}
-
-                              {/* Instrument */}
-                              {member.instrument && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <i className="fas fa-music"></i>
-                                  {member.instrument}
-                                </span>
-                              )}
-
-                              {/* Status */}
-                              {member.status !== 'active' && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {member.status}
-                                </Badge>
-                              )}
-                            </div>
+                            {(member.user?.firstName || member.user?.lastName) && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {member.user.firstName} {member.user.lastName}
+                              </p>
+                            )}
+                            {member.user?.email && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">{member.user.email}</p>
+                            )}
                           </div>
 
                           {/* Actions */}
                           {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') && (
-                            <div className="flex items-center gap-1 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Disable button */}
+                              <button
+                                onClick={() => disableMemberMutation.mutate(member.id)}
+                                className="text-orange-500 hover:text-orange-700 p-2"
+                                title="Disable member"
+                                data-testid={`button-disable-${member.id}`}
+                              >
+                                <i className="fas fa-ban"></i>
+                              </button>
+
                               {/* Remove button with confirmation */}
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <button
-                                    className="text-muted-foreground hover:text-red-500 p-2"
+                                    className="text-red-500 hover:text-red-700 p-2"
                                     data-testid={`button-remove-${member.id}`}
-                                    title="Remove member"
+                                    title="Remove member permanently"
                                   >
-                                    <i className="fas fa-trash text-sm"></i>
+                                    <i className="fas fa-trash"></i>
                                   </button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -432,6 +412,58 @@ export default function Members({ artistId, membership }: MembersProps) {
                             </div>
                           )}
                         </div>
+
+                        {/* Member Details */}
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          {/* Role */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Role</Label>
+                            {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') ? (
+                              <Select
+                                value={member.role}
+                                onValueChange={(newRole) => updateRoleMutation.mutate({ membershipId: member.id, role: newRole })}
+                              >
+                                <SelectTrigger className="h-8 mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  {membership.role === 'owner' && <SelectItem value="owner">Owner</SelectItem>}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="secondary" className="mt-1">
+                                {member.role}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Instrument */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Instrument</Label>
+                            <p className="text-sm mt-1">{member.instrument || '-'}</p>
+                          </div>
+
+                          {/* Join Date */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Joined</Label>
+                            <p className="text-sm mt-1">
+                              {member.joinedAt ? format(new Date(member.joinedAt), 'd MMM yyyy') : '-'}
+                            </p>
+                          </div>
+
+                          {/* Status */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Status</Label>
+                            <Badge
+                              variant={member.status === 'active' ? 'default' : 'secondary'}
+                              className="mt-1"
+                            >
+                              {member.status}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -451,11 +483,12 @@ export default function Members({ artistId, membership }: MembersProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 sm:space-y-6">
-                  {/* Reusable Invite Link */}
-                  <div className="flex flex-col gap-3">
-                    <p className="text-sm text-muted-foreground">
-                      {activeInvites.length > 0 ? 'Share this link with anyone to join' : 'Create a reusable invite link to share with your team'}
-                    </p>
+                  {/* General Invite Link */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">General Invite Link</h3>
+                      <p className="text-sm text-muted-foreground">Share with anyone to join</p>
+                    </div>
                     <Button
                       onClick={async () => {
                         try {
@@ -478,53 +511,133 @@ export default function Members({ artistId, membership }: MembersProps) {
                           });
                         }
                       }}
-                      variant="default"
-                      size="default"
+                      variant="outline"
+                      size="sm"
                       data-testid="button-generate-general-link"
-                      className="w-full"
+                      className="flex-shrink-0"
                     >
-                      <i className="fas fa-link mr-2"></i>
-                      {activeInvites.length > 0 ? 'Share Invite Link' : 'Create Invite Link'}
+                      <i className="fas fa-share-nodes mr-2"></i>
+                      <span className="hidden sm:inline">Generate & </span>Share
                     </Button>
+                  </div>
+
+                  {/* Specific Member Invite */}
+                  <div>
+                    <div className="mb-3">
+                      <h3 className="font-semibold text-foreground">Send Specific Invite</h3>
+                      <p className="text-sm text-muted-foreground">Send a magic link to someone's phone</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Input
+                        type="tel"
+                        placeholder="+44 7xxx xxx xxx"
+                        className="flex-1"
+                        data-testid="input-invite-phone"
+                        value={invitePhone}
+                        onChange={(e) => setInvitePhone(e.target.value)}
+                      />
+                      <Button
+                        onClick={async () => {
+                          if (!invitePhone.trim()) {
+                            toast({
+                              title: "Phone number required",
+                              description: "Please enter a phone number to send the invite",
+                              variant: "destructive"
+                            });
+                            return;
+                          }
+
+                          try {
+                            const response = await apiRequest("POST", `/api/artists/${artistId}/invites/phone`, {
+                              phone: invitePhone
+                            });
+                            const data = await response.json();
+
+                            // Refresh invites list
+                            queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
+
+                            toast({
+                              title: "Invite sent!",
+                              description: `Magic link sent to ${invitePhone}`,
+                              variant: "default"
+                            });
+
+                            setInvitePhone("");
+                          } catch (error: any) {
+                            toast({
+                              title: "Error sending invite",
+                              description: error.message || "Please try again",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                        variant="action"
+                        data-testid="button-send-invite"
+                        disabled={!invitePhone.trim()}
+                        className="flex-shrink-0"
+                      >
+                        <i className="fas fa-paper-plane mr-2"></i>
+                        <span className="hidden sm:inline">Send </span>Invite
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Active Invite Link */}
-              {activeInvites.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg sm:text-xl">
-                      Active Invite Link
-                    </CardTitle>
-                    <CardDescription>
-                      {activeInvites[0].acceptedByUserId ? 'Used by members' : 'Reusable link - share with your team'}
-                    </CardDescription>
-                  </CardHeader>
+              {/* Active Invites List */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg sm:text-xl">
+                    Active Invite Links ({activeInvites.length})
+                  </CardTitle>
+                </CardHeader>
                 <CardContent className="pt-0">
                   {invitesLoading ? (
-                    <div className="text-center py-6">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mx-auto"></div>
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading invites...</p>
                     </div>
                   ) : activeInvites.length === 0 ? (
-                    <div className="text-center py-6">
-                      <p className="text-sm text-muted-foreground">No active invite link</p>
+                    <div className="text-center py-8">
+                      <i className="fas fa-envelope-open text-4xl text-muted-foreground mb-3"></i>
+                      <p className="text-muted-foreground">No active invite links</p>
+                      <p className="text-sm text-muted-foreground">Generate a new invite link above to get started</p>
                     </div>
                   ) : (
-                    <div>
-                      {(() => {
-                        const invite = activeInvites[0]; // Only show first invite
+                    <div className="divide-y divide-border/40">
+                      {activeInvites.map((invite) => {
                         const expiryDate = new Date(invite.expiresAt * 1000);
                         const inviteLink = `https://backstage.bndy.co.uk/invite/${invite.token}`;
 
                         return (
-                          <div className="space-y-3" data-testid={`invite-card-${invite.token}`}>
-                            <p className="text-xs text-muted-foreground">
-                              Created {format(new Date(invite.createdAt), 'd MMM yyyy')} • Expires {format(expiryDate, 'd MMM yyyy')}
+                          <div
+                            key={invite.token}
+                            className="py-4 first:pt-0 last:pb-0"
+                            data-testid={`invite-card-${invite.token}`}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={invite.inviteType === 'general' ? 'default' : 'secondary'} className="text-xs">
+                                {invite.inviteType === 'general' ? 'General' : 'Phone'}
+                              </Badge>
+                              <Badge variant="outline" className="text-green-600 text-xs">
+                                Active
+                              </Badge>
+                            </div>
+
+                            {invite.phone && (
+                              <p className="text-sm text-muted-foreground mb-1">
+                                Sent to: {invite.phone}
+                              </p>
+                            )}
+
+                            <p className="text-xs text-muted-foreground mb-3">
+                              Created {format(new Date(invite.createdAt), 'd MMM yyyy HH:mm')} •
+                              Expires {format(expiryDate, 'd MMM yyyy')}
                             </p>
 
-                            <div className="flex items-center gap-2">
-                              <code className="text-xs bg-muted px-3 py-2 rounded flex-1 truncate">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-3">
+                              <code className="text-xs bg-background px-2 py-1.5 rounded flex-1 truncate w-full sm:w-auto">
                                 {inviteLink}
                               </code>
                               <Button
@@ -539,11 +652,13 @@ export default function Members({ artistId, membership }: MembersProps) {
                                 }}
                                 data-testid={`button-copy-${invite.token}`}
                                 title="Copy link"
+                                className="flex-shrink-0"
                               >
                                 <i className="fas fa-copy"></i>
                               </Button>
                             </div>
 
+                            {/* Share Button - Mobile First */}
                             <div className="flex items-center gap-2">
                               <Button
                                 onClick={() => shareInviteLink(inviteLink, invite.metadata.artistName)}
@@ -553,7 +668,7 @@ export default function Members({ artistId, membership }: MembersProps) {
                                 data-testid={`button-share-${invite.token}`}
                               >
                                 <i className="fas fa-share-nodes mr-2"></i>
-                                Share Link
+                                Share Invite
                               </Button>
 
                               <AlertDialog>
@@ -588,7 +703,7 @@ export default function Members({ artistId, membership }: MembersProps) {
                             </div>
                           </div>
                         );
-                      })()}
+                      })}
                     </div>
                   )}
                 </CardContent>
