@@ -52,10 +52,11 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "agenda">("calendar");
-  
+
   // Simple toggle controls for the unified calendar view
   const [showArtistEvents, setShowArtistEvents] = useState(true);
   const [showMyEvents, setShowMyEvents] = useState(true);
+  const [showAllArtists, setShowAllArtists] = useState(false); // Default to current artist only
   
   const { toast } = useToast();
 
@@ -152,8 +153,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       return showArtistEvents;
     }
 
-    // Other artist events in artist context (shown as part of "My Events" for cross-artist privacy)
-    return showMyEvents;
+    // Other artist events in artist context - only show if "All Artists" toggle is enabled
+    return showAllArtists;
   });
 
   // Get artist members using new artist-scoped API (only when artist context exists)
@@ -596,7 +597,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-sans font-semibold text-card-foreground">
-                    Next Up - {EVENT_TYPE_CONFIG[nextEvent.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event"}{nextEvent.venue ? ` - ${nextEvent.venue}` : nextEvent.location ? ` - ${nextEvent.location}` : ''}
+                    Next Up - {getEventDisplayName(nextEvent)}
                   </h3>
                   <p className="text-card-foreground">
                     {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}
@@ -675,6 +676,24 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
             >
               <i className="fas fa-user text-xs"></i>
             </button>
+
+            {/* All Artists Toggle - Icon only on mobile - only show when in artist context */}
+            {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && (
+              <button
+                onClick={() => setShowAllArtists(!showAllArtists)}
+                className={`
+                  w-7 h-7 rounded-full text-xs font-medium border transition-all duration-200 flex items-center justify-center
+                  ${showAllArtists
+                    ? 'bg-purple-500 text-white border-purple-500'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                  }
+                `}
+                data-testid="toggle-all-artists"
+                title="All Artists"
+              >
+                <i className="fas fa-layer-group text-xs"></i>
+              </button>
+            )}
           </div>
         </div>
 
@@ -722,6 +741,27 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                   <i className="fas fa-check ml-2 text-xs"></i>
                 )}
               </button>
+
+              {/* All Artists Toggle - only show when in artist context and user has multiple artists */}
+              {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && (
+                <button
+                  onClick={() => setShowAllArtists(!showAllArtists)}
+                  className={`
+                    px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+                    ${showAllArtists
+                      ? 'bg-purple-500 text-white border-purple-500 shadow-md'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+                    }
+                  `}
+                  data-testid="toggle-all-artists"
+                >
+                  <i className="fas fa-layer-group mr-2 text-xs"></i>
+                  All Artists
+                  {showAllArtists && (
+                    <i className="fas fa-check ml-2 text-xs"></i>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
@@ -788,7 +828,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     className={`min-h-24 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
                     } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''} ${
-                      (index + 1) % 7 === 0 && index < calendarDays.length - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
+                      index % 7 === 6 && index < calendarDays.length - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
                     }`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
@@ -827,7 +867,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
 
                         const spanDays = Math.min(getEventSpanDays(event), getRemainingDaysInWeek(index));
                         const eventColors = getEventColors(event.type);
-                        const artistDisplayColour = artistData?.displayColour || '#f97316';
+                        const artistDisplayColour = (event as any).artistDisplayColour || artistData?.displayColour || '#f97316';
                         const isGig = event.type === 'gig' || event.type === 'public_gig';
 
                         return (
@@ -888,7 +928,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                           Math.ceil((eventEndDate.getTime() - day.getTime()) / (1000 * 60 * 60 * 24)) + 1 :
                           remainingDays;
                         const eventColors = getEventColors(event.type);
-                        const artistDisplayColour = artistData?.displayColour || '#f97316';
+                        const artistDisplayColour = (event as any).artistDisplayColour || artistData?.displayColour || '#f97316';
                         const isGig = event.type === 'gig' || event.type === 'public_gig';
 
                         return (
@@ -957,7 +997,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
             ) : (
               getAgendaEvents().map((event) => {
                 const isGig = event.type === 'gig' || event.type === 'public_gig';
-                const artistDisplayColour = artistData?.displayColour || '#f97316';
+                const artistDisplayColour = (event as any).artistDisplayColour || artistData?.displayColour || '#f97316';
                 const backgroundColor = isGig ? artistDisplayColour : (EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.color || EVENT_TYPE_CONFIG.practice.color);
 
                 return (
