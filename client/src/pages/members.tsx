@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface MembersProps {
@@ -108,7 +109,7 @@ export default function Members({ artistId, membership }: MembersProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await apiRequest("DELETE", `/api/artists/${artistId}/members/${membershipId}`);
+      const response = await apiRequest("DELETE", `/api/memberships/${membershipId}`);
       return response.json();
     },
     onSuccess: () => {
@@ -135,7 +136,9 @@ export default function Members({ artistId, membership }: MembersProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await apiRequest("PUT", `/api/artists/${artistId}/members/${membershipId}/disable`);
+      const response = await apiRequest("PUT", `/api/memberships/${membershipId}`, {
+        status: 'inactive'
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -149,6 +152,34 @@ export default function Members({ artistId, membership }: MembersProps) {
       toast({
         title: "Error",
         description: error.message || "Failed to disable member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update member role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ membershipId, role }: { membershipId: string, role: string }) => {
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await apiRequest("PUT", `/api/memberships/${membershipId}`, {
+        role: role
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "members"] });
+      toast({
+        title: "Success",
+        description: "Member role updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update role",
         variant: "destructive",
       });
     },
@@ -220,100 +251,148 @@ export default function Members({ artistId, membership }: MembersProps) {
               <CardDescription>Your active team members</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 {artistMembers.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-muted rounded-xl p-4 flex items-center justify-between"
+                    className="bg-muted rounded-xl p-4"
                     data-testid={`member-card-${member.id}`}
                   >
-                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                    <div className="flex items-start gap-4">
                       {/* Avatar */}
                       <div className="relative group flex-shrink-0">
                         {member.avatarUrl ? (
                           <img
                             src={member.avatarUrl}
                             alt={`${member.displayName} avatar`}
-                            className="w-14 h-14 rounded-full object-cover"
+                            className="w-16 h-16 rounded-full object-cover"
                           />
                         ) : (
                           <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center"
+                            className="w-16 h-16 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: member.color }}
                           >
-                            <i className={`fas ${member.icon} text-white text-lg`}></i>
+                            <i className={`fas ${member.icon} text-white text-xl`}></i>
                           </div>
                         )}
                       </div>
 
                       {/* Member Info */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-sans font-semibold text-card-foreground truncate" data-testid={`member-name-${member.id}`}>
-                          {member.displayName}
-                        </h4>
-                        {(member.user?.firstName || member.user?.lastName) && (
-                          <p className="text-sm text-muted-foreground truncate">
-                            {member.user.firstName} {member.user.lastName}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-xs">
-                            {member.role}
-                          </Badge>
-                          {member.instrument && (
-                            <span className="text-xs text-muted-foreground">{member.instrument}</span>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-sans font-semibold text-lg text-card-foreground truncate" data-testid={`member-name-${member.id}`}>
+                              {member.displayName}
+                            </h4>
+                            {(member.user?.firstName || member.user?.lastName) && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {member.user.firstName} {member.user.lastName}
+                              </p>
+                            )}
+                            {member.user?.email && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">{member.user.email}</p>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Disable button */}
+                              <button
+                                onClick={() => disableMemberMutation.mutate(member.id)}
+                                className="text-orange-500 hover:text-orange-700 p-2"
+                                title="Disable member"
+                                data-testid={`button-disable-${member.id}`}
+                              >
+                                <i className="fas fa-ban"></i>
+                              </button>
+
+                              {/* Remove button with confirmation */}
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button
+                                    className="text-red-500 hover:text-red-700 p-2"
+                                    data-testid={`button-remove-${member.id}`}
+                                    title="Remove member permanently"
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove Member</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove {member.displayName}? This will permanently delete their membership and all associated events. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => removeMemberMutation.mutate(member.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Remove
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           )}
                         </div>
-                        {member.user?.email && (
-                          <p className="text-xs text-muted-foreground mt-1 truncate">{member.user.email}</p>
-                        )}
+
+                        {/* Member Details */}
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          {/* Role */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Role</Label>
+                            {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') ? (
+                              <Select
+                                value={member.role}
+                                onValueChange={(newRole) => updateRoleMutation.mutate({ membershipId: member.id, role: newRole })}
+                              >
+                                <SelectTrigger className="h-8 mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  {membership.role === 'owner' && <SelectItem value="owner">Owner</SelectItem>}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="secondary" className="mt-1">
+                                {member.role}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Instrument */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Instrument</Label>
+                            <p className="text-sm mt-1">{member.instrument || '-'}</p>
+                          </div>
+
+                          {/* Join Date */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Joined</Label>
+                            <p className="text-sm mt-1">
+                              {member.joinedAt ? format(new Date(member.joinedAt), 'dd/MM/yyyy') : '-'}
+                            </p>
+                          </div>
+
+                          {/* Status */}
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Status</Label>
+                            <Badge
+                              variant={member.status === 'active' ? 'default' : 'secondary'}
+                              className="mt-1"
+                            >
+                              {member.status}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    {member.id !== membership.id && (membership.role === 'admin' || membership.role === 'owner') && (
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Disable button */}
-                        <button
-                          onClick={() => disableMemberMutation.mutate(member.id)}
-                          className="text-orange-500 hover:text-orange-700 p-2"
-                          title="Disable member"
-                          data-testid={`button-disable-${member.id}`}
-                        >
-                          <i className="fas fa-ban"></i>
-                        </button>
-
-                        {/* Remove button with confirmation */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button
-                              className="text-red-500 hover:text-red-700 p-2"
-                              data-testid={`button-remove-${member.id}`}
-                              title="Remove member permanently"
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove Member</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to remove {member.displayName}? This will permanently delete their membership and all associated events. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => removeMemberMutation.mutate(member.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
