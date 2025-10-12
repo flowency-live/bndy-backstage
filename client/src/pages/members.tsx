@@ -449,7 +449,7 @@ export default function Members({ artistId, membership }: MembersProps) {
                           <div>
                             <Label className="text-xs text-muted-foreground">Joined</Label>
                             <p className="text-sm mt-1">
-                              {member.joinedAt ? format(new Date(member.joinedAt), 'dd/MM/yyyy') : '-'}
+                              {member.joinedAt ? format(new Date(member.joinedAt), 'd MMM yyyy') : '-'}
                             </p>
                           </div>
 
@@ -634,8 +634,8 @@ export default function Members({ artistId, membership }: MembersProps) {
                                 )}
 
                                 <p className="text-xs text-muted-foreground mb-2">
-                                  Created {format(new Date(invite.createdAt), 'dd/MM/yyyy HH:mm')} •
-                                  Expires {format(expiryDate, 'dd/MM/yyyy')}
+                                  Created {format(new Date(invite.createdAt), 'd MMM yyyy HH:mm')} •
+                                  Expires {format(expiryDate, 'd MMM yyyy')}
                                 </p>
 
                                 <div className="flex items-center gap-2 mb-3">
