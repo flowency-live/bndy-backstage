@@ -146,8 +146,18 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       return showArtistEvents;
     }
 
-    // Personal unavailable events - user's own unavailability
-    if (event.type === 'unavailable' || !event.artistId) {
+    // Handle unavailability events - check ownership
+    if (event.type === 'unavailable') {
+      // If it's the current user's own unavailability → My Events
+      if (event.ownerUserId === session?.user?.cognitoId) {
+        return showMyEvents;
+      }
+      // If it's another user's unavailability within the same artist → Artist Events
+      return showArtistEvents;
+    }
+
+    // Personal events without artist association
+    if (!event.artistId) {
       return showMyEvents;
     }
 
