@@ -45,61 +45,49 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     checkAuth();
   }, []);
 
+  // Debug current auth state
+  console.log('🔧 MEMBER GATE: Current state:', {
+    authLoading,
+    contextLoading,
+    isAuthenticated,
+    hasUser: !!contextUserProfile?.user,
+    artistsCount: contextUserProfile?.artists?.length || 0,
+    allowNoContextForDashboard,
+    currentArtistId,
+    isRedirecting
+  });
 
   // Use data from user-context (already fetched and managed)
   const userProfile = contextUserProfile;
 
-  // Handle authentication and profile completion redirects
+  // Handle authentication redirects
   useEffect(() => {
-    // Step 1: Check authentication
+    console.log('🔧 MEMBER GATE: Authentication redirect check triggered');
+    console.log('🔧 MEMBER GATE: Auth state details:', {
+      authLoading,
+      contextLoading,
+      isAuthenticated,
+      hasUser: !!userProfile?.user,
+      isRedirecting
+    });
+
+    // Only redirect if we're absolutely sure the user is not authenticated
     if (!authLoading && !isAuthenticated) {
-      if (!isRedirecting) {
-        console.log('🔐 MemberGate: Not authenticated, redirecting to login');
-        setIsRedirecting(true);
-        setLocation('/login');
-      }
-      return;
+      console.log('🔧 MEMBER GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
+      setIsRedirecting(true);
+      setLocation('/login');
+    } else {
+      console.log('🔧 MEMBER GATE: ✅ Not redirecting to login');
+      console.log('🔧 MEMBER GATE: Stay reason:', {
+        authLoading: authLoading ? 'still loading' : 'done',
+        contextLoading: contextLoading ? 'still loading' : 'done',
+        isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
+      });
     }
-
-    // Step 2: Check profile completion (after auth confirmed)
-    if (!authLoading && !contextLoading && isAuthenticated && userProfile?.user) {
-      const currentPath = window.location.pathname;
-
-      // Skip profile check if already on profile page or logout
-      if (currentPath === '/profile' || currentPath === '/logout') {
-        return;
-      }
-
-      // Check if profile has required fields
-      const hasRequiredFields =
-        userProfile.user.firstName &&
-        userProfile.user.lastName &&
-        userProfile.user.displayName;
-
-      const profileComplete = userProfile.user.profileCompleted || hasRequiredFields;
-
-      if (!profileComplete) {
-        console.log('👤 MemberGate: Profile incomplete, redirecting to /profile', {
-          firstName: !!userProfile.user.firstName,
-          lastName: !!userProfile.user.lastName,
-          displayName: !!userProfile.user.displayName
-        });
-        setIsRedirecting(true);
-        setLocation('/profile');
-        return;
-      }
-
-      console.log('✅ MemberGate: Profile complete, allowing access');
-      // Reset redirecting state when all checks pass
-      if (isRedirecting) {
-        setIsRedirecting(false);
-      }
-    }
-  }, [authLoading, contextLoading, isAuthenticated, userProfile, setLocation, isRedirecting]);
+  }, [authLoading, isAuthenticated, setLocation, isRedirecting, contextLoading, userProfile]);
 
   // Show loading state
   if (authLoading || contextLoading || isRedirecting) {
-    console.log('🔄 MemberGate: Loading state', { authLoading, contextLoading, isRedirecting });
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">
@@ -123,14 +111,14 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
         <div className="text-center max-w-md w-full">
           <div className="mb-8" data-testid="logo-container">
             <div className="w-48 h-48 flex items-center justify-center mx-auto">
-              <BndyLogo 
+              <BndyLogo
                 className="w-32 h-32"
                 color="white"
-                holeColor="rgb(51 65 85)" 
+                holeColor="rgb(51 65 85)"
               />
             </div>
           </div>
-          
+
           <h2 className="text-2xl font-serif text-white mb-6">Select Your Artist</h2>
 
           <div className="space-y-3 mb-6">
@@ -180,13 +168,6 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
 
   // Render children with artist context (could be null for dashboard)
   // user-context already handles finding the current membership
-  console.log('✅ MemberGate: Rendering children', {
-    currentArtistId,
-    hasMembership: !!currentMembership,
-    hasUserProfile: !!userProfile,
-    artistsCount: userProfile?.artists?.length || 0
-  });
-
   return (
     <>
       {children({
