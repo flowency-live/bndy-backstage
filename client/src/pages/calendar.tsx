@@ -771,7 +771,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 divide-x divide-slate-300 dark:divide-slate-700 bg-white dark:bg-slate-900">
+            <div className="grid grid-cols-7 bg-white dark:bg-slate-900">
               {calendarDays.map((day, index) => {
                 const dateStr = format(day, "yyyy-MM-dd");
                 const dayEvents = getEventsForDate(day);
@@ -787,7 +787,9 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     key={index}
                     className={`min-h-24 relative ${
                       isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
-                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''}`}
+                    } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''} ${
+                      (index + 1) % 7 === 0 && index < calendarDays.length - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
+                    }`}
                     data-testid={`calendar-day-${dateStr}`}
                   >
                     {/* Date number - centered at top */}
