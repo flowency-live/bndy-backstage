@@ -186,8 +186,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
     enabled: !!effectiveArtistId,
   });
 
-  // Get full artist data for display settings (displayColour, etc.)
-  const { data: artistData } = useQuery<{ displayColour?: string }>({
+  // Get full artist data for display settings (displayColour, name, etc.)
+  const { data: artistData } = useQuery<{ displayColour?: string; name?: string }>({
     queryKey: ["/api/artists", effectiveArtistId],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/artists/${effectiveArtistId}`);
@@ -615,11 +615,14 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-sans font-semibold text-card-foreground">
-                    Next - {(nextEvent as any).artistName || effectiveMembership?.artistName || 'Event'} - {nextEvent.venue || nextEvent.location || 'TBC'} - {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}{nextEvent.startTime && ` ${nextEvent.startTime}`}
+                    Next - {artistData?.name || (nextEvent as any).artistName || effectiveMembership?.artistName || 'Event'} - {nextEvent.venue || nextEvent.location || 'TBC'}
                   </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {format(new Date(nextEvent.date + 'T00:00:00'), "EEE MMM do")}{nextEvent.startTime && ` ${nextEvent.startTime}`}
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setDismissedHighlight(true)}
                 className="text-muted-foreground hover:text-foreground"
                 data-testid="button-dismiss-highlight"
