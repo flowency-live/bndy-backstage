@@ -258,23 +258,33 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   };
 
   // Helper function to get display name for an event
-  const getEventDisplayName = (event: Event & { bandName?: string; displayName?: string }) => {
+  const getEventDisplayName = (event: Event & { bandName?: string; displayName?: string; crossArtistEvent?: boolean }) => {
     let eventName = "";
 
-    if (event.type === "unavailable") {
-      // Check if backend enriched the event with displayName (new system)
-      if (event.displayName) {
-        eventName = event.displayName;
-      } else if (event.membershipId) {
-        // Legacy band member unavailable event
-        const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
-        // For unavailable events, prefer the user's display name over the membership display name
-        eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
-      } else if (event.ownerUserId) {
-        // Fallback for events not yet enriched
-        eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
-      } else {
-        eventName = "Unavailable";
+    // Check if this is a cross-artist event (from another artist showing as unavailability)
+    const isCrossArtist = (event as any).crossArtistEvent ||
+                          (effectiveArtistId && event.artistId && event.artistId !== effectiveArtistId);
+
+    if (event.type === "unavailable" || isCrossArtist) {
+      // For unavailability or cross-artist events, exclude time
+      if (event.type === "unavailable") {
+        // Check if backend enriched the event with displayName (new system)
+        if (event.displayName) {
+          eventName = event.displayName;
+        } else if (event.membershipId) {
+          // Legacy band member unavailable event
+          const member = artistMembers.find(member => member.membership_id === event.membershipId || member.user_id === event.membershipId);
+          // For unavailable events, prefer the user's display name over the membership display name
+          eventName = member?.user?.displayName?.trim() || member?.displayName || "Unavailable";
+        } else if (event.ownerUserId) {
+          // Fallback for events not yet enriched
+          eventName = userProfile?.user?.displayName?.trim() || "Unavailable";
+        } else {
+          eventName = "Unavailable";
+        }
+      } else if (isCrossArtist) {
+        // Cross-artist events: show only the user's display name
+        eventName = event.displayName || "Unavailable";
       }
     } else if (event.type === "gig") {
       // Format: Venue, Time, Title
@@ -925,7 +935,6 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-${event.id}`}
                           >
-                            {event.type === 'unavailable' && <span className="mr-1">✗</span>}
                             {event.type === 'gig' || event.type === 'unavailable' ? getEventDisplayName(event) : (event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event))}
                           </div>
                         );
@@ -985,7 +994,6 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-extending-${event.id}`}
                           >
-                            {event.type === 'unavailable' && <span className="mr-1">✗</span>}
                             {getEventDisplayName(event)}
                           </div>
                         );
@@ -1042,7 +1050,6 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-sans font-semibold text-card-foreground">
-                        {event.type === 'unavailable' && <span className="mr-1 text-red-500">✗</span>}
                         {getEventDisplayName(event)}
                       </h4>
                       <p className="text-muted-foreground">
