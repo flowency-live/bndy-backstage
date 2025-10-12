@@ -251,26 +251,26 @@ class AuthService {
     success: boolean;
     membership: {
       id: string;
-      artistId: string;
       role: string;
       joinedAt: string;
     };
     artist: {
       id: string;
       name: string;
+      profileImageUrl?: string;
     };
   }> {
     const response = await this.apiRequest<{
       success: boolean;
       membership: {
         id: string;
-        artistId: string;
         role: string;
         joinedAt: string;
       };
       artist: {
         id: string;
         name: string;
+        profileImageUrl?: string;
       };
     }>(`/api/invites/${token}/accept`, {
       method: 'POST',

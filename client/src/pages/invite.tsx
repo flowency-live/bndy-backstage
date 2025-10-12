@@ -9,11 +9,14 @@ import BndyLogo from "@/components/ui/bndy-logo";
 interface InviteDetails {
   token: string;
   artistId: string;
-  artistName: string;
-  invitedByUserId: string;
-  invitedByName?: string;
-  expiresAt: string;
+  inviteType: string;
+  status: string;
+  expiresAt: number;
   createdAt: string;
+  metadata: {
+    artistName: string;
+    inviterName?: string;
+  };
 }
 
 export default function Invite() {
@@ -92,13 +95,17 @@ export default function Invite() {
 
       localStorage.removeItem('pendingInvite');
 
+      // Set the new artist as the active context
+      console.log('🎫 INVITE: Setting new artist as active context:', result.artist.id);
+      localStorage.setItem('bndy-selected-artist-id', result.artist.id);
+
       toast({
-        title: "Invitation Accepted!",
-        description: `You've joined ${result.artist.name}`,
+        title: "Welcome to the Band!",
+        description: `You've joined ${result.artist.name}! Taking you to your dashboard...`,
         variant: "default"
       });
 
-      // Redirect to dashboard
+      // Redirect to dashboard - UserProvider will load the artist context
       setLocation('/dashboard');
     } catch (error: any) {
       console.error('🎫 INVITE: Accept error:', error);
@@ -185,35 +192,54 @@ export default function Invite() {
           </h1>
 
           <p className="text-gray-600 mb-2">
-            {inviteDetails.invitedByName ? `${inviteDetails.invitedByName} has` : 'You\'ve been'} invited you to join
+            {inviteDetails.metadata.inviterName ? `${inviteDetails.metadata.inviterName} has` : 'You\'ve been'} invited you to join
           </p>
 
           <p className="text-2xl font-serif text-brand-primary mb-6">
-            {inviteDetails.artistName}
+            {inviteDetails.metadata.artistName}
           </p>
 
-          <p className="text-gray-600 mb-6">
-            Join this exclusive platform to stay organised and coordinate your music.
-          </p>
+          {!isAuthenticated ? (
+            <p className="text-gray-600 mb-6">
+              <strong>Ready to join?</strong> Sign in or create your account to accept this invitation and start collaborating with {inviteDetails.metadata.artistName}.
+            </p>
+          ) : !profileComplete ? (
+            <p className="text-gray-600 mb-6">
+              <strong>Almost there!</strong> Complete your profile to join {inviteDetails.metadata.artistName} and access your dashboard.
+            </p>
+          ) : (
+            <p className="text-gray-600 mb-6">
+              <strong>You're all set!</strong> Accept this invitation to join {inviteDetails.metadata.artistName} and access the band's calendar, setlists, and more.
+            </p>
+          )}
 
           <div className="space-y-3">
             <Button
               onClick={handleAcceptInvite}
               disabled={accepting}
-              className="w-full bg-brand-accent hover:bg-brand-accent-light text-white py-3"
+              className="w-full bg-brand-accent hover:bg-brand-accent-light text-white py-3 font-semibold"
               data-testid="button-accept-invite"
             >
               {accepting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Accepting...
+                  Joining {inviteDetails.metadata.artistName}...
                 </>
               ) : isAuthenticated && !profileComplete ? (
-                "Complete Profile to Accept"
+                <>
+                  <i className="fas fa-user-edit mr-2"></i>
+                  Complete Profile & Join
+                </>
               ) : !isAuthenticated ? (
-                "Sign In to Accept"
+                <>
+                  <i className="fas fa-sign-in-alt mr-2"></i>
+                  Sign In to Join
+                </>
               ) : (
-                "Accept Invitation"
+                <>
+                  <i className="fas fa-check-circle mr-2"></i>
+                  Accept & Join Band
+                </>
               )}
             </Button>
 
@@ -229,12 +255,23 @@ export default function Invite() {
           </div>
         </div>
 
-        <div className="mt-6 text-slate-400 text-sm">
-          <p>
-            {!isAuthenticated ? "Joining requires phone verification" :
-             !profileComplete ? "Complete your profile to continue" :
-             "Ready to join!"}
-          </p>
+        <div className="mt-6 text-slate-400 text-sm space-y-2">
+          {!isAuthenticated ? (
+            <div>
+              <p className="font-semibold mb-1">📱 New to bndy?</p>
+              <p>We'll walk you through phone verification and creating your profile.</p>
+            </div>
+          ) : !profileComplete ? (
+            <div>
+              <p className="font-semibold mb-1">👤 Profile Required</p>
+              <p>Add your name and details to join the band.</p>
+            </div>
+          ) : (
+            <div>
+              <p className="font-semibold mb-1">🎸 You're One Click Away!</p>
+              <p>Accept to unlock your band's calendar, setlists, and collaboration tools.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
