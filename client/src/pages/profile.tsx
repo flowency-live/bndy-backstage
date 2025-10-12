@@ -71,17 +71,8 @@ export default function Profile() {
         return;
       }
 
-      // If this was profile creation, redirect to dashboard or band selection
-      if (mode === "create") {
-        if (userProfile?.artists && userProfile.artists.length > 0) {
-          setLocation("/dashboard");
-        } else {
-          setLocation("/onboarding");
-        }
-      } else {
-        // If editing, always go back to dashboard
-        setLocation("/dashboard");
-      }
+      // Always redirect to dashboard after profile completion
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
