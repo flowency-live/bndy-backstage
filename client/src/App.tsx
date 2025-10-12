@@ -18,6 +18,7 @@ import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
+import Members from "@/pages/members";
 import Issues from "@/pages/issues";
 import Godmode from "@/pages/godmode";
 // Onboarding removed - artist creation now in dashboard
@@ -113,6 +114,20 @@ function Router() {
               <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Admin artistId={contextId} membership={membership} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/members">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Members artistId={contextId} membership={membership} />
                 </AppLayout>
               </ProfileGate>
             );

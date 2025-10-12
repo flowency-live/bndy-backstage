@@ -937,7 +937,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               color="hsl(142, 71%, 45%)"
               count={artistMembers.length}
               actionLabel="Manage"
-              onClick={() => setLocation("/admin")}
+              onClick={() => setLocation("/members")}
               className="animate-stagger-4"
             />
           </div>
