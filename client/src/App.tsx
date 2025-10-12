@@ -63,14 +63,11 @@ function Router() {
       </Route>
       <Route path="/calendar">
         <MemberGate>
-          {({ contextId, membership }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <AppLayout artistId={contextId} membership={membership}>
-                <Calendar artistId={contextId} membership={membership} />
-              </AppLayout>
-            );
-          }}
+          {({ contextId, membership }) => (
+            <AppLayout artistId={contextId} membership={membership}>
+              <Calendar artistId={contextId} membership={membership} />
+            </AppLayout>
+          )}
         </MemberGate>
       </Route>
       <Route path="/gigs">
