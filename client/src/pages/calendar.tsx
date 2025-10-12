@@ -308,8 +308,19 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       return event.membershipId === effectiveMembership?.id;
     }
 
-    // For other events, all band members can edit (could be extended with role-based permissions later)
-    return true;
+    // For artist events, only allow editing if in that artist's context
+    // This prevents users from editing/deleting other artists' events when viewing cross-artist calendar
+    if (event.artistId && effectiveArtistId) {
+      return event.artistId === effectiveArtistId;
+    }
+
+    // For personal events without artist context, allow editing
+    if (!event.artistId) {
+      return true;
+    }
+
+    // Default: no permission
+    return false;
   };
 
   const getArtistEvents = (dateEvents: Event[]) => {
