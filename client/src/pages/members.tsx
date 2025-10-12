@@ -60,7 +60,6 @@ export default function Members({ artistId, membership }: MembersProps) {
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
   const { toast } = useToast();
-  const [invitePhone, setInvitePhone] = useState("");
 
   // Share invite link using native share dialog (mobile-first)
   const shareInviteLink = async (inviteLink: string, artistName: string) => {
@@ -520,68 +519,6 @@ export default function Members({ artistId, membership }: MembersProps) {
                       <span className="hidden sm:inline">Generate & </span>Share
                     </Button>
                   </div>
-
-                  {/* Specific Member Invite */}
-                  <div>
-                    <div className="mb-3">
-                      <h3 className="font-semibold text-foreground">Send Specific Invite</h3>
-                      <p className="text-sm text-muted-foreground">Send a magic link to someone's phone</p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Input
-                        type="tel"
-                        placeholder="+44 7xxx xxx xxx"
-                        className="flex-1"
-                        data-testid="input-invite-phone"
-                        value={invitePhone}
-                        onChange={(e) => setInvitePhone(e.target.value)}
-                      />
-                      <Button
-                        onClick={async () => {
-                          if (!invitePhone.trim()) {
-                            toast({
-                              title: "Phone number required",
-                              description: "Please enter a phone number to send the invite",
-                              variant: "destructive"
-                            });
-                            return;
-                          }
-
-                          try {
-                            const response = await apiRequest("POST", `/api/artists/${artistId}/invites/phone`, {
-                              phone: invitePhone
-                            });
-                            const data = await response.json();
-
-                            // Refresh invites list
-                            queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "invites"] });
-
-                            toast({
-                              title: "Invite sent!",
-                              description: `Magic link sent to ${invitePhone}`,
-                              variant: "default"
-                            });
-
-                            setInvitePhone("");
-                          } catch (error: any) {
-                            toast({
-                              title: "Error sending invite",
-                              description: error.message || "Please try again",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
-                        variant="action"
-                        data-testid="button-send-invite"
-                        disabled={!invitePhone.trim()}
-                        className="flex-shrink-0"
-                      >
-                        <i className="fas fa-paper-plane mr-2"></i>
-                        <span className="hidden sm:inline">Send </span>Invite
-                      </Button>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -616,21 +553,6 @@ export default function Members({ artistId, membership }: MembersProps) {
                             className="py-4 first:pt-0 last:pb-0"
                             data-testid={`invite-card-${invite.token}`}
                           >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant={invite.inviteType === 'general' ? 'default' : 'secondary'} className="text-xs">
-                                {invite.inviteType === 'general' ? 'General' : 'Phone'}
-                              </Badge>
-                              <Badge variant="outline" className="text-green-600 text-xs">
-                                Active
-                              </Badge>
-                            </div>
-
-                            {invite.phone && (
-                              <p className="text-sm text-muted-foreground mb-1">
-                                Sent to: {invite.phone}
-                              </p>
-                            )}
-
                             <p className="text-xs text-muted-foreground mb-3">
                               Created {format(new Date(invite.createdAt), 'd MMM yyyy HH:mm')} •
                               Expires {format(expiryDate, 'd MMM yyyy')}
