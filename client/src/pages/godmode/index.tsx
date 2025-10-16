@@ -44,7 +44,7 @@ export default function GodmodePage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(false);
   const [artistsError, setArtistsError] = useState<string | null>(null);
-  const [artistFilter, setArtistFilter] = useState<'all' | 'verified' | 'unverified' | 'claimed' | 'unclaimed'>('all');
+  const [artistFilter, setArtistFilter] = useState<'all' | 'has-owner'>('all');
   const [artistSearch, setArtistSearch] = useState('');
   const [editingArtist, setEditingArtist] = useState<string | null>(null);
   const [artistEditForm, setArtistEditForm] = useState<Artist | null>(null);
@@ -278,10 +278,9 @@ export default function GodmodePage() {
     const matchesSearch = a.name.toLowerCase().includes(artistSearch.toLowerCase()) ||
                          a.location.toLowerCase().includes(artistSearch.toLowerCase());
     if (!matchesSearch) return false;
-    if (artistFilter === 'verified') return a.isVerified;
-    if (artistFilter === 'unverified') return !a.isVerified;
-    if (artistFilter === 'claimed') return a.claimedByUserId !== null;
-    if (artistFilter === 'unclaimed') return a.claimedByUserId === null;
+    if (artistFilter === 'has-owner') {
+      return memberships.some(m => m.artist_id === a.id && m.role === 'owner');
+    }
     return true;
   });
 
@@ -323,11 +322,7 @@ export default function GodmodePage() {
 
   const artistStats = {
     total: artists.length,
-    verified: artists.filter(a => a.isVerified).length,
-    unverified: artists.filter(a => !a.isVerified).length,
-    claimed: artists.filter(a => a.claimedByUserId !== null).length,
-    unclaimed: artists.filter(a => a.claimedByUserId === null).length,
-    withImages: artists.filter(a => a.profileImageUrl).length,
+    hasOwner: artists.filter(a => memberships.some(m => m.artist_id === a.id && m.role === 'owner')).length,
   };
 
   const songStats = {
@@ -453,7 +448,12 @@ export default function GodmodePage() {
                               className="h-8"
                             />
                           ) : (
-                            <div className="font-medium">{venue.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{venue.name}</span>
+                              {venues.filter(v => v.name.toLowerCase() === venue.name.toLowerCase()).length > 1 && (
+                                <AlertCircle className="h-4 w-4 text-orange-500" title="Duplicate name detected" />
+                              )}
+                            </div>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -552,18 +552,11 @@ export default function GodmodePage() {
                 All ({artistStats.total})
               </Button>
               <Button
-                variant={artistFilter === 'verified' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('verified')}
+                variant={artistFilter === 'has-owner' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('has-owner')}
                 size="sm"
               >
-                Verified ({artistStats.verified})
-              </Button>
-              <Button
-                variant={artistFilter === 'claimed' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('claimed')}
-                size="sm"
-              >
-                Claimed ({artistStats.claimed})
+                Has Owner ({artistStats.hasOwner})
               </Button>
             </div>
             <div className="flex gap-2">
