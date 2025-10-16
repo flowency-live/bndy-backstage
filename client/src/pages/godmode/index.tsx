@@ -154,6 +154,23 @@ export default function GodmodePage() {
     if (activeTab === 'users' && users.length === 0) fetchUsers();
   }, [activeTab]);
 
+  // Reset pages when search changes
+  useEffect(() => {
+    setVenuePage(1);
+  }, [venueSearch, venueFilter]);
+
+  useEffect(() => {
+    setArtistPage(1);
+  }, [artistSearch, artistFilter]);
+
+  useEffect(() => {
+    setSongPage(1);
+  }, [songSearch, songFilter]);
+
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch, userFilter]);
+
   // Venue Handlers
   const handleVenueEditStart = (venue: Venue) => {
     setEditingVenue(venue.id);
