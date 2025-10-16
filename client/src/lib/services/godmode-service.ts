@@ -61,6 +61,20 @@ export interface Venue {
   updatedAt?: string;
 }
 
+export interface User {
+  id: string;
+  cognitoId: string;
+  email: string | null;
+  phone: string | null;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
+  profileCompleted: boolean;
+  membershipCount: number;
+  createdAt: string;
+}
+
 // Artist Operations
 export async function getAllArtists(): Promise<Artist[]> {
   try {
@@ -350,4 +364,21 @@ export function getSocialMediaCount(artist: Artist): number {
   if (artist.instagramUrl) count++;
   if (artist.websiteUrl) count++;
   return count + artist.socialMediaUrls.length;
+}
+
+// User Operations
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/users`, {
+      credentials: 'include' // Include cookies for authentication
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.users || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
 }

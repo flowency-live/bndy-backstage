@@ -23,7 +23,7 @@ interface ProfileGateProps {
  * MemberGate handles all loading states - ProfileGate just checks and redirects.
  */
 export default function ProfileGate({ children, userProfile }: ProfileGateProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
@@ -50,6 +50,13 @@ export default function ProfileGate({ children, userProfile }: ProfileGateProps)
 
     // Redirect to profile page if incomplete
     if (!profileComplete) {
+      // Don't redirect if already on profile page (prevents infinite loop)
+      if (location === '/profile') {
+        console.log('🔒 PROFILE GATE: ❌ Profile incomplete but already on /profile - no redirect');
+        setHasChecked(true);
+        return;
+      }
+
       console.log('🔒 PROFILE GATE: ❌ Profile incomplete - redirecting to /profile');
       setLocation('/profile');
     } else {
@@ -57,7 +64,7 @@ export default function ProfileGate({ children, userProfile }: ProfileGateProps)
     }
 
     setHasChecked(true);
-  }, [userProfile, hasChecked, setLocation]);
+  }, [userProfile, hasChecked, location, setLocation]);
 
   // If no userProfile yet, render nothing (MemberGate shows loading)
   if (!userProfile?.user) {

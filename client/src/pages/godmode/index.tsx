@@ -8,6 +8,7 @@ import {
   getAllVenues,
   getAllArtists,
   getAllSongs,
+  getAllUsers,
   updateVenue,
   updateArtist,
   updateSong,
@@ -17,7 +18,8 @@ import {
   formatDuration,
   type Venue,
   type Artist,
-  type Song
+  type Song,
+  type User
 } from '@/lib/services/godmode-service';
 
 export default function GodmodePage() {
@@ -59,6 +61,15 @@ export default function GodmodePage() {
   const [songPage, setSongPage] = useState(1);
   const songsPerPage = 25;
 
+  // Users State
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [userFilter, setUserFilter] = useState<'all' | 'completed' | 'incomplete' | 'with-bands' | 'no-bands'>('all');
+  const [userSearch, setUserSearch] = useState('');
+  const [userPage, setUserPage] = useState(1);
+  const usersPerPage = 25;
+
   // Fetch Functions
   const fetchVenues = async () => {
     setVenuesLoading(true);
@@ -99,10 +110,24 @@ export default function GodmodePage() {
     }
   };
 
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      setUsersError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'venues' && venues.length === 0) fetchVenues();
     if (activeTab === 'artists' && artists.length === 0) fetchArtists();
     if (activeTab === 'songs' && songs.length === 0) fetchSongs();
+    if (activeTab === 'users' && users.length === 0) fetchUsers();
   }, [activeTab]);
 
   // Venue Handlers
@@ -284,7 +309,7 @@ export default function GodmodePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="venues" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Venues ({venueStats.total})
@@ -296,6 +321,10 @@ export default function GodmodePage() {
           <TabsTrigger value="songs" className="flex items-center gap-2">
             <Music className="h-4 w-4" />
             Songs ({songStats.total})
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Users ({users.length})
           </TabsTrigger>
         </TabsList>
 
@@ -772,6 +801,160 @@ export default function GodmodePage() {
                       size="sm"
                       onClick={() => setSongPage(p => Math.min(songTotalPages, p + 1))}
                       disabled={songPage === songTotalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* USERS TAB */}
+        <TabsContent value="users" className="mt-6">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <Input
+                placeholder="Search users by name, email, or phone..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="max-w-md"
+              />
+              <Button onClick={fetchUsers} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={userFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setUserFilter('all')}
+                size="sm"
+              >
+                All ({users.length})
+              </Button>
+              <Button
+                variant={userFilter === 'completed' ? 'default' : 'outline'}
+                onClick={() => setUserFilter('completed')}
+                size="sm"
+              >
+                Complete ({users.filter(u => u.profileCompleted).length})
+              </Button>
+              <Button
+                variant={userFilter === 'incomplete' ? 'default' : 'outline'}
+                onClick={() => setUserFilter('incomplete')}
+                size="sm"
+              >
+                Incomplete ({users.filter(u => !u.profileCompleted).length})
+              </Button>
+              <Button
+                variant={userFilter === 'with-bands' ? 'default' : 'outline'}
+                onClick={() => setUserFilter('with-bands')}
+                size="sm"
+              >
+                With Bands ({users.filter(u => u.membershipCount > 0).length})
+              </Button>
+              <Button
+                variant={userFilter === 'no-bands' ? 'default' : 'outline'}
+                onClick={() => setUserFilter('no-bands')}
+                size="sm"
+              >
+                No Bands ({users.filter(u => u.membershipCount === 0).length})
+              </Button>
+            </div>
+          </div>
+
+          {usersLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
+          {usersError && <div className="text-destructive text-center py-12">{usersError}</div>}
+
+          {!usersLoading && !usersError && (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Cognito ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Display Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Profile</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Bands</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {users
+                      .filter(u => {
+                        const matchesSearch = (u.displayName && u.displayName.toLowerCase().includes(userSearch.toLowerCase())) ||
+                                            (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase())) ||
+                                            (u.phone && u.phone.includes(userSearch)) ||
+                                            u.cognitoId.toLowerCase().includes(userSearch.toLowerCase());
+                        if (!matchesSearch) return false;
+                        if (userFilter === 'completed') return u.profileCompleted;
+                        if (userFilter === 'incomplete') return !u.profileCompleted;
+                        if (userFilter === 'with-bands') return u.membershipCount > 0;
+                        if (userFilter === 'no-bands') return u.membershipCount === 0;
+                        return true;
+                      })
+                      .slice((userPage - 1) * usersPerPage, userPage * usersPerPage)
+                      .map(user => (
+                        <tr key={user.id} className="hover:bg-muted/50">
+                          <td className="px-4 py-3">
+                            <div className="font-mono text-xs text-muted-foreground">{user.cognitoId.substring(0, 20)}...</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-medium">{user.displayName || <span className="text-muted-foreground italic">NULL</span>}</div>
+                            {user.firstName && user.lastName && (
+                              <div className="text-xs text-muted-foreground">{user.firstName} {user.lastName}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm">{user.email || user.phone || <span className="text-muted-foreground italic">-</span>}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            {user.profileCompleted ? (
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <AlertCircle className="h-5 w-5 text-yellow-500" />
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm font-medium">{user.membershipCount}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-xs text-muted-foreground">
+                              {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Users Pagination */}
+              {Math.ceil(users.length / usersPerPage) > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(userPage - 1) * usersPerPage + 1}-{Math.min(userPage * usersPerPage, users.length)} of {users.length} users
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUserPage(p => Math.max(1, p - 1))}
+                      disabled={userPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-sm">Page {userPage} of {Math.ceil(users.length / usersPerPage)}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUserPage(p => Math.min(Math.ceil(users.length / usersPerPage), p + 1))}
+                      disabled={userPage === Math.ceil(users.length / usersPerPage)}
                     >
                       Next
                     </Button>
