@@ -412,16 +412,14 @@ export async function deleteUser(userId: string): Promise<void> {
 // Membership Operations
 export async function getAllMemberships(): Promise<Membership[]> {
   try {
-    // Use the DynamoDB scan via a Lambda function
-    // For now, we'll need to create an endpoint or use AWS SDK directly
-    // This is a placeholder - we'll implement via Lambda
     const response = await fetch(`${API_BASE_URL}/api/memberships/all`, {
       credentials: 'include'
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch memberships: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    return data.memberships || [];
   } catch (error) {
     console.error('Error fetching memberships:', error);
     throw error;
