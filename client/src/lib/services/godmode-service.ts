@@ -382,3 +382,19 @@ export async function getAllUsers(): Promise<User[]> {
     throw error;
   }
 }
+
+export async function deleteUser(userId: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete user: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error deleting user ${userId}:`, error);
+    throw error;
+  }
+}

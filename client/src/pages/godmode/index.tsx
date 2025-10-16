@@ -15,6 +15,7 @@ import {
   deleteVenue,
   deleteArtist,
   deleteSong,
+  deleteUser,
   formatDuration,
   type Venue,
   type Artist,
@@ -67,6 +68,7 @@ export default function GodmodePage() {
   const [usersError, setUsersError] = useState<string | null>(null);
   const [userFilter, setUserFilter] = useState<'all' | 'completed' | 'incomplete' | 'with-bands' | 'no-bands'>('all');
   const [userSearch, setUserSearch] = useState('');
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [userPage, setUserPage] = useState(1);
   const usersPerPage = 25;
 
@@ -220,6 +222,20 @@ export default function GodmodePage() {
       setSongsError(err instanceof Error ? err.message : 'Failed to delete');
     } finally {
       setDeletingSong(null);
+    }
+  };
+
+  // User Handlers
+  const handleUserDelete = async (userId: string) => {
+    if (!confirm('Delete this user? This will also delete all artist memberships for this user.')) return;
+    setDeletingUser(userId);
+    try {
+      await deleteUser(userId);
+      setUsers(users.filter(u => u.id !== userId));
+    } catch (err) {
+      setUsersError(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setDeletingUser(null);
     }
   };
 
@@ -557,6 +573,7 @@ export default function GodmodePage() {
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Location</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genres</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Owner</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
                     </tr>
@@ -577,6 +594,16 @@ export default function GodmodePage() {
                         </td>
                         <td className="px-4 py-3 text-sm">{artist.location}</td>
                         <td className="px-4 py-3 text-sm">{artist.genres.slice(0, 2).join(', ')}</td>
+                        <td className="px-4 py-3">
+                          {artist.claimedByUserId ? (
+                            <div className="text-sm">
+                              {users.find(u => u.id === artist.claimedByUserId)?.displayName ||
+                               <span className="text-muted-foreground italic">Unknown User</span>}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground italic text-sm">Unclaimed</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {artist.isVerified && <CheckCircle className="h-4 w-4 text-green-500" />}
@@ -880,6 +907,7 @@ export default function GodmodePage() {
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Profile</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artists</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Created</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -926,6 +954,16 @@ export default function GodmodePage() {
                             <div className="text-xs text-muted-foreground">
                               {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
                             </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleUserDelete(user.id)}
+                              disabled={deletingUser === user.id}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </td>
                         </tr>
                       ))}
