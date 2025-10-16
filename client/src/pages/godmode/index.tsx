@@ -9,6 +9,7 @@ import {
   getAllArtists,
   getAllSongs,
   getAllUsers,
+  getAllMemberships,
   updateVenue,
   updateArtist,
   updateSong,
@@ -20,7 +21,8 @@ import {
   type Venue,
   type Artist,
   type Song,
-  type User
+  type User,
+  type Membership
 } from '@/lib/services/godmode-service';
 
 export default function GodmodePage() {
@@ -71,6 +73,10 @@ export default function GodmodePage() {
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [userPage, setUserPage] = useState(1);
   const usersPerPage = 25;
+
+  // Memberships State (for artist owner lookup)
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [membershipsLoading, setMembershipsLoading] = useState(false);
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -125,9 +131,25 @@ export default function GodmodePage() {
     }
   };
 
+  const fetchMemberships = async () => {
+    setMembershipsLoading(true);
+    try {
+      const data = await getAllMemberships();
+      setMemberships(data);
+    } catch (err) {
+      console.error('Error fetching memberships:', err);
+    } finally {
+      setMembershipsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'venues' && venues.length === 0) fetchVenues();
-    if (activeTab === 'artists' && artists.length === 0) fetchArtists();
+    if (activeTab === 'artists') {
+      if (artists.length === 0) fetchArtists();
+      if (memberships.length === 0) fetchMemberships();
+      if (users.length === 0) fetchUsers();
+    }
     if (activeTab === 'songs' && songs.length === 0) fetchSongs();
     if (activeTab === 'users' && users.length === 0) fetchUsers();
   }, [activeTab]);
@@ -595,14 +617,32 @@ export default function GodmodePage() {
                         <td className="px-4 py-3 text-sm">{artist.location}</td>
                         <td className="px-4 py-3 text-sm">{artist.genres.slice(0, 2).join(', ')}</td>
                         <td className="px-4 py-3">
-                          {artist.claimedByUserId ? (
-                            <div className="text-sm">
-                              {users.find(u => u.id === artist.claimedByUserId)?.displayName ||
-                               <span className="text-muted-foreground italic">Unknown User</span>}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground italic text-sm">Unclaimed</span>
-                          )}
+                          {(() => {
+                            // Find owner membership for this artist
+                            const ownerMembership = memberships.find(
+                              m => m.artist_id === artist.id && m.role === 'owner'
+                            );
+
+                            if (ownerMembership) {
+                              // Find the user by matching cognito_id
+                              // membership.user_id contains cognito_id, match with user.cognitoId
+                              const ownerUser = users.find(u => u.cognitoId === ownerMembership.user_id);
+
+                              if (ownerUser) {
+                                return (
+                                  <div className="text-sm font-medium">
+                                    {ownerUser.displayName || ownerUser.username}
+                                  </div>
+                                );
+                              }
+
+                              // Found membership but user not in list
+                              return <span className="text-yellow-600 text-sm">Owner (user not found)</span>;
+                            }
+
+                            // No owner membership found
+                            return <span className="text-muted-foreground italic text-sm">No owner</span>;
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">

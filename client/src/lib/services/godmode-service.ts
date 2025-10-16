@@ -63,6 +63,7 @@ export interface Venue {
 
 export interface User {
   id: string;
+  cognitoId: string; // Added for matching with memberships
   email: string | null;
   phone: string | null;
   username: string;
@@ -73,6 +74,15 @@ export interface User {
   membershipCount: number;
   authType: 'Phone' | 'Google' | 'Facebook' | 'Email';
   createdAt: string;
+}
+
+export interface Membership {
+  membership_id: string;
+  user_id: string; // This is cognito_id
+  artist_id: string;
+  role: 'owner' | 'admin' | 'member' | 'pending';
+  display_name: string | null;
+  status: string;
 }
 
 // Artist Operations
@@ -395,6 +405,25 @@ export async function deleteUser(userId: string): Promise<void> {
     }
   } catch (error) {
     console.error(`Error deleting user ${userId}:`, error);
+    throw error;
+  }
+}
+
+// Membership Operations
+export async function getAllMemberships(): Promise<Membership[]> {
+  try {
+    // Use the DynamoDB scan via a Lambda function
+    // For now, we'll need to create an endpoint or use AWS SDK directly
+    // This is a placeholder - we'll implement via Lambda
+    const response = await fetch(`${API_BASE_URL}/api/memberships/all`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch memberships: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching memberships:', error);
     throw error;
   }
 }
