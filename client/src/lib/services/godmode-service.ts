@@ -369,7 +369,7 @@ export function getSocialMediaCount(artist: Artist): number {
 // User Operations
 export async function getAllUsers(): Promise<User[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users`, {
+    const response = await fetch(`${API_BASE_URL}/users`, {
       credentials: 'include' // Include cookies for authentication
     });
     if (!response.ok) {
