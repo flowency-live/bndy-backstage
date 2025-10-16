@@ -853,14 +853,14 @@ export default function GodmodePage() {
                 onClick={() => setUserFilter('with-bands')}
                 size="sm"
               >
-                With Bands ({users.filter(u => u.membershipCount > 0).length})
+                With Artists ({users.filter(u => u.membershipCount > 0).length})
               </Button>
               <Button
                 variant={userFilter === 'no-bands' ? 'default' : 'outline'}
                 onClick={() => setUserFilter('no-bands')}
                 size="sm"
               >
-                No Bands ({users.filter(u => u.membershipCount === 0).length})
+                No Artists ({users.filter(u => u.membershipCount === 0).length})
               </Button>
             </div>
           </div>
@@ -874,11 +874,11 @@ export default function GodmodePage() {
                 <table className="w-full">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Cognito ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Auth Type</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Display Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Contact</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Profile</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Bands</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artists</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Created</th>
                     </tr>
                   </thead>
@@ -887,8 +887,7 @@ export default function GodmodePage() {
                       .filter(u => {
                         const matchesSearch = (u.displayName && u.displayName.toLowerCase().includes(userSearch.toLowerCase())) ||
                                             (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase())) ||
-                                            (u.phone && u.phone.includes(userSearch)) ||
-                                            u.cognitoId.toLowerCase().includes(userSearch.toLowerCase());
+                                            (u.phone && u.phone.includes(userSearch));
                         if (!matchesSearch) return false;
                         if (userFilter === 'completed') return u.profileCompleted;
                         if (userFilter === 'incomplete') return !u.profileCompleted;
@@ -900,7 +899,9 @@ export default function GodmodePage() {
                       .map(user => (
                         <tr key={user.id} className="hover:bg-muted/50">
                           <td className="px-4 py-3">
-                            <div className="font-mono text-xs text-muted-foreground">{user.cognitoId.substring(0, 20)}...</div>
+                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted">
+                              {user.authType}
+                            </div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="font-medium">{user.displayName || <span className="text-muted-foreground italic">NULL</span>}</div>

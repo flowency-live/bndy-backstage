@@ -63,7 +63,6 @@ export interface Venue {
 
 export interface User {
   id: string;
-  cognitoId: string;
   email: string | null;
   phone: string | null;
   username: string;
@@ -72,6 +71,7 @@ export interface User {
   displayName: string | null;
   profileCompleted: boolean;
   membershipCount: number;
+  authType: 'Phone' | 'Google' | 'Facebook' | 'Email';
   createdAt: string;
 }
 
