@@ -9,30 +9,35 @@ The BNDY Backstage application requires the following Google Cloud APIs to be en
 - **Used in**: LocationAutocomplete component
 - **Endpoint**: `https://maps.googleapis.com/maps/api/js?libraries=places`
 
-### 2. **Geocoding API** ⚠️ REQUIRED
-- **Purpose**: Convert place names to coordinates (lat/lng)
+### 2. **Maps JavaScript API** ✅
+- **Purpose**: Geocoding (convert place names to coordinates)
 - **Used in**: LocationAutocomplete component when user selects a location
-- **Endpoint**: `https://maps.googleapis.com/maps/api/geocode/json`
-- **Error if missing**: `REQUEST_DENIED` in browser console
+- **Method**: Uses `google.maps.Geocoder()` from JavaScript SDK
+- **Note**: No REST API calls, no CORS issues
 
-### 3. **Maps JavaScript API** (Optional)
-- **Purpose**: Display maps in UI (if needed in future)
-- **Currently**: Used for loading the Places library
+## API Keys Used
 
-## Current Issue
+### Frontend (Backstage Client)
+- **Key**: `bndy_places_APIKey` (AIzaSyB_I7xhBq0ZS4bZ9bn4sJv9Iq7_a5x4b1I)
+- **Purpose**: Looking up towns & cities in LocationAutocomplete
+- **Used in**: `/admin`, `/profile`, and godmode `/venue-import`
+- **Env var**: `VITE_GOOGLE_MAPS_API_KEY`
 
-The **Geocoding API is not enabled** in the Google Cloud project, causing the error:
-```
-[LocationAutocomplete] Geocoding failed: REQUEST_DENIED
-```
+### Backend (Venues Lambda)
+- **Key**: `bndy_Venues_key` (AIzaSyCXtOe0EV-UTTuE62XTV6Z7K18XDEYGv8Q)
+- **Purpose**: Looking up venues (places where events are held)
+- **Used in**: Venue import extract-and-match, backfill-websites
+- **Env var**: `GOOGLE_MAPS_API_KEY` in Lambda
 
-## How to Fix
+## Recent Fix (2025-10-17)
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Select your project (the one with API key `AIzaSyB_I7xhBq0ZS4bZ9bn4sJv9Iq7_a5x4b1I`)
-3. Navigate to **APIs & Services** > **Library**
-4. Search for "**Geocoding API**"
-5. Click **Enable**
+**Problem**: LocationAutocomplete was making direct REST API calls to the Geocoding API, causing `REQUEST_DENIED` errors due to HTTP referrer restrictions.
+
+**Solution**: Changed to use the Google Maps JavaScript SDK Geocoder (`google.maps.Geocoder()`), which:
+- Uses the same API key already loaded for Places Autocomplete
+- Avoids CORS and referrer restriction issues
+- More reliable and consistent with other Google Maps features
+- No additional API configuration needed
 
 ## API Key Configuration
 
