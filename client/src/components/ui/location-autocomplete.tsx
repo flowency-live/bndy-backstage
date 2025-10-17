@@ -109,28 +109,34 @@ export default function LocationAutocomplete({
     setShowDropdown(false);
     setPredictions([]);
 
-    // Geocode the selected location using REST API
+    // Geocode the selected location using Google Maps JavaScript SDK
     console.log('[LocationAutocomplete] Geocoding selected location:', location);
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) {
-        console.warn('[LocationAutocomplete] API key not configured, returning without coordinates');
+      // Ensure Google Maps is loaded
+      if (!window.google?.maps?.Geocoder) {
+        console.warn('[LocationAutocomplete] Google Maps not loaded, returning without coordinates');
         onChange(location);
         return;
       }
 
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&region=gb&key=${apiKey}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.results && data.results.length > 0) {
-        const { lat, lng } = data.results[0].geometry.location;
-        console.log('[LocationAutocomplete] Geocoded to:', lat, lng);
-        onChange(location, lat, lng);
-      } else {
-        console.warn('[LocationAutocomplete] Geocoding failed:', data.status);
-        onChange(location);
-      }
+      // Use the JavaScript SDK Geocoder instead of REST API
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode(
+        {
+          address: location,
+          region: 'gb'
+        },
+        (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            const { lat, lng } = results[0].geometry.location;
+            console.log('[LocationAutocomplete] Geocoded to:', lat(), lng());
+            onChange(location, lat(), lng());
+          } else {
+            console.warn('[LocationAutocomplete] Geocoding failed:', status);
+            onChange(location);
+          }
+        }
+      );
     } catch (error) {
       console.error('[LocationAutocomplete] Geocoding error:', error);
       onChange(location);
