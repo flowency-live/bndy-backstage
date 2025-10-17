@@ -59,8 +59,11 @@ export default function Profile() {
         queryClient.setQueryData(["/api/me"], { user: response.user, bands: [] });
       }
 
-      // Also invalidate to ensure fresh data on next load
+      // Invalidate ALL user-related queries to ensure UserContext refetches with fresh data
+      // This prevents ProfileGate from seeing stale cached data and redirecting back to /profile
       await queryClient.invalidateQueries({ queryKey: ["/api/me"] });
+      await queryClient.invalidateQueries({ queryKey: ["users-profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
 
       toast({
         title: "Profile Updated",
