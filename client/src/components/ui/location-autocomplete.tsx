@@ -35,6 +35,7 @@ export default function LocationAutocomplete({
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const initialValue = useRef(value);
+  const justSelectedRef = useRef(false); // Track if user just selected from dropdown
 
   // Sync external value changes
   useEffect(() => {
@@ -45,6 +46,12 @@ export default function LocationAutocomplete({
   useEffect(() => {
     // Don't search on initial mount with existing value
     if (searchTerm === initialValue.current && initialValue.current) {
+      return;
+    }
+
+    // Don't search if we just selected from dropdown (prevents reopening)
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false; // Reset flag for future searches
       return;
     }
 
@@ -79,20 +86,25 @@ export default function LocationAutocomplete({
     return () => clearTimeout(timeoutId);
   }, [searchTerm, googleMapsLoaded, loadGoogleMaps]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking/tapping outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleSelect = async (prediction: google.maps.places.AutocompletePrediction) => {
     const location = prediction.description;
+    justSelectedRef.current = true; // Mark that we just selected from dropdown
     setSearchTerm(location);
     setShowDropdown(false);
     setPredictions([]);
@@ -158,6 +170,10 @@ export default function LocationAutocomplete({
             <div
               key={prediction.place_id}
               onClick={() => handleSelect(prediction)}
+              onTouchEnd={(e) => {
+                e.preventDefault(); // Prevent ghost click and keyboard
+                handleSelect(prediction);
+              }}
               className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
             >
               <MapPin className="h-4 w-4 text-muted-foreground" />
