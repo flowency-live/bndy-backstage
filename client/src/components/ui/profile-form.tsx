@@ -157,7 +157,7 @@ export default function ProfileForm({
                       <FormControl>
                         <LocationAutocomplete
                           value={field.value || ''}
-                          onChange={field.onChange}
+                          onChange={(location) => field.onChange(location)}
                           placeholder="e.g., Manchester, London, Birmingham"
                         />
                       </FormControl>
