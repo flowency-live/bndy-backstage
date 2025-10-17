@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/hooks/use-confirm';
 import type { ArtistMembership } from '@/types/api';
 import VenueSearchStep from '@/components/wizard-steps/venue-search-step';
 import DateTimeStep from '@/components/wizard-steps/date-time-step';
@@ -64,6 +65,7 @@ export default function PublicGigWizard({
   editingEventId,
 }: PublicGigWizardProps) {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<PublicGigFormData>(initialData || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -255,11 +257,14 @@ export default function PublicGigWizard({
   };
 
   // Close and clear draft
-  const handleClose = () => {
+  const handleClose = async () => {
     if (Object.keys(formData).length > 0) {
-      const confirmed = confirm(
-        'You have unsaved changes. Are you sure you want to close?'
-      );
+      const confirmed = await confirm({
+        title: 'Unsaved Changes',
+        description: 'You have unsaved changes. Are you sure you want to close?',
+        confirmText: 'Close',
+        variant: 'destructive',
+      });
       if (!confirmed) return;
     }
     localStorage.removeItem(STORAGE_KEY);
@@ -420,6 +425,9 @@ export default function PublicGigWizard({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }

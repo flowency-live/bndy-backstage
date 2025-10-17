@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirm } from "@/hooks/use-confirm";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { ArtistMembership, InsertEvent, Event } from "@/types/api";
@@ -29,6 +30,7 @@ interface EventModalProps {
 
 export default function EventModal({ isOpen, onClose, selectedDate, selectedEvent, eventType, currentUser, artistId, onPublicGigSelected, onUnavailableSelected }: EventModalProps) {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
   const [formData, setFormData] = useState<Partial<InsertEvent>>({
     type: eventType,
     date: selectedDate,
@@ -259,8 +261,17 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
     }
   };
 
-  const handleDelete = () => {
-    if (selectedEvent && confirm("Are you sure you want to delete this event?")) {
+  const handleDelete = async () => {
+    if (!selectedEvent) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Event',
+      description: 'Are you sure you want to delete this event? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       deleteEventMutation.mutate(selectedEvent.id);
     }
   };
@@ -516,8 +527,16 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
                             </span>
                             <button
                               type="button"
-                              onClick={() => {
-                                if (confirm(`Cancel ${event.title || (event.type === "gig" ? "gig" : "practice")} on ${format(new Date(event.date + 'T00:00:00'), "MMM d")}?`)) {
+                              onClick={async () => {
+                                const eventTitle = event.title || (event.type === "gig" ? "gig" : "practice");
+                                const eventDate = format(new Date(event.date + 'T00:00:00'), "MMM d");
+                                const confirmed = await confirm({
+                                  title: 'Cancel Event',
+                                  description: `Cancel ${eventTitle} on ${eventDate}?`,
+                                  confirmText: 'Cancel Event',
+                                  variant: 'destructive',
+                                });
+                                if (confirmed) {
                                   deleteEventMutation.mutate(event.id);
                                 }
                               }}
@@ -627,6 +646,9 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
           title={`Select ${timePickerType === "start" ? "Start" : "End"} Time`}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog />
     </>
   );
 }

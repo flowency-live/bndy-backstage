@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
@@ -43,10 +44,11 @@ interface SongsProps {
 export default function Songs({ artistId, membership }: SongsProps) {
   // Apply songs theme
   useSectionTheme('songs');
-  
+
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
@@ -242,8 +244,15 @@ export default function Songs({ artistId, membership }: SongsProps) {
     return song.vetos.some(v => v.membershipId === membership.id);
   };
 
-  const handleDeleteSong = (songId: string, spotifyId: string, songTitle: string) => {
-    if (confirm(`Are you sure you want to remove "${songTitle}" from the practice list?`)) {
+  const handleDeleteSong = async (songId: string, spotifyId: string, songTitle: string) => {
+    const confirmed = await confirm({
+      title: 'Remove Song',
+      description: `Are you sure you want to remove "${songTitle}" from the practice list?`,
+      confirmText: 'Remove',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       deleteSongMutation.mutate({ songId, spotifyId });
     }
   };
@@ -502,6 +511,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
         artistId={artistId}
         membership={membership}
       />
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }

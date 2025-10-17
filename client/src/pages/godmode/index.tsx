@@ -24,8 +24,10 @@ import {
   type User,
   type Membership
 } from '@/lib/services/godmode-service';
+import { useConfirm } from '@/hooks/use-confirm';
 
 export default function GodmodePage() {
+  const { confirm, ConfirmDialog } = useConfirm();
   const [activeTab, setActiveTab] = useState('venues');
 
   // Venues State
@@ -190,7 +192,14 @@ export default function GodmodePage() {
   };
 
   const handleVenueDelete = async (venueId: string) => {
-    if (!confirm('Delete this venue?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Venue',
+      description: 'Are you sure you want to delete this venue? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
     setDeletingVenue(venueId);
     try {
       await deleteVenue(venueId);
@@ -221,7 +230,14 @@ export default function GodmodePage() {
   };
 
   const handleArtistDelete = async (artistId: string) => {
-    if (!confirm('Delete this artist?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Artist',
+      description: 'Are you sure you want to delete this artist? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
     setDeletingArtist(artistId);
     try {
       await deleteArtist(artistId);
@@ -252,7 +268,14 @@ export default function GodmodePage() {
   };
 
   const handleSongDelete = async (songId: string) => {
-    if (!confirm('Delete this song?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Song',
+      description: 'Are you sure you want to delete this song? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
     setDeletingSong(songId);
     try {
       await deleteSong(songId);
@@ -266,7 +289,14 @@ export default function GodmodePage() {
 
   // User Handlers
   const handleUserDelete = async (userId: string) => {
-    if (!confirm('Delete this user? This will also delete all artist memberships for this user.')) return;
+    const confirmed = await confirm({
+      title: 'Delete User',
+      description: 'Delete this user? This will also delete all artist memberships for this user.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
     setDeletingUser(userId);
     try {
       await deleteUser(userId);
@@ -1054,6 +1084,9 @@ export default function GodmodePage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }
