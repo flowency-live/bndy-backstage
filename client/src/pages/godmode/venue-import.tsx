@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import LocationAutocomplete from '@/components/ui/location-autocomplete';
 
 interface ExtractedVenue {
   name: string;
@@ -28,6 +29,8 @@ export default function VenueImportPage() {
   // Form state
   const [sourceInput, setSourceInput] = useState('');
   const [locationContext, setLocationContext] = useState('');
+  const [locationLat, setLocationLat] = useState<number | undefined>();
+  const [locationLng, setLocationLng] = useState<number | undefined>();
   const [searchRadius, setSearchRadius] = useState('10');
   const [sourceName, setSourceName] = useState('');
 
@@ -65,6 +68,8 @@ export default function VenueImportPage() {
         body: JSON.stringify({
           source: sourceInput,
           locationContext,
+          locationLat,
+          locationLng,
           searchRadius: parseInt(searchRadius),
           sourceName: sourceName || 'Manual import',
         }),
@@ -290,12 +295,16 @@ export default function VenueImportPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="location-context">Location Context *</Label>
-              <Input
-                id="location-context"
-                placeholder="e.g., Stockport, UK"
+              <LocationAutocomplete
                 value={locationContext}
-                onChange={(e) => setLocationContext(e.target.value)}
+                onChange={(location, lat, lng) => {
+                  setLocationContext(location);
+                  setLocationLat(lat);
+                  setLocationLng(lng);
+                }}
+                placeholder="e.g., Stockport, Manchester, London"
                 className="mt-1"
+                required
               />
             </div>
             <div>
