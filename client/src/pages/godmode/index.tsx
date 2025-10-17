@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search } from 'lucide-react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import {
   type Membership
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
+import VenueImportPage from './venue-import';
 
 export default function GodmodePage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -389,10 +390,14 @@ export default function GodmodePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="venues" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Venues ({venueStats.total})
+          </TabsTrigger>
+          <TabsTrigger value="venue-import" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Import
           </TabsTrigger>
           <TabsTrigger value="artists" className="flex items-center gap-2">
             <User className="h-4 w-4" />
@@ -407,6 +412,11 @@ export default function GodmodePage() {
             Users ({users.length})
           </TabsTrigger>
         </TabsList>
+
+        {/* VENUE IMPORT TAB */}
+        <TabsContent value="venue-import" className="mt-6">
+          <VenueImportPage />
+        </TabsContent>
 
         {/* VENUES TAB */}
         <TabsContent value="venues" className="mt-6">

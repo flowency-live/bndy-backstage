@@ -15,6 +15,7 @@ interface Venue {
   latitude: number;
   longitude: number;
   googlePlaceId?: string;
+  website?: string;
   source?: 'db' | 'google_places';
 }
 
@@ -130,6 +131,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
             latitude: venueData.latitude,
             longitude: venueData.longitude,
             googlePlaceId: venueData.googlePlaceId,
+            website: venueData.website,
             source: 'google_places' as const,
           };
         });
@@ -172,6 +174,7 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
         lng: venue.longitude,
       },
       googlePlaceId: venue.googlePlaceId,
+      venueWebsite: venue.website,
       // Auto-generate title: [artistname] @ [venuename]
       title: `${artistName} @ ${venue.name}`,
     });

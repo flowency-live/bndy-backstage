@@ -55,7 +55,7 @@ export async function searchGooglePlaces(
       // Build request - simple query with structured location bias
       const request: any = {
         textQuery: query, // Simple query - no location text to avoid fuzzy match confusion
-        fields: ['displayName', 'formattedAddress', 'location', 'id'],
+        fields: ['displayName', 'formattedAddress', 'location', 'id', 'websiteURI'],
         maxResultCount: 50, // Get diverse results
       };
 
@@ -88,6 +88,7 @@ export async function searchGooglePlaces(
         name: place.displayName,
         formatted_address: place.formattedAddress,
         place_id: place.id,
+        website: place.websiteURI || undefined,
         geometry: {
           location: place.location,
         },
@@ -166,6 +167,7 @@ export function placeResultToVenueData(place: google.maps.places.PlaceResult) {
       lng: place.geometry?.location?.lng() || 0,
     },
     phone: place.formatted_phone_number || '',
+    website: place.website || '',
     source: 'google_places',
   };
 }

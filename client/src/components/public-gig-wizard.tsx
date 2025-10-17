@@ -27,6 +27,7 @@ export interface PublicGigFormData {
   venueAddress?: string;
   venueLocation?: { lat: number; lng: number };
   googlePlaceId?: string;
+  venueWebsite?: string;
 
   // Step 2: Date & Time
   date?: string; // YYYY-MM-DD
@@ -179,6 +180,7 @@ export default function PublicGigWizard({
             latitude: formData.venueLocation.lat,
             longitude: formData.venueLocation.lng,
             googlePlaceId: formData.googlePlaceId,
+            website: formData.venueWebsite,
             source: 'backstage_wizard',
           }),
         });
