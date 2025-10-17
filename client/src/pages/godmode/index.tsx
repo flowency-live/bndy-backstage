@@ -323,8 +323,8 @@ export default function GodmodePage() {
   });
 
   const filteredArtists = artists.filter(a => {
-    const matchesSearch = a.name.toLowerCase().includes(artistSearch.toLowerCase()) ||
-                         a.location.toLowerCase().includes(artistSearch.toLowerCase());
+    const matchesSearch = (a.name && String(a.name).toLowerCase().includes(artistSearch.toLowerCase())) ||
+                         (a.location && String(a.location).toLowerCase().includes(artistSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (artistFilter === 'has-owner') {
       return memberships.some(m => m.artist_id === a.id && m.role === 'owner');
