@@ -538,7 +538,7 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {venue.socialMediaURLs && venue.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                            {venue.socialMediaURLs && Array.isArray(venue.socialMediaURLs) && venue.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
                               <a
                                 href={venue.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
                                 target="_blank"
@@ -707,7 +707,7 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {artist.socialMediaURLs && artist.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                            {artist.socialMediaURLs && Array.isArray(artist.socialMediaURLs) && artist.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
                               <a
                                 href={artist.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
                                 target="_blank"
