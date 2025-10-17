@@ -27,7 +27,9 @@ export default function VenueImportPage() {
   const { toast } = useToast();
 
   // Form state
-  const [sourceInput, setSourceInput] = useState('');
+  const [inputMode, setInputMode] = useState<'url' | 'text'>('url');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [sourceText, setSourceText] = useState('');
   const [locationContext, setLocationContext] = useState('');
   const [locationLat, setLocationLat] = useState<number | undefined>();
   const [locationLng, setLocationLng] = useState<number | undefined>();
@@ -45,10 +47,21 @@ export default function VenueImportPage() {
   const [backfillResults, setBackfillResults] = useState<{success: number; failed: number; noWebsite: number} | null>(null);
 
   const handleExtractAndMatch = async () => {
+    const sourceInput = inputMode === 'url' ? sourceUrl : sourceText;
+
     if (!sourceInput.trim() || !locationContext.trim()) {
       toast({
         title: 'Missing information',
-        description: 'Please provide both source input and location context',
+        description: `Please provide both ${inputMode === 'url' ? 'URL' : 'venue list'} and location context`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (inputMode === 'url' && !sourceUrl.startsWith('http')) {
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid URL starting with http:// or https://',
         variant: 'destructive',
       });
       return;
@@ -71,7 +84,7 @@ export default function VenueImportPage() {
           locationLat,
           locationLng,
           searchRadius: parseInt(searchRadius),
-          sourceName: sourceName || 'Manual import',
+          sourceName: sourceName || (inputMode === 'url' ? sourceUrl : 'Manual import'),
         }),
       });
 
@@ -163,7 +176,8 @@ export default function VenueImportPage() {
     // Clear extracted venues after successful import
     if (successCount > 0) {
       setExtractedVenues([]);
-      setSourceInput('');
+      setSourceUrl('');
+      setSourceText('');
     }
   };
 
@@ -280,17 +294,65 @@ export default function VenueImportPage() {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="source-input">Paste URL or raw text</Label>
-            <Textarea
-              id="source-input"
-              placeholder="Paste a URL (e.g., https://www.gigs-news.uk/stockport) or raw text containing venue names..."
-              value={sourceInput}
-              onChange={(e) => setSourceInput(e.target.value)}
-              rows={6}
-              className="mt-1"
-            />
+          {/* Input Mode Tabs */}
+          <div className="flex gap-2 border-b">
+            <button
+              onClick={() => setInputMode('url')}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                inputMode === 'url'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              From URL
+            </button>
+            <button
+              onClick={() => setInputMode('text')}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                inputMode === 'text'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              From Text List
+            </button>
           </div>
+
+          {/* URL Input */}
+          {inputMode === 'url' && (
+            <div>
+              <Label htmlFor="source-url">Website URL</Label>
+              <Input
+                id="source-url"
+                type="url"
+                placeholder="e.g., https://www.gigs-news.uk/stockport"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter a URL to a webpage containing venue names. We'll extract the venues automatically.
+              </p>
+            </div>
+          )}
+
+          {/* Text Input */}
+          {inputMode === 'text' && (
+            <div>
+              <Label htmlFor="source-text">Venue List</Label>
+              <Textarea
+                id="source-text"
+                placeholder="Paste a list of venue names, one per line or comma-separated:&#10;&#10;The Stockport Plaza&#10;The Alexandra Theatre&#10;The Castle Hotel"
+                value={sourceText}
+                onChange={(e) => setSourceText(e.target.value)}
+                rows={8}
+                className="mt-1 font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter venue names separated by newlines or commas. We'll look them up using Google Places.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -333,7 +395,12 @@ export default function VenueImportPage() {
 
           <Button
             onClick={handleExtractAndMatch}
-            disabled={isProcessing || !sourceInput.trim() || !locationContext.trim()}
+            disabled={
+              isProcessing ||
+              !locationContext.trim() ||
+              (inputMode === 'url' && !sourceUrl.trim()) ||
+              (inputMode === 'text' && !sourceText.trim())
+            }
             className="w-full"
           >
             {isProcessing ? (
