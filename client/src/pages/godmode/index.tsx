@@ -693,7 +693,7 @@ export default function GodmodePage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm">{artist.location}</td>
-                        <td className="px-4 py-3 text-sm">{artist.genres.slice(0, 2).join(', ')}</td>
+                        <td className="px-4 py-3 text-sm">{Array.isArray(artist.genres) ? artist.genres.slice(0, 2).join(', ') : (artist.genres || '-')}</td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {artist.website && (
