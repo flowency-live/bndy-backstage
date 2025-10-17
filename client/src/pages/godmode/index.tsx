@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Upload } from 'lucide-react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Upload, Globe, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -484,6 +484,7 @@ export default function GodmodePage() {
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Address</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Coordinates</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
                     </tr>
@@ -523,6 +524,32 @@ export default function GodmodePage() {
                           ) : (
                             <div className="text-sm max-w-xs truncate">{venue.address}</div>
                           )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {venue.website && (
+                              <a
+                                href={venue.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                title={venue.website}
+                              >
+                                <Globe className="h-4 w-4" />
+                              </a>
+                            )}
+                            {venue.socialMediaURLs && venue.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                              <a
+                                href={venue.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Facebook"
+                              >
+                                <Facebook className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-xs text-muted-foreground">
@@ -645,6 +672,7 @@ export default function GodmodePage() {
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Location</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genres</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Owner</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
@@ -666,6 +694,32 @@ export default function GodmodePage() {
                         </td>
                         <td className="px-4 py-3 text-sm">{artist.location}</td>
                         <td className="px-4 py-3 text-sm">{artist.genres.slice(0, 2).join(', ')}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {artist.website && (
+                              <a
+                                href={artist.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                title={artist.website}
+                              >
+                                <Globe className="h-4 w-4" />
+                              </a>
+                            )}
+                            {artist.socialMediaURLs && artist.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                              <a
+                                href={artist.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Facebook"
+                              >
+                                <Facebook className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           {(() => {
                             // Find owner membership for this artist
