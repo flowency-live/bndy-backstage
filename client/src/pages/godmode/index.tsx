@@ -538,9 +538,9 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {venue.socialMediaURLs && Array.isArray(venue.socialMediaURLs) && venue.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                            {venue.socialMediaURLs && Array.isArray(venue.socialMediaURLs) && venue.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
                               <a
-                                href={venue.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
+                                href={venue.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800"
@@ -707,9 +707,9 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {artist.socialMediaURLs && Array.isArray(artist.socialMediaURLs) && artist.socialMediaURLs.some((url: string) => url.includes('facebook.com')) && (
+                            {artist.socialMediaURLs && Array.isArray(artist.socialMediaURLs) && artist.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
                               <a
-                                href={artist.socialMediaURLs.find((url: string) => url.includes('facebook.com'))}
+                                href={artist.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800"
