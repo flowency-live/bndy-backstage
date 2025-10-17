@@ -311,9 +311,9 @@ export default function GodmodePage() {
 
   // Filtered Data
   const filteredVenues = venues.filter(v => {
-    const matchesSearch = v.name.toLowerCase().includes(venueSearch.toLowerCase()) ||
-                         v.address.toLowerCase().includes(venueSearch.toLowerCase()) ||
-                         (v.postcode && v.postcode.toLowerCase().includes(venueSearch.toLowerCase()));
+    const matchesSearch = (v.name && String(v.name).toLowerCase().includes(venueSearch.toLowerCase())) ||
+                         (v.address && String(v.address).toLowerCase().includes(venueSearch.toLowerCase())) ||
+                         (v.postcode && String(v.postcode).toLowerCase().includes(venueSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (venueFilter === 'validated') return v.validated;
     if (venueFilter === 'unvalidated') return !v.validated;
@@ -333,10 +333,10 @@ export default function GodmodePage() {
   });
 
   const filteredSongs = songs.filter(s => {
-    const matchesSearch = s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
-                         s.artistName.toLowerCase().includes(songSearch.toLowerCase()) ||
-                         s.genre.toLowerCase().includes(songSearch.toLowerCase()) ||
-                         (s.album && s.album.toLowerCase().includes(songSearch.toLowerCase()));
+    const matchesSearch = (s.title && String(s.title).toLowerCase().includes(songSearch.toLowerCase())) ||
+                         (s.artistName && String(s.artistName).toLowerCase().includes(songSearch.toLowerCase())) ||
+                         (s.genre && String(s.genre).toLowerCase().includes(songSearch.toLowerCase())) ||
+                         (s.album && String(s.album).toLowerCase().includes(songSearch.toLowerCase()));
     if (!matchesSearch) return false;
     if (songFilter === 'featured') return s.isFeatured;
     if (songFilter === 'has-streaming') return !!(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl);
@@ -508,7 +508,7 @@ export default function GodmodePage() {
                           ) : (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{venue.name}</span>
-                              {venues.filter(v => v.name.toLowerCase() === venue.name.toLowerCase()).length > 1 && (
+                              {venue.name && venues.filter(v => v.name && String(v.name).toLowerCase() === String(venue.name).toLowerCase()).length > 1 && (
                                 <AlertCircle className="h-4 w-4 text-orange-500" title="Duplicate name detected" />
                               )}
                             </div>
