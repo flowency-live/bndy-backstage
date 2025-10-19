@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Globe, Facebook } from 'lucide-react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Globe, Facebook, Instagram, Link as LinkIcon } from 'lucide-react';
+import LocationAutocomplete from '@/components/ui/location-autocomplete';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -96,6 +97,13 @@ export default function GodmodePage() {
   const [htmlInput, setHtmlInput] = useState('');
   const [showHtmlInput, setShowHtmlInput] = useState(false);
   const [queuePhase, setQueuePhase] = useState<'venues' | 'artists' | 'events'>('venues');
+  const [editingArtistGroup, setEditingArtistGroup] = useState<string | null>(null);
+  const [artistEditData, setArtistEditData] = useState<{location: string; facebookUrl: string; instagramUrl: string; websiteUrl: string}>({
+    location: '',
+    facebookUrl: '',
+    instagramUrl: '',
+    websiteUrl: ''
+  });
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -1390,72 +1398,75 @@ export default function GodmodePage() {
 
               {/* PHASE 1: VENUES TAB */}
               <TabsContent value="venues" className="mt-6">
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Process Unique Venues First</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    {uniqueVenueGroups.length} unique venues found. Review and approve each venue before processing artists.
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">Phase 1: Venues</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {uniqueVenueGroups.length} unique venues. Approve to create/match venues and enrich with Facebook URLs.
                   </p>
-                  <div className="space-y-4">
-                    {uniqueVenueGroups.map(groupKey => {
-                      const items = groupedVenues[groupKey];
-                      const firstItem = items[0];
-                      return (
-                        <div key={groupKey} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-lg">{firstItem.venueName}</h4>
-                              <div className="text-sm text-muted-foreground mt-1">
-                                Appears in {items.length} event{items.length > 1 ? 's' : ''}
-                              </div>
-                            </div>
-                            <div className={`px-3 py-1 rounded text-xs font-medium ${
-                              firstItem.venueResolution.action === 'MATCH_EXISTING' ? 'bg-green-100 text-green-800' :
-                              firstItem.venueResolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {firstItem.venueResolution.action}
-                            </div>
-                          </div>
+                </div>
 
-                          <div className="grid grid-cols-2 gap-6 mb-4">
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-2">Resolution Details</div>
-                              <div className="space-y-1 text-sm">
-                                <div>
-                                  <span className="text-muted-foreground">Confidence: </span>
-                                  <span className="font-medium">{Math.round(firstItem.venueResolution.confidence * 100)}%</span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">Reasons: </span>
-                                  <span className="font-medium">{firstItem.venueResolution.reasons.join(', ')}</span>
-                                </div>
-                                {firstItem.venueResolution.venue_id && (
-                                  <div>
-                                    <span className="text-muted-foreground">Matched ID: </span>
-                                    <span className="font-mono text-xs">{firstItem.venueResolution.venue_id.substring(0, 8)}...</span>
+                <Card>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Venue Name</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Confidence</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Facebook</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Website</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Events</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {uniqueVenueGroups.map(groupKey => {
+                          const items = groupedVenues[groupKey];
+                          const firstItem = items[0];
+                          const isMatch = firstItem.venueResolution.action === 'MATCH_EXISTING';
+                          const isCreate = firstItem.venueResolution.action === 'CREATE_NEW';
+                          const hasExistingFB = firstItem.venueResolution.matched_venue?.facebookUrl;
+                          const willEnrichFB = isMatch && !hasExistingFB && firstItem.facebookUrl;
+
+                          return (
+                            <tr key={groupKey} className="hover:bg-muted/50">
+                              <td className="px-4 py-3">
+                                <div className="font-medium">{firstItem.venueName}</div>
+                                {firstItem.venueResolution.enrichments?.address && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {firstItem.venueResolution.enrichments.address}
                                   </div>
                                 )}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-2">Enrichments</div>
-                              <div className="space-y-1 text-sm">
-                                {firstItem.venueResolution.enrichments?.address && (
-                                  <div className="text-xs">{firstItem.venueResolution.enrichments.address}</div>
-                                )}
-                                {firstItem.venueResolution.enrichments?.website && (
-                                  <a
-                                    href={firstItem.venueResolution.enrichments.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                                  >
-                                    <Globe className="h-3 w-3" />
-                                    {firstItem.venueResolution.enrichments.website}
-                                  </a>
-                                )}
-                                {firstItem.facebookUrl && (
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                  isMatch ? 'bg-green-100 text-green-800' :
+                                  isCreate ? 'bg-blue-100 text-blue-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {isMatch ? 'Match' : isCreate ? 'New' : 'Review'}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-medium">
+                                  {Math.round(firstItem.venueResolution.confidence * 100)}%
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {firstItem.venueResolution.reasons.slice(0, 2).join(', ')}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {willEnrichFB ? (
+                                  <div className="flex items-center gap-1 text-green-600">
+                                    <CheckCircle className="h-3 w-3" />
+                                    <span className="text-xs">Will add</span>
+                                  </div>
+                                ) : hasExistingFB ? (
+                                  <div className="flex items-center gap-1 text-muted-foreground">
+                                    <CheckCircle className="h-3 w-3" />
+                                    <span className="text-xs">Has URL</span>
+                                  </div>
+                                ) : firstItem.facebookUrl ? (
                                   <a
                                     href={firstItem.facebookUrl}
                                     target="_blank"
@@ -1463,42 +1474,59 @@ export default function GodmodePage() {
                                     className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                   >
                                     <Facebook className="h-3 w-3" />
-                                    Facebook Event
+                                    Event
                                   </a>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">-</span>
                                 )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end gap-2 pt-4 border-t">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                // Reject all items in this venue group
-                                items.forEach(item => handleRejectQueueItem(item.queue_id));
-                              }}
-                              disabled={processingQueue !== null}
-                            >
-                              <X className="h-3 w-3 mr-2" />
-                              Dismiss All ({items.length})
-                            </Button>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => {
-                                // For now, approve first item (will need to batch approve later)
-                                handleApproveQueueItem(firstItem.queue_id);
-                              }}
-                              disabled={processingQueue !== null}
-                            >
-                              <CheckCircle className="h-3 w-3 mr-2" />
-                              Approve Venue
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                              </td>
+                              <td className="px-4 py-3">
+                                {firstItem.venueResolution.enrichments?.website ? (
+                                  <a
+                                    href={firstItem.venueResolution.enrichments.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                  >
+                                    <Globe className="h-3 w-3" />
+                                    Link
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-medium">{items.length}</div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      items.forEach(item => handleRejectQueueItem(item.queue_id));
+                                    }}
+                                    disabled={processingQueue !== null}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => {
+                                      handleApproveQueueItem(firstItem.queue_id);
+                                    }}
+                                    disabled={processingQueue !== null}
+                                  >
+                                    <CheckCircle className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </Card>
               </TabsContent>

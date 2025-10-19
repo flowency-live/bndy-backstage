@@ -443,6 +443,12 @@ export interface VenueResolution {
     lat: number;
     lng: number;
   };
+  matched_venue?: {
+    id: string;
+    name: string;
+    facebookUrl?: string;
+    website?: string;
+  };
 }
 
 export interface ArtistCandidate {
@@ -476,6 +482,8 @@ export interface QueueItem {
   artistResolution: ArtistResolution;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  venue_group_key?: string;
+  artist_group_key?: string;
 }
 
 // Event Queue Operations
