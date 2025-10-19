@@ -538,3 +538,19 @@ export async function loadPOCResults(): Promise<void> {
     throw error;
   }
 }
+
+export async function extractFromGigsNews(): Promise<{ extracted: number; queued: number }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/extract-from-url`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to extract from gigs-news: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error extracting from gigs-news:', error);
+    throw error;
+  }
+}

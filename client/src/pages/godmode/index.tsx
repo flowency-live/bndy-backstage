@@ -21,6 +21,7 @@ import {
   approveQueueItem,
   rejectQueueItem,
   loadPOCResults,
+  extractFromGigsNews,
   formatDuration,
   type Venue,
   type Artist,
@@ -185,6 +186,29 @@ export default function GodmodePage() {
       await fetchEventQueue();
     } catch (err) {
       setQueueError(err instanceof Error ? err.message : 'Failed to load POC results');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleExtractFromGigsNews = async () => {
+    const confirmed = await confirm({
+      title: 'Extract Events from gigs-news.uk',
+      description: 'This will fetch the latest HTML from gigs-news.uk, extract events with LLM, resolve venues/artists, and populate the review queue. This may take 2-3 minutes. Continue?',
+      confirmText: 'Extract',
+      variant: 'default',
+    });
+    if (!confirmed) return;
+
+    setQueueLoading(true);
+    setQueueError(null);
+    try {
+      const result = await extractFromGigsNews();
+      await fetchEventQueue();
+      // Show success message with count
+      console.log(`Extracted ${result.extracted} events, ${result.queued} added to queue`);
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Failed to extract events from gigs-news');
     } finally {
       setQueueLoading(false);
     }
@@ -1240,6 +1264,9 @@ export default function GodmodePage() {
                 </Button>
               </div>
               <div className="flex gap-2">
+                <Button onClick={handleExtractFromGigsNews} size="sm" variant="default">
+                  Get gigs-news
+                </Button>
                 <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
                   Load POC Results
                 </Button>
