@@ -21,6 +21,7 @@ import Admin from "@/pages/admin";
 import Members from "@/pages/members";
 import Issues from "@/pages/issues";
 import Godmode from "@/pages/godmode";
+import AgentEvents from "@/pages/agentevents";
 // Onboarding removed - artist creation now in dashboard
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
@@ -142,6 +143,11 @@ function Router() {
       <Route path="/godmode">
         <AppLayout>
           <Godmode />
+        </AppLayout>
+      </Route>
+      <Route path="/agentevents">
+        <AppLayout>
+          <AgentEvents />
         </AppLayout>
       </Route>
       <Route component={NotFound} />
