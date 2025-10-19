@@ -225,7 +225,7 @@ export default function GodmodePage() {
 
     const confirmed = await confirm({
       title: 'Extract Events from HTML',
-      description: `This will extract events from the pasted HTML (${Math.round(htmlInput.length / 1024)}KB), resolve venues/artists, and populate the review queue. This may take 1-2 minutes. Continue?`,
+      description: `This will extract events from the pasted HTML (${Math.round(htmlInput.length / 1024)}KB), resolve venues/artists, and populate the review queue. This takes ~60 seconds. Continue?`,
       confirmText: 'Extract',
       variant: 'default',
     });
@@ -234,14 +234,27 @@ export default function GodmodePage() {
     setQueueLoading(true);
     setQueueError(null);
     try {
-      const result = await extractFromHTML(htmlInput);
+      await extractFromHTML(htmlInput);
+      // Success - reload queue
       await fetchEventQueue();
-      setHtmlInput(''); // Clear the textarea
-      setShowHtmlInput(false); // Hide the input area
-      console.log(`Extracted ${result.extracted} events, ${result.queued} added to queue`);
+      setHtmlInput('');
+      setShowHtmlInput(false);
     } catch (err) {
-      setQueueError(err instanceof Error ? err.message : 'Failed to extract events from HTML');
-    } finally {
+      // API Gateway timeout (503) is expected - Lambda continues processing
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('503')) {
+        console.log('API Gateway timeout (expected) - reloading queue in 10s...');
+        // Wait 10 seconds for Lambda to finish, then reload
+        setTimeout(async () => {
+          await fetchEventQueue();
+          setHtmlInput('');
+          setShowHtmlInput(false);
+          setQueueLoading(false);
+        }, 10000);
+        return; // Don't set error or clear loading yet
+      }
+      // Real error
+      setQueueError(errorMessage);
       setQueueLoading(false);
     }
   };
