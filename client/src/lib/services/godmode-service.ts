@@ -425,3 +425,116 @@ export async function getAllMemberships(): Promise<Membership[]> {
     throw error;
   }
 }
+
+// Agentic Event Ingestion Queue Types
+export interface VenueResolution {
+  action: 'MATCH_EXISTING' | 'CREATE_NEW' | 'REVIEW';
+  venue_id?: string;
+  confidence: number;
+  reasons: string[];
+  enrichments?: {
+    website?: string;
+    google_place_id?: string;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+  };
+  location?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface ArtistCandidate {
+  artist: Artist;
+  score: number;
+  reasons: string[];
+}
+
+export interface ArtistResolution {
+  action: 'MATCH_EXISTING' | 'CREATE_NEW' | 'REVIEW';
+  artist_id?: string;
+  confidence: number;
+  reasons: string[];
+  artist_data?: {
+    name: string;
+    location?: string;
+  };
+  candidates?: ArtistCandidate[];
+  suggestion?: string;
+}
+
+export interface QueueItem {
+  queue_id: string;
+  venueName: string;
+  artistName: string;
+  date: string;
+  time?: string;
+  notes?: string;
+  facebookUrl?: string;
+  venueResolution: VenueResolution;
+  artistResolution: ArtistResolution;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
+// Event Queue Operations
+export async function getEventQueue(): Promise<QueueItem[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/queue`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch event queue: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching event queue:', error);
+    throw error;
+  }
+}
+
+export async function approveQueueItem(queueId: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/queue/${queueId}/approve`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to approve queue item: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error approving queue item ${queueId}:`, error);
+    throw error;
+  }
+}
+
+export async function rejectQueueItem(queueId: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/queue/${queueId}/reject`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to reject queue item: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error rejecting queue item ${queueId}:`, error);
+    throw error;
+  }
+}
+
+export async function loadPOCResults(): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/load-poc`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load POC results: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error loading POC results:', error);
+    throw error;
+  }
+}

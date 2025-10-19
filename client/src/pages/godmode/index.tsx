@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Upload, Globe, Facebook } from 'lucide-react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, ExternalLink, Search, Globe, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -17,15 +17,19 @@ import {
   deleteArtist,
   deleteSong,
   deleteUser,
+  getEventQueue,
+  approveQueueItem,
+  rejectQueueItem,
+  loadPOCResults,
   formatDuration,
   type Venue,
   type Artist,
   type Song,
   type User,
-  type Membership
+  type Membership,
+  type QueueItem
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
-import VenueImportPage from './venue-import';
 
 export default function GodmodePage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -80,6 +84,13 @@ export default function GodmodePage() {
   // Memberships State (for artist owner lookup)
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
+
+  // Event Queue State
+  const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [queueError, setQueueError] = useState<string | null>(null);
+  const [processingQueue, setProcessingQueue] = useState<string | null>(null);
+  const [queueFilter, setQueueFilter] = useState<'all' | 'pending' | 'needs-review'>('pending');
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -146,6 +157,63 @@ export default function GodmodePage() {
     }
   };
 
+  const fetchEventQueue = async () => {
+    setQueueLoading(true);
+    setQueueError(null);
+    try {
+      const data = await getEventQueue();
+      setQueueItems(data);
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleLoadPOCResults = async () => {
+    const confirmed = await confirm({
+      title: 'Load POC Results',
+      description: 'This will load the POC results from poc-results.json into the review queue. Continue?',
+      confirmText: 'Load',
+      variant: 'default',
+    });
+    if (!confirmed) return;
+
+    setQueueLoading(true);
+    try {
+      await loadPOCResults();
+      await fetchEventQueue();
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Failed to load POC results');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleApproveQueueItem = async (queueId: string) => {
+    setProcessingQueue(queueId);
+    try {
+      await approveQueueItem(queueId);
+      setQueueItems(queueItems.filter(item => item.queue_id !== queueId));
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Failed to approve');
+    } finally {
+      setProcessingQueue(null);
+    }
+  };
+
+  const handleRejectQueueItem = async (queueId: string) => {
+    setProcessingQueue(queueId);
+    try {
+      await rejectQueueItem(queueId);
+      setQueueItems(queueItems.filter(item => item.queue_id !== queueId));
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Failed to reject');
+    } finally {
+      setProcessingQueue(null);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'venues' && venues.length === 0) fetchVenues();
     if (activeTab === 'artists') {
@@ -155,6 +223,7 @@ export default function GodmodePage() {
     }
     if (activeTab === 'songs' && songs.length === 0) fetchSongs();
     if (activeTab === 'users' && users.length === 0) fetchUsers();
+    if (activeTab === 'queue' && queueItems.length === 0) fetchEventQueue();
   }, [activeTab]);
 
   // Reset pages when search changes
@@ -395,10 +464,6 @@ export default function GodmodePage() {
             <MapPin className="h-4 w-4" />
             Venues ({venueStats.total})
           </TabsTrigger>
-          <TabsTrigger value="venue-import" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            Import
-          </TabsTrigger>
           <TabsTrigger value="artists" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Artists ({artistStats.total})
@@ -411,12 +476,11 @@ export default function GodmodePage() {
             <User className="h-4 w-4" />
             Users ({users.length})
           </TabsTrigger>
+          <TabsTrigger value="queue" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Event Queue ({queueItems.filter(q => q.status === 'pending').length})
+          </TabsTrigger>
         </TabsList>
-
-        {/* VENUE IMPORT TAB */}
-        <TabsContent value="venue-import" className="mt-6">
-          <VenueImportPage />
-        </TabsContent>
 
         {/* VENUES TAB */}
         <TabsContent value="venues" className="mt-6">
@@ -1145,6 +1209,231 @@ export default function GodmodePage() {
                 </div>
               )}
             </Card>
+          )}
+        </TabsContent>
+
+        {/* EVENT QUEUE TAB */}
+        <TabsContent value="queue" className="mt-6">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <Button
+                  variant={queueFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setQueueFilter('all')}
+                  size="sm"
+                >
+                  All ({queueItems.length})
+                </Button>
+                <Button
+                  variant={queueFilter === 'pending' ? 'default' : 'outline'}
+                  onClick={() => setQueueFilter('pending')}
+                  size="sm"
+                >
+                  Pending ({queueItems.filter(q => q.status === 'pending').length})
+                </Button>
+                <Button
+                  variant={queueFilter === 'needs-review' ? 'default' : 'outline'}
+                  onClick={() => setQueueFilter('needs-review')}
+                  size="sm"
+                >
+                  Needs Review ({queueItems.filter(q => q.venueResolution.action === 'REVIEW' || q.artistResolution.action === 'REVIEW').length})
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
+                  Load POC Results
+                </Button>
+                <Button onClick={fetchEventQueue} size="sm" variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {queueLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
+          {queueError && <div className="text-destructive text-center py-12">{queueError}</div>}
+
+          {!queueLoading && !queueError && (
+            <div className="space-y-4">
+              {queueItems
+                .filter(item => {
+                  if (queueFilter === 'pending') return item.status === 'pending';
+                  if (queueFilter === 'needs-review') return item.venueResolution.action === 'REVIEW' || item.artistResolution.action === 'REVIEW';
+                  return true;
+                })
+                .map(item => (
+                  <Card key={item.queue_id} className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left Column - Extracted Data */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Extracted Event</h3>
+                        <div className="space-y-2">
+                          <div>
+                            <div className="text-sm text-muted-foreground">Artist</div>
+                            <div className="font-medium">{item.artistName}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Venue</div>
+                            <div className="font-medium">{item.venueName}</div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-sm text-muted-foreground">Date</div>
+                              <div className="font-medium">{item.date}</div>
+                            </div>
+                            {item.time && (
+                              <div>
+                                <div className="text-sm text-muted-foreground">Time</div>
+                                <div className="font-medium">{item.time}</div>
+                              </div>
+                            )}
+                          </div>
+                          {item.notes && (
+                            <div>
+                              <div className="text-sm text-muted-foreground">Notes</div>
+                              <div className="text-sm">{item.notes}</div>
+                            </div>
+                          )}
+                          {item.facebookUrl && (
+                            <div>
+                              <div className="text-sm text-muted-foreground">Facebook URL</div>
+                              <a href={item.facebookUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" />
+                                Event Link
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Column - Resolution Details */}
+                      <div className="space-y-4">
+                        {/* Venue Resolution */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold">Venue Resolution</h4>
+                            <div className={`px-2 py-1 rounded text-xs font-medium ${
+                              item.venueResolution.action === 'MATCH_EXISTING' ? 'bg-green-100 text-green-800' :
+                              item.venueResolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {item.venueResolution.action}
+                            </div>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Confidence: </span>
+                              <span className="font-medium">{Math.round(item.venueResolution.confidence * 100)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Reasons: </span>
+                              <span className="font-medium">{item.venueResolution.reasons.join(', ')}</span>
+                            </div>
+                            {item.venueResolution.venue_id && (
+                              <div>
+                                <span className="text-muted-foreground">Matched Venue ID: </span>
+                                <span className="font-mono text-xs">{item.venueResolution.venue_id}</span>
+                              </div>
+                            )}
+                            {item.venueResolution.enrichments && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="text-muted-foreground mb-1">Enrichments:</div>
+                                {item.venueResolution.enrichments.address && (
+                                  <div className="text-xs">{item.venueResolution.enrichments.address}</div>
+                                )}
+                                {item.venueResolution.enrichments.website && (
+                                  <a href={item.venueResolution.enrichments.website} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:text-blue-800">
+                                    {item.venueResolution.enrichments.website}
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Artist Resolution */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold">Artist Resolution</h4>
+                            <div className={`px-2 py-1 rounded text-xs font-medium ${
+                              item.artistResolution.action === 'MATCH_EXISTING' ? 'bg-green-100 text-green-800' :
+                              item.artistResolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {item.artistResolution.action}
+                            </div>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Confidence: </span>
+                              <span className="font-medium">{Math.round(item.artistResolution.confidence * 100)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Reasons: </span>
+                              <span className="font-medium">{item.artistResolution.reasons.join(', ')}</span>
+                            </div>
+                            {item.artistResolution.artist_id && (
+                              <div>
+                                <span className="text-muted-foreground">Matched Artist ID: </span>
+                                <span className="font-mono text-xs">{item.artistResolution.artist_id}</span>
+                              </div>
+                            )}
+                            {item.artistResolution.suggestion && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="text-muted-foreground mb-1">Suggestion:</div>
+                                <div className="text-xs">{item.artistResolution.suggestion}</div>
+                              </div>
+                            )}
+                            {item.artistResolution.candidates && item.artistResolution.candidates.length > 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="text-muted-foreground mb-1">Candidates:</div>
+                                {item.artistResolution.candidates.slice(0, 3).map((candidate, idx) => (
+                                  <div key={idx} className="text-xs py-1">
+                                    {candidate.artist.name} ({Math.round(candidate.score * 100)}%) - {candidate.reasons.join(', ')}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end gap-2 mt-6 pt-6 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleRejectQueueItem(item.queue_id)}
+                        disabled={processingQueue === item.queue_id}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={() => handleApproveQueueItem(item.queue_id)}
+                        disabled={processingQueue === item.queue_id}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve & Create Event
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+
+              {queueItems.length === 0 && (
+                <Card className="p-12">
+                  <div className="text-center text-muted-foreground">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No events in the review queue</p>
+                    <Button onClick={handleLoadPOCResults} size="sm" variant="outline" className="mt-4">
+                      Load POC Results to Test
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </div>
           )}
         </TabsContent>
       </Tabs>
