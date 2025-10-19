@@ -95,6 +95,7 @@ export default function GodmodePage() {
   const [queueFilter, setQueueFilter] = useState<'all' | 'pending' | 'needs-review'>('pending');
   const [htmlInput, setHtmlInput] = useState('');
   const [showHtmlInput, setShowHtmlInput] = useState(false);
+  const [queuePhase, setQueuePhase] = useState<'venues' | 'artists' | 'events'>('venues');
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -495,6 +496,28 @@ export default function GodmodePage() {
   const songTotalPages = Math.ceil(filteredSongs.length / songsPerPage);
   const songStartIndex = (songPage - 1) * songsPerPage;
   const paginatedSongs = filteredSongs.slice(songStartIndex, songStartIndex + songsPerPage);
+
+  // Group queue items by venue_group_key and artist_group_key
+  const groupedVenues = queueItems.reduce((acc, item) => {
+    const key = item.venue_group_key || item.venueName;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(item);
+    return acc;
+  }, {} as Record<string, QueueItem[]>);
+
+  const groupedArtists = queueItems.reduce((acc, item) => {
+    const key = item.artist_group_key || item.artistName;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(item);
+    return acc;
+  }, {} as Record<string, QueueItem[]>);
+
+  const uniqueVenueGroups = Object.keys(groupedVenues);
+  const uniqueArtistGroups = Object.keys(groupedArtists);
 
   // Stats
   const venueStats = {
@@ -1285,28 +1308,8 @@ export default function GodmodePage() {
         <TabsContent value="queue" className="mt-6">
           <div className="mb-6 space-y-4">
             <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                <Button
-                  variant={queueFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setQueueFilter('all')}
-                  size="sm"
-                >
-                  All ({queueItems.length})
-                </Button>
-                <Button
-                  variant={queueFilter === 'pending' ? 'default' : 'outline'}
-                  onClick={() => setQueueFilter('pending')}
-                  size="sm"
-                >
-                  Pending ({queueItems.filter(q => q.status === 'pending').length})
-                </Button>
-                <Button
-                  variant={queueFilter === 'needs-review' ? 'default' : 'outline'}
-                  onClick={() => setQueueFilter('needs-review')}
-                  size="sm"
-                >
-                  Needs Review ({queueItems.filter(q => q.venueResolution.action === 'REVIEW' || q.artistResolution.action === 'REVIEW').length})
-                </Button>
+              <div className="text-sm text-muted-foreground">
+                Process in order: Venues → Artists → Events
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
@@ -1359,15 +1362,233 @@ export default function GodmodePage() {
           {queueLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
           {queueError && <div className="text-destructive text-center py-12">{queueError}</div>}
 
-          {!queueLoading && !queueError && (
-            <div className="space-y-4">
-              {queueItems
-                .filter(item => {
-                  if (queueFilter === 'pending') return item.status === 'pending';
-                  if (queueFilter === 'needs-review') return item.venueResolution.action === 'REVIEW' || item.artistResolution.action === 'REVIEW';
-                  return true;
-                })
-                .map(item => (
+          {!queueLoading && !queueError && queueItems.length === 0 && (
+            <Card className="p-12">
+              <div className="text-center text-muted-foreground">
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No events in the review queue</p>
+                <Button onClick={handleLoadPOCResults} size="sm" variant="outline" className="mt-4">
+                  Load POC Results to Test
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {!queueLoading && !queueError && queueItems.length > 0 && (
+            <Tabs value={queuePhase} onValueChange={(val) => setQueuePhase(val as 'venues' | 'artists' | 'events')} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="venues">
+                  Phase 1: Venues ({uniqueVenueGroups.length})
+                </TabsTrigger>
+                <TabsTrigger value="artists">
+                  Phase 2: Artists ({uniqueArtistGroups.length})
+                </TabsTrigger>
+                <TabsTrigger value="events">
+                  Phase 3: Events ({queueItems.length})
+                </TabsTrigger>
+              </TabsList>
+
+              {/* PHASE 1: VENUES TAB */}
+              <TabsContent value="venues" className="mt-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Process Unique Venues First</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {uniqueVenueGroups.length} unique venues found. Review and approve each venue before processing artists.
+                  </p>
+                  <div className="space-y-4">
+                    {uniqueVenueGroups.map(groupKey => {
+                      const items = groupedVenues[groupKey];
+                      const firstItem = items[0];
+                      return (
+                        <div key={groupKey} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg">{firstItem.venueName}</h4>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Appears in {items.length} event{items.length > 1 ? 's' : ''}
+                              </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded text-xs font-medium ${
+                              firstItem.venueResolution.action === 'MATCH_EXISTING' ? 'bg-green-100 text-green-800' :
+                              firstItem.venueResolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {firstItem.venueResolution.action}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-6 mb-4">
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-2">Resolution Details</div>
+                              <div className="space-y-1 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Confidence: </span>
+                                  <span className="font-medium">{Math.round(firstItem.venueResolution.confidence * 100)}%</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Reasons: </span>
+                                  <span className="font-medium">{firstItem.venueResolution.reasons.join(', ')}</span>
+                                </div>
+                                {firstItem.venueResolution.venue_id && (
+                                  <div>
+                                    <span className="text-muted-foreground">Matched ID: </span>
+                                    <span className="font-mono text-xs">{firstItem.venueResolution.venue_id.substring(0, 8)}...</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-xs text-muted-foreground mb-2">Enrichments</div>
+                              <div className="space-y-1 text-sm">
+                                {firstItem.venueResolution.enrichments?.address && (
+                                  <div className="text-xs">{firstItem.venueResolution.enrichments.address}</div>
+                                )}
+                                {firstItem.venueResolution.enrichments?.website && (
+                                  <a
+                                    href={firstItem.venueResolution.enrichments.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                  >
+                                    <Globe className="h-3 w-3" />
+                                    {firstItem.venueResolution.enrichments.website}
+                                  </a>
+                                )}
+                                {firstItem.facebookUrl && (
+                                  <a
+                                    href={firstItem.facebookUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                  >
+                                    <Facebook className="h-3 w-3" />
+                                    Facebook Event
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-4 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Reject all items in this venue group
+                                items.forEach(item => handleRejectQueueItem(item.queue_id));
+                              }}
+                              disabled={processingQueue !== null}
+                            >
+                              <X className="h-3 w-3 mr-2" />
+                              Dismiss All ({items.length})
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => {
+                                // For now, approve first item (will need to batch approve later)
+                                handleApproveQueueItem(firstItem.queue_id);
+                              }}
+                              disabled={processingQueue !== null}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-2" />
+                              Approve Venue
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </TabsContent>
+
+              {/* PHASE 2: ARTISTS TAB */}
+              <TabsContent value="artists" className="mt-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Process Unique Artists</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {uniqueArtistGroups.length} unique artists found. Complete venue processing first.
+                  </p>
+                  <div className="space-y-4">
+                    {uniqueArtistGroups.map(groupKey => {
+                      const items = groupedArtists[groupKey];
+                      const firstItem = items[0];
+                      return (
+                        <div key={groupKey} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg">{firstItem.artistName}</h4>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Appears in {items.length} event{items.length > 1 ? 's' : ''}
+                              </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded text-xs font-medium ${
+                              firstItem.artistResolution.action === 'MATCH_EXISTING' ? 'bg-green-100 text-green-800' :
+                              firstItem.artistResolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {firstItem.artistResolution.action}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 text-sm mb-4">
+                            <div>
+                              <span className="text-muted-foreground">Confidence: </span>
+                              <span className="font-medium">{Math.round(firstItem.artistResolution.confidence * 100)}%</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Reasons: </span>
+                              <span className="font-medium">{firstItem.artistResolution.reasons.join(', ')}</span>
+                            </div>
+                            {firstItem.artistResolution.artist_id && (
+                              <div>
+                                <span className="text-muted-foreground">Matched ID: </span>
+                                <span className="font-mono text-xs">{firstItem.artistResolution.artist_id.substring(0, 8)}...</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-4 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                items.forEach(item => handleRejectQueueItem(item.queue_id));
+                              }}
+                              disabled={processingQueue !== null}
+                            >
+                              <X className="h-3 w-3 mr-2" />
+                              Dismiss All ({items.length})
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => {
+                                handleApproveQueueItem(firstItem.queue_id);
+                              }}
+                              disabled={processingQueue !== null}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-2" />
+                              Approve Artist
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </TabsContent>
+
+              {/* PHASE 3: EVENTS TAB */}
+              <TabsContent value="events" className="mt-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Review Individual Events</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {queueItems.length} events ready for review. Complete venues and artists first.
+                  </p>
+                  <div className="space-y-4">
+                    {queueItems.map(item => (
                   <Card key={item.queue_id} className="p-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left Column - Extracted Data */}
@@ -1526,19 +1747,10 @@ export default function GodmodePage() {
                     </div>
                   </Card>
                 ))}
-
-              {queueItems.length === 0 && (
-                <Card className="p-12">
-                  <div className="text-center text-muted-foreground">
-                    <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No events in the review queue</p>
-                    <Button onClick={handleLoadPOCResults} size="sm" variant="outline" className="mt-4">
-                      Load POC Results to Test
-                    </Button>
                   </div>
                 </Card>
-              )}
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
         </TabsContent>
       </Tabs>
