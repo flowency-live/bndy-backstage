@@ -261,40 +261,27 @@ export default function AgentEventsPage() {
         <p className="text-muted-foreground">Extract and enrich events and venues with LLM-powered automation</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'events' | 'venues')} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="events">
-            Event Queue ({queueItems.length})
-          </TabsTrigger>
-          <TabsTrigger value="venues">
-            <Database className="h-4 w-4 mr-2" />
-            Venue Enrichment
-          </TabsTrigger>
-        </TabsList>
-
-        {/* EVENT QUEUE TAB */}
-        <TabsContent value="events">
-          <div className="mb-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                Process in order: Venues → Artists → Events
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
-                  {showHtmlInput ? 'Hide' : 'Paste HTML'}
-                </Button>
-                <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
-                  Load POC Results
-                </Button>
-                <Button onClick={fetchEventQueue} size="sm" variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-            </div>
+      {/* HTML Input Area - Shared across all tabs */}
+      <div className="mb-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Paste HTML from gigs-news.uk to extract events or enrich venues
           </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
+              {showHtmlInput ? 'Hide HTML Input' : 'Paste HTML'}
+            </Button>
+            <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
+              Load POC Results
+            </Button>
+            <Button onClick={fetchEventQueue} size="sm" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Queue
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      {/* HTML Input Area */}
       {showHtmlInput && (
         <Card className="p-4 mb-4">
           <div className="space-y-3">
@@ -331,6 +318,19 @@ export default function AgentEventsPage() {
         </Card>
       )}
 
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'events' | 'venues')} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="events">
+            Event Queue ({queueItems.length})
+          </TabsTrigger>
+          <TabsTrigger value="venues">
+            <Database className="h-4 w-4 mr-2" />
+            Venue Enrichment
+          </TabsTrigger>
+        </TabsList>
+
+        {/* EVENT QUEUE TAB */}
+        <TabsContent value="events">
       {queueLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
       {queueError && <div className="text-destructive text-center py-12">{queueError}</div>}
 
