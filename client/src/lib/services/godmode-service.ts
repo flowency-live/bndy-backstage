@@ -554,3 +554,23 @@ export async function extractFromGigsNews(): Promise<{ extracted: number; queued
     throw error;
   }
 }
+
+export async function extractFromHTML(html: string): Promise<{ extracted: number; queued: number }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/extract-from-html`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ html })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to extract from HTML: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error extracting from HTML:', error);
+    throw error;
+  }
+}

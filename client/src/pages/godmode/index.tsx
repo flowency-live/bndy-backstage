@@ -22,6 +22,7 @@ import {
   rejectQueueItem,
   loadPOCResults,
   extractFromGigsNews,
+  extractFromHTML,
   formatDuration,
   type Venue,
   type Artist,
@@ -92,6 +93,8 @@ export default function GodmodePage() {
   const [queueError, setQueueError] = useState<string | null>(null);
   const [processingQueue, setProcessingQueue] = useState<string | null>(null);
   const [queueFilter, setQueueFilter] = useState<'all' | 'pending' | 'needs-review'>('pending');
+  const [htmlInput, setHtmlInput] = useState('');
+  const [showHtmlInput, setShowHtmlInput] = useState(false);
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -209,6 +212,35 @@ export default function GodmodePage() {
       console.log(`Extracted ${result.extracted} events, ${result.queued} added to queue`);
     } catch (err) {
       setQueueError(err instanceof Error ? err.message : 'Failed to extract events from gigs-news');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleExtractFromHTML = async () => {
+    if (!htmlInput.trim()) {
+      setQueueError('Please paste HTML content first');
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Extract Events from HTML',
+      description: `This will extract events from the pasted HTML (${Math.round(htmlInput.length / 1024)}KB), resolve venues/artists, and populate the review queue. This may take 1-2 minutes. Continue?`,
+      confirmText: 'Extract',
+      variant: 'default',
+    });
+    if (!confirmed) return;
+
+    setQueueLoading(true);
+    setQueueError(null);
+    try {
+      const result = await extractFromHTML(htmlInput);
+      await fetchEventQueue();
+      setHtmlInput(''); // Clear the textarea
+      setShowHtmlInput(false); // Hide the input area
+      console.log(`Extracted ${result.extracted} events, ${result.queued} added to queue`);
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : 'Failed to extract events from HTML');
     } finally {
       setQueueLoading(false);
     }
@@ -1264,8 +1296,8 @@ export default function GodmodePage() {
                 </Button>
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleExtractFromGigsNews} size="sm" variant="default">
-                  Get gigs-news
+                <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
+                  {showHtmlInput ? 'Hide' : 'Paste HTML'}
                 </Button>
                 <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
                   Load POC Results
@@ -1277,6 +1309,39 @@ export default function GodmodePage() {
               </div>
             </div>
           </div>
+
+          {/* HTML Input Area */}
+          {showHtmlInput && (
+            <Card className="p-4 mb-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Paste HTML from gigs-news.uk</label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Open gigs-news.uk, right-click → "Save As" → "Webpage, HTML Only", then paste the contents here
+                  </p>
+                  <textarea
+                    value={htmlInput}
+                    onChange={(e) => setHtmlInput(e.target.value)}
+                    className="w-full h-40 p-3 border rounded font-mono text-xs"
+                    placeholder="<html>...</html>"
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    {htmlInput.length > 0 && `${Math.round(htmlInput.length / 1024)}KB pasted`}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setHtmlInput('')} size="sm" variant="outline" disabled={!htmlInput}>
+                      Clear
+                    </Button>
+                    <Button onClick={handleExtractFromHTML} size="sm" variant="default" disabled={!htmlInput.trim()}>
+                      Extract Events
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {queueLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
           {queueError && <div className="text-destructive text-center py-12">{queueError}</div>}
