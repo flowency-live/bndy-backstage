@@ -582,3 +582,46 @@ export async function extractFromHTML(html: string): Promise<{ extracted: number
     throw error;
   }
 }
+
+// Venue Enrichment Types
+export interface VenueEnrichmentMatch {
+  extractedName: string;
+  facebookUrl?: string;
+  venueId: string;
+  currentFacebookUrl?: string;
+  needsEnrichment: boolean;
+  resolution: VenueResolution;
+}
+
+export interface VenueEnrichmentNew {
+  extractedName: string;
+  facebookUrl?: string;
+  resolution: VenueResolution;
+}
+
+export interface VenueEnrichmentResults {
+  perfectMatches: VenueEnrichmentMatch[];
+  newVenues: VenueEnrichmentNew[];
+  totalExtracted: number;
+}
+
+// Venue Enrichment Operations
+export async function extractVenuesFromHTML(html: string): Promise<VenueEnrichmentResults> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ingest/extract-venues`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ html })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to extract venues: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error extracting venues from HTML:', error);
+    throw error;
+  }
+}

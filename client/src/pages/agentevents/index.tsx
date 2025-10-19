@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, CheckCircle, AlertCircle, RefreshCw, X, ExternalLink, Globe, Facebook } from 'lucide-react';
+import { MapPin, CheckCircle, AlertCircle, RefreshCw, X, ExternalLink, Globe, Facebook, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -10,7 +10,10 @@ import {
   loadPOCResults,
   extractFromGigsNews,
   extractFromHTML,
-  type QueueItem
+  extractVenuesFromHTML,
+  updateVenue,
+  type QueueItem,
+  type VenueEnrichmentResults
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
 
@@ -25,6 +28,13 @@ export default function AgentEventsPage() {
   const [htmlInput, setHtmlInput] = useState('');
   const [showHtmlInput, setShowHtmlInput] = useState(false);
   const [queuePhase, setQueuePhase] = useState<'venues' | 'artists' | 'events'>('venues');
+
+  // Venue Enrichment State
+  const [venueEnrichmentResults, setVenueEnrichmentResults] = useState<VenueEnrichmentResults | null>(null);
+  const [venueEnrichmentLoading, setVenueEnrichmentLoading] = useState(false);
+  const [venueEnrichmentError, setVenueEnrichmentError] = useState<string | null>(null);
+  const [enrichingVenues, setEnrichingVenues] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'events' | 'venues'>('events');
 
   const fetchEventQueue = async () => {
     setQueueLoading(true);
@@ -143,6 +153,81 @@ export default function AgentEventsPage() {
     }
   };
 
+  // Venue Enrichment Handlers
+  const handleExtractVenues = async () => {
+    if (!htmlInput.trim()) {
+      setVenueEnrichmentError('Please paste HTML content first');
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Extract Venues for Enrichment',
+      description: `Extract ALL venues from pasted HTML (${Math.round(htmlInput.length / 1024)}KB) and match them to existing venues in the database. Continue?`,
+      confirmText: 'Extract',
+      variant: 'default',
+    });
+    if (!confirmed) return;
+
+    setVenueEnrichmentLoading(true);
+    setVenueEnrichmentError(null);
+    try {
+      const results = await extractVenuesFromHTML(htmlInput);
+      setVenueEnrichmentResults(results);
+      setActiveTab('venues');
+    } catch (err) {
+      setVenueEnrichmentError(err instanceof Error ? err.message : 'Failed to extract venues');
+    } finally {
+      setVenueEnrichmentLoading(false);
+    }
+  };
+
+  const handleEnrichVenue = async (venueId: string, facebookUrl: string) => {
+    setEnrichingVenues(prev => new Set(prev).add(venueId));
+    try {
+      await updateVenue(venueId, { facebookUrl });
+
+      setVenueEnrichmentResults(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          perfectMatches: prev.perfectMatches.map(match =>
+            match.venueId === venueId
+              ? { ...match, currentFacebookUrl: facebookUrl, needsEnrichment: false }
+              : match
+          )
+        };
+      });
+    } catch (err) {
+      setVenueEnrichmentError(err instanceof Error ? err.message : 'Failed to enrich venue');
+    } finally {
+      setEnrichingVenues(prev => {
+        const next = new Set(prev);
+        next.delete(venueId);
+        return next;
+      });
+    }
+  };
+
+  const handleEnrichAllVenues = async () => {
+    if (!venueEnrichmentResults) return;
+
+    const toEnrich = venueEnrichmentResults.perfectMatches.filter(m => m.needsEnrichment);
+
+    const confirmed = await confirm({
+      title: 'Enrich All Venues',
+      description: `Add Facebook URLs to ${toEnrich.length} venues that don't currently have one. Continue?`,
+      confirmText: 'Enrich All',
+      variant: 'default',
+    });
+    if (!confirmed) return;
+
+    for (const match of toEnrich) {
+      if (match.facebookUrl) {
+        await handleEnrichVenue(match.venueId, match.facebookUrl);
+      }
+    }
+  };
+
   useEffect(() => {
     if (queueItems.length === 0) fetchEventQueue();
   }, []);
@@ -173,28 +258,41 @@ export default function AgentEventsPage() {
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Agentic Event Ingestion</h1>
-        <p className="text-muted-foreground">Review and approve LLM-extracted events with automated venue/artist matching</p>
+        <p className="text-muted-foreground">Extract and enrich events and venues with LLM-powered automation</p>
       </div>
 
-      <div className="mb-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            Process in order: Venues → Artists → Events
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'events' | 'venues')} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="events">
+            Event Queue ({queueItems.length})
+          </TabsTrigger>
+          <TabsTrigger value="venues">
+            <Database className="h-4 w-4 mr-2" />
+            Venue Enrichment
+          </TabsTrigger>
+        </TabsList>
+
+        {/* EVENT QUEUE TAB */}
+        <TabsContent value="events">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                Process in order: Venues → Artists → Events
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
+                  {showHtmlInput ? 'Hide' : 'Paste HTML'}
+                </Button>
+                <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
+                  Load POC Results
+                </Button>
+                <Button onClick={fetchEventQueue} size="sm" variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowHtmlInput(!showHtmlInput)} size="sm" variant="outline">
-              {showHtmlInput ? 'Hide' : 'Paste HTML'}
-            </Button>
-            <Button onClick={handleLoadPOCResults} size="sm" variant="outline">
-              Load POC Results
-            </Button>
-            <Button onClick={fetchEventQueue} size="sm" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* HTML Input Area */}
       {showHtmlInput && (
@@ -219,6 +317,10 @@ export default function AgentEventsPage() {
               <div className="flex gap-2">
                 <Button onClick={() => setHtmlInput('')} size="sm" variant="outline" disabled={!htmlInput}>
                   Clear
+                </Button>
+                <Button onClick={handleExtractVenues} size="sm" variant="secondary" disabled={!htmlInput.trim()}>
+                  <Database className="h-4 w-4 mr-2" />
+                  Extract Venues
                 </Button>
                 <Button onClick={handleExtractFromHTML} size="sm" variant="default" disabled={!htmlInput.trim()}>
                   Extract Events
@@ -642,6 +744,204 @@ export default function AgentEventsPage() {
           </TabsContent>
         </Tabs>
       )}
+        </TabsContent>
+
+        {/* VENUE ENRICHMENT TAB */}
+        <TabsContent value="venues">
+          {venueEnrichmentLoading && (
+            <div className="text-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto" />
+            </div>
+          )}
+
+          {venueEnrichmentError && (
+            <div className="text-destructive text-center py-12">{venueEnrichmentError}</div>
+          )}
+
+          {!venueEnrichmentLoading && !venueEnrichmentError && !venueEnrichmentResults && (
+            <Card className="p-12">
+              <div className="text-center text-muted-foreground">
+                <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-4">No venue enrichment results yet</p>
+                <p className="text-sm">Paste HTML and click "Extract Venues" to begin</p>
+              </div>
+            </Card>
+          )}
+
+          {venueEnrichmentResults && (
+            <div className="space-y-6">
+              {/* Summary */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Extraction Summary</h3>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-3xl font-bold">{venueEnrichmentResults.totalExtracted}</div>
+                    <div className="text-sm text-muted-foreground">Total Venues</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-green-600">{venueEnrichmentResults.perfectMatches.length}</div>
+                    <div className="text-sm text-muted-foreground">Perfect Matches</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-blue-600">{venueEnrichmentResults.newVenues.length}</div>
+                    <div className="text-sm text-muted-foreground">New/Uncertain</div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Perfect Matches - Can Enrich */}
+              {venueEnrichmentResults.perfectMatches.length > 0 && (
+                <Card className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Perfect Matches ({venueEnrichmentResults.perfectMatches.length})</h3>
+                      <p className="text-sm text-muted-foreground">
+                        99% confidence matches - can be enriched automatically
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleEnrichAllVenues}
+                      disabled={venueEnrichmentResults.perfectMatches.filter(m => m.needsEnrichment).length === 0}
+                    >
+                      Enrich All ({venueEnrichmentResults.perfectMatches.filter(m => m.needsEnrichment).length})
+                    </Button>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Venue Name</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Current FB URL</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">New FB URL</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {venueEnrichmentResults.perfectMatches.map((match, idx) => (
+                          <tr key={idx} className="hover:bg-muted/50">
+                            <td className="px-4 py-3">
+                              <div className="font-medium">{match.extractedName}</div>
+                              <div className="text-xs text-muted-foreground font-mono">
+                                {match.venueId.substring(0, 8)}...
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              {match.currentFacebookUrl ? (
+                                <a
+                                  href={match.currentFacebookUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  Has URL
+                                </a>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">None</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {match.facebookUrl ? (
+                                <a
+                                  href={match.facebookUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  View URL
+                                </a>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">None</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {match.needsEnrichment ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Can Enrich
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Enriched
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {match.needsEnrichment && match.facebookUrl && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleEnrichVenue(match.venueId, match.facebookUrl!)}
+                                  disabled={enrichingVenues.has(match.venueId)}
+                                >
+                                  {enrichingVenues.has(match.venueId) ? 'Enriching...' : 'Enrich'}
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+
+              {/* New Venues - Need Review */}
+              {venueEnrichmentResults.newVenues.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">New/Uncertain Venues ({venueEnrichmentResults.newVenues.length})</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    These venues need manual review or creation in the system
+                  </p>
+                  <div className="space-y-4">
+                    {venueEnrichmentResults.newVenues.map((newVenue, idx) => (
+                      <div key={idx} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-semibold">{newVenue.extractedName}</h4>
+                            {newVenue.facebookUrl && (
+                              <a
+                                href={newVenue.facebookUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
+                              >
+                                <Facebook className="h-3 w-3" />
+                                Facebook URL
+                              </a>
+                            )}
+                          </div>
+                          <div className={`px-2 py-1 rounded text-xs font-medium ${
+                            newVenue.resolution.action === 'CREATE_NEW' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {newVenue.resolution.action}
+                          </div>
+                        </div>
+                        <div className="text-sm space-y-1">
+                          <div>
+                            <span className="text-muted-foreground">Confidence: </span>
+                            <span className="font-medium">{Math.round(newVenue.resolution.confidence * 100)}%</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Reasons: </span>
+                            <span className="font-medium">{newVenue.resolution.reasons.join(', ')}</span>
+                          </div>
+                          {newVenue.resolution.enrichments?.address && (
+                            <div>
+                              <span className="text-muted-foreground">Address: </span>
+                              <span className="text-xs">{newVenue.resolution.enrichments.address}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
