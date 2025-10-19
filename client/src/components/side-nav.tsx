@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
-import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -355,7 +355,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-3">
-            {/* Godmode, Issue Report & Theme Toggle */}
+            {/* Godmode, AgentEvents, Issue Report & Theme Toggle */}
             <div className="flex justify-center gap-2">
               <Button
                 variant="ghost"
@@ -366,6 +366,16 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                 title="Admin Godmode"
               >
                 <Shield className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open('/agentevents', '_blank')}
+                className="h-8 w-8 p-0 text-foreground hover:bg-muted"
+                data-testid="button-agentevents"
+                title="Agent Events"
+              >
+                <Zap className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
