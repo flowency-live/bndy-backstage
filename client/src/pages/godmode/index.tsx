@@ -34,7 +34,7 @@ export default function GodmodePage() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'has-coords' | 'has-images'>('all');
+  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'has-coords' | 'has-images' | 'no-place-id'>('all');
   const [venueSearch, setVenueSearch] = useState('');
   const [editingVenue, setEditingVenue] = useState<string | null>(null);
   const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
@@ -318,6 +318,7 @@ export default function GodmodePage() {
     if (venueFilter === 'unvalidated') return !v.validated;
     if (venueFilter === 'has-coords') return v.latitude !== 0 && v.longitude !== 0;
     if (venueFilter === 'has-images') return v.profileImageUrl !== null;
+    if (venueFilter === 'no-place-id') return !v.googlePlaceId;
     return true;
   });
 
@@ -365,6 +366,7 @@ export default function GodmodePage() {
     hasCoords: venues.filter(v => v.latitude !== 0 && v.longitude !== 0).length,
     hasImages: venues.filter(v => v.profileImageUrl).length,
     hasPhone: venues.filter(v => v.phone).length,
+    noPlaceId: venues.filter(v => !v.googlePlaceId).length,
   };
 
   const artistStats = {
@@ -458,6 +460,13 @@ export default function GodmodePage() {
                 size="sm"
               >
                 With Images ({venueStats.hasImages})
+              </Button>
+              <Button
+                variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('no-place-id')}
+                size="sm"
+              >
+                No Place ID ({venueStats.noPlaceId})
               </Button>
             </div>
           </div>
