@@ -584,10 +584,15 @@ export default function GodmodePage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-xs text-muted-foreground">
-                            {venue.location ? (
+                            {venue.location && typeof venue.location.lat === 'number' && typeof venue.location.lng === 'number' ? (
                               <>
                                 <div>{venue.location.lat.toFixed(6)}</div>
                                 <div>{venue.location.lng.toFixed(6)}</div>
+                              </>
+                            ) : venue.latitude && venue.longitude ? (
+                              <>
+                                <div>{venue.latitude.toFixed(6)}</div>
+                                <div>{venue.longitude.toFixed(6)}</div>
                               </>
                             ) : (
                               <span className="italic">No coords</span>
