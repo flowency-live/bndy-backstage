@@ -34,7 +34,7 @@ export default function GodmodePage() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'has-coords' | 'has-images' | 'no-place-id'>('all');
+  const [venueFilter, setVenueFilter] = useState<'all' | 'no-place-id' | 'no-socials'>('all');
   const [venueSearch, setVenueSearch] = useState('');
   const [editingVenue, setEditingVenue] = useState<string | null>(null);
   const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
@@ -46,7 +46,7 @@ export default function GodmodePage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(false);
   const [artistsError, setArtistsError] = useState<string | null>(null);
-  const [artistFilter, setArtistFilter] = useState<'all' | 'has-owner'>('all');
+  const [artistFilter, setArtistFilter] = useState<'all' | 'no-genres' | 'no-socials' | 'no-location'>('all');
   const [artistSearch, setArtistSearch] = useState('');
   const [editingArtist, setEditingArtist] = useState<string | null>(null);
   const [artistEditForm, setArtistEditForm] = useState<Artist | null>(null);
@@ -314,11 +314,14 @@ export default function GodmodePage() {
                          (v.address && String(v.address).toLowerCase().includes(venueSearch.toLowerCase())) ||
                          (v.postcode && String(v.postcode).toLowerCase().includes(venueSearch.toLowerCase()));
     if (!matchesSearch) return false;
-    if (venueFilter === 'validated') return v.validated;
-    if (venueFilter === 'unvalidated') return !v.validated;
-    if (venueFilter === 'has-coords') return v.latitude !== 0 && v.longitude !== 0;
-    if (venueFilter === 'has-images') return v.profileImageUrl !== null;
     if (venueFilter === 'no-place-id') return !v.googlePlaceId;
+    if (venueFilter === 'no-socials') {
+      const hasSocials = v.website ||
+                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
+                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
+                                               (url.includes('facebook.com') || url.includes('instagram.com'))));
+      return !hasSocials;
+    }
     return true;
   });
 
@@ -326,9 +329,12 @@ export default function GodmodePage() {
     const matchesSearch = (a.name && String(a.name).toLowerCase().includes(artistSearch.toLowerCase())) ||
                          (a.location && String(a.location).toLowerCase().includes(artistSearch.toLowerCase()));
     if (!matchesSearch) return false;
-    if (artistFilter === 'has-owner') {
-      return memberships.some(m => m.artist_id === a.id && m.role === 'owner');
+    if (artistFilter === 'no-genres') return !a.genres || (Array.isArray(a.genres) && a.genres.length === 0);
+    if (artistFilter === 'no-socials') {
+      const hasSocials = a.facebookUrl || a.instagramUrl;
+      return !hasSocials;
     }
+    if (artistFilter === 'no-location') return !a.location || !a.googlePlaceId;
     return true;
   });
 
@@ -361,17 +367,21 @@ export default function GodmodePage() {
   // Stats
   const venueStats = {
     total: venues.length,
-    validated: venues.filter(v => v.validated).length,
-    unvalidated: venues.filter(v => !v.validated).length,
-    hasCoords: venues.filter(v => v.latitude !== 0 && v.longitude !== 0).length,
-    hasImages: venues.filter(v => v.profileImageUrl).length,
-    hasPhone: venues.filter(v => v.phone).length,
     noPlaceId: venues.filter(v => !v.googlePlaceId).length,
+    noSocials: venues.filter(v => {
+      const hasSocials = v.website ||
+                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
+                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
+                                               (url.includes('facebook.com') || url.includes('instagram.com'))));
+      return !hasSocials;
+    }).length,
   };
 
   const artistStats = {
     total: artists.length,
-    hasOwner: artists.filter(a => memberships.some(m => m.artist_id === a.id && m.role === 'owner')).length,
+    noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
+    noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
+    noLocation: artists.filter(a => !a.location || !a.googlePlaceId).length,
   };
 
   const songStats = {
@@ -434,39 +444,18 @@ export default function GodmodePage() {
                 All ({venueStats.total})
               </Button>
               <Button
-                variant={venueFilter === 'validated' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('validated')}
-                size="sm"
-              >
-                Validated ({venueStats.validated})
-              </Button>
-              <Button
-                variant={venueFilter === 'unvalidated' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('unvalidated')}
-                size="sm"
-              >
-                Unvalidated ({venueStats.unvalidated})
-              </Button>
-              <Button
-                variant={venueFilter === 'has-coords' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('has-coords')}
-                size="sm"
-              >
-                Has Coords ({venueStats.hasCoords})
-              </Button>
-              <Button
-                variant={venueFilter === 'has-images' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('has-images')}
-                size="sm"
-              >
-                With Images ({venueStats.hasImages})
-              </Button>
-              <Button
                 variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
                 onClick={() => setVenueFilter('no-place-id')}
                 size="sm"
               >
                 No Place ID ({venueStats.noPlaceId})
+              </Button>
+              <Button
+                variant={venueFilter === 'no-socials' ? 'default' : 'outline'}
+                onClick={() => setVenueFilter('no-socials')}
+                size="sm"
+              >
+                No Socials ({venueStats.noSocials})
               </Button>
             </div>
           </div>
@@ -625,8 +614,20 @@ export default function GodmodePage() {
 
         {/* ARTISTS TAB */}
         <TabsContent value="artists" className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex gap-2">
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <Input
+                placeholder="Search artists by name or location..."
+                value={artistSearch}
+                onChange={(e) => setArtistSearch(e.target.value)}
+                className="max-w-md"
+              />
+              <Button onClick={fetchArtists} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={artistFilter === 'all' ? 'default' : 'outline'}
                 onClick={() => setArtistFilter('all')}
@@ -635,26 +636,25 @@ export default function GodmodePage() {
                 All ({artistStats.total})
               </Button>
               <Button
-                variant={artistFilter === 'has-owner' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('has-owner')}
+                variant={artistFilter === 'no-genres' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('no-genres')}
                 size="sm"
               >
-                Has Owner ({artistStats.hasOwner})
+                No Genres ({artistStats.noGenres})
               </Button>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search artists..."
-                  value={artistSearch}
-                  onChange={(e) => setArtistSearch(e.target.value)}
-                  className="pl-8 w-64"
-                />
-              </div>
-              <Button onClick={fetchArtists} size="sm" variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+              <Button
+                variant={artistFilter === 'no-socials' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('no-socials')}
+                size="sm"
+              >
+                No Socials ({artistStats.noSocials})
+              </Button>
+              <Button
+                variant={artistFilter === 'no-location' ? 'default' : 'outline'}
+                onClick={() => setArtistFilter('no-location')}
+                size="sm"
+              >
+                No Location / Place ID ({artistStats.noLocation})
               </Button>
             </div>
           </div>
