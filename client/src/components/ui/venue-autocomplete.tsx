@@ -132,7 +132,9 @@ export default function VenueAutocomplete({
 
   const handleSelect = async (prediction: google.maps.places.AutocompletePrediction) => {
     justSelectedRef.current = true;
-    setSearchTerm(prediction.description);
+
+    // Clear the search term immediately to prevent reopening
+    setSearchTerm('');
     setShowDropdown(false);
     setPredictions([]);
 

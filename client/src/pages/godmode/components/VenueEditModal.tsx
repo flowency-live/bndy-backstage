@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -195,6 +195,9 @@ export default function VenueEditModal({
               </Button>
             </div>
           </DialogTitle>
+          <DialogDescription>
+            Update venue details including name, address, and social media links.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -212,11 +215,23 @@ export default function VenueEditModal({
             />
           </div>
 
+          {/* Current Address (Read-only) */}
+          <div>
+            <Label htmlFor="venue-address">Current Address (Read-only)</Label>
+            <Input
+              id="venue-address"
+              value={editForm.address || 'No address set'}
+              readOnly
+              disabled
+              className="bg-muted"
+            />
+          </div>
+
           {/* Google Place Lookup */}
           <div>
-            <Label htmlFor="venue-place">Google Place</Label>
+            <Label htmlFor="venue-place">Google Place Lookup</Label>
             <VenueAutocomplete
-              value={editForm.name || ''}
+              value=""
               onChange={handleVenueSelect}
               placeholder="Search for venue on Google Places..."
             />
