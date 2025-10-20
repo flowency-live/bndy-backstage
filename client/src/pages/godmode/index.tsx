@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, Search, Globe, Facebook } from 'lucide-react';
+import { MapPin, Music, User, CheckCircle, AlertCircle, RefreshCw, Edit, Trash2, Save, X, Search, Globe, Facebook, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -25,6 +25,8 @@ import {
   type Membership
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
+import VenueEditModal from './components/VenueEditModal';
+import ArtistEditModal from './components/ArtistEditModal';
 
 export default function GodmodePage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -79,6 +81,12 @@ export default function GodmodePage() {
   // Memberships State (for artist owner lookup)
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
+
+  // Batch Edit Modal State
+  const [venueEditModalOpen, setVenueEditModalOpen] = useState(false);
+  const [venueEditIndex, setVenueEditIndex] = useState(0);
+  const [artistEditModalOpen, setArtistEditModalOpen] = useState(false);
+  const [artistEditIndex, setArtistEditIndex] = useState(0);
 
   // Fetch Functions
   const fetchVenues = async () => {
@@ -308,6 +316,29 @@ export default function GodmodePage() {
     }
   };
 
+  // Batch Edit Modal Handlers
+  const handleOpenVenueBatchEdit = () => {
+    if (filteredVenues.length === 0) return;
+    setVenueEditIndex(0);
+    setVenueEditModalOpen(true);
+  };
+
+  const handleVenueBatchSave = async (venue: Venue) => {
+    const updated = await updateVenue(venue.id, venue);
+    setVenues(venues.map(v => v.id === updated.id ? updated : v));
+  };
+
+  const handleOpenArtistBatchEdit = () => {
+    if (filteredArtists.length === 0) return;
+    setArtistEditIndex(0);
+    setArtistEditModalOpen(true);
+  };
+
+  const handleArtistBatchSave = async (artist: Artist) => {
+    const updated = await updateArtist(artist.id, artist);
+    setArtists(artists.map(a => a.id === updated.id ? updated : a));
+  };
+
   // Filtered Data
   const filteredVenues = venues.filter(v => {
     const matchesSearch = (v.name && String(v.name).toLowerCase().includes(venueSearch.toLowerCase())) ||
@@ -435,28 +466,40 @@ export default function GodmodePage() {
                 Refresh
               </Button>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={venueFilter === 'all' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('all')}
-                size="sm"
-              >
-                All ({venueStats.total})
-              </Button>
-              <Button
-                variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('no-place-id')}
-                size="sm"
-              >
-                No Place ID ({venueStats.noPlaceId})
-              </Button>
-              <Button
-                variant={venueFilter === 'no-socials' ? 'default' : 'outline'}
-                onClick={() => setVenueFilter('no-socials')}
-                size="sm"
-              >
-                No Socials ({venueStats.noSocials})
-              </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={venueFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setVenueFilter('all')}
+                  size="sm"
+                >
+                  All ({venueStats.total})
+                </Button>
+                <Button
+                  variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
+                  onClick={() => setVenueFilter('no-place-id')}
+                  size="sm"
+                >
+                  No Place ID ({venueStats.noPlaceId})
+                </Button>
+                <Button
+                  variant={venueFilter === 'no-socials' ? 'default' : 'outline'}
+                  onClick={() => setVenueFilter('no-socials')}
+                  size="sm"
+                >
+                  No Socials ({venueStats.noSocials})
+                </Button>
+              </div>
+              {filteredVenues.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleOpenVenueBatchEdit}
+                >
+                  <List className="h-4 w-4 mr-2" />
+                  Batch Edit ({filteredVenues.length})
+                </Button>
+              )}
             </div>
           </div>
 
@@ -627,35 +670,47 @@ export default function GodmodePage() {
                 Refresh
               </Button>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={artistFilter === 'all' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('all')}
-                size="sm"
-              >
-                All ({artistStats.total})
-              </Button>
-              <Button
-                variant={artistFilter === 'no-genres' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('no-genres')}
-                size="sm"
-              >
-                No Genres ({artistStats.noGenres})
-              </Button>
-              <Button
-                variant={artistFilter === 'no-socials' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('no-socials')}
-                size="sm"
-              >
-                No Socials ({artistStats.noSocials})
-              </Button>
-              <Button
-                variant={artistFilter === 'no-location' ? 'default' : 'outline'}
-                onClick={() => setArtistFilter('no-location')}
-                size="sm"
-              >
-                No Location / Place ID ({artistStats.noLocation})
-              </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={artistFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setArtistFilter('all')}
+                  size="sm"
+                >
+                  All ({artistStats.total})
+                </Button>
+                <Button
+                  variant={artistFilter === 'no-genres' ? 'default' : 'outline'}
+                  onClick={() => setArtistFilter('no-genres')}
+                  size="sm"
+                >
+                  No Genres ({artistStats.noGenres})
+                </Button>
+                <Button
+                  variant={artistFilter === 'no-socials' ? 'default' : 'outline'}
+                  onClick={() => setArtistFilter('no-socials')}
+                  size="sm"
+                >
+                  No Socials ({artistStats.noSocials})
+                </Button>
+                <Button
+                  variant={artistFilter === 'no-location' ? 'default' : 'outline'}
+                  onClick={() => setArtistFilter('no-location')}
+                  size="sm"
+                >
+                  No Location / Place ID ({artistStats.noLocation})
+                </Button>
+              </div>
+              {filteredArtists.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleOpenArtistBatchEdit}
+                >
+                  <List className="h-4 w-4 mr-2" />
+                  Batch Edit ({filteredArtists.length})
+                </Button>
+              )}
             </div>
           </div>
 
@@ -1150,6 +1205,29 @@ export default function GodmodePage() {
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
+
+      {/* Batch Edit Modals */}
+      {venueEditModalOpen && filteredVenues.length > 0 && (
+        <VenueEditModal
+          open={venueEditModalOpen}
+          onClose={() => setVenueEditModalOpen(false)}
+          venues={filteredVenues}
+          currentIndex={venueEditIndex}
+          onSave={handleVenueBatchSave}
+          onNavigate={setVenueEditIndex}
+        />
+      )}
+
+      {artistEditModalOpen && filteredArtists.length > 0 && (
+        <ArtistEditModal
+          open={artistEditModalOpen}
+          onClose={() => setArtistEditModalOpen(false)}
+          artists={filteredArtists}
+          currentIndex={artistEditIndex}
+          onSave={handleArtistBatchSave}
+          onNavigate={setArtistEditIndex}
+        />
+      )}
     </div>
   );
 }
