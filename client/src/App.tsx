@@ -20,9 +20,7 @@ import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
 import Members from "@/pages/members";
 import Issues from "@/pages/issues";
-import Godmode from "@/pages/godmode";
 import AgentEvents from "@/pages/agentevents";
-// Onboarding removed - artist creation now in dashboard
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
 import AuthSuccess from "@/pages/auth-success";
@@ -30,6 +28,15 @@ import OAuthResult from "@/pages/oauth-result";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Footer from "@/components/ui/footer";
+
+// Godmode pages
+import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
+import GodmodeDashboard from "@/pages/godmode/Dashboard";
+import VenuesPage from "@/pages/godmode/venues";
+import EnrichmentQueuePage from "@/pages/godmode/venues/enrichment";
+import ArtistsPage from "@/pages/godmode/artists";
+import SongsPageGodmode from "@/pages/godmode/songs";
+import UsersPage from "@/pages/godmode/users";
 
 function Router() {
   return (
@@ -140,16 +147,51 @@ function Router() {
           <Issues />
         </AppLayout>
       </Route>
+
+      {/* Godmode Routes */}
       <Route path="/godmode">
-        <AppLayout>
-          <Godmode />
-        </AppLayout>
+        <GodmodeLayout>
+          <GodmodeDashboard />
+        </GodmodeLayout>
       </Route>
-      <Route path="/agentevents">
-        <AppLayout>
+      <Route path="/godmode/venues">
+        <GodmodeLayout>
+          <VenuesPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/venues/enrichment">
+        <GodmodeLayout>
+          <EnrichmentQueuePage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/artists">
+        <GodmodeLayout>
+          <ArtistsPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/songs">
+        <GodmodeLayout>
+          <SongsPageGodmode />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/users">
+        <GodmodeLayout>
+          <UsersPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/events">
+        <GodmodeLayout>
           <AgentEvents />
-        </AppLayout>
+        </GodmodeLayout>
       </Route>
+
+      {/* Legacy agentevents route - redirects to godmode */}
+      <Route path="/agentevents">
+        <GodmodeLayout>
+          <AgentEvents />
+        </GodmodeLayout>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
