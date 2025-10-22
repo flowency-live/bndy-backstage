@@ -47,6 +47,7 @@ export interface Venue {
   longitude: number;
   location: { lat: number; lng: number };
   googlePlaceId: string;
+  website?: string;
   validated: boolean;
   nameVariants: string[];
   phone: string;
@@ -57,6 +58,15 @@ export interface Venue {
   standardTicketed: boolean;
   standardTicketInformation: string;
   standardTicketUrl: string;
+  enrichment_status?: 'high_confidence' | 'needs_review' | 'reviewed' | 'rejected';
+  enrichment_data?: {
+    suggested_website: string | null;
+    suggested_facebook: string | null;
+    confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+    notes: string;
+    date: string;
+  };
+  enrichment_date?: string;
   createdAt: string;
   updatedAt?: string;
 }
