@@ -266,7 +266,7 @@ export default function VenuesPage() {
                           </a>
                         )}
                         {(() => {
-                          const socialUrls = (venue as any).social_media_urls || [];
+                          const socialUrls = venue.socialMediaURLs || [];
                           const facebookUrl = socialUrls.find((s: any) => {
                             if (typeof s === 'string') return s.includes('facebook.com');
                             return s?.platform === 'facebook';
