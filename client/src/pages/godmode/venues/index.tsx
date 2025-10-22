@@ -266,10 +266,15 @@ export default function VenuesPage() {
                           </a>
                         )}
                         {(() => {
-                          const facebookUrl = (venue as any).social_media_urls?.find((s: any) => s.platform === 'facebook')?.url;
-                          return facebookUrl && (
+                          const socialUrls = (venue as any).social_media_urls || [];
+                          const facebookUrl = socialUrls.find((s: any) => {
+                            if (typeof s === 'string') return s.includes('facebook.com');
+                            return s?.platform === 'facebook';
+                          });
+                          const url = typeof facebookUrl === 'string' ? facebookUrl : facebookUrl?.url;
+                          return url && (
                             <a
-                              href={facebookUrl}
+                              href={url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800"
