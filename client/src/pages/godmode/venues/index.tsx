@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
-import { MapPin, RefreshCw, Edit, Trash2, Save, X, Globe, Facebook, List, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, RefreshCw, Edit, Trash2, Save, X, Globe, Facebook, List, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   getAllVenues,
+  createVenue,
   updateVenue,
   deleteVenue,
   type Venue,
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
 import VenueEditModal from '../components/VenueEditModal';
+import VenueAddModal from '../components/VenueAddModal';
 
 export default function VenuesPage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -30,6 +32,9 @@ export default function VenuesPage() {
   // Batch Edit Modal State
   const [venueEditModalOpen, setVenueEditModalOpen] = useState(false);
   const [venueEditIndex, setVenueEditIndex] = useState(0);
+
+  // Add Venue Modal State
+  const [venueAddModalOpen, setVenueAddModalOpen] = useState(false);
 
   // Fetch Venues
   const fetchVenues = async () => {
@@ -102,6 +107,12 @@ export default function VenuesPage() {
   const handleVenueBatchSave = async (venue: Venue) => {
     const updated = await updateVenue(venue.id, venue);
     setVenues(venues.map(v => v.id === updated.id ? updated : v));
+  };
+
+  // Add Venue Handler
+  const handleVenueCreate = async (venueData: any) => {
+    const newVenue = await createVenue(venueData);
+    setVenues([...venues, newVenue]);
   };
 
   // Filtered Data
