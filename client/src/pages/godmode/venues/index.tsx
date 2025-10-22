@@ -168,7 +168,7 @@ export default function VenuesPage() {
             onChange={(e) => setVenueSearch(e.target.value)}
             className="max-w-md"
           />
-          <Button onClick={fetchVenues} size="sm" variant="outline">
+          <div className="flex gap-2"><Button onClick={() => setVenueAddModalOpen(true)} size="sm" variant="default"><Plus className="h-4 w-4 mr-2" />Add Venue</Button><Button onClick={fetchVenues} size="sm" variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -394,6 +394,13 @@ export default function VenuesPage() {
           onNavigate={setVenueEditIndex}
         />
       )}
+
+      {/* Add Venue Modal */}
+      <VenueAddModal
+        open={venueAddModalOpen}
+        onClose={() => setVenueAddModalOpen(false)}
+        onSave={handleVenueCreate}
+      />
     </div>
   );
 }
