@@ -113,9 +113,8 @@ export default function VenuesPage() {
     if (venueFilter === 'no-place-id') return !v.googlePlaceId;
     if (venueFilter === 'no-socials') {
       const hasSocials = v.website ||
-                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
-                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
-                                               (url.includes('facebook.com') || url.includes('instagram.com'))));
+                        ((v as any).social_media_urls && Array.isArray((v as any).social_media_urls) &&
+                         (v as any).social_media_urls.length > 0);
       return !hasSocials;
     }
     return true;
@@ -132,9 +131,8 @@ export default function VenuesPage() {
     noPlaceId: venues.filter(v => !v.googlePlaceId).length,
     noSocials: venues.filter(v => {
       const hasSocials = v.website ||
-                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
-                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
-                                               (url.includes('facebook.com') || url.includes('instagram.com'))));
+                        ((v as any).social_media_urls && Array.isArray((v as any).social_media_urls) &&
+                         (v as any).social_media_urls.length > 0);
       return !hasSocials;
     }).length,
   };
@@ -267,17 +265,20 @@ export default function VenuesPage() {
                             <Globe className="h-4 w-4" />
                           </a>
                         )}
-                        {venue.socialMediaURLs && Array.isArray(venue.socialMediaURLs) && venue.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
-                          <a
-                            href={venue.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Facebook"
-                          >
-                            <Facebook className="h-4 w-4" />
-                          </a>
-                        )}
+                        {(() => {
+                          const facebookUrl = (venue as any).social_media_urls?.find((s: any) => s.platform === 'facebook')?.url;
+                          return facebookUrl && (
+                            <a
+                              href={facebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800"
+                              title="Facebook"
+                            >
+                              <Facebook className="h-4 w-4" />
+                            </a>
+                          );
+                        })()}
                       </div>
                     </td>
                     <td className="px-4 py-3">
