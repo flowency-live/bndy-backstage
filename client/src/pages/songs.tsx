@@ -67,6 +67,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
+  const [editedSongs, setEditedSongs] = useState<Record<string, any>>({});
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -222,6 +223,34 @@ export default function Songs({ artistId, membership }: SongsProps) {
     },
     onError: (error: Error) => {
       toast({ title: "Failed to remove song", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateSongMutation = useMutation({
+    mutationFn: async ({ songId, updates }: { songId: string; updates: any }) => {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook/${songId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update song");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      toast({ title: "Song updated" });
+      setEditedSongs({});
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to update song", description: error.message, variant: "destructive" });
     },
   });
 
@@ -396,15 +425,15 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     </div>
 
                     {/* Song info */}
-                    <div className="flex-1 min-w-0 px-3 py-2">
+                    <div className="flex-1 min-w-0 px-2 py-2">
                       <h3 className="font-medium text-foreground truncate" data-testid={`song-title-${song.id}`}>
                         {song.title}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
-                    {/* Duration and BPM - fixed width for alignment */}
-                    <div className="flex flex-col items-end px-3 text-xs text-muted-foreground font-mono" style={{ minWidth: '80px' }}>
+                    {/* Duration and BPM - minimal padding */}
+                    <div className="flex flex-col items-end text-xs text-muted-foreground" style={{ minWidth: '60px' }}>
                       {song.duration && (
                         <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
                       )}
@@ -414,7 +443,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     </div>
 
                     {/* Readiness summary */}
-                    <div className="flex items-center space-x-2 pr-3">
+                    <div className="flex items-center space-x-1 pr-1">
                       <div className="flex items-center space-x-1">
                         {readinessCounts.green > 0 && (
                           <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-green-${song.id}`}>
@@ -443,10 +472,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       {/* Expand button */}
                       <button
                         onClick={() => toggleExpanded(song.id)}
-                        className="p-2 hover:bg-muted rounded-lg"
+                        className="p-1 hover:bg-muted rounded-lg"
                         data-testid={`button-expand-${song.id}`}
                       >
-                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-muted-foreground`}></i>
+                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-muted-foreground text-sm`}></i>
                       </button>
                     </div>
                   </div>
@@ -462,16 +491,24 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             <input
                               type="number"
                               placeholder="120"
-                              defaultValue={song.bpm || ''}
+                              value={editedSongs[song.id]?.bpm ?? song.bpm ?? ''}
+                              onChange={(e) => setEditedSongs(prev => ({
+                                ...prev,
+                                [song.id]: { ...prev[song.id], bpm: e.target.value ? parseInt(e.target.value) : null }
+                              }))}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration (seconds)</label>
                             <input
-                              type="text"
-                              placeholder="3:45"
-                              defaultValue={song.duration ? formatDuration(song.duration) : ''}
+                              type="number"
+                              placeholder="225"
+                              value={editedSongs[song.id]?.duration ?? song.duration ?? ''}
+                              onChange={(e) => setEditedSongs(prev => ({
+                                ...prev,
+                                [song.id]: { ...prev[song.id], duration: e.target.value ? parseInt(e.target.value) : null }
+                              }))}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
                           </div>
@@ -480,7 +517,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             <input
                               type="text"
                               placeholder="Am"
-                              defaultValue={song.key || ''}
+                              value={editedSongs[song.id]?.key ?? song.key ?? ''}
+                              onChange={(e) => setEditedSongs(prev => ({
+                                ...prev,
+                                [song.id]: { ...prev[song.id], key: e.target.value }
+                              }))}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
                           </div>
@@ -491,7 +532,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <input
                             type="url"
                             placeholder="https://..."
-                            defaultValue={song.additionalUrl || ''}
+                            value={editedSongs[song.id]?.additional_url ?? song.additionalUrl ?? ''}
+                            onChange={(e) => setEditedSongs(prev => ({
+                              ...prev,
+                              [song.id]: { ...prev[song.id], additional_url: e.target.value }
+                            }))}
                             className="w-full px-2 py-1 text-sm border rounded"
                           />
                         </div>
@@ -500,7 +545,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <label className="text-xs font-medium text-muted-foreground block mb-1">Notes</label>
                           <textarea
                             placeholder="Add notes about this song..."
-                            defaultValue={song.notes || ''}
+                            value={editedSongs[song.id]?.notes ?? song.notes ?? ''}
+                            onChange={(e) => setEditedSongs(prev => ({
+                              ...prev,
+                              [song.id]: { ...prev[song.id], notes: e.target.value }
+                            }))}
                             rows={3}
                             className="w-full px-2 py-1 text-sm border rounded resize-none"
                           />
@@ -508,15 +557,27 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
                         {/* Action buttons */}
                         <div className="flex items-center justify-between pt-2">
-                          <a
-                            href={song.spotifyUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm"
-                          >
-                            <i className="fab fa-spotify"></i>
-                            <span>Open in Spotify</span>
-                          </a>
+                          <div className="flex items-center space-x-2">
+                            <a
+                              href={song.spotifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center space-x-1 text-green-600 hover:text-green-700 font-semibold text-sm"
+                            >
+                              <i className="fab fa-spotify"></i>
+                              <span>Spotify</span>
+                            </a>
+
+                            {editedSongs[song.id] && (
+                              <button
+                                onClick={() => updateSongMutation.mutate({ songId: song.id, updates: editedSongs[song.id] })}
+                                disabled={updateSongMutation.isPending}
+                                className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm font-semibold"
+                              >
+                                Save
+                              </button>
+                            )}
+                          </div>
 
                           <button
                             onClick={() => handleDeleteSong(song.id, song.spotifyId, song.title)}
