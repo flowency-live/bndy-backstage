@@ -201,20 +201,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                   {navigationItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.startsWith(item.href);
-                    const isComingSoon = item.href === '/songs';
-                    
+
                     const handleClick = () => {
-                      if (isComingSoon) {
-                        toast({
-                          title: "Coming Soon!",
-                          description: "Song Lists features are being finalized for launch",
-                          duration: 3000,
-                        });
-                        setIsOpen(false);
-                      } else {
-                        setLocation(item.href);
-                        setIsOpen(false);
-                      }
+                      setLocation(item.href);
+                      setIsOpen(false);
                     };
                     
                     return (
@@ -223,11 +213,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         onClick={handleClick}
                         className={`
                           w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
-                          ${isActive 
-                            ? 'bg-primary/10 text-primary border border-primary/20' 
+                          ${isActive
+                            ? 'bg-primary/10 text-primary border border-primary/20'
                             : 'hover:bg-muted text-foreground'
                           }
-                          ${isComingSoon ? 'opacity-75' : ''}
                         `}
                         data-testid={`nav-${item.label.toLowerCase()}`}
                       >
@@ -243,11 +232,6 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         <div className="flex-1 text-left">
                           <div className="font-medium flex items-center gap-2">
                             {item.label}
-                            {isComingSoon && (
-                              <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
-                                Soon
-                              </span>
-                            )}
                           </div>
                           <div className="text-sm text-muted-foreground">{item.description}</div>
                         </div>

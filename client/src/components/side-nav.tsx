@@ -298,18 +298,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
                 const isActive = location.startsWith(item.href);
                 const IconComponent = item.icon;
-                const isComingSoon = item.href === '/songs';
 
                 const handleClick = () => {
-                  if (isComingSoon) {
-                    toast({
-                      title: "Coming Soon!",
-                      description: "Song Lists features are being finalized for launch",
-                      duration: 3000,
-                    });
-                  } else {
-                    navigateTo(item.href);
-                  }
+                  navigateTo(item.href);
                 };
 
                 return (
@@ -322,7 +313,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                         ? 'bg-primary/10 text-primary border border-primary/20'
                         : 'hover:bg-muted text-foreground'
                       }
-                      ${isComingSoon ? 'opacity-75' : ''}
                     `}
                     data-testid={`nav-${item.href.slice(1)}`}
                   >
@@ -338,11 +328,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     <div className="flex-1 text-left">
                       <div className="font-medium flex items-center gap-2">
                         {item.label}
-                        {isComingSoon && (
-                          <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
-                            Soon
-                          </span>
-                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">{item.description}</div>
                     </div>
