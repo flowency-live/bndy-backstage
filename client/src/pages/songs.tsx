@@ -21,6 +21,8 @@ interface SongWithDetails {
   previewUrl?: string;
   addedByMembershipId?: string;
   createdAt: string;
+  duration?: number;
+  bpm?: number;
   readiness: Array<{
     id: string;
     songId: string;
@@ -39,6 +41,14 @@ interface SongWithDetails {
 interface SongsProps {
   artistId: string;
   membership: ArtistMembership & { artist: Artist };
+}
+
+// Helper function to format duration in seconds to MM:SS
+function formatDuration(seconds?: number): string {
+  if (!seconds) return '';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 export default function Songs({ artistId, membership }: SongsProps) {
@@ -89,6 +99,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
         previewUrl: item.previewUrl || null,
         addedByMembershipId: item.added_by_membership_id,
         createdAt: item.created_at,
+        duration: item.globalSong?.duration || null,
+        bpm: item.globalSong?.metadata?.bpm || null,
         readiness: item.readiness || [],
         vetos: item.vetos || [],
       }));
@@ -343,20 +355,20 @@ export default function Songs({ artistId, membership }: SongsProps) {
               const hasVetos = song.vetos.length > 0;
 
               return (
-                <div 
-                  key={song.id} 
-                  className={`bg-card rounded-lg shadow-sm border border-border hover:bg-muted/50 transition-all duration-200 ${
+                <div
+                  key={song.id}
+                  className={`bg-card rounded-lg shadow-sm border border-border hover:bg-muted/50 transition-all duration-200 overflow-hidden ${
                     hasVetos ? 'opacity-60' : ''
                   }`}
                   data-testid={`song-card-${song.id}`}
                 >
                   {/* Main song card */}
-                  <div className="px-4 py-3 flex items-center space-x-3">
-                    {/* Album artwork */}
-                    <div className="w-12 h-12 bg-muted rounded flex-shrink-0 overflow-hidden">
+                  <div className="flex items-center">
+                    {/* Album artwork - edge to edge */}
+                    <div className="w-16 h-16 bg-muted flex-shrink-0 overflow-hidden">
                       {song.imageUrl ? (
-                        <img 
-                          src={song.imageUrl} 
+                        <img
+                          src={song.imageUrl}
                           alt={song.album}
                           className="w-full h-full object-cover"
                         />
@@ -368,15 +380,25 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     </div>
 
                     {/* Song info */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 px-3 py-2">
                       <h3 className="font-medium text-foreground truncate" data-testid={`song-title-${song.id}`}>
                         {song.title}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
+                    {/* Duration and BPM - fixed width for alignment */}
+                    <div className="flex flex-col items-end px-3 text-xs text-muted-foreground font-mono" style={{ minWidth: '80px' }}>
+                      {song.duration && (
+                        <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
+                      )}
+                      {song.bpm && (
+                        <div className="whitespace-nowrap">{song.bpm} BPM</div>
+                      )}
+                    </div>
+
                     {/* Readiness summary */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 pr-3">
                       <div className="flex items-center space-x-1">
                         {readinessCounts.green > 0 && (
                           <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-green-${song.id}`}>
