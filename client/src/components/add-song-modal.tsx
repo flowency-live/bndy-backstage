@@ -37,10 +37,6 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
 
   const addSongMutation = useMutation({
     mutationFn: async (songData: SongSearchResult) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-
       // If song is from bndy-songs, add directly to playbook using existing song_id
       if (songData.source === "bndy") {
         const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
@@ -157,25 +153,26 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
         console.log('Found', bndySongs.length, 'songs in bndy-songs');
       }
 
-      // Step 2: Search Spotify as fallback
+      // Step 2: Search Spotify as fallback (disabled - route not implemented yet)
       let spotifySongs: SongSearchResult[] = [];
-      try {
-        const spotifyResult = await spotifyService.searchTracks(query, 8);
-        spotifySongs = spotifyResult.tracks.items.map((track: SpotifyTrack) => ({
-          id: track.id,
-          title: track.name,
-          artistName: track.artists.map(a => a.name).join(", "),
-          album: track.album.name,
-          imageUrl: track.album.images.length > 0 ? track.album.images[track.album.images.length - 1].url : null,
-          spotifyUrl: track.external_urls.spotify,
-          source: "spotify" as const,
-          spotifyId: track.id,
-          duration: Math.floor(track.duration_ms / 1000),
-        }));
-        console.log('Found', spotifySongs.length, 'songs in Spotify');
-      } catch (error) {
-        console.log('Spotify search failed (no token or error), showing only bndy-songs results');
-      }
+      // TODO: Enable when Spotify search endpoint is implemented
+      // try {
+      //   const spotifyResult = await spotifyService.searchTracks(query, 8);
+      //   spotifySongs = spotifyResult.tracks.items.map((track: SpotifyTrack) => ({
+      //     id: track.id,
+      //     title: track.name,
+      //     artistName: track.artists.map(a => a.name).join(", "),
+      //     album: track.album.name,
+      //     imageUrl: track.album.images.length > 0 ? track.album.images[track.album.images.length - 1].url : null,
+      //     spotifyUrl: track.external_urls.spotify,
+      //     source: "spotify" as const,
+      //     spotifyId: track.id,
+      //     duration: Math.floor(track.duration_ms / 1000),
+      //   }));
+      //   console.log('Found', spotifySongs.length, 'songs in Spotify');
+      // } catch (error) {
+      //   // Spotify search endpoint not implemented yet
+      // }
 
       // Combine results: bndy-songs first, then Spotify
       const combinedResults = [...bndySongs, ...spotifySongs];
