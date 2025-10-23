@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon } from "lucide-react";
 import type { Event, Song, ArtistMembership, Artist, User } from "@/types/api";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
@@ -57,7 +57,7 @@ interface TileProps {
 function DashboardTile({ title, subtitle, icon, color, onClick, className = "", count, actionLabel }: TileProps) {
   return (
     <Card
-      className={`aspect-square sm:aspect-auto sm:h-36 lg:h-40 cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
+      className={`aspect-square cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
       onClick={onClick}
       data-testid={`tile-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
@@ -71,27 +71,24 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
           }}
         >
           {/* Animated background on hover */}
-          <div 
+          <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, color-mix(in hsl, ${color} 90%, transparent 10%) 0%, ${color} 50%, color-mix(in hsl, ${color} 80%, transparent 20%) 100%)`,
               backgroundSize: '200% 200%',
               backgroundPosition: '100% 100%'
             }}
           />
-          
-          {/* Background Icon - Responsive sizing */}
-          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 text-white/20 text-3xl sm:text-5xl lg:text-6xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+
+          {/* Background Icon - Centered and filling tile */}
+          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-6xl sm:text-7xl lg:text-8xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
 
           {/* Content - Mobile responsive padding - High contrast white text */}
           <div className="relative p-2 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
             <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
-              <h3 className="font-serif text-sm sm:text-lg lg:text-xl font-semibold mb-0.5 sm:mb-1 text-white drop-shadow-lg leading-tight">{title}</h3>
-              {subtitle && (
-                <p className="text-white/90 text-[10px] sm:text-sm drop-shadow-md line-clamp-1">{subtitle}</p>
-              )}
+              <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-0.5 sm:mb-1 text-white drop-shadow-lg leading-tight">{title}</h3>
             </div>
 
             <div className="flex items-center justify-between">
@@ -650,24 +647,40 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
   // Get songs for this band
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
-    queryKey: ["/api/artists", artistId, "songs"],
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
     queryFn: async () => {
       if (!session) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch songs");
       }
-      
-      return response.json();
+
+      const data = await response.json();
+
+      // Transform the API response to match our interface (same as songs.tsx)
+      return data.map((item: any) => ({
+        id: item.id,
+        spotifyId: item.globalSong?.spotifyUrl || '',
+        title: item.globalSong?.title || '',
+        artist: item.globalSong?.artistName || '',
+        album: item.globalSong?.album || '',
+        spotifyUrl: item.globalSong?.spotifyUrl || '',
+        imageUrl: item.globalSong?.albumImageUrl || null,
+        previewUrl: item.previewUrl || null,
+        addedByMembershipId: item.added_by_membership_id,
+        createdAt: item.created_at,
+        readiness: item.readiness || [],
+        vetos: item.vetos || [],
+      }));
     },
     enabled: !!session && !!artistId,
   });
@@ -804,10 +817,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           </div>
 
           {calendarExpanded && (
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
               <DashboardTile
                 title="Calendar"
-                subtitle="All scheduled events"
                 icon={<Calendar />}
                 color="hsl(271, 91%, 65%)"
                 actionLabel="View Calendar"
@@ -817,13 +829,21 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
               <DashboardTile
                 title="Gigs"
-                subtitle="Performance schedule"
                 icon={<Mic />}
                 color="hsl(24, 95%, 53%)"
                 count={upcomingGigs}
                 actionLabel="View Gigs"
                 onClick={() => setLocation("/gigs")}
                 className="animate-stagger-2"
+              />
+
+              <DashboardTile
+                title="Profile"
+                icon={<UserIcon />}
+                color="hsl(280, 65%, 60%)"
+                actionLabel="Edit"
+                onClick={() => setLocation("/profile")}
+                className="animate-stagger-3"
               />
             </div>
           )}
@@ -853,10 +873,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           </div>
 
           {songExpanded && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
               <DashboardTile
                 title="Playbook"
-                subtitle="Complete song repertoire"
                 icon={<Music />}
                 color="hsl(199, 89%, 48%)"
                 count={totalSongs}
@@ -867,7 +886,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
               <DashboardTile
                 title="Setlists"
-                subtitle="Ready-to-perform sets"
                 icon={<List />}
                 color="hsl(159, 68%, 48%)"
                 count={0}
@@ -877,8 +895,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               />
 
               <DashboardTile
-                title="Song Pipeline"
-                subtitle="Active practice & new suggestions"
+                title="Pipeline"
                 icon={<GitBranch />}
                 color="hsl(45, 93%, 47%)"
                 count={Math.max(0, totalSongs - 5)}
