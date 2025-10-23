@@ -799,7 +799,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               title="Calendar"
               icon={<Calendar />}
               color="hsl(271, 91%, 65%)"
-              actionLabel="View Calendar"
               onClick={() => setLocation("/calendar")}
               className="animate-stagger-1"
             />
@@ -809,16 +808,14 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               icon={<Mic />}
               color="hsl(24, 95%, 53%)"
               count={upcomingGigs}
-              actionLabel="View Gigs"
               onClick={() => setLocation("/gigs")}
               className="animate-stagger-2"
             />
 
             <DashboardTile
-              title="Admin"
+              title="Profile"
               icon={<Settings />}
               color="hsl(220, 13%, 51%)"
-              actionLabel="Settings"
               onClick={() => setLocation("/admin")}
               className="animate-stagger-3"
             />
@@ -834,7 +831,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               icon={<Music />}
               color="hsl(199, 89%, 48%)"
               count={totalSongs}
-              actionLabel="View All"
               onClick={() => setLocation("/songs")}
               className="animate-stagger-1"
             />
@@ -844,7 +840,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               icon={<List />}
               color="hsl(159, 68%, 48%)"
               count={0}
-              actionLabel="Create"
               onClick={() => setLocation("/songs")}
               className="animate-stagger-2"
             />
@@ -854,7 +849,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               icon={<GitBranch />}
               color="hsl(45, 93%, 47%)"
               count={Math.max(0, totalSongs - 5)}
-              actionLabel="Review"
               onClick={() => setLocation("/songs")}
               className="animate-stagger-3"
             />
