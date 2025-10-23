@@ -64,24 +64,20 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-      
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
+        credentials: "include",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch songs");
       }
-      
+
       return response.json();
     },
-    enabled: !!session?.access_token && !!artistId,
+    enabled: !!artistId,
   });
 
   // Get band members using new band-scoped API
