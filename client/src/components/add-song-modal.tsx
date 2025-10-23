@@ -230,11 +230,11 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 sm:p-6 flex items-center justify-between">
+        <div className="bg-orange-500 text-white p-4 sm:p-6 flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-serif font-bold">Add Song to Playbook</h2>
           <button
             onClick={onClose}
-            className="text-primary-foreground hover:text-primary-foreground/80 p-2"
+            className="text-white hover:text-white/80 p-2"
           >
             <i className="fas fa-times text-xl"></i>
           </button>
@@ -248,50 +248,50 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search songs or artists..."
-              className="w-full px-4 py-3 pl-11 sm:pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary text-base sm:text-lg"
+              className="w-full px-4 py-3 pl-11 sm:pl-12 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-base sm:text-lg"
               autoFocus
             />
             <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2">
               {isSearching ? (
-                <i className="fas fa-spinner fa-spin text-brand-primary"></i>
+                <i className="fas fa-spinner fa-spin text-orange-500"></i>
               ) : (
-                <i className="fas fa-search text-gray-400"></i>
+                <i className="fas fa-search text-muted-foreground"></i>
               )}
             </div>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
               >
                 <i className="fas fa-times"></i>
               </button>
             )}
           </div>
           {searchQuery.length >= 1 && searchQuery.length < 2 && (
-            <p className="text-sm text-gray-500 mt-2">Type at least 2 characters to search</p>
+            <p className="text-sm text-muted-foreground mt-2">Type at least 2 characters to search</p>
           )}
         </div>
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto max-h-96">
           {!searchQuery && (
-            <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-search text-4xl mb-4 text-gray-300"></i>
+            <div className="p-6 text-center text-muted-foreground">
+              <i className="fas fa-search text-4xl mb-4 text-muted-foreground/50"></i>
               <p className="text-sm sm:text-base">Start typing to search for songs</p>
-              <p className="text-xs mt-2 text-gray-400">Searches your library first, then Spotify</p>
+              <p className="text-xs mt-2 text-muted-foreground/70">Searches your library first, then Spotify</p>
             </div>
           )}
 
           {searchQuery && searchQuery.length < 2 && (
-            <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-keyboard text-4xl mb-4 text-gray-300"></i>
+            <div className="p-6 text-center text-muted-foreground">
+              <i className="fas fa-keyboard text-4xl mb-4 text-muted-foreground/50"></i>
               <p className="text-sm sm:text-base">Keep typing... (need at least 2 characters)</p>
             </div>
           )}
 
           {searchResults.length === 0 && !isSearching && searchQuery.length >= 2 && (
-            <div className="p-6 text-center text-gray-500">
-              <i className="fas fa-exclamation-circle text-4xl mb-4 text-gray-300"></i>
+            <div className="p-6 text-center text-muted-foreground">
+              <i className="fas fa-exclamation-circle text-4xl mb-4 text-muted-foreground/50"></i>
               <p className="text-sm sm:text-base">No results found for "{searchQuery}"</p>
             </div>
           )}
@@ -300,8 +300,8 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
           {searchResults.length > 0 && (
             <div className="relative">
               {isSearching && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-                  <div className="flex items-center space-x-2 text-brand-primary">
+                <div className="absolute inset-0 bg-background/75 flex items-center justify-center z-10">
+                  <div className="flex items-center space-x-2 text-orange-500">
                     <i className="fas fa-spinner fa-spin"></i>
                     <span className="text-sm">Updating results...</span>
                   </div>
@@ -311,14 +311,10 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
               {searchResults.map((song) => (
                 <div
                   key={`${song.source}-${song.id}`}
-                  className="p-3 sm:p-4 border-b hover:bg-gray-50 flex items-center space-x-3 sm:space-x-4"
+                  className="p-3 sm:p-4 border-b hover:bg-muted/50 flex items-center space-x-3 sm:space-x-4"
                 >
-                  {/* Album artwork with orange border for bndy-songs */}
-                  <div
-                    className={`w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded flex-shrink-0 overflow-hidden ${
-                      song.source === "bndy" ? "ring-2 ring-orange-500" : ""
-                    }`}
-                  >
+                  {/* Album artwork with orange corner marker for bndy-songs */}
+                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-muted rounded flex-shrink-0 overflow-hidden">
                     {song.imageUrl ? (
                       <img
                         src={song.imageUrl}
@@ -330,21 +326,20 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
                         <i className="fas fa-music text-white text-lg sm:text-xl"></i>
                       </div>
                     )}
+                    {/* Orange corner triangle for bndy-songs */}
+                    {song.source === "bndy" && (
+                      <div className="absolute top-0 right-0 w-0 h-0 border-t-[16px] border-t-orange-500 border-l-[16px] border-l-transparent"></div>
+                    )}
                   </div>
 
                   {/* Song info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-brand-primary truncate text-sm sm:text-base">
+                    <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">
                       {song.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">{song.artistName}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">{song.artistName}</p>
                     {song.album && (
-                      <p className="text-xs text-gray-500 truncate hidden sm:block">{song.album}</p>
-                    )}
-                    {song.source === "bndy" && (
-                      <span className="inline-block mt-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
-                        In Library
-                      </span>
+                      <p className="text-xs text-muted-foreground truncate hidden sm:block">{song.album}</p>
                     )}
                   </div>
 
@@ -355,7 +350,7 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
                       handleAddSong(song);
                     }}
                     disabled={addSongMutation.isPending}
-                    className="px-3 sm:px-4 py-2 bg-brand-accent text-white rounded-lg hover:bg-brand-accent-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base"
+                    className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base"
                   >
                     <i className="fas fa-plus"></i>
                     <span className="hidden sm:inline">Add</span>

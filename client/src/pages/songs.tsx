@@ -259,19 +259,36 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      {/* Page Header */}
-      <PageHeader title="Practice List">
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-          data-testid="button-add-song"
-        >
-          <i className="fas fa-plus"></i>
-          <span>Add Song</span>
-        </button>
-      </PageHeader>
-
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Section Tabs - Playbook, Setlists, Pipeline */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Song Lists</h1>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+              data-testid="button-add-song"
+            >
+              <i className="fas fa-plus"></i>
+              <span className="hidden sm:inline">Add Song</span>
+            </button>
+          </div>
+
+          {/* Tabs Navigation */}
+          <div className="flex gap-2 border-b border-border">
+            <button className="px-4 py-2 font-medium text-primary border-b-2 border-primary">
+              Playbook
+            </button>
+            <button className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground">
+              Setlists
+            </button>
+            <button className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground">
+              Pipeline
+            </button>
+          </div>
+        </div>
+
+        <div>
         {/* Spotify link row - only show if configured */}
         {spotifyPlaylistId && (
           <div className="flex justify-start mb-8">
@@ -502,6 +519,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
             })}
           </div>
         )}
+        </div>
       </div>
 
       {/* Add Song Modal */}
