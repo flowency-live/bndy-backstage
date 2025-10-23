@@ -81,7 +81,7 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
           />
 
           {/* Background Icon - Centered and filling tile */}
-          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-8xl sm:text-9xl lg:text-[10rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[12rem] sm:text-[14rem] lg:text-[16rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
 
@@ -594,8 +594,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();
   const { selectArtist } = useUser();
-  const [calendarExpanded, setCalendarExpanded] = React.useState(true);
-  const [songExpanded, setSongExpanded] = React.useState(true);
   const [showingCreateForm, setShowingCreateForm] = React.useState(false);
   const [fabMenuOpen, setFabMenuOpen] = React.useState(false);
 
@@ -795,160 +793,70 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
         {/* Calendar & Gigs Section */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Calendar & Gigs</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCalendarExpanded(!calendarExpanded)}
-                className="text-primary hover:text-primary/80"
-                data-testid="button-toggle-calendar"
-              >
-                {calendarExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {calendarExpanded && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-              <DashboardTile
-                title="Calendar"
-                icon={<Calendar />}
-                color="hsl(271, 91%, 65%)"
-                actionLabel="View Calendar"
-                onClick={() => setLocation("/calendar")}
-                className="animate-stagger-1"
-              />
-
-              <DashboardTile
-                title="Gigs"
-                icon={<Mic />}
-                color="hsl(24, 95%, 53%)"
-                count={upcomingGigs}
-                actionLabel="View Gigs"
-                onClick={() => setLocation("/gigs")}
-                className="animate-stagger-2"
-              />
-
-              <DashboardTile
-                title="Admin"
-                icon={<Settings />}
-                color="hsl(220, 13%, 51%)"
-                actionLabel="Settings"
-                onClick={() => setLocation("/admin")}
-                className="animate-stagger-3"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Song Lists Section */}
-        <div className="mb-6 sm:mb-8 relative">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">Song Lists</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSongExpanded(!songExpanded)}
-                className="text-primary hover:text-primary/80"
-                data-testid="button-toggle-songs"
-              >
-                {songExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {songExpanded && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-              <DashboardTile
-                title="Playbook"
-                icon={<Music />}
-                color="hsl(199, 89%, 48%)"
-                count={totalSongs}
-                actionLabel="View All"
-                onClick={() => setLocation("/songs")}
-                className="animate-stagger-1"
-              />
-
-              <DashboardTile
-                title="Setlists"
-                icon={<List />}
-                color="hsl(159, 68%, 48%)"
-                count={0}
-                actionLabel="Create"
-                onClick={() => setLocation("/songs")}
-                className="animate-stagger-2"
-              />
-
-              <DashboardTile
-                title="Pipeline"
-                icon={<GitBranch />}
-                color="hsl(45, 93%, 47%)"
-                count={Math.max(0, totalSongs - 5)}
-                actionLabel="Review"
-                onClick={() => setLocation("/songs")}
-                className="animate-stagger-3"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Profile & Members Section */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* Profile Section */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">
-                  {membership?.artist?.name || membership?.name} Profile
-                </h2>
-              </div>
-            </div>
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <DashboardTile
+              title="Calendar"
+              icon={<Calendar />}
+              color="hsl(271, 91%, 65%)"
+              actionLabel="View Calendar"
+              onClick={() => setLocation("/calendar")}
+              className="animate-stagger-1"
+            />
 
             <DashboardTile
-              title={`${membership?.artist?.name || membership?.name} Profile`}
-              subtitle="Artist settings & configuration"
+              title="Gigs"
+              icon={<Mic />}
+              color="hsl(24, 95%, 53%)"
+              count={upcomingGigs}
+              actionLabel="View Gigs"
+              onClick={() => setLocation("/gigs")}
+              className="animate-stagger-2"
+            />
+
+            <DashboardTile
+              title="Admin"
               icon={<Settings />}
               color="hsl(220, 13%, 51%)"
-              actionLabel="Configure"
+              actionLabel="Settings"
               onClick={() => setLocation("/admin")}
               className="animate-stagger-3"
             />
           </div>
+        </div>
 
-          {/* Members Section */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-1 sm:mb-2">
-                  {membership?.artist?.name || membership?.name} Members
-                </h2>
-              </div>
-            </div>
+        {/* Song Lists Section */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Song Lists</h2>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+            <DashboardTile
+              title="Playbook"
+              icon={<Music />}
+              color="hsl(199, 89%, 48%)"
+              count={totalSongs}
+              actionLabel="View All"
+              onClick={() => setLocation("/songs")}
+              className="animate-stagger-1"
+            />
 
             <DashboardTile
-              title={`${membership?.artist?.name || membership?.name} Members`}
-              subtitle="Manage your team"
-              icon={<Users />}
-              color="hsl(142, 71%, 45%)"
-              count={artistMembers.length}
-              actionLabel="Manage"
-              onClick={() => setLocation("/members")}
-              className="animate-stagger-4"
+              title="Setlists"
+              icon={<List />}
+              color="hsl(159, 68%, 48%)"
+              count={0}
+              actionLabel="Create"
+              onClick={() => setLocation("/songs")}
+              className="animate-stagger-2"
+            />
+
+            <DashboardTile
+              title="Pipeline"
+              icon={<GitBranch />}
+              color="hsl(45, 93%, 47%)"
+              count={Math.max(0, totalSongs - 5)}
+              actionLabel="Review"
+              onClick={() => setLocation("/songs")}
+              className="animate-stagger-3"
             />
           </div>
         </div>
