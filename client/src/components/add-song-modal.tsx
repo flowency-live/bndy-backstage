@@ -71,6 +71,7 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
           title: songData.title,
           artistName: songData.artistName,
           album: songData.album,
+          albumImageUrl: songData.imageUrl,
           spotifyUrl: songData.spotifyUrl,
           duration: songData.duration,
           genre: songData.genre || "",
@@ -144,7 +145,7 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
           title: song.title,
           artistName: song.artistName,
           album: song.album,
-          imageUrl: null, // bndy-songs don't have images yet
+          imageUrl: song.albumImageUrl || null,
           spotifyUrl: song.spotifyUrl,
           source: "bndy" as const,
           duration: song.duration,
@@ -223,8 +224,8 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 sm:items-center overflow-y-auto">
+      <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl mt-4 sm:mt-0">
         {/* Header */}
         <div className="bg-orange-500 text-white p-4 sm:p-6 flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-serif font-bold">Add Song to Playbook</h2>
