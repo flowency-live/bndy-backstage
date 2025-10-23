@@ -106,7 +106,8 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
       return addToPlaybookResponse.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "playbook"] });
+      // Invalidate the songs list query to refresh the playbook view
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
       toast({ title: "Song added to playbook!" });
       onClose();
       setSearchQuery("");
@@ -131,15 +132,19 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
     setIsSearching(true);
 
     try {
-      // Step 1: Search bndy-songs first
-      const bndySongsResponse = await fetch(
-        `https://api.bndy.co.uk/api/songs?q=${encodeURIComponent(query)}`,
-        { credentials: "include" }
-      );
+      // Run both searches in parallel for better performance
+      const [bndySongsResponse, spotifyResult] = await Promise.allSettled([
+        fetch(
+          `https://api.bndy.co.uk/api/songs?q=${encodeURIComponent(query)}`,
+          { credentials: "include" }
+        ),
+        spotifyService.searchTracks(query, 10)
+      ]);
 
+      // Process bndy-songs results
       let bndySongs: SongSearchResult[] = [];
-      if (bndySongsResponse.ok) {
-        const songs = await bndySongsResponse.json();
+      if (bndySongsResponse.status === 'fulfilled' && bndySongsResponse.value.ok) {
+        const songs = await bndySongsResponse.value.json();
         bndySongs = songs.map((song: any) => ({
           id: song.id,
           title: song.title,
@@ -154,24 +159,34 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
         console.log('Found', bndySongs.length, 'songs in bndy-songs');
       }
 
-      // Step 2: Search Spotify as fallback
+      // Process Spotify results and deduplicate
       let spotifySongs: SongSearchResult[] = [];
-      try {
-        const spotifyResult = await spotifyService.searchTracks(query, 8);
-        spotifySongs = spotifyResult.tracks.items.map((track: SpotifyTrack) => ({
-          id: track.id,
-          title: track.name,
-          artistName: track.artists.map(a => a.name).join(", "),
-          album: track.album.name,
-          imageUrl: track.album.images.length > 0 ? track.album.images[track.album.images.length - 1].url : null,
-          spotifyUrl: track.external_urls.spotify,
-          source: "spotify" as const,
-          spotifyId: track.id,
-          duration: Math.floor(track.duration_ms / 1000),
-        }));
-        console.log('Found', spotifySongs.length, 'songs in Spotify');
-      } catch (error) {
-        console.log('Spotify search failed, showing only bndy-songs results');
+      if (spotifyResult.status === 'fulfilled') {
+        // Deduplicate: filter out Spotify songs that already exist in bndy-songs
+        const bndyKeys = new Set(
+          bndySongs.map(song =>
+            `${song.title.toLowerCase().trim()}|${song.artistName.toLowerCase().trim()}`
+          )
+        );
+
+        spotifySongs = spotifyResult.value.tracks.items
+          .map((track: SpotifyTrack) => ({
+            id: track.id,
+            title: track.name,
+            artistName: track.artists.map(a => a.name).join(", "),
+            album: track.album.name,
+            imageUrl: track.album.images.length > 0 ? track.album.images[track.album.images.length - 1].url : null,
+            spotifyUrl: track.external_urls.spotify,
+            source: "spotify" as const,
+            spotifyId: track.id,
+            duration: Math.floor(track.duration_ms / 1000),
+          }))
+          .filter(song => {
+            const key = `${song.title.toLowerCase().trim()}|${song.artistName.toLowerCase().trim()}`;
+            return !bndyKeys.has(key);
+          });
+
+        console.log('Found', spotifySongs.length, 'unique Spotify songs (after deduplication)');
       }
 
       // Combine results: bndy-songs first, then Spotify
@@ -199,7 +214,7 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
     if (searchQuery.trim().length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
         handleSearch(searchQuery);
-      }, 300);
+      }, 200);
     } else {
       setSearchResults([]);
       setIsSearching(false);
@@ -306,9 +321,11 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
               )}
 
               {searchResults.map((song) => (
-                <div
+                <button
                   key={`${song.source}-${song.id}`}
-                  className="p-3 sm:p-4 border-b hover:bg-muted/50 flex items-center space-x-3 sm:space-x-4"
+                  onClick={() => handleAddSong(song)}
+                  disabled={addSongMutation.isPending}
+                  className="w-full p-3 sm:p-4 border-b hover:bg-muted/50 flex items-center space-x-3 sm:space-x-4 text-left disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {/* Album artwork with orange corner marker for bndy-songs */}
                   <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-muted rounded flex-shrink-0 overflow-hidden">
@@ -340,19 +357,12 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
                     )}
                   </div>
 
-                  {/* Add button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAddSong(song);
-                    }}
-                    disabled={addSongMutation.isPending}
-                    className="px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base"
-                  >
+                  {/* Add icon */}
+                  <div className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
                     <i className="fas fa-plus"></i>
                     <span className="hidden sm:inline">Add</span>
-                  </button>
-                </div>
+                  </div>
+                </button>
               ))}
             </div>
           )}
