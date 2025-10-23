@@ -182,30 +182,27 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   const deleteSongMutation = useMutation({
     mutationFn: async (songData: { songId: string; spotifyId: string }) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-      
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songData.songId}`, {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook/${songData.songId}`, {
         method: "DELETE",
+        credentials: "include",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
         },
       });
-      if (!response.ok) throw new Error("Failed to delete song");
-      
-      // Also remove from Spotify playlist if configured
-      const { spotifySync } = await import('@/lib/spotify-sync');
-      if (spotifySync.isConfigured()) {
-        await spotifySync.removeTrackFromSpotify(songData.spotifyId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete song");
       }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
-      toast({ title: "Song removed from practice list and Spotify playlist" });
+      toast({ title: "Song removed from playbook" });
     },
-    onError: () => {
-      toast({ title: "Failed to remove song", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Failed to remove song", description: error.message, variant: "destructive" });
     },
   });
 
