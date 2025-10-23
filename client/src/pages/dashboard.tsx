@@ -81,7 +81,7 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
           />
 
           {/* Background Icon - Centered and filling tile */}
-          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-6xl sm:text-7xl lg:text-8xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-8xl sm:text-9xl lg:text-[10rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
 
@@ -838,11 +838,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               />
 
               <DashboardTile
-                title="Profile"
-                icon={<UserIcon />}
-                color="hsl(280, 65%, 60%)"
-                actionLabel="Edit"
-                onClick={() => setLocation("/profile")}
+                title="Admin"
+                icon={<Settings />}
+                color="hsl(220, 13%, 51%)"
+                actionLabel="Settings"
+                onClick={() => setLocation("/admin")}
                 className="animate-stagger-3"
               />
             </div>
