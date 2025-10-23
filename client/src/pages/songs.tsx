@@ -23,6 +23,9 @@ interface SongWithDetails {
   createdAt: string;
   duration?: number;
   bpm?: number;
+  key?: string;
+  notes?: string;
+  additionalUrl?: string;
   readiness: Array<{
     id: string;
     songId: string;
@@ -63,6 +66,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -101,6 +105,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
         createdAt: item.created_at,
         duration: item.globalSong?.duration || null,
         bpm: item.globalSong?.metadata?.bpm || null,
+        key: item.globalSong?.metadata?.key || null,
+        notes: item.notes || '',
+        additionalUrl: item.additional_url || '',
         readiness: item.readiness || [],
         vetos: item.vetos || [],
       }));
@@ -284,13 +291,22 @@ export default function Songs({ artistId, membership }: SongsProps) {
         {/* Tabs Navigation - aligned like calendar */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2 border-b border-border">
-            <button className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500">
+            <button
+              onClick={() => setCurrentView('playbook')}
+              className={`px-4 py-2 font-medium ${currentView === 'playbook' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+            >
               Playbook
             </button>
-            <button className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground">
+            <button
+              onClick={() => setCurrentView('setlists')}
+              className={`px-4 py-2 font-medium ${currentView === 'setlists' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+            >
               Setlists
             </button>
-            <button className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground">
+            <button
+              onClick={() => setCurrentView('pipeline')}
+              className={`px-4 py-2 font-medium ${currentView === 'pipeline' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+            >
               Pipeline
             </button>
           </div>
@@ -436,7 +452,86 @@ export default function Songs({ artistId, membership }: SongsProps) {
                   </div>
 
                   {/* Expanded details */}
-                  {isExpanded && (
+                  {isExpanded && currentView === 'playbook' && (
+                    <div className="px-4 pb-4 border-t bg-muted/50 animate-expand overflow-hidden">
+                      <div className="pt-4 space-y-3 animate-fade-in-up">
+                        {/* Editable metadata fields */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">BPM</label>
+                            <input
+                              type="number"
+                              placeholder="120"
+                              defaultValue={song.bpm || ''}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
+                            <input
+                              type="text"
+                              placeholder="3:45"
+                              defaultValue={song.duration ? formatDuration(song.duration) : ''}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Key</label>
+                            <input
+                              type="text"
+                              placeholder="Am"
+                              defaultValue={song.key || ''}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Additional URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            defaultValue={song.additionalUrl || ''}
+                            className="w-full px-2 py-1 text-sm border rounded"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Notes</label>
+                          <textarea
+                            placeholder="Add notes about this song..."
+                            defaultValue={song.notes || ''}
+                            rows={3}
+                            className="w-full px-2 py-1 text-sm border rounded resize-none"
+                          />
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center justify-between pt-2">
+                          <a
+                            href={song.spotifyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold text-sm"
+                          >
+                            <i className="fab fa-spotify"></i>
+                            <span>Open in Spotify</span>
+                          </a>
+
+                          <button
+                            onClick={() => handleDeleteSong(song.id, song.spotifyId, song.title)}
+                            className="text-red-600 hover:text-red-700 font-semibold text-sm"
+                            disabled={deleteSongMutation.isPending}
+                          >
+                            <i className="fas fa-trash mr-1"></i>
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isExpanded && currentView === 'pipeline' && (
                     <div className="px-4 pb-4 border-t bg-muted/50 animate-expand overflow-hidden">
                       <div className="pt-4 space-y-4 animate-fade-in-up">
                         {/* Current user controls */}
@@ -451,7 +546,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                                   onClick={() => updateReadinessMutation.mutate({ songId: song.id, status: status as any })}
                                   className={`px-3 py-2 text-sm font-semibold transition-colors ${
                                     userReadiness === status
-                                      ? status === "green" ? "bg-green-500 text-white" 
+                                      ? status === "green" ? "bg-green-500 text-white"
                                         : status === "amber" ? "bg-yellow-500 text-white"
                                         : "bg-red-500 text-white"
                                       : "hover:bg-muted"
@@ -459,19 +554,19 @@ export default function Songs({ artistId, membership }: SongsProps) {
                                   disabled={updateReadinessMutation.isPending}
                                   data-testid={`button-readiness-${status}-${song.id}`}
                                 >
-                                  {status === "green" ? "🟢 Ready" 
-                                   : status === "amber" ? "🟡 Working" 
+                                  {status === "green" ? "🟢 Ready"
+                                   : status === "amber" ? "🟡 Working"
                                    : "🔴 Not Ready"}
                                 </button>
                               ))}
                             </div>
-                            
+
                             {/* Veto button */}
                             <button
                               onClick={() => toggleVetoMutation.mutate({ songId: song.id, hasVeto: userVeto })}
                               className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
-                                userVeto 
-                                  ? "bg-red-100 text-red-700 hover:bg-red-200" 
+                                userVeto
+                                  ? "bg-red-100 text-red-700 hover:bg-red-200"
                                   : "bg-muted hover:bg-muted/80"
                               }`}
                               disabled={toggleVetoMutation.isPending}
@@ -489,10 +584,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             {artistMembers.map((member) => {
                               const memberReadiness = song.readiness.find(r => r.membershipId === member.id);
                               const memberVeto = song.vetos.find(v => v.membershipId === member.id);
-                              
+
                               return (
                                 <div key={member.id} className="flex items-center space-x-2" data-testid={`member-status-${member.id}-${song.id}`}>
-                                  <div 
+                                  <div
                                     className="w-6 h-6 rounded-full flex items-center justify-center"
                                     style={{ backgroundColor: member.color }}
                                   >
@@ -502,8 +597,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
                                   <div className="flex items-center space-x-1">
                                     {memberReadiness && (
                                       <span className="text-sm">
-                                        {memberReadiness.status === "green" ? "🟢" 
-                                         : memberReadiness.status === "amber" ? "🟡" 
+                                        {memberReadiness.status === "green" ? "🟢"
+                                         : memberReadiness.status === "amber" ? "🟡"
                                          : "🔴"}
                                       </span>
                                     )}
@@ -527,7 +622,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             <i className="fab fa-spotify"></i>
                             <span>Open in Spotify</span>
                           </a>
-                          
+
                           <button
                             onClick={() => handleDeleteSong(song.id, song.spotifyId, song.title)}
                             className="text-red-600 hover:text-red-700 font-semibold"
