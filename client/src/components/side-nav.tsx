@@ -310,16 +310,16 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     className={`
                       w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-200
                       ${isActive
-                        ? 'bg-primary/10 text-primary border border-primary/20'
+                        ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
                         : 'hover:bg-muted text-foreground'
                       }
                     `}
                     data-testid={`nav-${item.href.slice(1)}`}
                   >
-                    <div 
+                    <div
                       className={`
                         w-10 h-10 rounded-lg flex items-center justify-center transition-colors
-                        ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted'}
+                        ${isActive ? 'bg-orange-500 text-white' : 'bg-muted'}
                       `}
                       style={!isActive ? { backgroundColor: `${item.color}20` } : {}}
                     >

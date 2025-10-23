@@ -332,7 +332,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                 onClick={() => setLocation(item.href)}
                 className={`
                   flex flex-col items-center gap-1 p-3 rounded-lg min-w-0 flex-1
-                  ${isActive ? 'text-primary' : 'text-muted-foreground'}
+                  ${isActive ? 'text-orange-500' : 'text-muted-foreground'}
                 `}
                 data-testid={`bottom-nav-${item.label.toLowerCase()}`}
               >

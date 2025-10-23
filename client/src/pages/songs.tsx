@@ -259,24 +259,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Section Tabs - Playbook, Setlists, Pipeline */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">Song Lists</h1>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-              data-testid="button-add-song"
-            >
-              <i className="fas fa-plus"></i>
-              <span className="hidden sm:inline">Add Song</span>
-            </button>
-          </div>
-
-          {/* Tabs Navigation */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Tabs Navigation - aligned like calendar */}
+        <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2 border-b border-border">
-            <button className="px-4 py-2 font-medium text-primary border-b-2 border-primary">
+            <button className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500">
               Playbook
             </button>
             <button className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground">
@@ -286,6 +273,15 @@ export default function Songs({ artistId, membership }: SongsProps) {
               Pipeline
             </button>
           </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            data-testid="button-add-song"
+          >
+            <i className="fas fa-plus"></i>
+            <span className="hidden sm:inline">Add Song</span>
+          </button>
         </div>
 
         <div>
