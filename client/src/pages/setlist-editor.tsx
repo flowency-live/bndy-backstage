@@ -272,10 +272,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       toSet.songs.splice(newIndex, 0, movedSong);
     }
 
-    // Update positions
+    // Update positions and filter out any undefined songs
     updatedSets.forEach(set => {
+      set.songs = set.songs.filter(song => song !== undefined && song !== null);
       set.songs.forEach((song, idx) => {
-        song.position = idx;
+        if (song) {
+          song.position = idx;
+        }
       });
     });
 
@@ -402,6 +405,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               >
                 <i className="fas fa-edit"></i>
               </button>
+              {updateSetlistMutation.isPending && (
+                <span className="text-sm text-muted-foreground animate-pulse">
+                  <i className="fas fa-spinner fa-spin"></i> Saving...
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -441,14 +449,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       </div>
                     </div>
 
-                    <div id={`set-${set.id}`} className="p-2 min-h-[200px] space-y-1">
-                      {set.songs.length === 0 ? (
+                    <div id={`set-${set.id}`} className="p-2 min-h-[100px] space-y-1">
+                      {set.songs.length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
                           <i className="fas fa-music text-4xl mb-2 opacity-30"></i>
                           <p>Drag songs here from the playbook</p>
                         </div>
-                      ) : (
-                        set.songs.map((song, idx) => (
+                      )}
+                      {set.songs.map((song, idx) => (
                           <div key={song.id}>
                             <div
                               data-song-id={song.song_id}
@@ -511,8 +519,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               </div>
                             )}
                           </div>
-                        ))
-                      )}
+                        ))}
                     </div>
                   </div>
                 );

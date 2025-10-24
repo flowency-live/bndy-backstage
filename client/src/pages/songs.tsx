@@ -454,7 +454,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
             </button>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-1" style={{ overflow: 'visible' }}>
             {sortedSongs.map((song) => {
               const readinessCounts = getReadinessCount(song);
               const userReadiness = getUserReadiness(song);
@@ -467,10 +467,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
               return (
                 <div
                   key={song.id}
-                  className={`bg-card rounded-lg shadow-sm border transition-all duration-200 overflow-hidden ${
+                  className={`bg-card rounded-lg shadow-sm border transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
                   } ${isSelected ? 'border-orange-500 border-2' : 'border-border hover:bg-muted/50'}`}
                   data-testid={`song-card-${song.id}`}
+                  style={{ overflow: 'visible' }}
                 >
                   {/* Main song card */}
                   <div className="flex items-center">
