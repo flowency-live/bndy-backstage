@@ -190,7 +190,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         sortableRefs.current[set.id] = Sortable.create(element, {
           group: 'setlist-songs',
           animation: 150,
-          handle: '.drag-handle',
           onEnd: (evt) => handleSongMove(evt, set.id),
         });
       }
@@ -207,7 +206,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         },
         animation: 150,
         sort: false,
-        handle: '.drag-handle',
       });
     }
 
@@ -411,21 +409,21 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 const varianceColor = getVarianceColor(variance);
 
                 return (
-                  <div key={set.id} className="bg-card border border-border rounded-lg overflow-hidden">
-                    <div className="bg-muted/30 p-4 border-b border-border flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">{set.name}</h3>
-                      <div className="flex items-center space-x-4">
-                        <div className={`text-sm font-medium ${varianceColor}`}>
+                  <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
+                    <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
+                      <h3 className="font-semibold">{set.name}</h3>
+                      <div className="flex items-center space-x-3 text-sm">
+                        <div className={`font-medium ${varianceColor}`}>
                           {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
-                          <span className="ml-2">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
+                          <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-muted-foreground">
                           {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
                         </span>
                       </div>
                     </div>
 
-                    <div id={`set-${set.id}`} className="p-4 min-h-[200px] space-y-2">
+                    <div id={`set-${set.id}`} className="p-2 min-h-[200px] space-y-1">
                       {set.songs.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                           <i className="fas fa-music text-4xl mb-2 opacity-30"></i>
@@ -436,52 +434,55 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           <div key={song.id}>
                             <div
                               data-song-id={song.song_id}
-                              className="flex items-center space-x-3 bg-background border border-border rounded-lg p-3 hover:border-orange-500/50 transition-colors"
+                              className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
                             >
-                              <div className="drag-handle cursor-move text-muted-foreground hover:text-foreground">
-                                <i className="fas fa-grip-vertical"></i>
-                              </div>
                               {song.imageUrl && (
                                 <img
                                   src={song.imageUrl}
                                   alt={song.title}
-                                  className="w-10 h-10 rounded object-cover"
+                                  className="w-8 h-8 rounded object-cover"
                                 />
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2">
-                                  <div className="font-medium truncate">{song.title}</div>
+                                  <div className="font-medium truncate text-sm">{song.title}</div>
                                   {song.tuning && song.tuning !== 'standard' && (
-                                    <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
+                                    <span className="px-1.5 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
                                       {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-sm text-muted-foreground truncate">{song.artist}</div>
+                                <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-xs text-muted-foreground">
                                 {formatDuration(song.duration)}
                               </div>
                               <button
-                                onClick={() => handleToggleSegue(set.id, song.id)}
-                                className={`p-2 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSegue(set.id, song.id);
+                                }}
+                                className={`p-1 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
                                 title={song.segueInto ? 'Click to break segue' : 'Click to segue into next song'}
                               >
                                 <i className="fas fa-arrow-down"></i>
                               </button>
                               <button
-                                onClick={() => handleRemoveSong(set.id, song.id)}
-                                className="text-red-500 hover:text-red-600 p-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSong(set.id, song.id);
+                                }}
+                                className="text-red-500 hover:text-red-600 p-1"
                               >
                                 <i className="fas fa-times"></i>
                               </button>
                             </div>
                             {song.segueInto && idx < set.songs.length - 1 && (
-                              <div className="flex items-center justify-center py-1">
-                                <div className="flex items-center space-x-2 text-blue-500 text-sm">
-                                  <div className="w-16 h-0.5 bg-blue-500"></div>
-                                  <i className="fas fa-chevron-down"></i>
-                                  <div className="w-16 h-0.5 bg-blue-500"></div>
+                              <div className="flex items-center justify-center py-0.5">
+                                <div className="flex items-center space-x-2 text-blue-500 text-xs">
+                                  <div className="w-12 h-0.5 bg-blue-500"></div>
+                                  <i className="fas fa-chevron-down text-xs"></i>
+                                  <div className="w-12 h-0.5 bg-blue-500"></div>
                                   <span className="text-xs font-semibold">SEGUE</span>
                                 </div>
                               </div>
@@ -497,37 +498,34 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           </div>
 
           {/* Playbook drawer - desktop always visible, mobile toggleable */}
-          <div className={`${drawerOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 bg-card border border-border rounded-lg overflow-hidden`}>
-            <div className="bg-orange-500 text-white p-4">
+          <div className={`${drawerOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 bg-card border border-border rounded overflow-hidden`}>
+            <div className="bg-orange-500 text-white p-3">
               <h3 className="font-semibold">Playbook</h3>
-              <p className="text-sm opacity-90 mt-1">Drag songs to add to sets</p>
+              <p className="text-sm opacity-90">Drag songs to add to sets</p>
             </div>
 
-            <div className="p-4 border-b">
+            <div className="p-2 border-b">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search songs..."
-                className="w-full px-3 py-2 border border-border bg-background rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-2 py-1.5 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
-            <div id="playbook-drawer" className="p-4 max-h-[600px] overflow-y-auto space-y-2">
+            <div id="playbook-drawer" className="p-2 max-h-[600px] overflow-y-auto space-y-1">
               {filteredPlaybookSongs.map((song) => (
                 <div
                   key={song.id}
                   data-song-id={song.id}
-                  className="flex items-center space-x-3 bg-background border border-border rounded-lg p-3 hover:border-orange-500/50 transition-colors cursor-move"
+                  className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
                 >
-                  <div className="drag-handle text-muted-foreground">
-                    <i className="fas fa-grip-vertical"></i>
-                  </div>
                   {song.imageUrl && (
                     <img
                       src={song.imageUrl}
                       alt={song.title}
-                      className="w-10 h-10 rounded object-cover"
+                      className="w-8 h-8 rounded object-cover"
                     />
                   )}
                   <div className="flex-1 min-w-0">

@@ -535,7 +535,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                                 ...prev,
                                 [song.id]: { ...prev[song.id], tuning: e.target.value }
                               }))}
-                              className="w-full px-2 py-1 text-sm border rounded"
+                              className="w-full px-2 py-1 text-sm border border-border bg-background text-foreground rounded"
                             >
                               <option value="standard">Standard</option>
                               <option value="drop-d">Drop D</option>
