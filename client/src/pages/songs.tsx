@@ -519,13 +519,13 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
-                    {/* Duration and BPM - minimal padding */}
-                    <div className="flex flex-col items-end text-xs text-muted-foreground pr-1" style={{ minWidth: '55px' }}>
+                    {/* Duration and BPM - visible on all screen sizes */}
+                    <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       {song.duration && (
                         <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
                       )}
                       {song.bpm && (
-                        <div className="whitespace-nowrap text-xs">{song.bpm} BPM</div>
+                        <div className="whitespace-nowrap">{song.bpm} BPM</div>
                       )}
                     </div>
 
@@ -580,10 +580,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
                         {openMenuId === song.id && (
                           <>
                             <div
-                              className="fixed inset-0 z-10"
+                              className="fixed inset-0 z-40"
                               onClick={() => setOpenMenuId(null)}
                             />
-                            <div className="absolute right-0 top-8 z-20 bg-card border border-border rounded shadow-lg py-1 min-w-[160px]">
+                            <div className="absolute right-0 top-8 z-50 bg-card border border-border rounded shadow-lg py-1 min-w-[160px]">
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();

@@ -327,7 +327,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   };
 
   const getSetTotalDuration = (set: Set): number => {
-    return set.songs.reduce((total, song) => total + (song.duration || 0), 0);
+    if (!set.songs || set.songs.length === 0) return 0;
+    return set.songs.reduce((total, song) => total + (song?.duration || 0), 0);
   };
 
   // Filter playbook songs based on search
