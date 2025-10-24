@@ -143,7 +143,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     enabled: !!artistId,
   });
 
-  // Update setlist mutation
+  // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
     mutationFn: async (updates: Partial<Setlist>) => {
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
@@ -162,16 +162,33 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
-      toast({ title: "Setlist updated" });
+    onMutate: async (updates) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
+
+      // Snapshot previous value
+      const previousSetlist = queryClient.getQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId]);
+
+      // Optimistically update
+      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], (old: any) => ({
+        ...old,
+        ...updates,
+      }));
+
+      return { previousSetlist };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _updates, context) => {
+      // Rollback on error
+      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], context?.previousSetlist);
       toast({
         title: "Failed to update setlist",
         description: error.message,
         variant: "destructive"
       });
+    },
+    onSettled: () => {
+      // Refetch to ensure sync
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
     },
   });
 
@@ -436,6 +453,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               data-song-id={song.song_id}
                               className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
                             >
+                              {/* Position number */}
+                              <div className="w-6 text-center text-xs font-semibold text-muted-foreground">
+                                {idx + 1}
+                              </div>
+
                               {song.imageUrl && (
                                 <img
                                   src={song.imageUrl}
@@ -454,8 +476,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 </div>
                                 <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {formatDuration(song.duration)}
+                              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                                {song.duration ? formatDuration(song.duration) : '0:00'}
                               </div>
                               <button
                                 onClick={(e) => {
