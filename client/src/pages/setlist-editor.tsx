@@ -392,14 +392,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         <div className="mb-4 lg:hidden">
           <button
             onClick={() => setDrawerOpen(!drawerOpen)}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center space-x-2"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium flex items-center justify-center space-x-2"
           >
             <i className={`fas fa-${drawerOpen ? 'times' : 'music'}`}></i>
-            <span>{drawerOpen ? 'Close' : 'Add Songs from Playbook'}</span>
+            <span>{drawerOpen ? 'Close Playbook' : 'Add Songs from Playbook'}</span>
           </button>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Sets area */}
           <div className="flex-1">
             <div className="space-y-6">
@@ -499,9 +499,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
           {/* Playbook drawer - desktop always visible, mobile toggleable */}
           <div className={`${drawerOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 bg-card border border-border rounded overflow-hidden`}>
-            <div className="bg-orange-500 text-white p-3">
-              <h3 className="font-semibold">Playbook</h3>
-              <p className="text-sm opacity-90">Drag songs to add to sets</p>
+            <div className="bg-orange-500 text-white p-2">
+              <h3 className="font-semibold text-sm">Playbook</h3>
+              <p className="text-xs opacity-90">Drag songs to add to sets</p>
             </div>
 
             <div className="p-2 border-b">
@@ -514,25 +514,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               />
             </div>
 
-            <div id="playbook-drawer" className="p-2 max-h-[600px] overflow-y-auto space-y-1">
+            <div id="playbook-drawer" className="p-2 max-h-[70vh] lg:max-h-[600px] overflow-y-auto space-y-1">
               {filteredPlaybookSongs.map((song) => (
                 <div
                   key={song.id}
                   data-song-id={song.id}
                   className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
                 >
-                  {song.imageUrl && (
-                    <img
-                      src={song.imageUrl}
-                      alt={song.title}
-                      className="w-8 h-8 rounded object-cover"
-                    />
-                  )}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate text-sm">{song.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
                     {song.duration ? formatDuration(song.duration) : '--'}
                   </div>
                 </div>

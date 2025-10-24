@@ -71,6 +71,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [editedSongs, setEditedSongs] = useState<Record<string, any>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -361,7 +363,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
         </div>
 
         {/* Search and Multi-Select Controls */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <div className="flex-1">
             <input
               type="text"
@@ -371,25 +373,43 @@ export default function Songs({ artistId, membership }: SongsProps) {
               className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
-          {selectedSongs.length > 0 && (
-            <button
-              onClick={() => {
-                toast({ title: "Creating setlist from selection", description: "This feature is coming soon" });
-              }}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium flex items-center gap-2 whitespace-nowrap"
-            >
-              <i className="fas fa-list"></i>
-              <span>Create Setlist ({selectedSongs.length})</span>
-            </button>
-          )}
-          {selectedSongs.length > 0 && (
-            <button
-              onClick={() => setSelectedSongs([])}
-              className="text-muted-foreground hover:text-foreground px-3 py-2"
-              title="Clear selection"
-            >
-              <i className="fas fa-times"></i>
-            </button>
+          <button
+            onClick={() => {
+              setMultiSelectMode(!multiSelectMode);
+              if (multiSelectMode) {
+                setSelectedSongs([]);
+              }
+            }}
+            className={`px-3 py-2 rounded font-medium flex items-center gap-2 whitespace-nowrap ${
+              multiSelectMode
+                ? 'bg-orange-500 text-white hover:bg-orange-600'
+                : 'border border-border bg-background text-foreground hover:bg-muted'
+            }`}
+            title="Toggle multi-select mode"
+          >
+            <i className="fas fa-check-square"></i>
+            <span className="hidden sm:inline">Select</span>
+          </button>
+          {multiSelectMode && selectedSongs.length > 0 && (
+            <>
+              <button
+                onClick={() => {
+                  toast({ title: "Creating setlist from selection", description: "This feature is coming soon" });
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded font-medium flex items-center gap-2 whitespace-nowrap"
+              >
+                <i className="fas fa-list"></i>
+                <span className="hidden sm:inline">Create Setlist</span>
+                <span>({selectedSongs.length})</span>
+              </button>
+              <button
+                onClick={() => setSelectedSongs([])}
+                className="text-muted-foreground hover:text-foreground px-2 py-2"
+                title="Clear selection"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </>
           )}
         </div>
 
@@ -454,28 +474,30 @@ export default function Songs({ artistId, membership }: SongsProps) {
                 >
                   {/* Main song card */}
                   <div className="flex items-center">
-                    {/* Selection checkbox */}
-                    <div className="pl-2 pr-1">
-                      <button
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedSongs(prev => prev.filter(id => id !== song.id));
-                          } else {
-                            setSelectedSongs(prev => [...prev, song.id]);
-                          }
-                        }}
-                        className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                          isSelected ? 'bg-orange-500 border-orange-500' : 'border-border bg-background hover:border-orange-500'
-                        }`}
-                      >
-                        {isSelected && (
-                          <span className="text-white text-xs font-bold">{selectionIndex + 1}</span>
-                        )}
-                      </button>
-                    </div>
+                    {/* Selection checkbox - only in multi-select mode */}
+                    {multiSelectMode && (
+                      <div className="pl-2 pr-1">
+                        <button
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedSongs(prev => prev.filter(id => id !== song.id));
+                            } else {
+                              setSelectedSongs(prev => [...prev, song.id]);
+                            }
+                          }}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected ? 'bg-orange-500 border-orange-500' : 'border-border bg-background hover:border-orange-500'
+                          }`}
+                        >
+                          {isSelected && (
+                            <span className="text-white text-xs font-bold">{selectionIndex + 1}</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
-                    {/* Album artwork - edge to edge */}
-                    <div className="w-16 h-16 bg-muted flex-shrink-0 overflow-hidden">
+                    {/* Album artwork - reduced height */}
+                    <div className="w-12 h-12 bg-muted flex-shrink-0 overflow-hidden">
                       {song.imageUrl ? (
                         <img
                           src={song.imageUrl}
@@ -484,52 +506,52 @@ export default function Songs({ artistId, membership }: SongsProps) {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <i className="fas fa-music text-muted-foreground text-xl"></i>
+                          <i className="fas fa-music text-muted-foreground text-sm"></i>
                         </div>
                       )}
                     </div>
 
                     {/* Song info */}
-                    <div className="flex-1 min-w-0 px-2 py-2">
-                      <h3 className="font-medium text-foreground truncate" data-testid={`song-title-${song.id}`}>
+                    <div className="flex-1 min-w-0 px-2 py-1.5">
+                      <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
                         {song.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
+                      <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
                     {/* Duration and BPM - minimal padding */}
-                    <div className="flex flex-col items-end text-xs text-muted-foreground" style={{ minWidth: '60px' }}>
+                    <div className="flex flex-col items-end text-xs text-muted-foreground pr-1" style={{ minWidth: '55px' }}>
                       {song.duration && (
                         <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
                       )}
                       {song.bpm && (
-                        <div className="whitespace-nowrap">{song.bpm} BPM</div>
+                        <div className="whitespace-nowrap text-xs">{song.bpm} BPM</div>
                       )}
                     </div>
 
                     {/* Readiness summary */}
-                    <div className="flex items-center space-x-1 pr-1">
-                      <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-0.5 pr-1">
+                      <div className="flex items-center space-x-0.5">
                         {readinessCounts.green > 0 && (
-                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-green-${song.id}`}>
-                            {readinessCounts.green}🟢
+                          <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full" data-testid={`readiness-green-${song.id}`}>
+                            {readinessCounts.green}
                           </span>
                         )}
                         {readinessCounts.amber > 0 && (
-                          <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-amber-${song.id}`}>
-                            {readinessCounts.amber}🟡
+                          <span className="bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full" data-testid={`readiness-amber-${song.id}`}>
+                            {readinessCounts.amber}
                           </span>
                         )}
                         {readinessCounts.red > 0 && (
-                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`readiness-red-${song.id}`}>
-                            {readinessCounts.red}🔴
+                          <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full" data-testid={`readiness-red-${song.id}`}>
+                            {readinessCounts.red}
                           </span>
                         )}
                       </div>
-                      
+
                       {/* Veto indicators */}
                       {song.vetos.length > 0 && (
-                        <span className="text-xl" data-testid={`vetos-${song.id}`}>
+                        <span className="text-base" data-testid={`vetos-${song.id}`}>
                           {"💩".repeat(Math.min(song.vetos.length, 3))}
                         </span>
                       )}
@@ -537,11 +559,46 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       {/* Expand button */}
                       <button
                         onClick={() => toggleExpanded(song.id)}
-                        className="p-1 hover:bg-muted rounded-lg"
+                        className="p-1 hover:bg-muted rounded"
                         data-testid={`button-expand-${song.id}`}
                       >
-                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-muted-foreground text-sm`}></i>
+                        <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-muted-foreground text-xs`}></i>
                       </button>
+
+                      {/* 3-dot menu */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === song.id ? null : song.id);
+                          }}
+                          className="p-1 hover:bg-muted rounded"
+                        >
+                          <i className="fas fa-ellipsis-v text-muted-foreground text-xs"></i>
+                        </button>
+
+                        {openMenuId === song.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div className="absolute right-0 top-8 z-20 bg-card border border-border rounded shadow-lg py-1 min-w-[160px]">
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  await handleDeleteSong(song.id, song.spotifyId, song.title);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-2 text-red-500"
+                              >
+                                <i className="fas fa-trash-alt w-4"></i>
+                                <span>Remove from playbook</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
