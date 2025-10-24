@@ -111,11 +111,10 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
     },
     onSuccess: (newSetlist) => {
       queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
-      toast({ title: "Setlist created! Editor coming soon..." });
+      toast({ title: "Setlist created!" });
       setShowCreateModal(false);
       setNewSetlistName('');
-      // TODO: Navigate to setlist editor when it's built
-      // setLocation(`/artist/${artistId}/setlists/${newSetlist.id}`);
+      setLocation(`/setlists/${newSetlist.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -221,9 +220,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   };
 
   const handleEditSetlist = (setlistId: string) => {
-    // TODO: Navigate to setlist editor when it's built
-    toast({ title: "Setlist editor coming soon..." });
-    // setLocation(`/artist/${artistId}/setlists/${setlistId}`);
+    setLocation(`/setlists/${setlistId}`);
   };
 
   // Calculate total duration for a set
