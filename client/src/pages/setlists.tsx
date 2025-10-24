@@ -111,11 +111,11 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
     },
     onSuccess: (newSetlist) => {
       queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
-      toast({ title: "Setlist created!" });
+      toast({ title: "Setlist created! Editor coming soon..." });
       setShowCreateModal(false);
       setNewSetlistName('');
-      // Navigate to setlist editor
-      setLocation(`/artist/${artistId}/setlists/${newSetlist.id}`);
+      // TODO: Navigate to setlist editor when it's built
+      // setLocation(`/artist/${artistId}/setlists/${newSetlist.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -221,7 +221,9 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   };
 
   const handleEditSetlist = (setlistId: string) => {
-    setLocation(`/artist/${artistId}/setlists/${setlistId}`);
+    // TODO: Navigate to setlist editor when it's built
+    toast({ title: "Setlist editor coming soon..." });
+    // setLocation(`/artist/${artistId}/setlists/${setlistId}`);
   };
 
   // Calculate total duration for a set
@@ -415,10 +417,10 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
       {/* Create Setlist Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="bg-orange-500 text-white p-6 flex items-center justify-between">
-              <h2 className="text-xl font-serif font-bold">Create New Setlist</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 sm:items-center overflow-y-auto">
+          <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl mt-4 sm:mt-0">
+            <div className="bg-orange-500 text-white p-4 sm:p-6 flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl font-serif font-bold">Create New Setlist</h2>
               <button
                 onClick={() => {
                   setShowCreateModal(false);
@@ -430,7 +432,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <label className="block text-sm font-medium text-foreground mb-2">
                 Setlist Name
               </label>
@@ -444,7 +446,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                   }
                 }}
                 placeholder="e.g., Summer Tour 2025"
-                className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-base sm:text-lg"
                 autoFocus
               />
 
