@@ -69,6 +69,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
   const [currentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
   const [editedSongs, setEditedSongs] = useState<Record<string, any>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -256,15 +258,21 @@ export default function Songs({ artistId, membership }: SongsProps) {
     },
   });
 
+  // Filter by search query first
+  const filteredSongs = songs.filter(song =>
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Sort songs by readiness (most ready first) and then by vetos (vetoed songs last)
-  const sortedSongs = [...songs].sort((a, b) => {
+  const sortedSongs = [...filteredSongs].sort((a, b) => {
     const aVetos = a.vetos.length;
     const bVetos = b.vetos.length;
-    
+
     // Songs with vetos go to bottom
     if (aVetos > 0 && bVetos === 0) return 1;
     if (bVetos > 0 && aVetos === 0) return -1;
-    
+
     // Calculate readiness scores
     const getReadinessScore = (song: SongWithDetails) => {
       let score = 0;
@@ -275,7 +283,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
       });
       return score;
     };
-    
+
     return getReadinessScore(b) - getReadinessScore(a);
   });
 
@@ -352,6 +360,39 @@ export default function Songs({ artistId, membership }: SongsProps) {
           </button>
         </div>
 
+        {/* Search and Multi-Select Controls */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search songs by title or artist..."
+              className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          {selectedSongs.length > 0 && (
+            <button
+              onClick={() => {
+                toast({ title: "Creating setlist from selection", description: "This feature is coming soon" });
+              }}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium flex items-center gap-2 whitespace-nowrap"
+            >
+              <i className="fas fa-list"></i>
+              <span>Create Setlist ({selectedSongs.length})</span>
+            </button>
+          )}
+          {selectedSongs.length > 0 && (
+            <button
+              onClick={() => setSelectedSongs([])}
+              className="text-muted-foreground hover:text-foreground px-3 py-2"
+              title="Clear selection"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          )}
+        </div>
+
         <div>
         {/* Spotify link row - only show if configured */}
         {spotifyPlaylistId && (
@@ -400,17 +441,39 @@ export default function Songs({ artistId, membership }: SongsProps) {
               const userVeto = getUserVeto(song);
               const isExpanded = expandedSongs.has(song.id);
               const hasVetos = song.vetos.length > 0;
+              const isSelected = selectedSongs.includes(song.id);
+              const selectionIndex = selectedSongs.indexOf(song.id);
 
               return (
                 <div
                   key={song.id}
-                  className={`bg-card rounded-lg shadow-sm border border-border hover:bg-muted/50 transition-all duration-200 overflow-hidden ${
+                  className={`bg-card rounded-lg shadow-sm border transition-all duration-200 overflow-hidden ${
                     hasVetos ? 'opacity-60' : ''
-                  }`}
+                  } ${isSelected ? 'border-orange-500 border-2' : 'border-border hover:bg-muted/50'}`}
                   data-testid={`song-card-${song.id}`}
                 >
                   {/* Main song card */}
                   <div className="flex items-center">
+                    {/* Selection checkbox */}
+                    <div className="pl-2 pr-1">
+                      <button
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedSongs(prev => prev.filter(id => id !== song.id));
+                          } else {
+                            setSelectedSongs(prev => [...prev, song.id]);
+                          }
+                        }}
+                        className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                          isSelected ? 'bg-orange-500 border-orange-500' : 'border-border bg-background hover:border-orange-500'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="text-white text-xs font-bold">{selectionIndex + 1}</span>
+                        )}
+                      </button>
+                    </div>
+
                     {/* Album artwork - edge to edge */}
                     <div className="w-16 h-16 bg-muted flex-shrink-0 overflow-hidden">
                       {song.imageUrl ? (

@@ -129,8 +129,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return data.map((item: any) => ({
         id: item.id,
         spotifyId: item.globalSong?.spotifyUrl || '',
-        title: item.globalSong?.title || '',
-        artist: item.globalSong?.artistName || '',
+        title: item.globalSong?.title || 'Unknown',
+        artist: item.globalSong?.artistName || 'Unknown',
         album: item.globalSong?.album || '',
         spotifyUrl: item.globalSong?.spotifyUrl || '',
         imageUrl: item.globalSong?.albumImageUrl || null,
@@ -138,7 +138,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         bpm: item.globalSong?.metadata?.bpm || null,
         key: item.globalSong?.metadata?.key || null,
         tuning: item.tuning || 'standard',
-      })).sort((a: PlaybookSong, b: PlaybookSong) => a.title.localeCompare(b.title));
+      })).sort((a: PlaybookSong, b: PlaybookSong) => (a.title || '').localeCompare(b.title || ''));
     },
     enabled: !!artistId,
   });
