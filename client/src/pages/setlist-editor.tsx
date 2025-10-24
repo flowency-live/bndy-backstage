@@ -14,6 +14,8 @@ interface Song {
   artist: string;
   duration: number;
   position: number;
+  tuning?: string;
+  segueInto?: boolean; // True if this song segues into the next one
   imageUrl?: string;
 }
 
@@ -45,6 +47,7 @@ interface PlaybookSong {
   duration?: number;
   bpm?: number;
   key?: string;
+  tuning?: string;
 }
 
 interface SetlistEditorProps {
@@ -134,6 +137,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         duration: item.globalSong?.duration || 0,
         bpm: item.globalSong?.metadata?.bpm || null,
         key: item.globalSong?.metadata?.key || null,
+        tuning: item.tuning || 'standard',
       })).sort((a: PlaybookSong, b: PlaybookSong) => a.title.localeCompare(b.title));
     },
     enabled: !!artistId,
@@ -241,6 +245,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           artist: playbookSong.artist,
           duration: playbookSong.duration || 0,
           position: newIndex,
+          tuning: playbookSong.tuning || 'standard',
+          segueInto: false,
           imageUrl: playbookSong.imageUrl,
         };
         toSet.songs.splice(newIndex, 0, newSong);
@@ -272,6 +278,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             ...song,
             position: idx,
           })),
+        };
+      }
+      return set;
+    });
+
+    updateSetlistMutation.mutate({ sets: updatedSets });
+  };
+
+  const handleToggleSegue = (setId: string, songId: string) => {
+    if (!setlist) return;
+
+    const updatedSets = setlist.sets.map(set => {
+      if (set.id === setId) {
+        return {
+          ...set,
+          songs: set.songs.map(song =>
+            song.id === songId ? { ...song, segueInto: !song.segueInto } : song
+          ),
         };
       }
       return set;
@@ -408,35 +432,60 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           <p>Drag songs here from the playbook</p>
                         </div>
                       ) : (
-                        set.songs.map((song) => (
-                          <div
-                            key={song.id}
-                            data-song-id={song.song_id}
-                            className="flex items-center space-x-3 bg-background border border-border rounded-lg p-3 hover:border-orange-500/50 transition-colors"
-                          >
-                            <div className="drag-handle cursor-move text-muted-foreground hover:text-foreground">
-                              <i className="fas fa-grip-vertical"></i>
-                            </div>
-                            {song.imageUrl && (
-                              <img
-                                src={song.imageUrl}
-                                alt={song.title}
-                                className="w-10 h-10 rounded object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">{song.title}</div>
-                              <div className="text-sm text-muted-foreground truncate">{song.artist}</div>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatDuration(song.duration)}
-                            </div>
-                            <button
-                              onClick={() => handleRemoveSong(set.id, song.id)}
-                              className="text-red-500 hover:text-red-600 p-2"
+                        set.songs.map((song, idx) => (
+                          <div key={song.id}>
+                            <div
+                              data-song-id={song.song_id}
+                              className="flex items-center space-x-3 bg-background border border-border rounded-lg p-3 hover:border-orange-500/50 transition-colors"
                             >
-                              <i className="fas fa-times"></i>
-                            </button>
+                              <div className="drag-handle cursor-move text-muted-foreground hover:text-foreground">
+                                <i className="fas fa-grip-vertical"></i>
+                              </div>
+                              {song.imageUrl && (
+                                <img
+                                  src={song.imageUrl}
+                                  alt={song.title}
+                                  className="w-10 h-10 rounded object-cover"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2">
+                                  <div className="font-medium truncate">{song.title}</div>
+                                  {song.tuning && song.tuning !== 'standard' && (
+                                    <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
+                                      {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-muted-foreground truncate">{song.artist}</div>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {formatDuration(song.duration)}
+                              </div>
+                              <button
+                                onClick={() => handleToggleSegue(set.id, song.id)}
+                                className={`p-2 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
+                                title={song.segueInto ? 'Click to break segue' : 'Click to segue into next song'}
+                              >
+                                <i className="fas fa-arrow-down"></i>
+                              </button>
+                              <button
+                                onClick={() => handleRemoveSong(set.id, song.id)}
+                                className="text-red-500 hover:text-red-600 p-2"
+                              >
+                                <i className="fas fa-times"></i>
+                              </button>
+                            </div>
+                            {song.segueInto && idx < set.songs.length - 1 && (
+                              <div className="flex items-center justify-center py-1">
+                                <div className="flex items-center space-x-2 text-blue-500 text-sm">
+                                  <div className="w-16 h-0.5 bg-blue-500"></div>
+                                  <i className="fas fa-chevron-down"></i>
+                                  <div className="w-16 h-0.5 bg-blue-500"></div>
+                                  <span className="text-xs font-semibold">SEGUE</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))
                       )}
