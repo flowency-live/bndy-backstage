@@ -24,6 +24,7 @@ interface SongWithDetails {
   duration?: number;
   bpm?: number;
   key?: string;
+  tuning?: string;
   notes?: string;
   additionalUrl?: string;
   readiness: Array<{
@@ -107,6 +108,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
         duration: item.globalSong?.duration || null,
         bpm: item.globalSong?.metadata?.bpm || null,
         key: item.globalSong?.metadata?.key || null,
+        tuning: item.tuning || 'standard',
         notes: item.notes || '',
         additionalUrl: item.additional_url || '',
         readiness: item.readiness || [],
@@ -485,7 +487,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     <div className="px-4 pb-4 border-t bg-muted/50 animate-expand overflow-hidden">
                       <div className="pt-4 space-y-3 animate-fade-in-up">
                         {/* Editable metadata fields */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">BPM</label>
                             <input
@@ -524,6 +526,21 @@ export default function Songs({ artistId, membership }: SongsProps) {
                               }))}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Tuning</label>
+                            <select
+                              value={editedSongs[song.id]?.tuning ?? song.tuning ?? 'standard'}
+                              onChange={(e) => setEditedSongs(prev => ({
+                                ...prev,
+                                [song.id]: { ...prev[song.id], tuning: e.target.value }
+                              }))}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            >
+                              <option value="standard">Standard</option>
+                              <option value="drop-d">Drop D</option>
+                              <option value="eb">Eb</option>
+                            </select>
                           </div>
                         </div>
 
