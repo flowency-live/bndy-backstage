@@ -683,6 +683,30 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     enabled: !!session && !!artistId,
   });
 
+  // Get setlists for this band
+  const { data: setlists = [] } = useQuery<any[]>({
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"],
+    queryFn: async () => {
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch setlists");
+      }
+
+      return response.json();
+    },
+    enabled: !!session && !!artistId,
+  });
+
   // Get band members
   const { data: artistMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/artists", artistId, "members"],
@@ -839,8 +863,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               title="Setlists"
               icon={<List />}
               color="hsl(159, 68%, 48%)"
-              count={0}
-              onClick={() => setLocation("/songs")}
+              count={setlists.length}
+              onClick={() => setLocation("/setlists")}
               className="animate-stagger-2"
             />
 

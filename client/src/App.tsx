@@ -16,6 +16,7 @@ import MyArtists from "@/pages/my-artists";
 import Invite from "@/pages/invite";
 import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
+import Setlists from "@/pages/setlists";
 import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
 import Members from "@/pages/members";
@@ -108,6 +109,20 @@ function Router() {
               <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Songs artistId={contextId} membership={membership} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/setlists">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Setlists artistId={contextId} membership={membership} />
                 </AppLayout>
               </ProfileGate>
             );
