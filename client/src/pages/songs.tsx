@@ -66,7 +66,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
+  const [currentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
   const [editedSongs, setEditedSongs] = useState<Record<string, any>>({});
 
   // Check for Spotify settings from localStorage
@@ -317,24 +317,24 @@ export default function Songs({ artistId, membership }: SongsProps) {
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Tabs Navigation - aligned like calendar */}
+        {/* Tabs Navigation - navigate to actual routes */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2 border-b border-border">
             <button
-              onClick={() => setCurrentView('playbook')}
-              className={`px-4 py-2 font-medium ${currentView === 'playbook' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setLocation("/songs")}
+              className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
             >
               Playbook
             </button>
             <button
-              onClick={() => setCurrentView('setlists')}
-              className={`px-4 py-2 font-medium ${currentView === 'setlists' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setLocation("/setlists")}
+              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
             >
               Setlists
             </button>
             <button
-              onClick={() => setCurrentView('pipeline')}
-              className={`px-4 py-2 font-medium ${currentView === 'pipeline' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setLocation("/songs")}
+              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
             >
               Pipeline
             </button>

@@ -244,20 +244,37 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
       <ConfirmDialog />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <PageHeader
-          title="Setlists"
-          subtitle={`${setlists.length} setlist${setlists.length !== 1 ? 's' : ''}`}
-          backLink={`/artist/${artistId}`}
-          action={
+        {/* Tabs Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-2 border-b border-border">
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
+              onClick={() => setLocation("/songs")}
+              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
             >
-              <i className="fas fa-plus"></i>
-              <span>New Setlist</span>
+              Playbook
             </button>
-          }
-        />
+            <button
+              onClick={() => setLocation("/setlists")}
+              className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
+            >
+              Setlists
+            </button>
+            <button
+              onClick={() => setLocation("/songs")}
+              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
+            >
+              Pipeline
+            </button>
+          </div>
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+          >
+            <i className="fas fa-plus"></i>
+            <span className="hidden sm:inline">New Setlist</span>
+          </button>
+        </div>
 
         {/* Loading state */}
         {isLoading && (
