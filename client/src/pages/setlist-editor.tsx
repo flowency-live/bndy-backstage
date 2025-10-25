@@ -198,8 +198,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   });
 
   // Initialize Sortable for all sets when setlist loads
+  // CRITICAL: Only depend on setlist (not workingSetlist) to avoid re-initialization on every change
   useEffect(() => {
-    if (!workingSetlist) return;
+    if (!setlist) return;
 
     // Clean up existing sortables safely
     Object.values(sortableRefs.current).forEach(sortable => {
@@ -214,7 +215,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     sortableRefs.current = {};
 
     // Initialize sortable for each set
-    workingSetlist.sets.forEach((set) => {
+    setlist.sets.forEach((set) => {
       const element = document.getElementById(`set-${set.id}`);
       if (element) {
         console.log(`[SORTABLE] Initializing Sortable for set: ${set.id}`);
@@ -283,7 +284,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         }
       });
     };
-  }, [workingSetlist]);
+  }, [setlist]); // Only re-initialize when setlist changes from server, not on local edits
 
   const handleSongMove = (evt: Sortable.SortableEvent, setId: string) => {
     console.log('🎵 handleSongMove triggered:', { setId, from: evt.from.id, to: evt.to.id, oldIndex: evt.oldIndex, newIndex: evt.newIndex });
@@ -360,10 +361,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       console.log('[DRAG] Updating local working copy (NOT saving to database)');
 
-      // Remove clone immediately - React will render the proper component
+      // Remove clone safely - wrap in try-catch to prevent crashes
       if (evt.item && evt.item.parentNode) {
-        console.log('[DRAG] Removing clone');
-        evt.item.parentNode.removeChild(evt.item);
+        try {
+          console.log('[DRAG] Removing clone');
+          evt.item.parentNode.removeChild(evt.item);
+        } catch (e) {
+          console.warn('[DRAG] Clone already removed by React:', e);
+        }
       }
 
       // Update local state only - DO NOT save to database
