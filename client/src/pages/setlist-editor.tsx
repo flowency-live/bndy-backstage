@@ -348,7 +348,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       // CRITICAL FIX: Create NEW set objects to trigger React re-render
       const immutableUpdatedSets = workingSetlist.sets.map(set => {
         if (set.id === toSetId) {
-          const newSongs = [...set.songs];
+          const newSongs = [...(set.songs || [])];
           newSongs.splice(newIndex, 0, newSong);
           return {
             ...set,
@@ -374,7 +374,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
     // Moving within or between sets
     if (fromSet && toSet) {
-      const movedSong = fromSet.songs[oldIndex];
+      const movedSong = fromSet.songs?.[oldIndex];
       if (!movedSong) {
         console.error('[DRAG] Could not find moved song');
         return;
@@ -386,7 +386,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       const immutableUpdatedSets = workingSetlist.sets.map(set => {
         // Remove from source set
         if (set.id === fromSetId) {
-          const newSongs = set.songs.filter((_, idx) => idx !== oldIndex);
+          const newSongs = (set.songs || []).filter((_, idx) => idx !== oldIndex);
           return {
             ...set,
             songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
@@ -394,7 +394,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         }
         // Add to destination set
         if (set.id === toSetId) {
-          const newSongs = [...set.songs];
+          const newSongs = [...(set.songs || [])];
           newSongs.splice(newIndex, 0, movedSong);
           return {
             ...set,
@@ -417,7 +417,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (set.id === setId) {
         return {
           ...set,
-          songs: set.songs.filter(s => s.id !== songId).map((song, idx) => ({
+          songs: (set.songs || []).filter(s => s.id !== songId).map((song, idx) => ({
             ...song,
             position: idx,
           })),
@@ -437,7 +437,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (set.id === setId) {
         return {
           ...set,
-          songs: set.songs.map(song =>
+          songs: (set.songs || []).map(song =>
             song.id === songId ? { ...song, segueInto: !song.segueInto } : song
           ),
         };
@@ -478,7 +478,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       title: playbookSong.title,
       artist: playbookSong.artist,
       duration: playbookSong.duration || 0,
-      position: activeSet.songs.length,
+      position: activeSet.songs?.length || 0,
       tuning: playbookSong.tuning || 'standard',
       segueInto: false,
       imageUrl: playbookSong.imageUrl,
@@ -488,7 +488,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (set.id === activeSetId) {
         return {
           ...set,
-          songs: [...set.songs, newSong],
+          songs: [...(set.songs || []), newSong],
         };
       }
       return set;
@@ -562,7 +562,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Get all song IDs currently in the setlist (use working copy to reflect unsaved changes)
   const songsInSetlist = new Set(
-    (workingSetlist || setlist)?.sets.flatMap(set => set.songs.map(song => song.song_id)) || []
+    (workingSetlist || setlist)?.sets.flatMap(set => (set.songs || []).map(song => song.song_id)) || []
   );
 
   // Filter playbook songs based on search and "show all" toggle
@@ -751,7 +751,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                     </div>
 
                     <div id={`set-${set.id}`} className="p-2 min-h-[100px] space-y-1">
-                      {set.songs.map((song, idx) => (
+                      {set.songs?.map((song, idx) => (
                           <div key={song.id}>
                             <div
                               data-song-id={song.song_id}
