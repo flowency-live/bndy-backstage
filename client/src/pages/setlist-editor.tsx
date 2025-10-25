@@ -312,22 +312,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Found playbook song:', playbookSong);
 
       if (playbookSong) {
-        // Remove the cloned element that Sortable created
-        // evt.item is the clone that was dropped, we need to remove it from DOM
-        // because we're creating our own React element
-        // ONLY do this when dragging from playbook (not when moving between sets)
-        // Use setTimeout to let React render first, then remove the clone
-        setTimeout(() => {
-          try {
-            if (evt.item && evt.item.parentNode) {
-              console.log('[DRAG] Removing Sortable clone from DOM');
-              evt.item.parentNode.removeChild(evt.item);
-            }
-          } catch (e) {
-            // Silently ignore - React might have already removed it
-            console.log('[DRAG] Clone already removed by React');
+        // Remove the cloned element IMMEDIATELY (synchronously)
+        // evt.item is the clone that Sortable created - we MUST remove it before React renders
+        // Otherwise we see the plain clone instead of the enriched React card
+        try {
+          if (evt.item && evt.item.parentNode) {
+            console.log('[DRAG] Removing Sortable clone from DOM IMMEDIATELY');
+            evt.item.parentNode.removeChild(evt.item);
           }
-        }, 0);
+        } catch (e) {
+          console.warn('[DRAG] Could not remove clone:', e);
+        }
 
         const newSong: SetlistSong = {
           id: `${Date.now()}-${Math.random()}`,
