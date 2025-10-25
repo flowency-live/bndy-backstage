@@ -279,6 +279,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   // Sort songs by readiness (most ready first) and then by vetos (vetoed songs last)
   const sortedSongs = [...filteredSongs].sort((a, b) => {
+    // Defensive: handle undefined/null items
+    if (!a || !a.vetos) return 1;
+    if (!b || !b.vetos) return -1;
+
     const aVetos = a.vetos.length;
     const bVetos = b.vetos.length;
 

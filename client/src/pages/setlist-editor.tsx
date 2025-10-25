@@ -295,7 +295,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       console.log(`[PLAYBOOK] ${validItems.length} valid songs after filtering`);
 
-      return validItems.map((item: any) => {
+      const mappedItems = validItems.map((item: any) => {
         const duration = item.globalSong?.duration || 0;
         console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s`);
 
@@ -310,11 +310,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           duration: duration,
           tuning: item.tuning || 'standard',
         };
-      }).sort((a, b) => {
-        // Defensive sort: Safely handle undefined values
-        const titleA = a?.title || '';
-        const titleB = b?.title || '';
-        return titleA.localeCompare(titleB);
+      });
+
+      // Defensive sort: Filter out any undefined/null items that somehow got through
+      const safeItems = mappedItems.filter(item => item && item.title);
+
+      return safeItems.sort((a, b) => {
+        // Extra safety: should never hit these conditions now, but just in case
+        if (!a || !a.title) return 1;
+        if (!b || !b.title) return -1;
+        return a.title.localeCompare(b.title);
       });
     },
     enabled: !!artistId,
