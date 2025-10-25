@@ -189,10 +189,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           forceFallback: true,     // Better cross-browser support
           fallbackTolerance: 3,    // px to move before drag starts
           onStart: (evt) => {
-            console.log('[SORTABLE] Drag started', evt);
+            console.log('[SORTABLE] Drag started from:', evt.from.id, 'to:', evt.to?.id);
           },
           onEnd: (evt) => {
-            console.log('[SORTABLE] Drag ended, calling handleSongMove', evt);
+            console.log('[SORTABLE] Drag ended. From:', evt.from.id, 'To:', evt.to.id);
+            handleSongMove(evt, set.id);
+          },
+          onAdd: (evt) => {
+            // This fires when something is added to this set
+            console.log('[SORTABLE] onAdd fired! From:', evt.from.id, 'To:', evt.to.id);
             handleSongMove(evt, set.id);
           },
         });
