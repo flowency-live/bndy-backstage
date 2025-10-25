@@ -169,11 +169,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       // Snapshot previous value
       const previousSetlist = queryClient.getQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId]);
 
-      // Optimistically update
-      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], (old: any) => ({
-        ...old,
-        ...updates,
-      }));
+      // Optimistically update - force a new object reference to trigger re-render
+      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          ...updates,
+          updated_at: new Date().toISOString(), // Force React to see this as a new object
+        };
+      });
 
       return { previousSetlist };
     },
@@ -186,8 +190,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         variant: "destructive"
       });
     },
+    onSuccess: () => {
+      // Immediately refetch to ensure UI is in sync with backend
+      queryClient.invalidateQueries({
+        queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
+        refetchType: 'active'
+      });
+    },
     onSettled: () => {
-      // Refetch to ensure sync
+      // Final refetch to ensure sync
       queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
     },
   });
