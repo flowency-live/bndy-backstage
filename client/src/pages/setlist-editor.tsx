@@ -560,9 +560,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     return total;
   };
 
-  // Get all song IDs currently in the setlist
+  // Get all song IDs currently in the setlist (use working copy to reflect unsaved changes)
   const songsInSetlist = new Set(
-    setlist?.sets.flatMap(set => set.songs.map(song => song.song_id)) || []
+    (workingSetlist || setlist)?.sets.flatMap(set => set.songs.map(song => song.song_id)) || []
   );
 
   // Filter playbook songs based on search and "show all" toggle
