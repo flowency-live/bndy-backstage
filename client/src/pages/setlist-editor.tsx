@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { useSectionTheme } from "@/hooks/use-section-theme";
@@ -6,7 +6,26 @@ import { useToast } from "@/hooks/use-toast";
 import { PageHeader } from "@/components/layout";
 import type { ArtistMembership, Artist } from "@/types/api";
 import type { Setlist, SetlistSet, SetlistSong, PlaybookSong } from "@/types/setlist";
-import Sortable from "sortablejs";
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface SetlistEditorProps {
   artistId: string;
@@ -35,6 +54,147 @@ function getVarianceColor(variance: number): string {
   return 'text-red-500';
 }
 
+// Sortable song card component
+function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue }: {
+  song: SetlistSong;
+  setId: string;
+  idx: number;
+  onToggleSegue: (setId: string, songId: string) => void;
+  onRemove: (setId: string, songId: string) => void;
+  showSegue: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: song.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div
+        {...attributes}
+        {...listeners}
+        className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
+      >
+        {/* Position number */}
+        <div className="w-6 text-center text-sm font-bold text-foreground">
+          {idx + 1}.
+        </div>
+
+        {song.imageUrl && (
+          <img
+            src={song.imageUrl}
+            alt={song.title}
+            className="w-8 h-8 rounded object-cover"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2">
+            <div className="font-medium truncate text-sm">{song.title}</div>
+            {song.tuning && song.tuning !== 'standard' && (
+              <span className="px-1.5 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
+                {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
+        </div>
+        <div className="text-xs text-muted-foreground whitespace-nowrap">
+          {song.duration ? formatDuration(song.duration) : '0:00'}
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSegue(setId, song.id);
+          }}
+          className={`p-1 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
+          title={song.segueInto ? 'Click to break segue' : 'Click to segue into next song'}
+        >
+          <i className="fas fa-arrow-down"></i>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(setId, song.id);
+          }}
+          className="text-red-500 hover:text-red-600 p-1"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      </div>
+      {showSegue && (
+        <div className="flex items-center justify-center py-0.5">
+          <div className="flex items-center space-x-2 text-blue-500 text-xs">
+            <div className="w-12 h-0.5 bg-blue-500"></div>
+            <i className="fas fa-chevron-down text-xs"></i>
+            <div className="w-12 h-0.5 bg-blue-500"></div>
+            <span className="text-xs font-semibold">SEGUE</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Draggable playbook song card
+function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
+  song: PlaybookSong;
+  isInSetlist: boolean;
+  onQuickAdd: (songId: string, e: React.MouseEvent) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `playbook-${song.id}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => onQuickAdd(song.id, e)}
+      className={`flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
+        isInSetlist
+          ? 'border-green-500/30 opacity-60'
+          : 'border-border hover:border-orange-500/50 cursor-pointer lg:cursor-grab active:cursor-grabbing'
+      }`}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center space-x-2">
+          <div className="font-medium truncate text-sm">{song.title}</div>
+          {isInSetlist && (
+            <i className="fas fa-check text-green-500 text-xs" title="Already in setlist"></i>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
+      </div>
+      <div className="text-xs text-muted-foreground whitespace-nowrap">
+        {song.duration ? formatDuration(song.duration) : '--'}
+      </div>
+    </div>
+  );
+}
+
 export default function SetlistEditor({ artistId, setlistId, membership }: SetlistEditorProps) {
   useSectionTheme('songs');
 
@@ -47,11 +207,32 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [activeSetId, setActiveSetId] = useState<string>('');
-  const sortableRefs = useRef<{ [key: string]: Sortable }>({});
+
+  // Drag and drop state
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   // Local working copy of setlist (for unsaved changes)
   const [workingSetlist, setWorkingSetlist] = useState<Setlist | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch setlist from database
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
@@ -92,7 +273,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const data = await response.json();
 
-      // VALIDATE: Ensure we have an array
+      // Validate: Ensure we have an array
       if (!Array.isArray(data)) {
         console.error('[PLAYBOOK] Invalid response - not an array:', data);
         return [];
@@ -100,7 +281,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       console.log(`[PLAYBOOK] Fetched ${data.length} songs from API`);
 
-      // FILTER out any null/undefined items BEFORE mapping
+      // Filter out any null/undefined items before mapping
       const validItems = data.filter(item => {
         if (!item) {
           console.warn('[PLAYBOOK] Skipping null/undefined item');
@@ -131,7 +312,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           tuning: item.tuning || 'standard',
         };
       }).sort((a, b) => {
-        // DEFENSIVE SORT: Safely handle undefined values
+        // Defensive sort: Safely handle undefined values
         const titleA = a?.title || '';
         const titleB = b?.title || '';
         return titleA.localeCompare(titleB);
@@ -226,243 +407,185 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     },
   });
 
-  // Initialize Sortable for all sets when setlist loads
-  // CRITICAL: Only depend on setlist (not workingSetlist) to avoid re-initialization on every change
-  useEffect(() => {
-    if (!setlist) return;
+  // Drag event handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    console.log('[DND] Drag started:', event.active.id);
+    setActiveId(event.active.id as string);
+  };
 
-    // Clean up existing sortables safely
-    Object.values(sortableRefs.current).forEach(sortable => {
-      if (sortable && typeof sortable.destroy === 'function') {
-        try {
-          sortable.destroy();
-        } catch (e) {
-          console.warn('Failed to destroy sortable:', e);
-        }
-      }
-    });
-    sortableRefs.current = {};
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
 
-    // Initialize sortable for each set
-    setlist.sets.forEach((set) => {
-      const element = document.getElementById(`set-${set.id}`);
-      if (element) {
-        console.log(`[SORTABLE] Initializing Sortable for set: ${set.id}`);
-        sortableRefs.current[set.id] = Sortable.create(element, {
-          group: 'setlist-songs',
-          animation: 150,
-          forceFallback: true,
-          fallbackTolerance: 3,
-          onEnd: (evt) => {
-            console.log('[SORTABLE] Drag ended. From:', evt.from.id || 'no id', 'To:', evt.to.id);
-
-            // CRITICAL: Revert Sortable's DOM changes BEFORE React re-renders
-            // This prevents React from trying to remove nodes that Sortable moved
-            try {
-              if (evt.item && evt.item.parentNode) {
-                evt.item.parentNode.removeChild(evt.item);
-              }
-              // Also remove any clones Sortable created
-              const clone = evt.clone;
-              if (clone && clone.parentNode) {
-                clone.parentNode.removeChild(clone);
-              }
-            } catch (e) {
-              console.warn('[SORTABLE] Failed to revert DOM:', e);
-            }
-
-            const isFromThisSet = evt.from.id === `set-${set.id}`;
-            const isToThisSet = evt.to.id === `set-${set.id}`;
-
-            if (isFromThisSet && isToThisSet) {
-              console.log('[SORTABLE] Reordering within same set');
-              handleSongMove(evt, set.id);
-            } else {
-              console.log('[SORTABLE] onEnd skipped - cross-set or playbook drag handled by onAdd');
-            }
-          },
-          onAdd: (evt) => {
-            console.log('[SORTABLE] onAdd fired! From:', evt.from.id || 'no id', 'To:', evt.to.id);
-
-            // CRITICAL: Revert Sortable's DOM changes BEFORE React re-renders
-            try {
-              if (evt.item && evt.item.parentNode) {
-                evt.item.parentNode.removeChild(evt.item);
-              }
-              const clone = evt.clone;
-              if (clone && clone.parentNode) {
-                clone.parentNode.removeChild(clone);
-              }
-            } catch (e) {
-              console.warn('[SORTABLE] Failed to revert DOM:', e);
-            }
-
-            handleSongMove(evt, set.id);
-          },
-        });
-      }
-    });
-
-    // Initialize sortable for drawer (playbook) - each letter group
-    const letterGroups = document.querySelectorAll('[data-letter-group]');
-    console.log('[SORTABLE] Found', letterGroups.length, 'letter groups in playbook');
-
-    letterGroups.forEach((groupElement, index) => {
-      const letter = groupElement.getAttribute('data-letter-group');
-      console.log(`[SORTABLE] Initializing Sortable for playbook group: ${letter}`);
-      sortableRefs.current[`drawer-${letter}`] = Sortable.create(groupElement as HTMLElement, {
-        group: {
-          name: 'setlist-songs',
-          pull: 'clone',
-          put: false,
-        },
-        animation: 150,
-        sort: false,
-        forceFallback: true,
-        draggable: '.playbook-song-card',  // Only song cards are draggable
-      });
-    });
-
-    return () => {
-      Object.values(sortableRefs.current).forEach(sortable => {
-        if (sortable && typeof sortable.destroy === 'function') {
-          try {
-            sortable.destroy();
-          } catch (e) {
-            console.warn('Failed to destroy sortable on cleanup:', e);
-          }
-        }
-      });
-    };
-  }, [setlist]); // Only re-initialize when setlist changes from server, not on local edits
-
-  const handleSongMove = (evt: Sortable.SortableEvent, setId: string) => {
-    console.log('🎵 handleSongMove triggered:', { setId, from: evt.from.id, to: evt.to.id, oldIndex: evt.oldIndex, newIndex: evt.newIndex });
-
-    if (!workingSetlist && !setlist) {
-      console.error('❌ No setlist found');
+    if (!over) {
+      setOverId(null);
       return;
     }
 
-    const currentSetlist = workingSetlist || setlist;
-    if (!currentSetlist) return;
+    setOverId(over.id as string);
+    console.log('[DND] Drag over:', { active: active.id, over: over.id });
+  };
 
-    // Check if dragging from playbook (has data-letter-group attribute)
-    const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    const fromSetId = isFromPlaybook ? 'playbook' : evt.from.id.replace('set-', '');
-    const toSetId = evt.to.id.replace('set-', '');
-    const oldIndex = evt.oldIndex ?? 0;
-    const newIndex = evt.newIndex ?? 0;
+    console.log('[DND] Drag ended:', { active: active.id, over: over?.id });
 
-    console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
+    setActiveId(null);
+    setOverId(null);
 
-    // Clone setlist for updates
-    const updatedSets = [...currentSetlist.sets];
-    const fromSet = isFromPlaybook ? null : updatedSets.find(s => s.id === fromSetId);
-    const toSet = updatedSets.find(s => s.id === toSetId);
+    if (!over || !workingSetlist) return;
 
-    if (!toSet) {
-      console.error('❌ toSet not found');
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
+
+    // Check if dragging from playbook (id starts with 'playbook-')
+    const isFromPlaybook = activeIdStr.startsWith('playbook-');
+    const songId = isFromPlaybook ? activeIdStr.replace('playbook-', '') : activeIdStr;
+
+    // Find which set the item was dropped over
+    let targetSetId: string | null = null;
+    let targetIndex = 0;
+
+    // Check if dropped directly on a set container
+    if (overIdStr.startsWith('set-container-')) {
+      targetSetId = overIdStr.replace('set-container-', '');
+      targetIndex = 0; // Add to beginning if dropped on container
+    } else {
+      // Dropped on a song - find which set and position
+      for (const set of workingSetlist.sets) {
+        const songIndex = set.songs.findIndex(s => s.id === overIdStr);
+        if (songIndex !== -1) {
+          targetSetId = set.id;
+          targetIndex = songIndex + 1; // Insert after the song we're over
+          break;
+        }
+      }
+    }
+
+    if (!targetSetId) {
+      console.warn('[DND] Could not determine target set');
       return;
     }
 
-    console.log('📦 Before update - toSet songs:', toSet.songs.length);
-
-    // If adding from playbook, create new song entry
     if (isFromPlaybook) {
-      const songElement = evt.item;
-      const songId = songElement.getAttribute('data-song-id');
-      const playbookSong = playbookSongs.find(s => s.id === songId);
+      // Adding from playbook
+      handleAddFromPlaybook(songId, targetSetId, targetIndex);
+    } else {
+      // Moving within or between sets
+      handleMoveSong(songId, targetSetId, targetIndex);
+    }
+  };
 
-      console.log('[DRAG] Adding from playbook');
-      console.log('[DRAG] Song ID:', songId);
-      console.log('[DRAG] Found playbook song:', playbookSong);
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverId(null);
+  };
 
-      if (!playbookSong) {
-        console.error('[DRAG] ERROR: Playbook song not found!');
-        return;
-      }
+  const handleAddFromPlaybook = (songId: string, targetSetId: string, targetIndex: number) => {
+    const playbookSong = playbookSongs.find(s => s.id === songId);
 
-      const newSong: SetlistSong = {
-        id: `${Date.now()}-${Math.random()}`,
-        song_id: playbookSong.id,
-        title: playbookSong.title,
-        artist: playbookSong.artist,
-        duration: playbookSong.duration || 0,
-        position: newIndex,
-        tuning: playbookSong.tuning || 'standard',
-        segueInto: false,
-        imageUrl: playbookSong.imageUrl,
-      };
-
-      console.log('[DRAG] Created new song object:', newSong);
-      console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
-
-      // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = currentSetlist.sets.map(set => {
-        if (set.id === toSetId) {
-          const newSongs = [...(set.songs || [])];
-          newSongs.splice(newIndex, 0, newSong);
-          return {
-            ...set,
-            songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
-          };
-        }
-        return set;
-      });
-
-      console.log('[DRAG] Updating local working copy (NOT saving to database)');
-      console.log('[DRAG] Duration check:', {
-        songTitle: newSong.title,
-        newSongDuration: newSong.duration,
-        playbookDuration: playbookSong.duration,
-        playbookSongData: playbookSong
-      });
-
-      // Update local state only - DO NOT save to database
-      // Note: We do NOT manually remove the clone - let React handle all DOM operations
-      setWorkingSetlist({ ...workingSetlist, sets: immutableUpdatedSets });
-      setHasUnsavedChanges(true);
+    if (!playbookSong || !workingSetlist) {
+      console.error('[DND] Playbook song not found:', songId);
       return;
     }
 
-    // Moving within or between sets
-    if (fromSet && toSet) {
-      const movedSong = fromSet.songs?.[oldIndex];
-      if (!movedSong) {
-        console.error('[DRAG] Could not find moved song');
-        return;
+    const newSong: SetlistSong = {
+      id: `${Date.now()}-${Math.random()}`,
+      song_id: playbookSong.id,
+      title: playbookSong.title,
+      artist: playbookSong.artist,
+      duration: playbookSong.duration || 0,
+      position: targetIndex,
+      tuning: playbookSong.tuning || 'standard',
+      segueInto: false,
+      imageUrl: playbookSong.imageUrl,
+    };
+
+    console.log('[DND] Adding from playbook:', newSong.title, 'to set', targetSetId, 'at index', targetIndex);
+
+    const updatedSets = workingSetlist.sets.map(set => {
+      if (set.id === targetSetId) {
+        const newSongs = [...set.songs];
+        newSongs.splice(targetIndex, 0, newSong);
+        return {
+          ...set,
+          songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
+        };
+      }
+      return set;
+    });
+
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleMoveSong = (songId: string, targetSetId: string, targetIndex: number) => {
+    if (!workingSetlist) return;
+
+    // Find source set and song
+    let sourceSetId: string | null = null;
+    let sourceIndex = -1;
+    let songToMove: SetlistSong | null = null;
+
+    for (const set of workingSetlist.sets) {
+      const idx = set.songs.findIndex(s => s.id === songId);
+      if (idx !== -1) {
+        sourceSetId = set.id;
+        sourceIndex = idx;
+        songToMove = set.songs[idx];
+        break;
+      }
+    }
+
+    if (!songToMove || !sourceSetId) {
+      console.warn('[DND] Could not find source song:', songId);
+      return;
+    }
+
+    // If moving within same set and to same position, do nothing
+    if (sourceSetId === targetSetId && sourceIndex === targetIndex) {
+      console.log('[DND] Same position, no change needed');
+      return;
+    }
+
+    console.log('[DND] Moving song:', songToMove.title, 'from', sourceSetId, sourceIndex, 'to', targetSetId, targetIndex);
+
+    const updatedSets = workingSetlist.sets.map(set => {
+      // Remove from source set
+      if (set.id === sourceSetId) {
+        const newSongs = set.songs.filter(s => s.id !== songId);
+
+        // If source and target are same set, we need to adjust target index
+        if (sourceSetId === targetSetId) {
+          const adjustedIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+          newSongs.splice(adjustedIndex, 0, songToMove);
+          return {
+            ...set,
+            songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
+          };
+        }
+
+        return {
+          ...set,
+          songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
+        };
       }
 
-      console.log('[DRAG] Song moved between/within sets');
+      // Add to target set (if different from source)
+      if (set.id === targetSetId && sourceSetId !== targetSetId) {
+        const newSongs = [...set.songs];
+        newSongs.splice(targetIndex, 0, songToMove);
+        return {
+          ...set,
+          songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
+        };
+      }
 
-      // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = currentSetlist.sets.map(set => {
-        // Remove from source set
-        if (set.id === fromSetId) {
-          const newSongs = (set.songs || []).filter((_, idx) => idx !== oldIndex);
-          return {
-            ...set,
-            songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
-          };
-        }
-        // Add to destination set
-        if (set.id === toSetId) {
-          const newSongs = [...(set.songs || [])];
-          newSongs.splice(newIndex, 0, movedSong);
-          return {
-            ...set,
-            songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
-          };
-        }
-        return set;
-      });
+      return set;
+    });
 
-      // Update local state only - DO NOT save to database
-      setWorkingSetlist({ ...workingSetlist, sets: immutableUpdatedSets });
-      setHasUnsavedChanges(true);
-    }
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
   };
 
   const handleRemoveSong = (setId: string, songId: string) => {
@@ -515,8 +638,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   // Quick add function for mobile tap-to-add
   const handleQuickAdd = (songId: string, e: React.MouseEvent) => {
     // Only handle click on mobile OR when explicitly clicking (not dragging)
-    // Check if this was a drag operation by seeing if mouse moved
-    const isDrag = e.type === 'click' && (e as any).detail === 0; // Detail is 0 for synthetic events from drag
+    const isDrag = e.type === 'click' && (e as any).detail === 0;
     if (isDrag) return;
 
     if (!workingSetlist || !activeSetId) return;
@@ -601,17 +723,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   const getSetTotalDuration = (set: SetlistSet): number => {
     if (!set.songs || set.songs.length === 0) {
-      console.log(`[DURATION] Set "${set.name}" has no songs`);
       return 0;
     }
 
     const total = set.songs.reduce((sum, song) => {
       const duration = song?.duration || 0;
-      console.log(`[DURATION] Song "${song.title}" duration: ${duration}s`);
       return sum + duration;
     }, 0);
 
-    console.log(`[DURATION] Set "${set.name}" total: ${total}s from ${set.songs.length} songs`);
     return total;
   };
 
@@ -672,297 +791,255 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     );
   }
 
+  // Create all droppable IDs for DndContext
+  const allDroppableIds = [
+    ...(workingSetlist || setlist).sets.flatMap(set => [
+      `set-container-${set.id}`,
+      ...set.songs.map(song => song.id)
+    ]),
+    ...filteredPlaybookSongs.map(song => `playbook-${song.id}`)
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Header */}
-        <div className="mb-6">
-          {editingName ? (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleUpdateName();
-                  if (e.key === 'Escape') setEditingName(false);
-                }}
-                className="text-2xl font-serif font-bold bg-background border border-border rounded px-2 py-1"
-                autoFocus
-              />
-              <button
-                onClick={handleUpdateName}
-                className="text-green-500 hover:text-green-600"
-              >
-                <i className="fas fa-check"></i>
-              </button>
-              <button
-                onClick={() => setEditingName(false)}
-                className="text-red-500 hover:text-red-600"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setLocation("/setlists")}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <i className="fas fa-arrow-left"></i>
-              </button>
-              <h1 className="text-2xl font-serif font-bold">{workingSetlist?.name || setlist.name}</h1>
-              <button
-                onClick={() => {
-                  setTempName(workingSetlist?.name || setlist.name);
-                  setEditingName(true);
-                }}
-                className="text-muted-foreground hover:text-foreground"
-                title="Edit setlist name"
-              >
-                <i className="fas fa-edit"></i>
-              </button>
-              <button
-                onClick={handleSave}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Save setlist"
-                disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
-              >
-                <i className="fas fa-save mr-1"></i> Save
-              </button>
-              <button
-                onClick={handleCancel}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Discard changes"
-                disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
-              >
-                <i className="fas fa-times mr-1"></i> Cancel
-              </button>
-              {updateSetlistMutation.isPending && (
-                <span className="text-sm text-muted-foreground animate-pulse">
-                  <i className="fas fa-spinner fa-spin"></i> Saving...
-                </span>
-              )}
-              {hasUnsavedChanges && !updateSetlistMutation.isPending && (
-                <span className="text-sm text-yellow-600">
-                  <i className="fas fa-exclamation-circle mr-1"></i> Unsaved changes
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Toggle drawer button (mobile) */}
-        <div className="mb-4 lg:hidden">
-          <button
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium flex items-center justify-center space-x-2"
-          >
-            <i className={`fas fa-${drawerOpen ? 'times' : 'music'}`}></i>
-            <span>{drawerOpen ? 'Close Playbook' : 'Add Songs from Playbook'}</span>
-          </button>
-        </div>
-
-        <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
-          {/* Sets area - 50% width on mobile when drawer is open */}
-          <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0`}>
-            <div className="space-y-6">
-              {(workingSetlist || setlist).sets.map((set) => {
-                const totalDuration = getSetTotalDuration(set);
-                const variance = getDurationVariance(totalDuration, set.targetDuration);
-                const varianceColor = getVarianceColor(variance);
-
-                console.log(`Set ${set.name}:`, {
-                  songCount: set.songs.length,
-                  totalDuration,
-                  songs: set.songs.map(s => ({ title: s.title, duration: s.duration, position: s.position }))
-                });
-
-                return (
-                  <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
-                    <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        {/* Active set radio button (mobile only) */}
-                        <div className="lg:hidden">
-                          <input
-                            type="radio"
-                            name="activeSet"
-                            checked={activeSetId === set.id}
-                            onChange={() => setActiveSetId(set.id)}
-                            className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                          />
-                        </div>
-                        <h3 className="font-semibold">{set.name}</h3>
-                      </div>
-                      <div className="flex items-center space-x-3 text-sm">
-                        <div className={`font-medium ${varianceColor}`}>
-                          {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
-                          <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
-                        </div>
-                        <span className="text-muted-foreground">
-                          {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div id={`set-${set.id}`} className="p-2 min-h-[100px] space-y-1">
-                      {set.songs?.map((song, idx) => (
-                          <div key={song.id}>
-                            <div
-                              data-song-id={song.song_id}
-                              className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
-                            >
-                              {/* Position number */}
-                              <div className="w-6 text-center text-sm font-bold text-foreground">
-                                {idx + 1}.
-                              </div>
-
-                              {song.imageUrl && (
-                                <img
-                                  src={song.imageUrl}
-                                  alt={song.title}
-                                  className="w-8 h-8 rounded object-cover"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2">
-                                  <div className="font-medium truncate text-sm">{song.title}</div>
-                                  {song.tuning && song.tuning !== 'standard' && (
-                                    <span className="px-1.5 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
-                                      {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
-                              </div>
-                              <div className="text-xs text-muted-foreground whitespace-nowrap">
-                                {song.duration ? formatDuration(song.duration) : '0:00'}
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleToggleSegue(set.id, song.id);
-                                }}
-                                className={`p-1 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
-                                title={song.segueInto ? 'Click to break segue' : 'Click to segue into next song'}
-                              >
-                                <i className="fas fa-arrow-down"></i>
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSong(set.id, song.id);
-                                }}
-                                className="text-red-500 hover:text-red-600 p-1"
-                              >
-                                <i className="fas fa-times"></i>
-                              </button>
-                            </div>
-                            {song.segueInto && idx < set.songs.length - 1 && (
-                              <div className="flex items-center justify-center py-0.5">
-                                <div className="flex items-center space-x-2 text-blue-500 text-xs">
-                                  <div className="w-12 h-0.5 bg-blue-500"></div>
-                                  <i className="fas fa-chevron-down text-xs"></i>
-                                  <div className="w-12 h-0.5 bg-blue-500"></div>
-                                  <span className="text-xs font-semibold">SEGUE</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Header */}
+          <div className="mb-6">
+            {editingName ? (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleUpdateName();
+                    if (e.key === 'Escape') setEditingName(false);
+                  }}
+                  className="text-2xl font-serif font-bold bg-background border border-border rounded px-2 py-1"
+                  autoFocus
+                />
+                <button
+                  onClick={handleUpdateName}
+                  className="text-green-500 hover:text-green-600"
+                >
+                  <i className="fas fa-check"></i>
+                </button>
+                <button
+                  onClick={() => setEditingName(false)}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setLocation("/setlists")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+                <h1 className="text-2xl font-serif font-bold">{workingSetlist?.name || setlist.name}</h1>
+                <button
+                  onClick={() => {
+                    setTempName(workingSetlist?.name || setlist.name);
+                    setEditingName(true);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="Edit setlist name"
+                >
+                  <i className="fas fa-edit"></i>
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Save setlist"
+                  disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
+                >
+                  <i className="fas fa-save mr-1"></i> Save
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Discard changes"
+                  disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
+                >
+                  <i className="fas fa-times mr-1"></i> Cancel
+                </button>
+                {updateSetlistMutation.isPending && (
+                  <span className="text-sm text-muted-foreground animate-pulse">
+                    <i className="fas fa-spinner fa-spin"></i> Saving...
+                  </span>
+                )}
+                {hasUnsavedChanges && !updateSetlistMutation.isPending && (
+                  <span className="text-sm text-yellow-600">
+                    <i className="fas fa-exclamation-circle mr-1"></i> Unsaved changes
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Playbook drawer - 50% width on mobile when open, always visible on desktop */}
-          <div className={`transition-all duration-300 ${
-            drawerOpen ? 'w-1/2 lg:w-80' : 'w-0 lg:w-80'
-          } ${drawerOpen ? 'block' : 'hidden lg:block'} bg-card border-l border-border overflow-hidden`}>
-            <div className="bg-orange-500 text-white p-2 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-sm">Playbook</h3>
-                <p className="text-xs opacity-90 lg:block hidden">Drag or tap to add</p>
-                <p className="text-xs opacity-90 lg:hidden">Tap to add to active set</p>
-              </div>
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="lg:hidden text-white hover:bg-orange-600 p-2 rounded"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
+          {/* Toggle drawer button (mobile) */}
+          <div className="mb-4 lg:hidden">
+            <button
+              onClick={() => setDrawerOpen(!drawerOpen)}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium flex items-center justify-center space-x-2"
+            >
+              <i className={`fas fa-${drawerOpen ? 'times' : 'music'}`}></i>
+              <span>{drawerOpen ? 'Close Playbook' : 'Add Songs from Playbook'}</span>
+            </button>
+          </div>
 
-            <div className="p-2 border-b space-y-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search songs..."
-                className="w-full px-2 py-1.5 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <label className="flex items-center space-x-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showAllSongs}
-                  onChange={(e) => setShowAllSongs(e.target.checked)}
-                  className="w-4 h-4 text-orange-500 focus:ring-orange-500 rounded"
-                />
-                <span className="text-foreground">Show songs already in setlist</span>
-              </label>
-            </div>
+          <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
+            {/* Sets area - 50% width on mobile when drawer is open */}
+            <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0`}>
+              <div className="space-y-6">
+                {(workingSetlist || setlist).sets.map((set) => {
+                  const totalDuration = getSetTotalDuration(set);
+                  const variance = getDurationVariance(totalDuration, set.targetDuration);
+                  const varianceColor = getVarianceColor(variance);
 
-            <div className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
-              {sortedLetters.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-8">
-                  {searchQuery ? 'No songs found' : 'No songs available'}
-                </div>
-              )}
-              {sortedLetters.map((letter) => (
-                <div key={letter} className="mb-3">
-                  {/* Letter header - sticky, NOT part of sortable */}
-                  <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10 pointer-events-none">
-                    {letter}
-                  </div>
-                  {/* Songs in this letter group - each group has its own sortable container */}
-                  <div data-letter-group={letter} className="space-y-1">
-                    {groupedSongs[letter].map((song) => {
-                      const isInSetlist = songsInSetlist.has(song.id);
-                      return (
-                        <div
-                          key={song.id}
-                          data-song-id={song.id}
-                          onClick={(e) => handleQuickAdd(song.id, e)}
-                          className={`playbook-song-card flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
-                            isInSetlist
-                              ? 'border-green-500/30 opacity-60'
-                              : 'border-border hover:border-orange-500/50 cursor-pointer lg:cursor-grab active:cursor-grabbing'
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
-                              <div className="font-medium truncate text-sm">{song.title}</div>
-                              {isInSetlist && (
-                                <i className="fas fa-check text-green-500 text-xs" title="Already in setlist"></i>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
+                  return (
+                    <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
+                      <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          {/* Active set radio button (mobile only) */}
+                          <div className="lg:hidden">
+                            <input
+                              type="radio"
+                              name="activeSet"
+                              checked={activeSetId === set.id}
+                              onChange={() => setActiveSetId(set.id)}
+                              className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                            />
                           </div>
-                          <div className="text-xs text-muted-foreground whitespace-nowrap">
-                            {song.duration ? formatDuration(song.duration) : '--'}
-                          </div>
+                          <h3 className="font-semibold">{set.name}</h3>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="flex items-center space-x-3 text-sm">
+                          <div className={`font-medium ${varianceColor}`}>
+                            {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
+                            <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
+                          </div>
+                          <span className="text-muted-foreground">
+                            {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      <SortableContext
+                        items={set.songs.map(s => s.id)}
+                        strategy={verticalListSortingStrategy}
+                        id={`set-container-${set.id}`}
+                      >
+                        <div className="p-2 min-h-[100px] space-y-1">
+                          {set.songs?.map((song, idx) => (
+                            <SortableSongCard
+                              key={song.id}
+                              song={song}
+                              setId={set.id}
+                              idx={idx}
+                              onToggleSegue={handleToggleSegue}
+                              onRemove={handleRemoveSong}
+                              showSegue={song.segueInto && idx < set.songs.length - 1}
+                            />
+                          ))}
+                          {set.songs.length === 0 && (
+                            <div className="text-center text-muted-foreground text-sm py-8">
+                              Drag songs here
+                            </div>
+                          )}
+                        </div>
+                      </SortableContext>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Playbook drawer - 50% width on mobile when open, always visible on desktop */}
+            <div className={`transition-all duration-300 ${
+              drawerOpen ? 'w-1/2 lg:w-80' : 'w-0 lg:w-80'
+            } ${drawerOpen ? 'block' : 'hidden lg:block'} bg-card border-l border-border overflow-hidden`}>
+              <div className="bg-orange-500 text-white p-2 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-sm">Playbook</h3>
+                  <p className="text-xs opacity-90 lg:block hidden">Drag or tap to add</p>
+                  <p className="text-xs opacity-90 lg:hidden">Tap to add to active set</p>
                 </div>
-              ))}
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="lg:hidden text-white hover:bg-orange-600 p-2 rounded"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+
+              <div className="p-2 border-b space-y-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search songs..."
+                  className="w-full px-2 py-1.5 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <label className="flex items-center space-x-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showAllSongs}
+                    onChange={(e) => setShowAllSongs(e.target.checked)}
+                    className="w-4 h-4 text-orange-500 focus:ring-orange-500 rounded"
+                  />
+                  <span className="text-foreground">Show songs already in setlist</span>
+                </label>
+              </div>
+
+              <div className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
+                {sortedLetters.length === 0 && (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    {searchQuery ? 'No songs found' : 'No songs available'}
+                  </div>
+                )}
+                {sortedLetters.map((letter) => (
+                  <div key={letter} className="mb-3">
+                    {/* Letter header - sticky */}
+                    <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10 pointer-events-none">
+                      {letter}
+                    </div>
+                    {/* Songs in this letter group */}
+                    <SortableContext
+                      items={groupedSongs[letter].map(s => `playbook-${s.id}`)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-1">
+                        {groupedSongs[letter].map((song) => {
+                          const isInSetlist = songsInSetlist.has(song.id);
+                          return (
+                            <DraggablePlaybookSong
+                              key={song.id}
+                              song={song}
+                              isInSetlist={isInSetlist}
+                              onQuickAdd={handleQuickAdd}
+                            />
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
