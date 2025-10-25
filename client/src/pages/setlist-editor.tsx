@@ -208,13 +208,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             console.log('[SORTABLE] Drag started from:', evt.from.id, 'to:', evt.to?.id);
           },
           onEnd: (evt) => {
-            console.log('[SORTABLE] Drag ended. From:', evt.from.id, 'To:', evt.to.id);
+            console.log('[SORTABLE] Drag ended. From:', evt.from.id || 'no id', 'To:', evt.to.id);
             // Only call handleSongMove if the source is THIS set (for reordering)
             // OR if it's from the playbook
             // Don't call if it's from another set (onAdd will handle that)
-            const fromId = evt.from.id;
-            const isFromThisSet = fromId === `set-${set.id}`;
-            const isFromPlaybook = fromId === 'playbook-drawer';
+            const isFromThisSet = evt.from.id === `set-${set.id}`;
+            const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
 
             if (isFromThisSet || isFromPlaybook) {
               handleSongMove(evt, set.id);
@@ -224,11 +223,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           },
           onAdd: (evt) => {
             // This fires when something is added to this set from ANOTHER set
-            console.log('[SORTABLE] onAdd fired! From:', evt.from.id, 'To:', evt.to.id);
+            console.log('[SORTABLE] onAdd fired! From:', evt.from.id || 'no id', 'To:', evt.to.id);
 
             // Only handle if it's from another set (not playbook)
-            const fromId = evt.from.id;
-            const isFromPlaybook = fromId === 'playbook-drawer';
+            const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
 
             if (!isFromPlaybook) {
               handleSongMove(evt, set.id);
@@ -240,22 +238,25 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       }
     });
 
-    // Initialize sortable for drawer (playbook)
-    const drawerElement = document.getElementById('playbook-drawer');
-    if (drawerElement) {
-      console.log('[SORTABLE] Initializing Sortable for playbook drawer');
-      sortableRefs.current['drawer'] = Sortable.create(drawerElement, {
+    // Initialize sortable for drawer (playbook) - each letter group
+    const letterGroups = document.querySelectorAll('[data-letter-group]');
+    console.log('[SORTABLE] Found', letterGroups.length, 'letter groups in playbook');
+
+    letterGroups.forEach((groupElement, index) => {
+      const letter = groupElement.getAttribute('data-letter-group');
+      console.log(`[SORTABLE] Initializing Sortable for playbook group: ${letter}`);
+      sortableRefs.current[`drawer-${letter}`] = Sortable.create(groupElement as HTMLElement, {
         group: {
           name: 'setlist-songs',
           pull: 'clone',
           put: false,
         },
-        // NO HANDLE - allow dragging entire card
         animation: 150,
         sort: false,
-        forceFallback: true,       // Better touch support
+        forceFallback: true,
+        draggable: '.playbook-song-card',  // Only song cards are draggable
       });
-    }
+    });
 
     return () => {
       Object.values(sortableRefs.current).forEach(sortable => {
@@ -278,16 +279,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return;
     }
 
-    const fromSetId = evt.from.id.replace('set-', '');
+    // Check if dragging from playbook (has data-letter-group attribute)
+    const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
+
+    const fromSetId = isFromPlaybook ? 'playbook' : evt.from.id.replace('set-', '');
     const toSetId = evt.to.id.replace('set-', '');
     const oldIndex = evt.oldIndex ?? 0;
     const newIndex = evt.newIndex ?? 0;
 
-    console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex });
+    console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
 
     // Clone setlist for updates
     const updatedSets = [...setlist.sets];
-    const fromSet = updatedSets.find(s => s.id === fromSetId);
+    const fromSet = isFromPlaybook ? null : updatedSets.find(s => s.id === fromSetId);
     const toSet = updatedSets.find(s => s.id === toSetId);
 
     if (!toSet) {
@@ -298,7 +302,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     console.log('📦 Before update - toSet songs:', toSet.songs.length);
 
     // If adding from drawer, create new song entry
-    if (fromSetId === 'playbook-drawer') {
+    if (isFromPlaybook) {
       const songElement = evt.item;
       const songId = songElement.getAttribute('data-song-id');
       const playbookSong = playbookSongs.find(s => s.id === songId);
@@ -754,7 +758,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               </label>
             </div>
 
-            <div id="playbook-drawer" className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
+            <div className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
               {sortedLetters.length === 0 && (
                 <div className="text-center text-muted-foreground text-sm py-8">
                   {searchQuery ? 'No songs found' : 'No songs available'}
@@ -762,12 +766,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               )}
               {sortedLetters.map((letter) => (
                 <div key={letter} className="mb-3">
-                  {/* Letter header - sticky */}
-                  <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10">
+                  {/* Letter header - sticky, NOT part of sortable */}
+                  <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10 pointer-events-none">
                     {letter}
                   </div>
-                  {/* Songs in this letter group */}
-                  <div className="space-y-1">
+                  {/* Songs in this letter group - each group has its own sortable container */}
+                  <div data-letter-group={letter} className="space-y-1">
                     {groupedSongs[letter].map((song) => {
                       const isInSetlist = songsInSetlist.has(song.id);
                       return (
@@ -775,7 +779,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           key={song.id}
                           data-song-id={song.id}
                           onClick={(e) => handleQuickAdd(song.id, e)}
-                          className={`flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
+                          className={`playbook-song-card flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
                             isInSetlist
                               ? 'border-green-500/30 opacity-60'
                               : 'border-border hover:border-orange-500/50 cursor-pointer lg:cursor-grab active:cursor-grabbing'
