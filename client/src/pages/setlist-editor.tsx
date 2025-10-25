@@ -49,13 +49,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [activeSetId, setActiveSetId] = useState<string>('');
   const sortableRefs = useRef<{ [key: string]: Sortable }>({});
 
-  // Set active set ID when setlist loads
-  useEffect(() => {
-    if (setlist && !activeSetId && setlist.sets.length > 0) {
-      setActiveSetId(setlist.sets[0].id);
-    }
-  }, [setlist, activeSetId]);
-
   // Fetch setlist
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
@@ -95,24 +88,34 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const data = await response.json();
 
-      return data.map((item: any) => ({
-        id: item.id,
-        spotifyId: item.globalSong?.spotifyUrl || '',
-        title: item.globalSong?.title || 'Unknown',
-        artist: item.globalSong?.artistName || 'Unknown',
-        album: item.globalSong?.album || '',
-        spotifyUrl: item.globalSong?.spotifyUrl || '',
-        imageUrl: item.globalSong?.albumImageUrl || null,
-        duration: item.globalSong?.duration || 0,
-        bpm: item.globalSong?.metadata?.bpm || null,
-        key: item.globalSong?.metadata?.key || null,
-        tuning: item.tuning || 'standard',
-      })).sort((a: PlaybookSong, b: PlaybookSong) => (a.title || '').localeCompare(b.title || ''));
+      return data.map((item: any) => {
+        const duration = item.globalSong?.duration || 0;
+        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Has globalSong: ${!!item.globalSong}`);
+
+        return {
+          id: item.id,
+          spotifyId: item.globalSong?.spotifyUrl || '',
+          title: item.globalSong?.title || 'Unknown',
+          artist: item.globalSong?.artistName || 'Unknown',
+          album: item.globalSong?.album || '',
+          spotifyUrl: item.globalSong?.spotifyUrl || '',
+          imageUrl: item.globalSong?.albumImageUrl || null,
+          duration: duration,
+          tuning: item.tuning || 'standard',
+        };
+      }).sort((a: PlaybookSong, b: PlaybookSong) => (a.title || '').localeCompare(b.title || ''));
     },
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
+
+  // Set active set ID when setlist loads
+  useEffect(() => {
+    if (setlist && !activeSetId && setlist.sets.length > 0) {
+      setActiveSetId(setlist.sets[0].id);
+    }
+  }, [setlist, activeSetId]);
 
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({

@@ -69,10 +69,6 @@ export interface PlaybookSong {
   imageUrl?: string;
   /** Duration in seconds - REQUIRED for setlist calculations */
   duration: number;
-  /** Tempo in BPM */
-  bpm?: number;
-  /** Musical key */
-  key?: string;
   /** Guitar tuning */
   tuning?: string;
 }

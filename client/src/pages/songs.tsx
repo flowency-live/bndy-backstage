@@ -99,10 +99,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       // Transform the API response to match our interface
       return data.map((item: any) => {
-        // Log if globalSong is missing
-        if (!item.globalSong) {
-          console.warn('Missing globalSong for item:', item.id);
-        }
+        const duration = item.globalSong?.duration || null;
+
+        // Log duration data for debugging
+        console.log(`[SONGS PAGE] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Has globalSong: ${!!item.globalSong} - Raw duration:`, item.globalSong?.duration);
 
         return {
           id: item.id,
@@ -115,8 +115,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
           previewUrl: item.previewUrl || null,
           addedByMembershipId: item.added_by_membership_id,
           createdAt: item.created_at,
-          duration: item.globalSong?.duration || null,
-          bpm: item.globalSong?.metadata?.bpm || null,
+          duration: duration,
           key: item.globalSong?.metadata?.key || null,
           tuning: item.tuning || 'standard',
           notes: item.notes || '',
