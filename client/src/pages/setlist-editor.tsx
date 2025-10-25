@@ -340,18 +340,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       console.log('[DRAG] Calling mutation with NEW set objects');
 
-      // Store reference to clone element
-      const cloneElement = evt.item;
+      // Remove clone immediately before mutation - React will render the proper component
+      if (evt.item && evt.item.parentNode) {
+        console.log('[DRAG] Removing clone before mutation');
+        evt.item.parentNode.removeChild(evt.item);
+      }
 
-      updateSetlistMutation.mutate({ sets: immutableUpdatedSets }, {
-        onSuccess: () => {
-          // Remove clone AFTER React has rendered the proper component
-          if (cloneElement && cloneElement.parentNode) {
-            console.log('[DRAG] Removing Sortable clone AFTER mutation success');
-            cloneElement.parentNode.removeChild(cloneElement);
-          }
-        }
-      });
+      updateSetlistMutation.mutate({ sets: immutableUpdatedSets });
       return;
     }
 
