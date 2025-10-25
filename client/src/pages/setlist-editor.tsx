@@ -316,12 +316,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         return;
       }
 
-      // Remove clone immediately
-      if (evt.item && evt.item.parentNode) {
-        console.log('[DRAG] Removing Sortable clone from DOM');
-        evt.item.parentNode.removeChild(evt.item);
-      }
-
       const newSong: SetlistSong = {
         id: `${Date.now()}-${Math.random()}`,
         song_id: playbookSong.id,
@@ -351,7 +345,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
 
       console.log('[DRAG] Calling mutation with NEW set objects');
-      updateSetlistMutation.mutate({ sets: immutableUpdatedSets });
+
+      // Store reference to clone element
+      const cloneElement = evt.item;
+
+      updateSetlistMutation.mutate({ sets: immutableUpdatedSets }, {
+        onSuccess: () => {
+          // Remove clone AFTER React has rendered the proper component
+          if (cloneElement && cloneElement.parentNode) {
+            console.log('[DRAG] Removing Sortable clone AFTER mutation success');
+            cloneElement.parentNode.removeChild(cloneElement);
+          }
+        }
+      });
       return;
     }
 
