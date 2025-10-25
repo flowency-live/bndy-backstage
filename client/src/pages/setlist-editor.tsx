@@ -473,12 +473,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       </div>
                     </div>
 
-                    {set.songs.length === 0 && (
-                      <div className="text-center py-12 text-muted-foreground pointer-events-none">
-                        <i className="fas fa-music text-4xl mb-2 opacity-30"></i>
-                        <p>Drag songs here from the playbook</p>
-                      </div>
-                    )}
                     <div id={`set-${set.id}`} className="p-2 min-h-[100px] space-y-1">
                       {set.songs.map((song, idx) => (
                           <div key={song.id}>
