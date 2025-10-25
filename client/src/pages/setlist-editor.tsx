@@ -289,20 +289,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
     console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
 
-    // Clone setlist for updates
-    const updatedSets = [...setlist.sets];
-    const fromSet = isFromPlaybook ? null : updatedSets.find(s => s.id === fromSetId);
-    const toSet = updatedSets.find(s => s.id === toSetId);
-
-    if (!toSet) {
-      console.error('❌ toSet not found');
-      return;
-    }
-
-    console.log('📦 Before update - toSet songs:', toSet.songs.length);
-
-    // If adding from drawer, create new song entry
+    // If adding from playbook, remove clone immediately
     if (isFromPlaybook) {
+      try {
+        if (evt.item && evt.item.parentNode) {
+          console.log('[DRAG] Removing Sortable clone from DOM IMMEDIATELY');
+          evt.item.parentNode.removeChild(evt.item);
+        }
+      } catch (e) {
+        console.warn('[DRAG] Could not remove clone:', e);
+      }
+
       const songElement = evt.item;
       const songId = songElement.getAttribute('data-song-id');
       const playbookSong = playbookSongs.find(s => s.id === songId);
@@ -311,58 +308,74 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Song ID:', songId);
       console.log('[DRAG] Found playbook song:', playbookSong);
 
-      if (playbookSong) {
-        // Remove the cloned element IMMEDIATELY (synchronously)
-        // evt.item is the clone that Sortable created - we MUST remove it before React renders
-        // Otherwise we see the plain clone instead of the enriched React card
-        try {
-          if (evt.item && evt.item.parentNode) {
-            console.log('[DRAG] Removing Sortable clone from DOM IMMEDIATELY');
-            evt.item.parentNode.removeChild(evt.item);
-          }
-        } catch (e) {
-          console.warn('[DRAG] Could not remove clone:', e);
-        }
-
-        const newSong: SetlistSong = {
-          id: `${Date.now()}-${Math.random()}`,
-          song_id: playbookSong.id,
-          title: playbookSong.title,
-          artist: playbookSong.artist,
-          duration: playbookSong.duration || 0,
-          position: newIndex,
-          tuning: playbookSong.tuning || 'standard',
-          segueInto: false,
-          imageUrl: playbookSong.imageUrl,
-        };
-        console.log('[DRAG] Created new song object:', newSong);
-        console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
-        toSet.songs.splice(newIndex, 0, newSong);
-        console.log('[DRAG] Added to set. New songs array:', toSet.songs);
-      } else {
+      if (!playbookSong) {
         console.error('[DRAG] ERROR: Playbook song not found!');
+        return;
       }
-    } else if (fromSet && toSet) {
-      // Moving within or between sets
-      const [movedSong] = fromSet.songs.splice(oldIndex, 1);
-      toSet.songs.splice(newIndex, 0, movedSong);
-      console.log('[DRAG] Song moved between sets');
-    }
 
-    // Update positions and filter out any undefined songs
-    updatedSets.forEach(set => {
-      set.songs = set.songs.filter(song => song !== undefined && song !== null);
-      set.songs.forEach((song, idx) => {
-        if (song) {
-          song.position = idx;
+      const newSong: SetlistSong = {
+        id: `${Date.now()}-${Math.random()}`,
+        song_id: playbookSong.id,
+        title: playbookSong.title,
+        artist: playbookSong.artist,
+        duration: playbookSong.duration || 0,
+        position: newIndex,
+        tuning: playbookSong.tuning || 'standard',
+        segueInto: false,
+        imageUrl: playbookSong.imageUrl,
+      };
+
+      console.log('[DRAG] Created new song object:', newSong);
+      console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
+
+      // Create NEW set objects to trigger React re-render (same as handleQuickAdd)
+      const updatedSets = setlist.sets.map(set => {
+        if (set.id === toSetId) {
+          const updatedSongs = [...set.songs];
+          updatedSongs.splice(newIndex, 0, newSong);
+          return {
+            ...set,
+            songs: updatedSongs.map((song, idx) => ({ ...song, position: idx })),
+          };
         }
+        return set;
       });
-    });
 
-    console.log('📦 After update - toSet songs:', toSet.songs.length);
-    console.log('🔄 Calling mutation with updated sets');
+      console.log('[DRAG] Calling mutation with updated sets');
+      updateSetlistMutation.mutate({ sets: updatedSets });
 
-    updateSetlistMutation.mutate({ sets: updatedSets });
+    } else {
+      // Moving within or between sets - also needs NEW objects
+      const updatedSets = setlist.sets.map(set => {
+        // Remove from source set
+        if (set.id === fromSetId) {
+          const updatedSongs = set.songs.filter((_, idx) => idx !== oldIndex);
+          return {
+            ...set,
+            songs: updatedSongs.map((song, idx) => ({ ...song, position: idx })),
+          };
+        }
+        // Add to destination set
+        if (set.id === toSetId) {
+          const fromSet = setlist.sets.find(s => s.id === fromSetId);
+          if (!fromSet) return set;
+
+          const movedSong = fromSet.songs[oldIndex];
+          if (!movedSong) return set;
+
+          const updatedSongs = [...set.songs];
+          updatedSongs.splice(newIndex, 0, movedSong);
+          return {
+            ...set,
+            songs: updatedSongs.map((song, idx) => ({ ...song, position: idx })),
+          };
+        }
+        return set;
+      });
+
+      console.log('[DRAG] Song moved between sets');
+      updateSetlistMutation.mutate({ sets: updatedSets });
+    }
   };
 
   const handleRemoveSong = (setId: string, songId: string) => {
