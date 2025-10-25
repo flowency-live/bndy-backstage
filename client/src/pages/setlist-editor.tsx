@@ -92,9 +92,32 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const data = await response.json();
 
-      return data.map((item: any) => {
+      // VALIDATE: Ensure we have an array
+      if (!Array.isArray(data)) {
+        console.error('[PLAYBOOK] Invalid response - not an array:', data);
+        return [];
+      }
+
+      console.log(`[PLAYBOOK] Fetched ${data.length} songs from API`);
+
+      // FILTER out any null/undefined items BEFORE mapping
+      const validItems = data.filter(item => {
+        if (!item) {
+          console.warn('[PLAYBOOK] Skipping null/undefined item');
+          return false;
+        }
+        if (!item.globalSong) {
+          console.warn('[PLAYBOOK] Skipping item without globalSong:', item.id);
+          return false;
+        }
+        return true;
+      });
+
+      console.log(`[PLAYBOOK] ${validItems.length} valid songs after filtering`);
+
+      return validItems.map((item: any) => {
         const duration = item.globalSong?.duration || 0;
-        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Has globalSong: ${!!item.globalSong}`);
+        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s`);
 
         return {
           id: item.id,
@@ -107,11 +130,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           duration: duration,
           tuning: item.tuning || 'standard',
         };
-      }).sort((a: PlaybookSong, b: PlaybookSong) => (a.title || '').localeCompare(b.title || ''));
+      }).sort((a, b) => {
+        // DEFENSIVE SORT: Safely handle undefined values
+        const titleA = a?.title || '';
+        const titleB = b?.title || '';
+        return titleA.localeCompare(titleB);
+      });
     },
     enabled: !!artistId,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 0, // Always refetch - don't use stale cache
+    gcTime: 60 * 1000, // Keep in cache for 1 minute only
+    refetchOnMount: 'always', // Force refetch when component mounts
   });
 
   // Initialize working copy when setlist loads
@@ -363,18 +392,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
 
       console.log('[DRAG] Updating local working copy (NOT saving to database)');
-
-      // Remove clone safely - wrap in try-catch to prevent crashes
-      if (evt.item && evt.item.parentNode) {
-        try {
-          console.log('[DRAG] Removing clone');
-          evt.item.parentNode.removeChild(evt.item);
-        } catch (e) {
-          console.warn('[DRAG] Clone already removed by React:', e);
-        }
-      }
+      console.log('[DRAG] Duration check:', {
+        songTitle: newSong.title,
+        newSongDuration: newSong.duration,
+        playbookDuration: playbookSong.duration,
+        playbookSongData: playbookSong
+      });
 
       // Update local state only - DO NOT save to database
+      // Note: We do NOT manually remove the clone - let React handle all DOM operations
       setWorkingSetlist({ ...workingSetlist, sets: immutableUpdatedSets });
       setHasUnsavedChanges(true);
       return;

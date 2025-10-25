@@ -18,6 +18,7 @@ import Calendar from "@/pages/calendar";
 import Songs from "@/pages/songs";
 import Setlists from "@/pages/setlists";
 import SetlistEditor from "@/pages/setlist-editor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
 import Members from "@/pages/members";
@@ -138,7 +139,9 @@ function Router() {
               return (
                 <ProfileGate userProfile={userProfile}>
                   <AppLayout artistId={contextId} membership={membership}>
-                    <SetlistEditor artistId={contextId} setlistId={params.setlistId} membership={membership} />
+                    <ErrorBoundary>
+                      <SetlistEditor artistId={contextId} setlistId={params.setlistId} membership={membership} />
+                    </ErrorBoundary>
                   </AppLayout>
                 </ProfileGate>
               );
