@@ -304,9 +304,22 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       console.log('[DRAG] Adding from playbook:', playbookSong.title);
 
-      // Remove the Sortable clone immediately
-      if (evt.item && evt.item.parentNode) {
-        evt.item.parentNode.removeChild(evt.item);
+      // Hide the clone immediately with CSS, then remove it after React renders
+      if (evt.item) {
+        evt.item.style.display = 'none';
+        console.log('[DRAG] Clone hidden with display:none');
+
+        // Schedule removal after React renders (next tick)
+        setTimeout(() => {
+          if (evt.item && evt.item.parentNode) {
+            try {
+              evt.item.parentNode.removeChild(evt.item);
+              console.log('[DRAG] Clone removed from DOM');
+            } catch (e) {
+              console.warn('[DRAG] Could not remove clone:', e);
+            }
+          }
+        }, 100);
       }
 
       // Create new song object
@@ -504,6 +517,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Filter playbook songs based on search and "show all" toggle
   const filteredPlaybookSongs = playbookSongs.filter(song => {
+    // Safety check
+    if (!song || !song.title || !song.artist) return false;
+
     // Filter by search query
     const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       song.artist.toLowerCase().includes(searchQuery.toLowerCase());
@@ -516,6 +532,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Group songs alphabetically
   const groupedSongs = filteredPlaybookSongs.reduce((acc, song) => {
+    if (!song || !song.title) return acc;
+
     const firstLetter = song.title.charAt(0).toUpperCase();
     const letter = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
 
