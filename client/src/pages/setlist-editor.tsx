@@ -146,18 +146,22 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         variant: "destructive"
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context: any) => {
       console.log('[SAVE] Mutation succeeded, updating cache with:', data);
       // Update cache with server response
       queryClient.setQueryData(
         ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
         data
       );
-      toast({
-        title: "Saved",
-        description: "Changes saved successfully",
-        duration: 2000,
-      });
+
+      // Only show toast if this was a MANUAL save (not auto-save)
+      if (context?.showToast) {
+        toast({
+          title: "Saved",
+          description: "Changes saved successfully",
+          duration: 2000,
+        });
+      }
     },
   });
 
@@ -483,11 +487,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                   if (setlist) {
                     updateSetlistMutation.mutate(
                       { sets: setlist.sets },
-                      {
-                        onSuccess: () => {
-                          toast({ title: "Setlist saved", description: "All changes have been saved successfully" });
-                        },
-                      }
+                      { showToast: true } // Flag for manual save - shows toast
                     );
                   }
                 }}
