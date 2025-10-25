@@ -250,11 +250,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           name: 'setlist-songs',
           pull: 'clone',
           put: false,
+          revertClone: true,  // Keep clone in source, don't move it
         },
         animation: 150,
         sort: false,
         forceFallback: true,
-        draggable: '.playbook-song-card',  // Only song cards are draggable
+        draggable: '.playbook-song-card',
+        onEnd: (evt) => {
+          // Remove the clone from destination immediately after drop
+          if (evt.item && evt.item.parentNode) {
+            console.log('[SORTABLE] Playbook onEnd - removing clone from:', evt.item.parentNode.id);
+            try {
+              evt.item.parentNode.removeChild(evt.item);
+              console.log('[SORTABLE] Successfully removed clone in playbook onEnd');
+            } catch (e) {
+              console.warn('[SORTABLE] Failed to remove clone in playbook onEnd:', e);
+            }
+          }
+        },
       });
     });
 
@@ -289,17 +302,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
     console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
 
-    // If adding from playbook, remove clone immediately
+    // If adding from playbook
     if (isFromPlaybook) {
-      try {
-        if (evt.item && evt.item.parentNode) {
-          console.log('[DRAG] Removing Sortable clone from DOM IMMEDIATELY');
-          evt.item.parentNode.removeChild(evt.item);
-        }
-      } catch (e) {
-        console.warn('[DRAG] Could not remove clone:', e);
-      }
-
       const songElement = evt.item;
       const songId = songElement.getAttribute('data-song-id');
       const playbookSong = playbookSongs.find(s => s.id === songId);
