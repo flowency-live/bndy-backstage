@@ -98,26 +98,33 @@ export default function Songs({ artistId, membership }: SongsProps) {
       const data = await response.json();
 
       // Transform the API response to match our interface
-      return data.map((item: any) => ({
-        id: item.id,
-        spotifyId: item.globalSong?.spotifyUrl || '',
-        title: item.globalSong?.title || '',
-        artist: item.globalSong?.artistName || '',
-        album: item.globalSong?.album || '',
-        spotifyUrl: item.globalSong?.spotifyUrl || '',
-        imageUrl: item.globalSong?.albumImageUrl || null,
-        previewUrl: item.previewUrl || null,
-        addedByMembershipId: item.added_by_membership_id,
-        createdAt: item.created_at,
-        duration: item.globalSong?.duration || null,
-        bpm: item.globalSong?.metadata?.bpm || null,
-        key: item.globalSong?.metadata?.key || null,
-        tuning: item.tuning || 'standard',
-        notes: item.notes || '',
-        additionalUrl: item.additional_url || '',
-        readiness: item.readiness || [],
-        vetos: item.vetos || [],
-      }));
+      return data.map((item: any) => {
+        // Log if globalSong is missing
+        if (!item.globalSong) {
+          console.warn('Missing globalSong for item:', item.id);
+        }
+
+        return {
+          id: item.id,
+          spotifyId: item.globalSong?.spotifyUrl || '',
+          title: item.globalSong?.title || 'Unknown Song',
+          artist: item.globalSong?.artistName || 'Unknown Artist',
+          album: item.globalSong?.album || '',
+          spotifyUrl: item.globalSong?.spotifyUrl || '',
+          imageUrl: item.globalSong?.albumImageUrl || null,
+          previewUrl: item.previewUrl || null,
+          addedByMembershipId: item.added_by_membership_id,
+          createdAt: item.created_at,
+          duration: item.globalSong?.duration || null,
+          bpm: item.globalSong?.metadata?.bpm || null,
+          key: item.globalSong?.metadata?.key || null,
+          tuning: item.tuning || 'standard',
+          notes: item.notes || '',
+          additionalUrl: item.additional_url || '',
+          readiness: item.readiness || [],
+          vetos: item.vetos || [],
+        };
+      });
     },
     enabled: !!artistId,
   });

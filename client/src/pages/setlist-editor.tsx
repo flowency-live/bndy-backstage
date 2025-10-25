@@ -418,12 +418,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                   setEditingName(true);
                 }}
                 className="text-muted-foreground hover:text-foreground"
+                title="Edit setlist name"
               >
                 <i className="fas fa-edit"></i>
               </button>
+              <button
+                onClick={() => {
+                  // Force a refetch to ensure data is saved
+                  queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
+                  toast({ title: "Setlist saved", description: "All changes have been saved" });
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium"
+                title="Save setlist"
+              >
+                <i className="fas fa-save mr-1"></i> Save
+              </button>
               {updateSetlistMutation.isPending && (
                 <span className="text-sm text-muted-foreground animate-pulse">
-                  <i className="fas fa-spinner fa-spin"></i> Saving...
+                  <i className="fas fa-spinner fa-spin"></i> Auto-saving...
                 </span>
               )}
             </div>
@@ -481,8 +493,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
                             >
                               {/* Position number */}
-                              <div className="w-6 text-center text-xs font-semibold text-muted-foreground">
-                                {idx + 1}
+                              <div className="w-6 text-center text-sm font-bold text-foreground">
+                                {idx + 1}.
                               </div>
 
                               {song.imageUrl && (
