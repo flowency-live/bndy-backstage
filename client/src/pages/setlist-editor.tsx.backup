@@ -18,7 +18,6 @@ import {
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
-  useDraggable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -157,11 +156,13 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
     listeners,
     setNodeRef,
     transform,
+    transition,
     isDragging,
-  } = useDraggable({ id: `playbook-${song.id}` });
+  } = useSortable({ id: `playbook-${song.id}` });
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: CSS.Transform.toString(transform),
+    transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -1014,19 +1015,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       {letter}
                     </div>
                     {/* Songs in this letter group */}
-                    <div className="space-y-1">
-                      {groupedSongs[letter].map((song) => {
-                        const isInSetlist = songsInSetlist.has(song.id);
-                        return (
-                          <DraggablePlaybookSong
-                            key={song.id}
-                            song={song}
-                            isInSetlist={isInSetlist}
-                            onQuickAdd={handleQuickAdd}
-                          />
-                        );
-                      })}
-                    </div>
+                    <SortableContext
+                      items={groupedSongs[letter].map(s => `playbook-${s.id}`)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-1">
+                        {groupedSongs[letter].map((song) => {
+                          const isInSetlist = songsInSetlist.has(song.id);
+                          return (
+                            <DraggablePlaybookSong
+                              key={song.id}
+                              song={song}
+                              isInSetlist={isInSetlist}
+                              onQuickAdd={handleQuickAdd}
+                            />
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
                   </div>
                 ))}
               </div>
