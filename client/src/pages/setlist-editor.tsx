@@ -138,28 +138,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[SAVE] Response data:', data);
       return data;
     },
-    onMutate: async (updates) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
-
-      // Snapshot previous value
-      const previousSetlist = queryClient.getQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId]);
-
-      // Optimistically update - force a new object reference to trigger re-render
-      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          ...updates,
-          updated_at: new Date().toISOString(), // Force React to see this as a new object
-        };
-      });
-
-      return { previousSetlist };
-    },
-    onError: (error: Error, _updates, context) => {
-      // Rollback on error
-      queryClient.setQueryData(["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId], context?.previousSetlist);
+    onError: (error: Error) => {
+      console.error('[SAVE] Mutation failed:', error);
       toast({
         title: "Failed to update setlist",
         description: error.message,
@@ -167,11 +147,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
     },
     onSuccess: (data) => {
-      // Update cache with server response instead of invalidating
+      console.log('[SAVE] Mutation succeeded, updating cache with:', data);
+      // Update cache with server response
       queryClient.setQueryData(
         ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
         data
       );
+      toast({
+        title: "Saved",
+        description: "Changes saved successfully",
+        duration: 2000,
+      });
     },
   });
 
