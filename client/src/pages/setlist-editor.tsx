@@ -289,10 +289,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const handleSongMove = (evt: Sortable.SortableEvent, setId: string) => {
     console.log('🎵 handleSongMove triggered:', { setId, from: evt.from.id, to: evt.to.id, oldIndex: evt.oldIndex, newIndex: evt.newIndex });
 
-    if (!workingSetlist) {
-      console.error('❌ No working setlist found');
+    if (!workingSetlist && !setlist) {
+      console.error('❌ No setlist found');
       return;
     }
+
+    const currentSetlist = workingSetlist || setlist;
+    if (!currentSetlist) return;
 
     // Check if dragging from playbook (has data-letter-group attribute)
     const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
@@ -305,7 +308,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
 
     // Clone setlist for updates
-    const updatedSets = [...workingSetlist.sets];
+    const updatedSets = [...currentSetlist.sets];
     const fromSet = isFromPlaybook ? null : updatedSets.find(s => s.id === fromSetId);
     const toSet = updatedSets.find(s => s.id === toSetId);
 
@@ -347,7 +350,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
 
       // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = workingSetlist.sets.map(set => {
+      const immutableUpdatedSets = currentSetlist.sets.map(set => {
         if (set.id === toSetId) {
           const newSongs = [...(set.songs || [])];
           newSongs.splice(newIndex, 0, newSong);
@@ -388,7 +391,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Song moved between/within sets');
 
       // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = workingSetlist.sets.map(set => {
+      const immutableUpdatedSets = currentSetlist.sets.map(set => {
         // Remove from source set
         if (set.id === fromSetId) {
           const newSongs = (set.songs || []).filter((_, idx) => idx !== oldIndex);
