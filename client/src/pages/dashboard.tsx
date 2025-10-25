@@ -80,8 +80,8 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
             }}
           />
 
-          {/* Background Icon - Centered and filling tile - 100% LARGER, MORE VISIBLE */}
-          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[24rem] sm:text-[28rem] lg:text-[32rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+          {/* Background Icon - Centered and filling tile - 200% LARGER (x4 original), MORE VISIBLE */}
+          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[48rem] sm:text-[56rem] lg:text-[64rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
 
@@ -818,7 +818,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         {/* Calendar & Gigs Section */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <div className="flex gap-2 sm:gap-3 lg:gap-4">
             <DashboardTile
               title="Calendar"
               icon={<Calendar />}
@@ -849,7 +849,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         {/* Song Lists Section */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Song Lists</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <div className="flex gap-2 sm:gap-3 lg:gap-4">
             <DashboardTile
               title="Playbook"
               icon={<Music />}
