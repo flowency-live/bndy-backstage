@@ -6,30 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import { PageHeader } from "@/components/layout";
 import type { ArtistMembership, Artist } from "@/types/api";
-
-interface Set {
-  id: string;
-  name: string;
-  targetDuration: number; // in seconds
-  songs: Array<{
-    id: string;
-    song_id: string;
-    title: string;
-    artist: string;
-    duration: number;
-    position: number;
-  }>;
-}
-
-interface Setlist {
-  id: string;
-  artist_id: string;
-  name: string;
-  sets: Set[];
-  created_by_membership_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Setlist, SetlistSet, SetlistSong } from "@/types/setlist";
 
 interface SetlistsProps {
   artistId: string;
@@ -224,18 +201,24 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   };
 
   // Calculate total duration for a set
-  const getSetTotalDuration = (set: Set): number => {
-    return set.songs.reduce((total, song) => total + (song.duration || 0), 0);
+  const getSetTotalDuration = (set: SetlistSet): number => {
+    const total = set.songs.reduce((total, song) => total + (song.duration || 0), 0);
+    console.log(`[LIST] Set "${set.name}" total: ${total}s from ${set.songs.length} songs`);
+    return total;
   };
 
   // Calculate total duration for entire setlist
   const getSetlistTotalDuration = (setlist: Setlist): number => {
-    return setlist.sets.reduce((total, set) => total + getSetTotalDuration(set), 0);
+    const total = setlist.sets.reduce((total, set) => total + getSetTotalDuration(set), 0);
+    console.log(`[LIST] Setlist "${setlist.name}" total: ${total}s`);
+    return total;
   };
 
   // Calculate total target duration for setlist
   const getSetlistTargetDuration = (setlist: Setlist): number => {
-    return setlist.sets.reduce((total, set) => total + set.targetDuration, 0);
+    const total = setlist.sets.reduce((total, set) => total + set.targetDuration, 0);
+    console.log(`[LIST] Target duration: ${total}s`);
+    return total;
   };
 
   return (

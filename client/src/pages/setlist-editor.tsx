@@ -5,50 +5,8 @@ import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
 import { PageHeader } from "@/components/layout";
 import type { ArtistMembership, Artist } from "@/types/api";
+import type { Setlist, SetlistSet, SetlistSong, PlaybookSong } from "@/types/setlist";
 import Sortable from "sortablejs";
-
-interface Song {
-  id: string;
-  song_id: string;
-  title: string;
-  artist: string;
-  duration: number;
-  position: number;
-  tuning?: string;
-  segueInto?: boolean; // True if this song segues into the next one
-  imageUrl?: string;
-}
-
-interface Set {
-  id: string;
-  name: string;
-  targetDuration: number;
-  songs: Song[];
-}
-
-interface Setlist {
-  id: string;
-  artist_id: string;
-  name: string;
-  sets: Set[];
-  created_by_membership_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface PlaybookSong {
-  id: string;
-  spotifyId: string;
-  title: string;
-  artist: string;
-  album: string;
-  spotifyUrl: string;
-  imageUrl?: string;
-  duration?: number;
-  bpm?: number;
-  key?: string;
-  tuning?: string;
-}
 
 interface SetlistEditorProps {
   artistId: string;
@@ -150,6 +108,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
     mutationFn: async (updates: Partial<Setlist>) => {
+      console.log('[SAVE] Starting mutation with updates:', updates);
+      console.log('[SAVE] Number of sets:', updates.sets?.length);
+      updates.sets?.forEach((set, idx) => {
+        console.log(`[SAVE] Set ${idx + 1}: "${set.name}" has ${set.songs.length} songs`);
+        set.songs.forEach(song => {
+          console.log(`[SAVE]   - ${song.title}: ${song.duration}s`);
+        });
+      });
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
         method: "PUT",
         credentials: "include",
@@ -159,12 +126,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         body: JSON.stringify(updates),
       });
 
+      console.log('[SAVE] Response status:', response.status);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('[SAVE] ERROR:', error);
         throw new Error(error.error || "Failed to update setlist");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('[SAVE] Response data:', data);
+      return data;
     },
     onMutate: async (updates) => {
       // Cancel outgoing refetches
@@ -225,7 +197,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (element) {
         sortableRefs.current[set.id] = Sortable.create(element, {
           group: 'setlist-songs',
+          handle: '.drag-handle',  // Only drag from handle
           animation: 150,
+          forceFallback: true,     // Better cross-browser support
+          fallbackTolerance: 3,    // px to move before drag starts
           onEnd: (evt) => handleSongMove(evt, set.id),
         });
       }
@@ -240,8 +215,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           pull: 'clone',
           put: false,
         },
+        handle: '.drag-handle',    // Only drag from handle
         animation: 150,
         sort: false,
+        forceFallback: true,       // Better touch support
       });
     }
 
@@ -259,19 +236,31 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   }, [setlist]);
 
   const handleSongMove = (evt: Sortable.SortableEvent, setId: string) => {
-    if (!setlist) return;
+    console.log('🎵 handleSongMove triggered:', { setId, from: evt.from.id, to: evt.to.id, oldIndex: evt.oldIndex, newIndex: evt.newIndex });
+
+    if (!setlist) {
+      console.error('❌ No setlist found');
+      return;
+    }
 
     const fromSetId = evt.from.id.replace('set-', '');
     const toSetId = evt.to.id.replace('set-', '');
     const oldIndex = evt.oldIndex ?? 0;
     const newIndex = evt.newIndex ?? 0;
 
+    console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex });
+
     // Clone setlist for updates
     const updatedSets = [...setlist.sets];
     const fromSet = updatedSets.find(s => s.id === fromSetId);
     const toSet = updatedSets.find(s => s.id === toSetId);
 
-    if (!toSet) return;
+    if (!toSet) {
+      console.error('❌ toSet not found');
+      return;
+    }
+
+    console.log('📦 Before update - toSet songs:', toSet.songs.length);
 
     // If adding from drawer, create new song entry
     if (fromSetId === 'playbook-drawer') {
@@ -279,8 +268,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       const songId = songElement.getAttribute('data-song-id');
       const playbookSong = playbookSongs.find(s => s.id === songId);
 
+      console.log('[DRAG] Adding from playbook');
+      console.log('[DRAG] Song ID:', songId);
+      console.log('[DRAG] Found playbook song:', playbookSong);
+
       if (playbookSong) {
-        const newSong: Song = {
+        const newSong: SetlistSong = {
           id: `${Date.now()}-${Math.random()}`,
           song_id: playbookSong.id,
           title: playbookSong.title,
@@ -291,12 +284,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           segueInto: false,
           imageUrl: playbookSong.imageUrl,
         };
+        console.log('[DRAG] Created new song object:', newSong);
+        console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
         toSet.songs.splice(newIndex, 0, newSong);
+        console.log('[DRAG] Added to set. New songs array:', toSet.songs);
+      } else {
+        console.error('[DRAG] ERROR: Playbook song not found!');
       }
     } else if (fromSet && toSet) {
       // Moving within or between sets
       const [movedSong] = fromSet.songs.splice(oldIndex, 1);
       toSet.songs.splice(newIndex, 0, movedSong);
+      console.log('[DRAG] Song moved between sets');
     }
 
     // Update positions and filter out any undefined songs
@@ -308,6 +307,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         }
       });
     });
+
+    console.log('📦 After update - toSet songs:', toSet.songs.length);
+    console.log('🔄 Calling mutation with updated sets');
 
     updateSetlistMutation.mutate({ sets: updatedSets });
   };
@@ -356,9 +358,20 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setEditingName(false);
   };
 
-  const getSetTotalDuration = (set: Set): number => {
-    if (!set.songs || set.songs.length === 0) return 0;
-    return set.songs.reduce((total, song) => total + (song?.duration || 0), 0);
+  const getSetTotalDuration = (set: SetlistSet): number => {
+    if (!set.songs || set.songs.length === 0) {
+      console.log(`[DURATION] Set "${set.name}" has no songs`);
+      return 0;
+    }
+
+    const total = set.songs.reduce((sum, song) => {
+      const duration = song?.duration || 0;
+      console.log(`[DURATION] Song "${song.title}" duration: ${duration}s`);
+      return sum + duration;
+    }, 0);
+
+    console.log(`[DURATION] Set "${set.name}" total: ${total}s from ${set.songs.length} songs`);
+    return total;
   };
 
   // Filter playbook songs based on search
@@ -515,8 +528,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           <div key={song.id}>
                             <div
                               data-song-id={song.song_id}
-                              className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
+                              className="flex items-center gap-1 bg-background border border-border rounded p-1 hover:border-orange-500/50 transition-colors select-none"
                             >
+                              {/* DRAG HANDLE */}
+                              <div className="drag-handle cursor-grab active:cursor-grabbing p-2 -ml-1 touch-none hover:text-orange-500">
+                                <i className="fas fa-grip-vertical text-sm text-muted-foreground"></i>
+                              </div>
+
                               {/* Position number */}
                               <div className="w-6 text-center text-sm font-bold text-foreground">
                                 {idx + 1}.
@@ -614,8 +632,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 <div
                   key={song.id}
                   data-song-id={song.id}
-                  className="flex items-center space-x-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors cursor-move"
+                  className="flex items-center gap-1 bg-background border border-border rounded p-1 hover:border-orange-500/50 transition-colors select-none"
                 >
+                  {/* DRAG HANDLE */}
+                  <div className="drag-handle cursor-grab active:cursor-grabbing p-2 touch-none hover:text-orange-500">
+                    <i className="fas fa-grip-vertical text-sm text-muted-foreground"></i>
+                  </div>
+
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate text-sm">{song.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
