@@ -250,17 +250,27 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         console.log(`[SORTABLE] Initializing Sortable for set: ${set.id}`);
         sortableRefs.current[set.id] = Sortable.create(element, {
           group: 'setlist-songs',
-          // NO HANDLE - allow dragging entire card
           animation: 150,
-          forceFallback: true,     // Better cross-browser support
-          fallbackTolerance: 3,    // px to move before drag starts
-          onStart: (evt) => {
-            console.log('[SORTABLE] Drag started from:', evt.from.id, 'to:', evt.to?.id);
-          },
+          forceFallback: true,
+          fallbackTolerance: 3,
           onEnd: (evt) => {
             console.log('[SORTABLE] Drag ended. From:', evt.from.id || 'no id', 'To:', evt.to.id);
-            // Only call handleSongMove if reordering within THIS set
-            // Don't call if from playbook (onAdd handles) or from another set (onAdd handles)
+
+            // CRITICAL: Revert Sortable's DOM changes BEFORE React re-renders
+            // This prevents React from trying to remove nodes that Sortable moved
+            try {
+              if (evt.item && evt.item.parentNode) {
+                evt.item.parentNode.removeChild(evt.item);
+              }
+              // Also remove any clones Sortable created
+              const clone = evt.clone;
+              if (clone && clone.parentNode) {
+                clone.parentNode.removeChild(clone);
+              }
+            } catch (e) {
+              console.warn('[SORTABLE] Failed to revert DOM:', e);
+            }
+
             const isFromThisSet = evt.from.id === `set-${set.id}`;
             const isToThisSet = evt.to.id === `set-${set.id}`;
 
@@ -272,10 +282,21 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             }
           },
           onAdd: (evt) => {
-            // This fires when something is added to this set from playbook OR another set
             console.log('[SORTABLE] onAdd fired! From:', evt.from.id || 'no id', 'To:', evt.to.id);
 
-            // ALWAYS call handleSongMove from onAdd - it handles both playbook and cross-set drags
+            // CRITICAL: Revert Sortable's DOM changes BEFORE React re-renders
+            try {
+              if (evt.item && evt.item.parentNode) {
+                evt.item.parentNode.removeChild(evt.item);
+              }
+              const clone = evt.clone;
+              if (clone && clone.parentNode) {
+                clone.parentNode.removeChild(clone);
+              }
+            } catch (e) {
+              console.warn('[SORTABLE] Failed to revert DOM:', e);
+            }
+
             handleSongMove(evt, set.id);
           },
         });
