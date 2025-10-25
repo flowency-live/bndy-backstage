@@ -49,7 +49,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [activeSetId, setActiveSetId] = useState<string>('');
   const sortableRefs = useRef<{ [key: string]: Sortable }>({});
 
-  // Fetch setlist
+  // Local working copy of setlist (for unsaved changes)
+  const [workingSetlist, setWorkingSetlist] = useState<Setlist | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Fetch setlist from database
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
     queryFn: async () => {
@@ -110,12 +114,28 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
-  // Set active set ID when setlist loads
+  // Initialize working copy when setlist loads
   useEffect(() => {
-    if (setlist && !activeSetId && setlist.sets.length > 0) {
-      setActiveSetId(setlist.sets[0].id);
+    if (setlist && !workingSetlist) {
+      setWorkingSetlist(setlist);
+      if (setlist.sets.length > 0 && !activeSetId) {
+        setActiveSetId(setlist.sets[0].id);
+      }
     }
-  }, [setlist, activeSetId]);
+  }, [setlist, workingSetlist, activeSetId]);
+
+  // Warn user about unsaved changes when leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
@@ -179,7 +199,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Initialize Sortable for all sets when setlist loads
   useEffect(() => {
-    if (!setlist) return;
+    if (!workingSetlist) return;
 
     // Clean up existing sortables safely
     Object.values(sortableRefs.current).forEach(sortable => {
@@ -194,7 +214,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     sortableRefs.current = {};
 
     // Initialize sortable for each set
-    setlist.sets.forEach((set) => {
+    workingSetlist.sets.forEach((set) => {
       const element = document.getElementById(`set-${set.id}`);
       if (element) {
         console.log(`[SORTABLE] Initializing Sortable for set: ${set.id}`);
@@ -263,13 +283,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         }
       });
     };
-  }, [setlist]);
+  }, [workingSetlist]);
 
   const handleSongMove = (evt: Sortable.SortableEvent, setId: string) => {
     console.log('🎵 handleSongMove triggered:', { setId, from: evt.from.id, to: evt.to.id, oldIndex: evt.oldIndex, newIndex: evt.newIndex });
 
-    if (!setlist) {
-      console.error('❌ No setlist found');
+    if (!workingSetlist) {
+      console.error('❌ No working setlist found');
       return;
     }
 
@@ -284,7 +304,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     console.log('📍 IDs:', { fromSetId, toSetId, oldIndex, newIndex, isFromPlaybook });
 
     // Clone setlist for updates
-    const updatedSets = [...setlist.sets];
+    const updatedSets = [...workingSetlist.sets];
     const fromSet = isFromPlaybook ? null : updatedSets.find(s => s.id === fromSetId);
     const toSet = updatedSets.find(s => s.id === toSetId);
 
@@ -326,7 +346,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Song duration:', newSong.duration, 'seconds');
 
       // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = setlist.sets.map(set => {
+      const immutableUpdatedSets = workingSetlist.sets.map(set => {
         if (set.id === toSetId) {
           const newSongs = [...set.songs];
           newSongs.splice(newIndex, 0, newSong);
@@ -338,15 +358,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         return set;
       });
 
-      console.log('[DRAG] Calling mutation with NEW set objects');
+      console.log('[DRAG] Updating local working copy (NOT saving to database)');
 
-      // Remove clone immediately before mutation - React will render the proper component
+      // Remove clone immediately - React will render the proper component
       if (evt.item && evt.item.parentNode) {
-        console.log('[DRAG] Removing clone before mutation');
+        console.log('[DRAG] Removing clone');
         evt.item.parentNode.removeChild(evt.item);
       }
 
-      updateSetlistMutation.mutate({ sets: immutableUpdatedSets });
+      // Update local state only - DO NOT save to database
+      setWorkingSetlist({ ...workingSetlist, sets: immutableUpdatedSets });
+      setHasUnsavedChanges(true);
       return;
     }
 
@@ -361,7 +383,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Song moved between/within sets');
 
       // CRITICAL FIX: Create NEW set objects to trigger React re-render
-      const immutableUpdatedSets = setlist.sets.map(set => {
+      const immutableUpdatedSets = workingSetlist.sets.map(set => {
         // Remove from source set
         if (set.id === fromSetId) {
           const newSongs = set.songs.filter((_, idx) => idx !== oldIndex);
@@ -382,14 +404,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         return set;
       });
 
-      updateSetlistMutation.mutate({ sets: immutableUpdatedSets });
+      // Update local state only - DO NOT save to database
+      setWorkingSetlist({ ...workingSetlist, sets: immutableUpdatedSets });
+      setHasUnsavedChanges(true);
     }
   };
 
   const handleRemoveSong = (setId: string, songId: string) => {
-    if (!setlist) return;
+    if (!workingSetlist) return;
 
-    const updatedSets = setlist.sets.map(set => {
+    const updatedSets = workingSetlist.sets.map(set => {
       if (set.id === setId) {
         return {
           ...set,
@@ -402,13 +426,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return set;
     });
 
-    updateSetlistMutation.mutate({ sets: updatedSets });
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
   };
 
   const handleToggleSegue = (setId: string, songId: string) => {
-    if (!setlist) return;
+    if (!workingSetlist) return;
 
-    const updatedSets = setlist.sets.map(set => {
+    const updatedSets = workingSetlist.sets.map(set => {
       if (set.id === setId) {
         return {
           ...set,
@@ -420,12 +445,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return set;
     });
 
-    updateSetlistMutation.mutate({ sets: updatedSets });
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
   };
 
   const handleUpdateName = () => {
-    if (tempName.trim() && tempName !== setlist?.name) {
-      updateSetlistMutation.mutate({ name: tempName });
+    if (tempName.trim() && tempName !== workingSetlist?.name) {
+      setWorkingSetlist({ ...workingSetlist!, name: tempName });
+      setHasUnsavedChanges(true);
     }
     setEditingName(false);
   };
@@ -437,12 +464,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     const isDrag = e.type === 'click' && (e as any).detail === 0; // Detail is 0 for synthetic events from drag
     if (isDrag) return;
 
-    if (!setlist || !activeSetId) return;
+    if (!workingSetlist || !activeSetId) return;
 
     const playbookSong = playbookSongs.find(s => s.id === songId);
     if (!playbookSong) return;
 
-    const activeSet = setlist.sets.find(s => s.id === activeSetId);
+    const activeSet = workingSetlist.sets.find(s => s.id === activeSetId);
     if (!activeSet) return;
 
     const newSong: SetlistSong = {
@@ -457,7 +484,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       imageUrl: playbookSong.imageUrl,
     };
 
-    const updatedSets = setlist.sets.map(set => {
+    const updatedSets = workingSetlist.sets.map(set => {
       if (set.id === activeSetId) {
         return {
           ...set,
@@ -467,7 +494,54 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return set;
     });
 
-    updateSetlistMutation.mutate({ sets: updatedSets });
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
+  };
+
+  // Save all changes to database
+  const handleSave = () => {
+    if (!workingSetlist || !hasUnsavedChanges) return;
+
+    updateSetlistMutation.mutate(
+      { sets: workingSetlist.sets, name: workingSetlist.name },
+      {
+        onSuccess: (data) => {
+          console.log('[SAVE] Successfully saved to database');
+          setHasUnsavedChanges(false);
+          // Update the query cache with saved data
+          queryClient.setQueryData(
+            ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
+            data
+          );
+          toast({
+            title: "Saved",
+            description: "Setlist saved successfully",
+            duration: 2000,
+          });
+        },
+      }
+    );
+  };
+
+  // Discard all changes and reset to last saved state
+  const handleCancel = () => {
+    if (!setlist) return;
+
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Are you sure you want to discard them?"
+      );
+      if (!confirmed) return;
+    }
+
+    // Reset working copy to saved version
+    setWorkingSetlist(setlist);
+    setHasUnsavedChanges(false);
+    toast({
+      title: "Changes discarded",
+      description: "Setlist reset to last saved version",
+      duration: 2000,
+    });
   };
 
   const getSetTotalDuration = (set: SetlistSet): number => {
@@ -582,10 +656,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               >
                 <i className="fas fa-arrow-left"></i>
               </button>
-              <h1 className="text-2xl font-serif font-bold">{setlist.name}</h1>
+              <h1 className="text-2xl font-serif font-bold">{workingSetlist?.name || setlist.name}</h1>
               <button
                 onClick={() => {
-                  setTempName(setlist.name);
+                  setTempName(workingSetlist?.name || setlist.name);
                   setEditingName(true);
                 }}
                 className="text-muted-foreground hover:text-foreground"
@@ -594,23 +668,29 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 <i className="fas fa-edit"></i>
               </button>
               <button
-                onClick={() => {
-                  if (setlist) {
-                    updateSetlistMutation.mutate(
-                      { sets: setlist.sets },
-                      { showToast: true } // Flag for manual save - shows toast
-                    );
-                  }
-                }}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium"
+                onClick={handleSave}
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Save setlist"
-                disabled={updateSetlistMutation.isPending}
+                disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
               >
                 <i className="fas fa-save mr-1"></i> Save
               </button>
+              <button
+                onClick={handleCancel}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Discard changes"
+                disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
+              >
+                <i className="fas fa-times mr-1"></i> Cancel
+              </button>
               {updateSetlistMutation.isPending && (
                 <span className="text-sm text-muted-foreground animate-pulse">
-                  <i className="fas fa-spinner fa-spin"></i> Auto-saving...
+                  <i className="fas fa-spinner fa-spin"></i> Saving...
+                </span>
+              )}
+              {hasUnsavedChanges && !updateSetlistMutation.isPending && (
+                <span className="text-sm text-yellow-600">
+                  <i className="fas fa-exclamation-circle mr-1"></i> Unsaved changes
                 </span>
               )}
             </div>
@@ -632,7 +712,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           {/* Sets area - 50% width on mobile when drawer is open */}
           <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0`}>
             <div className="space-y-6">
-              {setlist.sets.map((set) => {
+              {(workingSetlist || setlist).sets.map((set) => {
                 const totalDuration = getSetTotalDuration(set);
                 const variance = getDurationVariance(totalDuration, set.targetDuration);
                 const varianceColor = getVarianceColor(variance);
