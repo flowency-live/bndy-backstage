@@ -45,7 +45,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [tempName, setTempName] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllSongs, setShowAllSongs] = useState(false);
+  const [activeSetId, setActiveSetId] = useState<string>('');
   const sortableRefs = useRef<{ [key: string]: Sortable }>({});
+
+  // Set active set ID when setlist loads
+  useEffect(() => {
+    if (setlist && !activeSetId && setlist.sets.length > 0) {
+      setActiveSetId(setlist.sets[0].id);
+    }
+  }, [setlist, activeSetId]);
 
   // Fetch setlist
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
@@ -300,14 +309,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         // evt.item is the clone that was dropped, we need to remove it from DOM
         // because we're creating our own React element
         // ONLY do this when dragging from playbook (not when moving between sets)
-        try {
-          if (evt.item && evt.item.parentNode) {
-            console.log('[DRAG] Removing Sortable clone from DOM');
-            evt.item.parentNode.removeChild(evt.item);
+        // Use setTimeout to let React render first, then remove the clone
+        setTimeout(() => {
+          try {
+            if (evt.item && evt.item.parentNode) {
+              console.log('[DRAG] Removing Sortable clone from DOM');
+              evt.item.parentNode.removeChild(evt.item);
+            }
+          } catch (e) {
+            // Silently ignore - React might have already removed it
+            console.log('[DRAG] Clone already removed by React');
           }
-        } catch (e) {
-          console.warn('[DRAG] Could not remove clone (probably not from playbook):', e);
-        }
+        }, 0);
 
         const newSong: SetlistSong = {
           id: `${Date.now()}-${Math.random()}`,
@@ -394,6 +407,46 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setEditingName(false);
   };
 
+  // Quick add function for mobile tap-to-add
+  const handleQuickAdd = (songId: string, e: React.MouseEvent) => {
+    // Only handle click on mobile OR when explicitly clicking (not dragging)
+    // Check if this was a drag operation by seeing if mouse moved
+    const isDrag = e.type === 'click' && (e as any).detail === 0; // Detail is 0 for synthetic events from drag
+    if (isDrag) return;
+
+    if (!setlist || !activeSetId) return;
+
+    const playbookSong = playbookSongs.find(s => s.id === songId);
+    if (!playbookSong) return;
+
+    const activeSet = setlist.sets.find(s => s.id === activeSetId);
+    if (!activeSet) return;
+
+    const newSong: SetlistSong = {
+      id: `${Date.now()}-${Math.random()}`,
+      song_id: playbookSong.id,
+      title: playbookSong.title,
+      artist: playbookSong.artist,
+      duration: playbookSong.duration || 0,
+      position: activeSet.songs.length,
+      tuning: playbookSong.tuning || 'standard',
+      segueInto: false,
+      imageUrl: playbookSong.imageUrl,
+    };
+
+    const updatedSets = setlist.sets.map(set => {
+      if (set.id === activeSetId) {
+        return {
+          ...set,
+          songs: [...set.songs, newSong],
+        };
+      }
+      return set;
+    });
+
+    updateSetlistMutation.mutate({ sets: updatedSets });
+  };
+
   const getSetTotalDuration = (set: SetlistSet): number => {
     if (!set.songs || set.songs.length === 0) {
       console.log(`[DURATION] Set "${set.name}" has no songs`);
@@ -410,11 +463,41 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     return total;
   };
 
-  // Filter playbook songs based on search
-  const filteredPlaybookSongs = playbookSongs.filter(song =>
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  // Get all song IDs currently in the setlist
+  const songsInSetlist = new Set(
+    setlist?.sets.flatMap(set => set.songs.map(song => song.song_id)) || []
   );
+
+  // Filter playbook songs based on search and "show all" toggle
+  const filteredPlaybookSongs = playbookSongs.filter(song => {
+    // Filter by search query
+    const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.artist.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Filter by "show all" toggle
+    const matchesFilter = showAllSongs || !songsInSetlist.has(song.id);
+
+    return matchesSearch && matchesFilter;
+  });
+
+  // Group songs alphabetically
+  const groupedSongs = filteredPlaybookSongs.reduce((acc, song) => {
+    const firstLetter = song.title.charAt(0).toUpperCase();
+    const letter = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+
+    if (!acc[letter]) {
+      acc[letter] = [];
+    }
+    acc[letter].push(song);
+
+    return acc;
+  }, {} as Record<string, PlaybookSong[]>);
+
+  const sortedLetters = Object.keys(groupedSongs).sort((a, b) => {
+    if (a === '#') return 1;
+    if (b === '#') return -1;
+    return a.localeCompare(b);
+  });
 
   if (setlistLoading || songsLoading) {
     return (
@@ -517,17 +600,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           </button>
         </div>
 
-        {/* Backdrop for mobile drawer */}
-        {drawerOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-            onClick={() => setDrawerOpen(false)}
-          />
-        )}
-
-        <div className="flex gap-4 relative">
-          {/* Sets area */}
-          <div className="flex-1 min-w-0">
+        <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
+          {/* Sets area - 50% width on mobile when drawer is open */}
+          <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0`}>
             <div className="space-y-6">
               {setlist.sets.map((set) => {
                 const totalDuration = getSetTotalDuration(set);
@@ -543,7 +618,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 return (
                   <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
                     <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
-                      <h3 className="font-semibold">{set.name}</h3>
+                      <div className="flex items-center space-x-2">
+                        {/* Active set radio button (mobile only) */}
+                        <div className="lg:hidden">
+                          <input
+                            type="radio"
+                            name="activeSet"
+                            checked={activeSetId === set.id}
+                            onChange={() => setActiveSetId(set.id)}
+                            className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                          />
+                        </div>
+                        <h3 className="font-semibold">{set.name}</h3>
+                      </div>
                       <div className="flex items-center space-x-3 text-sm">
                         <div className={`font-medium ${varianceColor}`}>
                           {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
@@ -627,14 +714,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             </div>
           </div>
 
-          {/* Playbook drawer - slide-in from right on mobile, always visible on desktop */}
-          <div className={`fixed lg:relative top-0 right-0 h-full w-80 bg-card border-l border-border shadow-2xl lg:shadow-none transform transition-transform duration-300 z-40 ${
-            drawerOpen ? 'translate-x-0' : 'translate-x-full'
-          } lg:translate-x-0 lg:block overflow-hidden`}>
+          {/* Playbook drawer - 50% width on mobile when open, always visible on desktop */}
+          <div className={`transition-all duration-300 ${
+            drawerOpen ? 'w-1/2 lg:w-80' : 'w-0 lg:w-80'
+          } ${drawerOpen ? 'block' : 'hidden lg:block'} bg-card border-l border-border overflow-hidden`}>
             <div className="bg-orange-500 text-white p-2 flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-sm">Playbook</h3>
-                <p className="text-xs opacity-90">Drag songs to add to sets</p>
+                <p className="text-xs opacity-90 lg:block hidden">Drag or tap to add</p>
+                <p className="text-xs opacity-90 lg:hidden">Tap to add to active set</p>
               </div>
               <button
                 onClick={() => setDrawerOpen(false)}
@@ -644,7 +732,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               </button>
             </div>
 
-            <div className="p-2 border-b">
+            <div className="p-2 border-b space-y-2">
               <input
                 type="text"
                 value={searchQuery}
@@ -652,21 +740,59 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 placeholder="Search songs..."
                 className="w-full px-2 py-1.5 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+              <label className="flex items-center space-x-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAllSongs}
+                  onChange={(e) => setShowAllSongs(e.target.checked)}
+                  className="w-4 h-4 text-orange-500 focus:ring-orange-500 rounded"
+                />
+                <span className="text-foreground">Show songs already in setlist</span>
+              </label>
             </div>
 
-            <div id="playbook-drawer" className="p-2 h-[calc(100vh-180px)] lg:max-h-[600px] overflow-y-auto space-y-1">
-              {filteredPlaybookSongs.map((song) => (
-                <div
-                  key={song.id}
-                  data-song-id={song.id}
-                  className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate text-sm">{song.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
+            <div id="playbook-drawer" className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
+              {sortedLetters.length === 0 && (
+                <div className="text-center text-muted-foreground text-sm py-8">
+                  {searchQuery ? 'No songs found' : 'No songs available'}
+                </div>
+              )}
+              {sortedLetters.map((letter) => (
+                <div key={letter} className="mb-3">
+                  {/* Letter header - sticky */}
+                  <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10">
+                    {letter}
                   </div>
-                  <div className="text-xs text-muted-foreground whitespace-nowrap">
-                    {song.duration ? formatDuration(song.duration) : '--'}
+                  {/* Songs in this letter group */}
+                  <div className="space-y-1">
+                    {groupedSongs[letter].map((song) => {
+                      const isInSetlist = songsInSetlist.has(song.id);
+                      return (
+                        <div
+                          key={song.id}
+                          data-song-id={song.id}
+                          onClick={(e) => handleQuickAdd(song.id, e)}
+                          className={`flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
+                            isInSetlist
+                              ? 'border-green-500/30 opacity-60'
+                              : 'border-border hover:border-orange-500/50 cursor-pointer lg:cursor-grab active:cursor-grabbing'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <div className="font-medium truncate text-sm">{song.title}</div>
+                              {isInSetlist && (
+                                <i className="fas fa-check text-green-500 text-xs" title="Already in setlist"></i>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground whitespace-nowrap">
+                            {song.duration ? formatDuration(song.duration) : '--'}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
