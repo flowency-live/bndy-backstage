@@ -107,6 +107,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return response.json();
     },
     enabled: !!artistId && !!setlistId,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Fetch playbook songs
@@ -141,6 +143,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       })).sort((a: PlaybookSong, b: PlaybookSong) => (a.title || '').localeCompare(b.title || ''));
     },
     enabled: !!artistId,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Update setlist mutation with optimistic updates
@@ -190,16 +194,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         variant: "destructive"
       });
     },
-    onSuccess: () => {
-      // Immediately refetch to ensure UI is in sync with backend
-      queryClient.invalidateQueries({
-        queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
-        refetchType: 'active'
-      });
-    },
-    onSettled: () => {
-      // Final refetch to ensure sync
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
+    onSuccess: (data) => {
+      // Update cache with server response instead of invalidating
+      queryClient.setQueryData(
+        ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
+        data
+      );
     },
   });
 
