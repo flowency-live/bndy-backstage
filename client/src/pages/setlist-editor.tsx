@@ -272,6 +272,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       console.log('[DRAG] Found playbook song:', playbookSong);
 
       if (playbookSong) {
+        // Remove the cloned element that Sortable created
+        // evt.item is the clone that was dropped, we need to remove it from DOM
+        // because we're creating our own React element
+        if (evt.item && evt.item.parentNode) {
+          console.log('[DRAG] Removing Sortable clone from DOM');
+          evt.item.parentNode.removeChild(evt.item);
+        }
+
         const newSong: SetlistSong = {
           id: `${Date.now()}-${Math.random()}`,
           song_id: playbookSong.id,
