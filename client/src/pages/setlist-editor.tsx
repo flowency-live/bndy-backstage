@@ -19,6 +19,7 @@ import {
   DragOverEvent,
   DragEndEvent,
   useDraggable,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -190,6 +191,27 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
       <div className="text-xs text-muted-foreground whitespace-nowrap">
         {song.duration ? formatDuration(song.duration) : '--'}
       </div>
+    </div>
+  );
+}
+
+// Droppable container for sets (allows dropping into empty sets)
+function DroppableSetContainer({ setId, children }: {
+  setId: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `set-container-${setId}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`p-2 min-h-[100px] space-y-1 transition-colors ${
+        isOver ? 'bg-orange-500/10 border-2 border-dashed border-orange-500' : ''
+      }`}
+    >
+      {children}
     </div>
   );
 }
@@ -944,7 +966,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                         strategy={verticalListSortingStrategy}
                         id={`set-container-${set.id}`}
                       >
-                        <div className="p-2 min-h-[100px] space-y-1">
+                        <DroppableSetContainer setId={set.id}>
                           {set.songs?.map((song, idx) => (
                             <SortableSongCard
                               key={song.id}
@@ -961,7 +983,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               Drag songs here
                             </div>
                           )}
-                        </div>
+                        </DroppableSetContainer>
                       </SortableContext>
                     </div>
                   );
@@ -1039,6 +1061,30 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           </div>
         </div>
       </div>
+
+      <DragOverlay>
+        {activeId ? (
+          <div className="flex items-center gap-2 bg-background border-2 border-orange-500 rounded p-2 shadow-lg opacity-90">
+            <div className="font-medium text-sm">
+              {(() => {
+                // Find the active song being dragged
+                if (activeId.startsWith('playbook-')) {
+                  const songId = activeId.replace('playbook-', '');
+                  const song = playbookSongs.find(s => s.id === songId);
+                  return song ? song.title : 'Song';
+                } else {
+                  // Find in setlist songs
+                  for (const set of (workingSetlist || setlist)?.sets || []) {
+                    const song = set.songs.find(s => s.id === activeId);
+                    if (song) return song.title;
+                  }
+                  return 'Song';
+                }
+              })()}
+            </div>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
