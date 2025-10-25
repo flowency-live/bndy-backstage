@@ -209,30 +209,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           },
           onEnd: (evt) => {
             console.log('[SORTABLE] Drag ended. From:', evt.from.id || 'no id', 'To:', evt.to.id);
-            // Only call handleSongMove if the source is THIS set (for reordering)
-            // OR if it's from the playbook
-            // Don't call if it's from another set (onAdd will handle that)
+            // Only call handleSongMove if reordering within THIS set
+            // Don't call if from playbook (onAdd handles) or from another set (onAdd handles)
             const isFromThisSet = evt.from.id === `set-${set.id}`;
-            const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
+            const isToThisSet = evt.to.id === `set-${set.id}`;
 
-            if (isFromThisSet || isFromPlaybook) {
+            if (isFromThisSet && isToThisSet) {
+              console.log('[SORTABLE] Reordering within same set');
               handleSongMove(evt, set.id);
             } else {
-              console.log('[SORTABLE] onEnd skipped - will be handled by onAdd on destination');
+              console.log('[SORTABLE] onEnd skipped - cross-set or playbook drag handled by onAdd');
             }
           },
           onAdd: (evt) => {
-            // This fires when something is added to this set from ANOTHER set
+            // This fires when something is added to this set from playbook OR another set
             console.log('[SORTABLE] onAdd fired! From:', evt.from.id || 'no id', 'To:', evt.to.id);
 
-            // Only handle if it's from another set (not playbook)
-            const isFromPlaybook = evt.from.hasAttribute('data-letter-group');
-
-            if (!isFromPlaybook) {
-              handleSongMove(evt, set.id);
-            } else {
-              console.log('[SORTABLE] onAdd skipped - playbook handled by onEnd');
-            }
+            // ALWAYS call handleSongMove from onAdd - it handles both playbook and cross-set drags
+            handleSongMove(evt, set.id);
           },
         });
       }
