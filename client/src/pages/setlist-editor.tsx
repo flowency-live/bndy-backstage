@@ -196,8 +196,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   useEffect(() => {
     if (!setlist) return;
 
-    // Clean up existing sortables
-    Object.values(sortableRefs.current).forEach(sortable => sortable?.destroy());
+    // Clean up existing sortables safely
+    Object.values(sortableRefs.current).forEach(sortable => {
+      if (sortable && typeof sortable.destroy === 'function') {
+        try {
+          sortable.destroy();
+        } catch (e) {
+          console.warn('Failed to destroy sortable:', e);
+        }
+      }
+    });
     sortableRefs.current = {};
 
     // Initialize sortable for each set
@@ -227,7 +235,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }
 
     return () => {
-      Object.values(sortableRefs.current).forEach(sortable => sortable?.destroy());
+      Object.values(sortableRefs.current).forEach(sortable => {
+        if (sortable && typeof sortable.destroy === 'function') {
+          try {
+            sortable.destroy();
+          } catch (e) {
+            console.warn('Failed to destroy sortable on cleanup:', e);
+          }
+        }
+      });
     };
   }, [setlist]);
 
@@ -425,9 +441,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4">
+        {/* Backdrop for mobile drawer */}
+        {drawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setDrawerOpen(false)}
+          />
+        )}
+
+        <div className="flex gap-4 relative">
           {/* Sets area */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="space-y-6">
               {setlist.sets.map((set) => {
                 const totalDuration = getSetTotalDuration(set);
@@ -449,13 +473,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       </div>
                     </div>
 
+                    {set.songs.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground pointer-events-none">
+                        <i className="fas fa-music text-4xl mb-2 opacity-30"></i>
+                        <p>Drag songs here from the playbook</p>
+                      </div>
+                    )}
                     <div id={`set-${set.id}`} className="p-2 min-h-[100px] space-y-1">
-                      {set.songs.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <i className="fas fa-music text-4xl mb-2 opacity-30"></i>
-                          <p>Drag songs here from the playbook</p>
-                        </div>
-                      )}
                       {set.songs.map((song, idx) => (
                           <div key={song.id}>
                             <div
@@ -527,11 +551,21 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             </div>
           </div>
 
-          {/* Playbook drawer - desktop always visible, mobile toggleable */}
-          <div className={`${drawerOpen ? 'block' : 'hidden'} lg:block w-full lg:w-80 bg-card border border-border rounded overflow-hidden`}>
-            <div className="bg-orange-500 text-white p-2">
-              <h3 className="font-semibold text-sm">Playbook</h3>
-              <p className="text-xs opacity-90">Drag songs to add to sets</p>
+          {/* Playbook drawer - slide-in from right on mobile, always visible on desktop */}
+          <div className={`fixed lg:relative top-0 right-0 h-full w-80 bg-card border-l border-border shadow-2xl lg:shadow-none transform transition-transform duration-300 z-40 ${
+            drawerOpen ? 'translate-x-0' : 'translate-x-full'
+          } lg:translate-x-0 lg:block overflow-hidden`}>
+            <div className="bg-orange-500 text-white p-2 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-sm">Playbook</h3>
+                <p className="text-xs opacity-90">Drag songs to add to sets</p>
+              </div>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="lg:hidden text-white hover:bg-orange-600 p-2 rounded"
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
 
             <div className="p-2 border-b">
@@ -544,7 +578,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               />
             </div>
 
-            <div id="playbook-drawer" className="p-2 max-h-[70vh] lg:max-h-[600px] overflow-y-auto space-y-1">
+            <div id="playbook-drawer" className="p-2 h-[calc(100vh-180px)] lg:max-h-[600px] overflow-y-auto space-y-1">
               {filteredPlaybookSongs.map((song) => (
                 <div
                   key={song.id}
