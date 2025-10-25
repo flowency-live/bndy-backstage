@@ -57,7 +57,7 @@ interface TileProps {
 function DashboardTile({ title, subtitle, icon, color, onClick, className = "", count, actionLabel }: TileProps) {
   return (
     <Card
-      className={`aspect-square cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
+      className={`aspect-square max-w-[280px] cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up ${className}`}
       onClick={onClick}
       data-testid={`tile-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
@@ -80,8 +80,8 @@ function DashboardTile({ title, subtitle, icon, color, onClick, className = "", 
             }}
           />
 
-          {/* Background Icon - Centered and filling tile */}
-          <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[12rem] sm:text-[14rem] lg:text-[16rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+          {/* Background Icon - Centered and filling tile - 100% LARGER, MORE VISIBLE */}
+          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[24rem] sm:text-[28rem] lg:text-[32rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
             {icon}
           </div>
 
