@@ -424,12 +424,20 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               </button>
               <button
                 onClick={() => {
-                  // Force a refetch to ensure data is saved
-                  queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId] });
-                  toast({ title: "Setlist saved", description: "All changes have been saved" });
+                  if (setlist) {
+                    updateSetlistMutation.mutate(
+                      { sets: setlist.sets },
+                      {
+                        onSuccess: () => {
+                          toast({ title: "Setlist saved", description: "All changes have been saved successfully" });
+                        },
+                      }
+                    );
+                  }
                 }}
                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium"
                 title="Save setlist"
+                disabled={updateSetlistMutation.isPending}
               >
                 <i className="fas fa-save mr-1"></i> Save
               </button>
@@ -469,6 +477,12 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 const totalDuration = getSetTotalDuration(set);
                 const variance = getDurationVariance(totalDuration, set.targetDuration);
                 const varianceColor = getVarianceColor(variance);
+
+                console.log(`Set ${set.name}:`, {
+                  songCount: set.songs.length,
+                  totalDuration,
+                  songs: set.songs.map(s => ({ title: s.title, duration: s.duration, position: s.position }))
+                });
 
                 return (
                   <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
