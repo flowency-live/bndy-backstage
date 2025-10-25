@@ -228,6 +228,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
         throw new Error(error.error || "Failed to delete song");
       }
 
+      // 204 No Content returns empty body, don't try to parse JSON
+      if (response.status === 204) {
+        return { success: true };
+      }
+
       return response.json();
     },
     onSuccess: () => {
