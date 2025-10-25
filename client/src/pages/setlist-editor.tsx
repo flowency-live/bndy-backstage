@@ -193,12 +193,32 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           },
           onEnd: (evt) => {
             console.log('[SORTABLE] Drag ended. From:', evt.from.id, 'To:', evt.to.id);
-            handleSongMove(evt, set.id);
+            // Only call handleSongMove if the source is THIS set (for reordering)
+            // OR if it's from the playbook
+            // Don't call if it's from another set (onAdd will handle that)
+            const fromId = evt.from.id;
+            const isFromThisSet = fromId === `set-${set.id}`;
+            const isFromPlaybook = fromId === 'playbook-drawer';
+
+            if (isFromThisSet || isFromPlaybook) {
+              handleSongMove(evt, set.id);
+            } else {
+              console.log('[SORTABLE] onEnd skipped - will be handled by onAdd on destination');
+            }
           },
           onAdd: (evt) => {
-            // This fires when something is added to this set
+            // This fires when something is added to this set from ANOTHER set
             console.log('[SORTABLE] onAdd fired! From:', evt.from.id, 'To:', evt.to.id);
-            handleSongMove(evt, set.id);
+
+            // Only handle if it's from another set (not playbook)
+            const fromId = evt.from.id;
+            const isFromPlaybook = fromId === 'playbook-drawer';
+
+            if (!isFromPlaybook) {
+              handleSongMove(evt, set.id);
+            } else {
+              console.log('[SORTABLE] onAdd skipped - playbook handled by onEnd');
+            }
           },
         });
       }
@@ -275,9 +295,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         // Remove the cloned element that Sortable created
         // evt.item is the clone that was dropped, we need to remove it from DOM
         // because we're creating our own React element
-        if (evt.item && evt.item.parentNode) {
-          console.log('[DRAG] Removing Sortable clone from DOM');
-          evt.item.parentNode.removeChild(evt.item);
+        // ONLY do this when dragging from playbook (not when moving between sets)
+        try {
+          if (evt.item && evt.item.parentNode) {
+            console.log('[DRAG] Removing Sortable clone from DOM');
+            evt.item.parentNode.removeChild(evt.item);
+          }
+        } catch (e) {
+          console.warn('[DRAG] Could not remove clone (probably not from playbook):', e);
         }
 
         const newSong: SetlistSong = {
