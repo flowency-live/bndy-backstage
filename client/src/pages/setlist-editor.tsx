@@ -181,13 +181,20 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setlist.sets.forEach((set) => {
       const element = document.getElementById(`set-${set.id}`);
       if (element) {
+        console.log(`[SORTABLE] Initializing Sortable for set: ${set.id}`);
         sortableRefs.current[set.id] = Sortable.create(element, {
           group: 'setlist-songs',
-          handle: '.drag-handle',  // Only drag from handle
+          // NO HANDLE - allow dragging entire card
           animation: 150,
           forceFallback: true,     // Better cross-browser support
           fallbackTolerance: 3,    // px to move before drag starts
-          onEnd: (evt) => handleSongMove(evt, set.id),
+          onStart: (evt) => {
+            console.log('[SORTABLE] Drag started', evt);
+          },
+          onEnd: (evt) => {
+            console.log('[SORTABLE] Drag ended, calling handleSongMove', evt);
+            handleSongMove(evt, set.id);
+          },
         });
       }
     });
@@ -195,13 +202,14 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     // Initialize sortable for drawer (playbook)
     const drawerElement = document.getElementById('playbook-drawer');
     if (drawerElement) {
+      console.log('[SORTABLE] Initializing Sortable for playbook drawer');
       sortableRefs.current['drawer'] = Sortable.create(drawerElement, {
         group: {
           name: 'setlist-songs',
           pull: 'clone',
           put: false,
         },
-        handle: '.drag-handle',    // Only drag from handle
+        // NO HANDLE - allow dragging entire card
         animation: 150,
         sort: false,
         forceFallback: true,       // Better touch support
@@ -514,13 +522,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           <div key={song.id}>
                             <div
                               data-song-id={song.song_id}
-                              className="flex items-center gap-1 bg-background border border-border rounded p-1 hover:border-orange-500/50 transition-colors select-none"
+                              className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
                             >
-                              {/* DRAG HANDLE */}
-                              <div className="drag-handle cursor-grab active:cursor-grabbing p-2 -ml-1 touch-none hover:text-orange-500">
-                                <i className="fas fa-grip-vertical text-sm text-muted-foreground"></i>
-                              </div>
-
                               {/* Position number */}
                               <div className="w-6 text-center text-sm font-bold text-foreground">
                                 {idx + 1}.
@@ -618,13 +621,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 <div
                   key={song.id}
                   data-song-id={song.id}
-                  className="flex items-center gap-1 bg-background border border-border rounded p-1 hover:border-orange-500/50 transition-colors select-none"
+                  className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
                 >
-                  {/* DRAG HANDLE */}
-                  <div className="drag-handle cursor-grab active:cursor-grabbing p-2 touch-none hover:text-orange-500">
-                    <i className="fas fa-grip-vertical text-sm text-muted-foreground"></i>
-                  </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate text-sm">{song.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
