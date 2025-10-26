@@ -292,8 +292,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
     // Calculate readiness scores
     const getReadinessScore = (song: SongWithDetails) => {
+      if (!song || !song.readiness) return 0;
       let score = 0;
-      if (!song.readiness) return 0;
       song.readiness.forEach(r => {
         if (r.status === "green") score += 3;
         else if (r.status === "amber") score += 2;
