@@ -941,17 +941,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                   return (
                     <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
                       <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {/* Active set radio button (mobile only) */}
-                          <div className="lg:hidden">
-                            <input
-                              type="radio"
-                              name="activeSet"
-                              checked={activeSetId === set.id}
-                              onChange={() => setActiveSetId(set.id)}
-                              className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                            />
-                          </div>
+                        <div
+                          className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setActiveSetId(set.id)}
+                          title="Click to make this the active set for quick-add"
+                        >
+                          {/* Active set radio button */}
+                          <input
+                            type="radio"
+                            name="activeSet"
+                            checked={activeSetId === set.id}
+                            onChange={() => setActiveSetId(set.id)}
+                            className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                          />
                           <h3 className="font-semibold">{set.name}</h3>
                         </div>
                         <div className="flex items-center space-x-3 text-sm">
