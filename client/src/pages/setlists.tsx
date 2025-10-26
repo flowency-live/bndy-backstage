@@ -44,6 +44,15 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState('');
   const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
+  const [editingSetlists, setEditingSetlists] = useState<Set<string>>(new Set());
+  const [expandedSets, setExpandedSets] = useState<Set<string>>(new Set());
+  const [editingSetlistName, setEditingSetlistName] = useState<string | null>(null);
+  const [tempSetlistName, setTempSetlistName] = useState('');
+  const [editingSetName, setEditingSetName] = useState<string | null>(null);
+  const [tempSetName, setTempSetName] = useState('');
+  const [editingSetDuration, setEditingSetDuration] = useState<string | null>(null);
+  const [tempSetDuration, setTempSetDuration] = useState(0);
+  const [workingSetlists, setWorkingSetlists] = useState<Map<string, Setlist>>(new Map());
 
   // Fetch all setlists for this artist
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
@@ -171,6 +180,38 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
     },
   });
 
+  // Update setlist mutation
+  const updateSetlistMutation = useMutation({
+    mutationFn: async ({ setlistId, updates }: { setlistId: string; updates: Partial<Setlist> }) => {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update setlist");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      toast({ title: "Setlist updated!" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update setlist",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+
   const handleCreateSetlist = () => {
     if (!newSetlistName.trim()) {
       toast({
@@ -202,6 +243,135 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
   const handleEditSetlist = (setlistId: string) => {
     setLocation(`/setlists/${setlistId}`);
+  };
+
+  // Get working copy of setlist (for editing) or original
+  const getWorkingSetlist = (setlistId: string): Setlist | undefined => {
+    return workingSetlists.get(setlistId) || setlists.find(s => s.id === setlistId);
+  };
+
+  // Toggle edit mode for a setlist
+  const toggleEditMode = (setlistId: string) => {
+    setEditingSetlists(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(setlistId)) {
+        // Exiting edit mode - discard working copy
+        newSet.delete(setlistId);
+        setWorkingSetlists(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(setlistId);
+          return newMap;
+        });
+      } else {
+        // Entering edit mode - create working copy
+        newSet.add(setlistId);
+        const originalSetlist = setlists.find(s => s.id === setlistId);
+        if (originalSetlist) {
+          setWorkingSetlists(prev => new Map(prev).set(setlistId, JSON.parse(JSON.stringify(originalSetlist))));
+        }
+      }
+      return newSet;
+    });
+  };
+
+  // Save changes to a setlist
+  const handleSaveSetlist = (setlistId: string) => {
+    const workingSetlist = workingSetlists.get(setlistId);
+    if (!workingSetlist) return;
+
+    updateSetlistMutation.mutate({
+      setlistId,
+      updates: {
+        name: workingSetlist.name,
+        sets: workingSetlist.sets,
+      },
+    });
+
+    // Exit edit mode
+    toggleEditMode(setlistId);
+  };
+
+  // Update setlist name in working copy
+  const updateSetlistName = (setlistId: string, newName: string) => {
+    setWorkingSetlists(prev => {
+      const newMap = new Map(prev);
+      const setlist = newMap.get(setlistId);
+      if (setlist) {
+        newMap.set(setlistId, { ...setlist, name: newName });
+      }
+      return newMap;
+    });
+  };
+
+  // Update set name in working copy
+  const updateSetName = (setlistId: string, setId: string, newName: string) => {
+    setWorkingSetlists(prev => {
+      const newMap = new Map(prev);
+      const setlist = newMap.get(setlistId);
+      if (setlist) {
+        const updatedSets = setlist.sets.map(set =>
+          set.id === setId ? { ...set, name: newName } : set
+        );
+        newMap.set(setlistId, { ...setlist, sets: updatedSets });
+      }
+      return newMap;
+    });
+  };
+
+  // Update set target duration in working copy
+  const updateSetDuration = (setlistId: string, setId: string, newDuration: number) => {
+    setWorkingSetlists(prev => {
+      const newMap = new Map(prev);
+      const setlist = newMap.get(setlistId);
+      if (setlist) {
+        const updatedSets = setlist.sets.map(set =>
+          set.id === setId ? { ...set, targetDuration: newDuration } : set
+        );
+        newMap.set(setlistId, { ...setlist, sets: updatedSets });
+      }
+      return newMap;
+    });
+  };
+
+  // Add new set to setlist
+  const handleAddSet = (setlistId: string) => {
+    setWorkingSetlists(prev => {
+      const newMap = new Map(prev);
+      const setlist = newMap.get(setlistId);
+      if (setlist) {
+        const newSetNumber = setlist.sets.length + 1;
+        const newSet: SetlistSet = {
+          id: crypto.randomUUID(),
+          name: `Set ${newSetNumber}`,
+          targetDuration: 3600, // Default 60 minutes
+          songs: [],
+        };
+        newMap.set(setlistId, { ...setlist, sets: [...setlist.sets, newSet] });
+      }
+      return newMap;
+    });
+  };
+
+  // Remove set from setlist
+  const handleRemoveSet = async (setlistId: string, setId: string, setName: string) => {
+    const confirmed = await confirm({
+      title: 'Remove Set',
+      description: `Are you sure you want to remove "${setName}"? This will remove all songs in this set.`,
+      confirmText: 'Remove',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
+      setWorkingSetlists(prev => {
+        const newMap = new Map(prev);
+        const setlist = newMap.get(setlistId);
+        if (setlist) {
+          const updatedSets = setlist.sets.filter(set => set.id !== setId);
+          newMap.set(setlistId, { ...setlist, sets: updatedSets });
+        }
+        return newMap;
+      });
+    }
   };
 
   // Calculate total duration for a set
@@ -288,26 +458,63 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
         {/* Setlists grid */}
         {!isLoading && setlists.length > 0 && (
           <div className="grid gap-4">
-            {setlists.map((setlist) => {
+            {setlists.map((originalSetlist) => {
+              const isEditing = editingSetlists.has(originalSetlist.id);
+              const setlist = getWorkingSetlist(originalSetlist.id) || originalSetlist;
               const totalDuration = getSetlistTotalDuration(setlist);
               const targetDuration = getSetlistTargetDuration(setlist);
               const variance = getDurationVariance(totalDuration, targetDuration);
               const varianceColor = getVarianceColor(variance);
               const totalSongs = setlist.sets.reduce((total, set) => total + set.songs.length, 0);
-              const isExpanded = expandedSetlists.has(setlist.id);
 
               return (
                 <div
                   key={setlist.id}
-                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-orange-500/50 transition-all shadow-sm"
+                  className={`bg-card border ${isEditing ? 'border-orange-500' : 'border-border'} rounded-lg overflow-hidden hover:border-orange-500/50 transition-all shadow-sm`}
                 >
                   {/* Setlist header */}
                   <div className="p-4 bg-gradient-to-r from-muted/30 to-muted/10">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold text-foreground mb-2">
-                          {setlist.name}
-                        </h3>
+                        {/* Editable setlist name */}
+                        {isEditing && editingSetlistName === setlist.id ? (
+                          <input
+                            type="text"
+                            value={tempSetlistName}
+                            onChange={(e) => setTempSetlistName(e.target.value)}
+                            onBlur={() => {
+                              if (tempSetlistName.trim()) {
+                                updateSetlistName(setlist.id, tempSetlistName.trim());
+                              }
+                              setEditingSetlistName(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                if (tempSetlistName.trim()) {
+                                  updateSetlistName(setlist.id, tempSetlistName.trim());
+                                }
+                                setEditingSetlistName(null);
+                              } else if (e.key === 'Escape') {
+                                setEditingSetlistName(null);
+                              }
+                            }}
+                            className="text-xl font-bold w-full px-2 py-1 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2"
+                            autoFocus
+                          />
+                        ) : (
+                          <h3
+                            className={`text-xl font-bold text-foreground mb-2 ${isEditing ? 'cursor-pointer hover:text-orange-500 transition-colors' : ''}`}
+                            onClick={() => {
+                              if (isEditing) {
+                                setEditingSetlistName(setlist.id);
+                                setTempSetlistName(setlist.name);
+                              }
+                            }}
+                            title={isEditing ? "Click to edit name" : ""}
+                          >
+                            {setlist.name}
+                          </h3>
+                        )}
                         <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                           <span className="flex items-center">
                             <i className="fas fa-layer-group mr-2"></i>
@@ -334,114 +541,250 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                       </div>
                     </div>
 
-                    {/* Sets preview chips */}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Add Set button (in edit mode) */}
+                    {isEditing && (
+                      <div className="mb-3">
+                        <button
+                          onClick={() => handleAddSet(setlist.id)}
+                          className="text-sm text-orange-500 hover:text-orange-600 px-3 py-1.5 rounded border border-orange-500/30 hover:bg-orange-500/10 transition-colors font-medium"
+                        >
+                          <i className="fas fa-plus mr-1"></i>
+                          Add Set
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Sets as individual cards */}
+                    <div className="space-y-2">
                       {setlist.sets.map((set) => {
                         const setDuration = getSetTotalDuration(set);
                         const setVariance = getDurationVariance(setDuration, set.targetDuration);
                         const setColor = getVarianceColor(setVariance);
+                        const isSetExpanded = expandedSets.has(set.id);
 
                         return (
                           <div
                             key={set.id}
-                            className="flex items-center space-x-2 bg-background border border-border rounded-full px-3 py-1 text-xs"
+                            className="bg-background border border-border rounded-lg overflow-hidden"
                           >
-                            <span className="font-semibold text-foreground">{set.name}</span>
-                            <span className={setColor}>
-                              {formatDuration(setDuration)}
-                            </span>
-                            <span className="text-muted-foreground">
-                              ({set.songs.length})
-                            </span>
+                            {/* Set header */}
+                            <div className="p-3 flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                {/* Expand/collapse button */}
+                                <button
+                                  onClick={() => {
+                                    setExpandedSets(prev => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(set.id)) {
+                                        newSet.delete(set.id);
+                                      } else {
+                                        newSet.add(set.id);
+                                      }
+                                      return newSet;
+                                    });
+                                  }}
+                                  className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <i className={`fas fa-chevron-${isSetExpanded ? 'down' : 'right'} text-sm`}></i>
+                                </button>
+
+                                {/* Editable set name */}
+                                {isEditing && editingSetName === set.id ? (
+                                  <input
+                                    type="text"
+                                    value={tempSetName}
+                                    onChange={(e) => setTempSetName(e.target.value)}
+                                    onBlur={() => {
+                                      if (tempSetName.trim()) {
+                                        updateSetName(setlist.id, set.id, tempSetName.trim());
+                                      }
+                                      setEditingSetName(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        if (tempSetName.trim()) {
+                                          updateSetName(setlist.id, set.id, tempSetName.trim());
+                                        }
+                                        setEditingSetName(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingSetName(null);
+                                      }
+                                    }}
+                                    className="font-semibold px-2 py-1 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500 w-32"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span
+                                    className={`font-semibold ${isEditing ? 'cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-transparent hover:border-orange-500' : ''}`}
+                                    onClick={() => {
+                                      if (isEditing) {
+                                        setEditingSetName(set.id);
+                                        setTempSetName(set.name);
+                                      }
+                                    }}
+                                    title={isEditing ? "Click to edit set name" : ""}
+                                  >
+                                    {set.name}
+                                  </span>
+                                )}
+
+                                <span className="text-sm text-muted-foreground">
+                                  ({set.songs.length} song{set.songs.length !== 1 ? 's' : ''})
+                                </span>
+                              </div>
+
+                              {/* Set duration */}
+                              <div className="flex items-center gap-3">
+                                <div className="text-sm">
+                                  <span className={setColor}>{formatDuration(setDuration)}</span>
+                                  <span className="text-muted-foreground mx-1">/</span>
+                                  {/* Editable target duration */}
+                                  {isEditing && editingSetDuration === set.id ? (
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={tempSetDuration}
+                                      onChange={(e) => setTempSetDuration(parseInt(e.target.value) || 0)}
+                                      onBlur={() => {
+                                        if (tempSetDuration > 0) {
+                                          updateSetDuration(setlist.id, set.id, tempSetDuration * 60);
+                                        }
+                                        setEditingSetDuration(null);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          if (tempSetDuration > 0) {
+                                            updateSetDuration(setlist.id, set.id, tempSetDuration * 60);
+                                          }
+                                          setEditingSetDuration(null);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingSetDuration(null);
+                                        }
+                                      }}
+                                      className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span
+                                      className={`${isEditing ? 'cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-transparent hover:border-orange-500' : ''}`}
+                                      onClick={() => {
+                                        if (isEditing) {
+                                          setEditingSetDuration(set.id);
+                                          setTempSetDuration(Math.round(set.targetDuration / 60));
+                                        }
+                                      }}
+                                      title={isEditing ? "Click to edit target duration (minutes)" : ""}
+                                    >
+                                      {formatDuration(set.targetDuration)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Remove set button (in edit mode) */}
+                                {isEditing && (
+                                  <button
+                                    onClick={() => handleRemoveSet(setlist.id, set.id, set.name)}
+                                    className="text-red-500 hover:text-red-600 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
+                                    title="Remove set"
+                                  >
+                                    <i className="fas fa-times text-sm"></i>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Expandable song list */}
+                            {isSetExpanded && (
+                              <div className="border-t border-border bg-muted/10 p-3">
+                                <div className="space-y-1">
+                                  {set.songs.map((song, idx) => (
+                                    <div
+                                      key={song.id}
+                                      className="flex items-center text-sm text-muted-foreground"
+                                    >
+                                      <span className="w-6 text-xs">{idx + 1}.</span>
+                                      <span className="flex-1">{song.title}</span>
+                                      <span className="text-xs">
+                                        {song.duration ? formatDuration(song.duration) : '--'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  {set.songs.length === 0 && (
+                                    <div className="text-xs italic text-muted-foreground/60">
+                                      No songs yet
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Expandable song list */}
-                  {isExpanded && (
-                    <div className="border-t border-border bg-muted/10 p-4">
-                      {setlist.sets.map((set) => (
-                        <div key={set.id} className="mb-4 last:mb-0">
-                          <h4 className="font-semibold text-sm text-foreground mb-2 flex items-center">
-                            <i className="fas fa-layer-group mr-2 text-orange-500"></i>
-                            {set.name}
-                          </h4>
-                          <div className="space-y-1 pl-6">
-                            {set.songs.map((song, idx) => (
-                              <div
-                                key={song.id}
-                                className="flex items-center text-sm text-muted-foreground"
-                              >
-                                <span className="w-6 text-xs">{idx + 1}.</span>
-                                <span className="flex-1">{song.title}</span>
-                                <span className="text-xs">
-                                  {song.duration ? formatDuration(song.duration) : '--'}
-                                </span>
-                              </div>
-                            ))}
-                            {set.songs.length === 0 && (
-                              <div className="text-xs italic text-muted-foreground/60">
-                                No songs yet
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {/* Actions */}
                   <div className="border-t border-border p-3 flex items-center justify-between bg-muted/5">
-                    <button
-                      onClick={() => {
-                        setExpandedSetlists(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(setlist.id)) {
-                            newSet.delete(setlist.id);
-                          } else {
-                            newSet.add(setlist.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded hover:bg-muted/30 transition-colors"
-                    >
-                      <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} mr-1`}></i>
-                      {isExpanded ? 'Hide' : 'Show'} Songs
-                    </button>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEditSetlist(setlist.id)}
-                        className="text-sm text-orange-500 hover:text-orange-600 px-3 py-1.5 rounded hover:bg-orange-500/10 transition-colors font-medium"
-                      >
-                        <i className="fas fa-edit mr-1"></i>
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopySetlist(setlist.id);
-                        }}
-                        className="text-sm text-blue-500 hover:text-blue-600 px-3 py-1.5 rounded hover:bg-blue-500/10 transition-colors"
-                        disabled={copySetlistMutation.isPending}
-                      >
-                        <i className="fas fa-copy mr-1"></i>
-                        Copy
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSetlist(setlist.id, setlist.name);
-                        }}
-                        className="text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded hover:bg-red-500/10 transition-colors"
-                        disabled={deleteSetlistMutation.isPending}
-                      >
-                        <i className="fas fa-trash mr-1"></i>
-                        Delete
-                      </button>
-                    </div>
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={() => toggleEditMode(setlist.id)}
+                          className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded hover:bg-muted/30 transition-colors"
+                        >
+                          <i className="fas fa-times mr-1"></i>
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleSaveSetlist(setlist.id)}
+                          disabled={updateSetlistMutation.isPending}
+                          className="text-sm text-white bg-orange-500 hover:bg-orange-600 px-4 py-1.5 rounded font-medium transition-colors disabled:opacity-50"
+                        >
+                          <i className="fas fa-save mr-1"></i>
+                          Save Changes
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleEditMode(setlist.id)}
+                          className="text-sm text-orange-500 hover:text-orange-600 px-3 py-1.5 rounded hover:bg-orange-500/10 transition-colors font-medium"
+                        >
+                          <i className="fas fa-cog mr-1"></i>
+                          Configure
+                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditSetlist(setlist.id)}
+                            className="text-sm text-blue-500 hover:text-blue-600 px-3 py-1.5 rounded hover:bg-blue-500/10 transition-colors"
+                          >
+                            <i className="fas fa-edit mr-1"></i>
+                            Edit Songs
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopySetlist(setlist.id);
+                            }}
+                            className="text-sm text-green-500 hover:text-green-600 px-3 py-1.5 rounded hover:bg-green-500/10 transition-colors"
+                            disabled={copySetlistMutation.isPending}
+                          >
+                            <i className="fas fa-copy mr-1"></i>
+                            Copy
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSetlist(setlist.id, setlist.name);
+                            }}
+                            className="text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded hover:bg-red-500/10 transition-colors"
+                            disabled={deleteSetlistMutation.isPending}
+                          >
+                            <i className="fas fa-trash mr-1"></i>
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               );
