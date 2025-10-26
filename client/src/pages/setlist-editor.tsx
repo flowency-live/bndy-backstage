@@ -486,7 +486,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         const songIndex = set.songs.findIndex(s => s.id === overIdStr);
         if (songIndex !== -1) {
           targetSetId = set.id;
-          targetIndex = songIndex + 1; // Insert after the song we're over
+          targetIndex = songIndex; // Insert before the song we're over (matches visual indicator above)
           break;
         }
       }
