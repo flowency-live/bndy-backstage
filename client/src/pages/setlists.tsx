@@ -294,29 +294,27 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
               const variance = getDurationVariance(totalDuration, targetDuration);
               const varianceColor = getVarianceColor(variance);
               const totalSongs = setlist.sets.reduce((total, set) => total + set.songs.length, 0);
+              const isExpanded = expandedSetlists.has(setlist.id);
 
               return (
                 <div
                   key={setlist.id}
-                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-orange-500/50 transition-all"
+                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-orange-500/50 transition-all shadow-sm"
                 >
-                  {/* Setlist header - clickable */}
-                  <div
-                    onClick={() => handleEditSetlist(setlist.id)}
-                    className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
+                  {/* Setlist header */}
+                  <div className="p-4 bg-gradient-to-r from-muted/30 to-muted/10">
+                    <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-foreground truncate mb-1">
+                        <h3 className="text-xl font-bold text-foreground mb-2">
                           {setlist.name}
                         </h3>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>
-                            <i className="fas fa-layer-group mr-1"></i>
+                        <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                          <span className="flex items-center">
+                            <i className="fas fa-layer-group mr-2"></i>
                             {setlist.sets.length} set{setlist.sets.length !== 1 ? 's' : ''}
                           </span>
-                          <span>
-                            <i className="fas fa-music mr-1"></i>
+                          <span className="flex items-center">
+                            <i className="fas fa-music mr-2"></i>
                             {totalSongs} song{totalSongs !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -324,18 +322,19 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
                       {/* Duration summary */}
                       <div className="text-right ml-4">
-                        <div className={`text-lg font-semibold ${varianceColor}`}>
-                          {formatDuration(totalDuration)} / {formatDuration(targetDuration)}
+                        <div className={`text-2xl font-bold ${varianceColor}`}>
+                          {formatDuration(totalDuration)}
                         </div>
-                        <div className={`text-xs ${varianceColor}`}>
+                        <div className="text-xs text-muted-foreground">
+                          / {formatDuration(targetDuration)}
+                        </div>
+                        <div className={`text-xs font-semibold ${varianceColor} mt-1`}>
                           {variance > 0 ? '+' : ''}{variance.toFixed(0)}%
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Sets preview */}
-                  <div className="border-t border-border bg-muted/20 p-3">
+                    {/* Sets preview chips */}
                     <div className="flex flex-wrap gap-2">
                       {setlist.sets.map((set) => {
                         const setDuration = getSetTotalDuration(set);
@@ -345,11 +344,11 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                         return (
                           <div
                             key={set.id}
-                            className="flex items-center space-x-2 bg-background border border-border rounded px-2 py-1 text-xs"
+                            className="flex items-center space-x-2 bg-background border border-border rounded-full px-3 py-1 text-xs"
                           >
-                            <span className="text-muted-foreground">{set.name}:</span>
+                            <span className="font-semibold text-foreground">{set.name}</span>
                             <span className={setColor}>
-                              {formatDuration(setDuration)}/{formatDuration(set.targetDuration)}
+                              {formatDuration(setDuration)}
                             </span>
                             <span className="text-muted-foreground">
                               ({set.songs.length})
@@ -360,37 +359,89 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                     </div>
                   </div>
 
+                  {/* Expandable song list */}
+                  {isExpanded && (
+                    <div className="border-t border-border bg-muted/10 p-4">
+                      {setlist.sets.map((set) => (
+                        <div key={set.id} className="mb-4 last:mb-0">
+                          <h4 className="font-semibold text-sm text-foreground mb-2 flex items-center">
+                            <i className="fas fa-layer-group mr-2 text-orange-500"></i>
+                            {set.name}
+                          </h4>
+                          <div className="space-y-1 pl-6">
+                            {set.songs.map((song, idx) => (
+                              <div
+                                key={song.id}
+                                className="flex items-center text-sm text-muted-foreground"
+                              >
+                                <span className="w-6 text-xs">{idx + 1}.</span>
+                                <span className="flex-1">{song.title}</span>
+                                <span className="text-xs">
+                                  {song.duration ? formatDuration(song.duration) : '--'}
+                                </span>
+                              </div>
+                            ))}
+                            {set.songs.length === 0 && (
+                              <div className="text-xs italic text-muted-foreground/60">
+                                No songs yet
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Actions */}
-                  <div className="border-t border-border p-3 flex items-center justify-end space-x-2">
+                  <div className="border-t border-border p-3 flex items-center justify-between bg-muted/5">
                     <button
-                      onClick={() => handleEditSetlist(setlist.id)}
-                      className="text-sm text-orange-500 hover:text-orange-600 px-3 py-1 rounded hover:bg-orange-500/10 transition-colors"
-                    >
-                      <i className="fas fa-edit mr-1"></i>
-                      Edit
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopySetlist(setlist.id);
+                      onClick={() => {
+                        setExpandedSetlists(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(setlist.id)) {
+                            newSet.delete(setlist.id);
+                          } else {
+                            newSet.add(setlist.id);
+                          }
+                          return newSet;
+                        });
                       }}
-                      className="text-sm text-blue-500 hover:text-blue-600 px-3 py-1 rounded hover:bg-blue-500/10 transition-colors"
-                      disabled={copySetlistMutation.isPending}
+                      className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded hover:bg-muted/30 transition-colors"
                     >
-                      <i className="fas fa-copy mr-1"></i>
-                      Copy
+                      <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} mr-1`}></i>
+                      {isExpanded ? 'Hide' : 'Show'} Songs
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSetlist(setlist.id, setlist.name);
-                      }}
-                      className="text-sm text-red-500 hover:text-red-600 px-3 py-1 rounded hover:bg-red-500/10 transition-colors"
-                      disabled={deleteSetlistMutation.isPending}
-                    >
-                      <i className="fas fa-trash mr-1"></i>
-                      Delete
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditSetlist(setlist.id)}
+                        className="text-sm text-orange-500 hover:text-orange-600 px-3 py-1.5 rounded hover:bg-orange-500/10 transition-colors font-medium"
+                      >
+                        <i className="fas fa-edit mr-1"></i>
+                        Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopySetlist(setlist.id);
+                        }}
+                        className="text-sm text-blue-500 hover:text-blue-600 px-3 py-1.5 rounded hover:bg-blue-500/10 transition-colors"
+                        disabled={copySetlistMutation.isPending}
+                      >
+                        <i className="fas fa-copy mr-1"></i>
+                        Copy
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSetlist(setlist.id, setlist.name);
+                        }}
+                        className="text-sm text-red-500 hover:text-red-600 px-3 py-1.5 rounded hover:bg-red-500/10 transition-colors"
+                        disabled={deleteSetlistMutation.isPending}
+                      >
+                        <i className="fas fa-trash mr-1"></i>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
