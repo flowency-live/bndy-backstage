@@ -57,7 +57,7 @@ function getVarianceColor(variance: number): string {
 }
 
 // Sortable song card component
-function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue }: {
+function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver }: {
   song: SetlistSong;
   setId: string;
   idx: number;
@@ -82,6 +82,10 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
 
   return (
     <div ref={setNodeRef} style={style}>
+      {/* Insertion indicator - shows where drop will happen */}
+      {isOver && (
+        <div className="h-1 bg-orange-500 rounded-full mb-1 shadow-lg"></div>
+      )}
       <div
         {...attributes}
         {...listeners}
@@ -976,6 +980,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               onToggleSegue={handleToggleSegue}
                               onRemove={handleRemoveSong}
                               showSegue={song.segueInto && idx < set.songs.length - 1}
+                              isOver={overId === song.id}
                             />
                           ))}
                           {set.songs.length === 0 && (
