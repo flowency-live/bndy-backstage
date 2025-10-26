@@ -233,6 +233,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [activeSetId, setActiveSetId] = useState<string>('');
   const [collapsedSets, setCollapsedSets] = useState<Set<string>>(new Set());
+  const [editingTargetDuration, setEditingTargetDuration] = useState<string | null>(null);
+  const [tempTargetDuration, setTempTargetDuration] = useState<number>(0);
 
   // Drag and drop state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -678,6 +680,21 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     });
   };
 
+  const handleUpdateTargetDuration = (setId: string, newDuration: number) => {
+    if (!workingSetlist || newDuration < 0) return;
+
+    const updatedSets = workingSetlist.sets.map(set => {
+      if (set.id === setId) {
+        return { ...set, targetDuration: newDuration };
+      }
+      return set;
+    });
+
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
+    setEditingTargetDuration(null);
+  };
+
   // Quick add function for mobile tap-to-add
   const handleQuickAdd = (songId: string, e: React.MouseEvent) => {
     // Only handle click on mobile OR when explicitly clicking (not dragging)
@@ -971,7 +988,46 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                         </div>
                         <div className="flex items-center space-x-3 text-sm">
                           <div className={`font-medium ${varianceColor}`}>
-                            {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
+                            {formatDuration(totalDuration)} / {
+                              editingTargetDuration === set.id ? (
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={tempTargetDuration}
+                                  onChange={(e) => setTempTargetDuration(parseInt(e.target.value) || 0)}
+                                  onBlur={() => {
+                                    if (tempTargetDuration > 0) {
+                                      handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
+                                    } else {
+                                      setEditingTargetDuration(null);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      if (tempTargetDuration > 0) {
+                                        handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
+                                      }
+                                    } else if (e.key === 'Escape') {
+                                      setEditingTargetDuration(null);
+                                    }
+                                  }}
+                                  className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingTargetDuration(set.id);
+                                    setTempTargetDuration(Math.round(set.targetDuration / 60));
+                                  }}
+                                  className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-muted-foreground hover:border-orange-500"
+                                  title="Click to edit target duration"
+                                >
+                                  {formatDuration(set.targetDuration)}
+                                </span>
+                              )
+                            }
                             <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
                           </div>
                           <span className="text-muted-foreground">
