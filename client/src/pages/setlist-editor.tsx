@@ -232,6 +232,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [activeSetId, setActiveSetId] = useState<string>('');
+  const [collapsedSets, setCollapsedSets] = useState<Set<string>>(new Set());
 
   // Drag and drop state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -665,6 +666,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setEditingName(false);
   };
 
+  const toggleSetCollapse = (setId: string) => {
+    setCollapsedSets(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(setId)) {
+        newSet.delete(setId);
+      } else {
+        newSet.add(setId);
+      }
+      return newSet;
+    });
+  };
+
   // Quick add function for mobile tap-to-add
   const handleQuickAdd = (songId: string, e: React.MouseEvent) => {
     // Only handle click on mobile OR when explicitly clicking (not dragging)
@@ -964,34 +977,43 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           <span className="text-muted-foreground">
                             {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
                           </span>
+                          <button
+                            onClick={() => toggleSetCollapse(set.id)}
+                            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                            title={collapsedSets.has(set.id) ? "Expand set" : "Collapse set"}
+                          >
+                            <i className={`fas fa-chevron-${collapsedSets.has(set.id) ? 'down' : 'up'}`}></i>
+                          </button>
                         </div>
                       </div>
 
-                      <SortableContext
-                        items={set.songs.map(s => s.id)}
-                        strategy={verticalListSortingStrategy}
-                        id={`set-container-${set.id}`}
-                      >
-                        <DroppableSetContainer setId={set.id}>
-                          {set.songs?.map((song, idx) => (
-                            <SortableSongCard
-                              key={song.id}
-                              song={song}
-                              setId={set.id}
-                              idx={idx}
-                              onToggleSegue={handleToggleSegue}
-                              onRemove={handleRemoveSong}
-                              showSegue={song.segueInto && idx < set.songs.length - 1}
-                              isOver={overId === song.id}
-                            />
-                          ))}
-                          {set.songs.length === 0 && (
-                            <div className="text-center text-muted-foreground text-sm py-8">
-                              Drag songs here
-                            </div>
-                          )}
-                        </DroppableSetContainer>
-                      </SortableContext>
+                      {!collapsedSets.has(set.id) && (
+                        <SortableContext
+                          items={set.songs.map(s => s.id)}
+                          strategy={verticalListSortingStrategy}
+                          id={`set-container-${set.id}`}
+                        >
+                          <DroppableSetContainer setId={set.id}>
+                            {set.songs?.map((song, idx) => (
+                              <SortableSongCard
+                                key={song.id}
+                                song={song}
+                                setId={set.id}
+                                idx={idx}
+                                onToggleSegue={handleToggleSegue}
+                                onRemove={handleRemoveSong}
+                                showSegue={song.segueInto && idx < set.songs.length - 1}
+                                isOver={overId === song.id}
+                              />
+                            ))}
+                            {set.songs.length === 0 && (
+                              <div className="text-center text-muted-foreground text-sm py-8">
+                                Drag songs here
+                              </div>
+                            )}
+                          </DroppableSetContainer>
+                        </SortableContext>
+                      )}
                     </div>
                   );
                 })}
