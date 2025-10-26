@@ -43,6 +43,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState('');
+  const [expandedSetlists, setExpandedSetlists] = useState<Set<string>>(new Set());
 
   // Fetch all setlists for this artist
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
@@ -62,6 +63,9 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
       return response.json();
     },
     enabled: !!artistId,
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   // Create setlist mutation
