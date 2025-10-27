@@ -14,6 +14,8 @@ export interface SetlistSong {
   artist: string;
   /** Duration in seconds - REQUIRED */
   duration: number;
+  /** Custom duration override in seconds */
+  custom_duration?: number;
   /** Position in the set (0-indexed) */
   position: number;
   /** Guitar tuning */
@@ -69,6 +71,8 @@ export interface PlaybookSong {
   imageUrl?: string;
   /** Duration in seconds - REQUIRED for setlist calculations */
   duration: number;
+  /** Custom duration override in seconds */
+  custom_duration?: number;
   /** Guitar tuning */
   tuning?: string;
 }

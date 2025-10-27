@@ -22,6 +22,7 @@ interface SongWithDetails {
   addedByMembershipId?: string;
   createdAt: string;
   duration?: number;
+  custom_duration?: number;
   bpm?: number;
   key?: string;
   tuning?: string;
@@ -571,8 +572,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
                           </span>
                         )}
-                        {song.duration && (
-                          <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
+                        {(song.custom_duration || song.duration) && (
+                          <div className="whitespace-nowrap">{formatDuration(song.custom_duration || song.duration)}</div>
                         )}
                       </div>
                       {song.bpm && (
@@ -689,10 +690,19 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           </div>
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
-                            <div className="w-full px-2 py-1 text-sm border rounded bg-muted/30 text-muted-foreground">
-                              {song.duration ? formatDuration(song.duration) : 'Unknown'}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">Duration is from Spotify and cannot be edited</p>
+                            <input
+                              type="number"
+                              placeholder={song.duration ? formatDuration(song.duration) : '0:00'}
+                              value={editedSongs[song.id]?.custom_duration ?? song.custom_duration ?? ''}
+                              onChange={(e) => setEditedSongs(prev => ({
+                                ...prev,
+                                [song.id]: { ...prev[song.id], custom_duration: e.target.value ? parseInt(e.target.value) : null }
+                              }))}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                            />
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {song.custom_duration ? 'Custom duration (seconds)' : `Spotify: ${song.duration ? formatDuration(song.duration) : 'Unknown'}`}
+                            </p>
                           </div>
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Key</label>

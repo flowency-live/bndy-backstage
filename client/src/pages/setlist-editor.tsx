@@ -114,7 +114,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
                 {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
               </span>
             )}
-            <span>{song.duration ? formatDuration(song.duration) : '0:00'}</span>
+            <span>{(song.custom_duration || song.duration) ? formatDuration(song.custom_duration || song.duration) : '0:00'}</span>
           </div>
         )}
         <button

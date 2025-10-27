@@ -50,6 +50,8 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const [tempSetName, setTempSetName] = useState('');
   const [editingSetDuration, setEditingSetDuration] = useState<string | null>(null);
   const [tempSetDuration, setTempSetDuration] = useState(0);
+  const [editingSongName, setEditingSongName] = useState<string | null>(null);
+  const [tempSongName, setTempSongName] = useState('');
 
   // Fetch all setlists for this artist
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
@@ -666,15 +668,64 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                       if (song.tuning && song.tuning !== 'standard') {
                                         console.log(`[SETLISTS READONLY RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
                                       }
+                                      const songKey = `${setlist.id}-${song.id}`;
                                       return (
                                         <div
                                           key={song.id}
-                                          className="flex items-center text-sm text-muted-foreground gap-2"
+                                          className="flex items-center text-sm text-muted-foreground gap-2 group"
                                         >
                                           <span className="w-6 text-xs">{idx + 1}.</span>
-                                          <span className="flex-1">
-                                            {song.title}
-                                          </span>
+                                          {editingSongName === songKey ? (
+                                            <input
+                                              type="text"
+                                              value={tempSongName}
+                                              onChange={(e) => setTempSongName(e.target.value)}
+                                              onBlur={() => {
+                                                if (tempSongName.trim() && tempSongName !== song.title) {
+                                                  // Update song name in setlist
+                                                  const updatedSets = setlist.sets.map(s => {
+                                                    if (s.id === set.id) {
+                                                      return {
+                                                        ...s,
+                                                        songs: s.songs.map(sg =>
+                                                          sg.id === song.id ? { ...sg, title: tempSongName.trim() } : sg
+                                                        )
+                                                      };
+                                                    }
+                                                    return s;
+                                                  });
+                                                  updateSetlistMutation.mutate({
+                                                    setlistId: setlist.id,
+                                                    updates: { sets: updatedSets }
+                                                  });
+                                                }
+                                                setEditingSongName(null);
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                  e.currentTarget.blur();
+                                                } else if (e.key === 'Escape') {
+                                                  setEditingSongName(null);
+                                                }
+                                              }}
+                                              className="flex-1 px-2 py-0.5 text-sm border border-orange-500 rounded bg-background focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                              autoFocus
+                                            />
+                                          ) : (
+                                            <span className="flex-1 flex items-center gap-1">
+                                              <span>{song.title}</span>
+                                              <button
+                                                onClick={() => {
+                                                  setEditingSongName(songKey);
+                                                  setTempSongName(song.title);
+                                                }}
+                                                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-orange-500 transition-all"
+                                                title="Edit song name"
+                                              >
+                                                <i className="fas fa-edit text-xs"></i>
+                                              </button>
+                                            </span>
+                                          )}
                                           <span className="flex items-center gap-1 text-xs">
                                             {song.tuning && song.tuning !== 'standard' && (
                                               <span className={`py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
@@ -685,7 +736,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                                 {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
                                               </span>
                                             )}
-                                            <span>{song.duration ? formatDuration(song.duration) : '--'}</span>
+                                            <span>{(song.custom_duration || song.duration) ? formatDuration(song.custom_duration || song.duration) : '--'}</span>
                                           </span>
                                         </div>
                                       );
