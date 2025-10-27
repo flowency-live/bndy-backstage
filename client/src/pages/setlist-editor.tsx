@@ -988,10 +988,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       <div
                         className="bg-muted/30 p-2 sm:p-3 border-b border-border cursor-pointer hover:bg-muted/40 transition-colors"
                         onClick={() => {
-                          // Clicking header makes this the active set AND expands it (collapses others)
-                          setActiveSetId(set.id);
-                          // If this set is collapsed, expand it and collapse all others
-                          if (isCollapsed) {
+                          // If clicking the already-active set, toggle its collapse state
+                          if (isActive) {
+                            toggleSetCollapse(set.id);
+                          } else {
+                            // Clicking a different set makes it active and expands it (collapses others)
+                            setActiveSetId(set.id);
+                            // Expand this set and collapse all others
                             setCollapsedSets(new Set());
                           }
                         }}
