@@ -188,6 +188,11 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <div className="font-medium truncate text-xs">{song.title}</div>
+          {song.tuning && song.tuning !== 'standard' && (
+            <span className="px-1 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded shrink-0">
+              {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
+            </span>
+          )}
           {isInSetlist && (
             <i className="fas fa-check text-green-500 text-xs shrink-0" title="Already in setlist"></i>
           )}
