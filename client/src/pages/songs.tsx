@@ -317,15 +317,18 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   const getReadinessCount = (song: SongWithDetails) => {
     const counts = { green: 0, amber: 0, red: 0 };
+    if (!song || !song.readiness) return counts;
     song.readiness.forEach(r => counts[r.status]++);
     return counts;
   };
 
   const getUserReadiness = (song: SongWithDetails) => {
+    if (!song || !song.readiness) return undefined;
     return song.readiness.find(r => r.membershipId === membership.id)?.status;
   };
 
   const getUserVeto = (song: SongWithDetails) => {
+    if (!song || !song.vetos) return false;
     return song.vetos.some(v => v.membershipId === membership.id);
   };
 
@@ -797,8 +800,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <span className="font-sans font-semibold text-foreground block mb-2">Member readiness:</span>
                           <div className="grid grid-cols-2 gap-2">
                             {artistMembers.map((member) => {
-                              const memberReadiness = song.readiness.find(r => r.membershipId === member.id);
-                              const memberVeto = song.vetos.find(v => v.membershipId === member.id);
+                              const memberReadiness = song.readiness?.find(r => r.membershipId === member.id);
+                              const memberVeto = song.vetos?.find(v => v.membershipId === member.id);
 
                               return (
                                 <div key={member.id} className="flex items-center space-x-2" data-testid={`member-status-${member.id}-${song.id}`}>
