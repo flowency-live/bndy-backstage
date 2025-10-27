@@ -768,6 +768,16 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setLocation(`/artists/${artistId}/setlists/${setlist.id}/print`);
+                      }}
+                      className="text-sm text-green-600 hover:text-green-700 px-3 py-1.5 rounded hover:bg-green-500/10 transition-colors"
+                    >
+                      <i className="fas fa-print mr-1"></i>
+                      Print
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleCopySetlist(setlist.id);
                       }}
                       className="text-sm text-blue-500 hover:text-blue-600 px-3 py-1.5 rounded hover:bg-blue-500/10 transition-colors"

@@ -1,0 +1,145 @@
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
+import type { Setlist } from "@/types/setlist";
+
+interface SetlistPrintProps {
+  artistId: string;
+  setlistId: string;
+}
+
+export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps) {
+  const [, setLocation] = useLocation();
+
+  // Fetch setlist
+  const { data: setlist, isLoading } = useQuery<Setlist>({
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
+    queryFn: async () => {
+      const response = await fetch(
+        `https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch setlist");
+      }
+
+      return response.json();
+    },
+  });
+
+  // Auto-open print dialog when loaded
+  useEffect(() => {
+    if (setlist && !isLoading) {
+      // Small delay to ensure rendering is complete
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+  }, [setlist, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <i className="fas fa-spinner fa-spin text-4xl text-orange-500"></i>
+      </div>
+    );
+  }
+
+  if (!setlist) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Setlist not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+          }
+          .print-page-break {
+            page-break-after: always;
+            break-after: page;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+        @media screen {
+          .print-container {
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 1rem;
+          }
+        }
+      `}</style>
+
+      {/* Close button - only visible on screen */}
+      <div className="no-print fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setLocation(`/artists/${artistId}/setlists`)}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow-lg"
+        >
+          <i className="fas fa-times mr-2"></i>
+          Close
+        </button>
+      </div>
+
+      <div className="print-container">
+        {setlist.sets.map((set, setIndex) => (
+          <div
+            key={set.id}
+            className={`${setIndex < setlist.sets.length - 1 ? 'print-page-break' : ''} p-8`}
+          >
+            {/* Set header */}
+            <div className="mb-8 text-center">
+              <h1 className="text-4xl font-bold mb-2">{set.name}</h1>
+              <p className="text-xl text-muted-foreground">{setlist.name}</p>
+            </div>
+
+            {/* Song list */}
+            <div className="space-y-3">
+              {set.songs.map((song, idx) => (
+                <div
+                  key={song.id}
+                  className="flex items-center gap-4 text-lg border-b border-border pb-2"
+                >
+                  {/* Track number */}
+                  <div className="w-12 text-right font-bold text-muted-foreground shrink-0">
+                    {idx + 1}.
+                  </div>
+
+                  {/* Track name */}
+                  <div className="flex-1 font-medium">
+                    {song.title}
+                  </div>
+
+                  {/* Tuning badge */}
+                  <div className="shrink-0">
+                    {song.tuning && song.tuning !== 'standard' && (
+                      <span className={`px-3 py-1 text-sm font-bold rounded ${
+                        song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                        song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                        'bg-gray-400 text-black'
+                      }`}>
+                        {song.tuning === 'drop-d' ? 'Drop D' :
+                         song.tuning === 'eb' ? 'Eb' :
+                         song.tuning.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
