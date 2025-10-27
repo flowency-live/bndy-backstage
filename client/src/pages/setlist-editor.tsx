@@ -89,32 +89,24 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
       <div
         {...attributes}
         {...listeners}
-        className="flex items-center gap-2 bg-background border border-border rounded p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-1 sm:gap-2 bg-background border border-border rounded p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
       >
         {/* Position number */}
-        <div className="w-6 text-center text-sm font-bold text-foreground">
+        <div className="w-5 sm:w-6 text-center text-xs sm:text-sm font-bold text-foreground shrink-0">
           {idx + 1}.
         </div>
 
-        {song.imageUrl && (
-          <img
-            src={song.imageUrl}
-            alt={song.title}
-            className="w-8 h-8 rounded object-cover"
-          />
-        )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            <div className="font-medium truncate text-sm">{song.title}</div>
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="font-medium truncate text-xs sm:text-sm">{song.title}</div>
             {song.tuning && song.tuning !== 'standard' && (
-              <span className="px-1.5 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded">
+              <span className="px-1 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded shrink-0">
                 {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
               </span>
             )}
           </div>
-          <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
         </div>
-        <div className="text-xs text-muted-foreground whitespace-nowrap">
+        <div className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
           {song.duration ? formatDuration(song.duration) : '0:00'}
         </div>
         <button
@@ -122,19 +114,19 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
             e.stopPropagation();
             onToggleSegue(setId, song.id);
           }}
-          className={`p-1 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600`}
+          className={`p-0.5 sm:p-1 ${song.segueInto ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-600 shrink-0`}
           title={song.segueInto ? 'Click to break segue' : 'Click to segue into next song'}
         >
-          <i className="fas fa-arrow-down"></i>
+          <i className="fas fa-arrow-down text-xs"></i>
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onRemove(setId, song.id);
           }}
-          className="text-red-500 hover:text-red-600 p-1"
+          className="text-red-500 hover:text-red-600 p-0.5 sm:p-1 shrink-0"
         >
-          <i className="fas fa-times"></i>
+          <i className="fas fa-times text-xs"></i>
         </button>
       </div>
       {showSegue && (
@@ -211,7 +203,7 @@ function DroppableSetContainer({ setId, children }: {
   return (
     <div
       ref={setNodeRef}
-      className={`p-2 min-h-[100px] space-y-1 transition-colors ${
+      className={`px-0 py-1 min-h-[100px] space-y-1 transition-colors ${
         isOver ? 'bg-orange-500/10 border-2 border-dashed border-orange-500' : ''
       }`}
     >
@@ -253,7 +245,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
+        delay: 150, // Reduced delay for better mobile responsiveness
         tolerance: 5,
       },
     }),
@@ -870,9 +862,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       onDragCancel={handleDragCancel}
     >
       <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-6xl mx-auto px-0 sm:px-6 py-2 sm:py-8">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-2 px-2 sm:px-0 sm:mb-6">
             {editingName ? (
               <div className="flex items-center space-x-2">
                 <input
@@ -948,16 +940,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             )}
           </div>
 
-          {/* Toggle drawer button (mobile) */}
-          <div className="mb-4 lg:hidden">
-            <button
-              onClick={() => setDrawerOpen(!drawerOpen)}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium flex items-center justify-center space-x-2"
-            >
-              <i className={`fas fa-${drawerOpen ? 'times' : 'music'}`}></i>
-              <span>{drawerOpen ? 'Close Playbook' : 'Add Songs from Playbook'}</span>
-            </button>
-          </div>
+          {/* Toggle drawer button (mobile) - only show when closed */}
+          {!drawerOpen && (
+            <div className="mb-2 lg:hidden px-2">
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium flex items-center justify-center space-x-2"
+              >
+                <i className="fas fa-music"></i>
+                <span>Add Songs from Playbook</span>
+              </button>
+            </div>
+          )}
 
           <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
             {/* Sets area - 50% width on mobile when drawer is open */}
@@ -969,8 +963,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                   const varianceColor = getVarianceColor(variance);
 
                   return (
-                    <div key={set.id} className="bg-card border border-border rounded overflow-hidden">
-                      <div className="bg-muted/30 p-3 border-b border-border flex items-center justify-between">
+                    <div key={set.id} className="bg-card border-y sm:border sm:rounded border-border overflow-hidden">
+                      <div className="bg-muted/30 p-2 sm:p-3 border-b border-border flex items-center justify-between text-xs sm:text-sm">
                         <div
                           className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setActiveSetId(set.id)}
