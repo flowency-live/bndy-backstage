@@ -561,10 +561,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
                         {song.tuning && song.tuning !== 'standard' && (
-                          <span className={`px-1 py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${
-                            song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-                            song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-                            'bg-gray-400 text-black'
+                          <span className={`py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${
+                            song.tuning === 'drop-d' ? 'bg-yellow-400 text-black px-1' :
+                            song.tuning === 'eb' ? 'bg-blue-500 text-white px-1.5' :
+                            'bg-gray-400 text-black px-1'
                           }`}>
                             {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
                           </span>

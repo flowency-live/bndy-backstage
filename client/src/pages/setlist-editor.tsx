@@ -105,10 +105,10 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         {!drawerOpen && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap shrink-0">
             {song.tuning && song.tuning !== 'standard' && (
-              <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
-                song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-                song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-                'bg-gray-400 text-black'
+              <span className={`py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
+                song.tuning === 'drop-d' ? 'bg-yellow-400 text-black px-1.5' :
+                song.tuning === 'eb' ? 'bg-blue-500 text-white px-2' :
+                'bg-gray-400 text-black px-1.5'
               }`}>
                 {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
               </span>
@@ -191,10 +191,10 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
         <div className="flex items-center space-x-1 sm:space-x-2">
           <div className="font-medium truncate text-xs">{song.title}</div>
           {song.tuning && song.tuning !== 'standard' && (
-            <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
-              song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-              song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-              'bg-gray-400 text-black'
+            <span className={`py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
+              song.tuning === 'drop-d' ? 'bg-yellow-400 text-black px-1.5' :
+              song.tuning === 'eb' ? 'bg-blue-500 text-white px-2' :
+              'bg-gray-400 text-black px-1.5'
             }`}>
               {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
             </span>
