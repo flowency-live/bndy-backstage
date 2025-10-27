@@ -267,7 +267,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Fetch setlist from database
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId, "v2"],
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId, "v3"],
     queryFn: async () => {
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
         credentials: "include",
