@@ -694,17 +694,38 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
                             <input
-                              type="number"
+                              type="text"
                               placeholder={song.duration ? formatDuration(song.duration) : '0:00'}
-                              value={editedSongs[song.id]?.custom_duration ?? song.custom_duration ?? ''}
-                              onChange={(e) => setEditedSongs(prev => ({
-                                ...prev,
-                                [song.id]: { ...prev[song.id], custom_duration: e.target.value ? parseInt(e.target.value) : null }
-                              }))}
+                              value={
+                                editedSongs[song.id]?.custom_duration !== undefined
+                                  ? formatDuration(editedSongs[song.id].custom_duration)
+                                  : song.custom_duration
+                                  ? formatDuration(song.custom_duration)
+                                  : ''
+                              }
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Parse mm:ss format
+                                const match = value.match(/^(\d+):(\d{2})$/);
+                                if (match) {
+                                  const minutes = parseInt(match[1]);
+                                  const seconds = parseInt(match[2]);
+                                  const totalSeconds = minutes * 60 + seconds;
+                                  setEditedSongs(prev => ({
+                                    ...prev,
+                                    [song.id]: { ...prev[song.id], custom_duration: totalSeconds }
+                                  }));
+                                } else if (value === '') {
+                                  setEditedSongs(prev => ({
+                                    ...prev,
+                                    [song.id]: { ...prev[song.id], custom_duration: null }
+                                  }));
+                                }
+                              }}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {song.custom_duration ? 'Custom duration (seconds)' : `Spotify: ${song.duration ? formatDuration(song.duration) : 'Unknown'}`}
+                              {song.custom_duration ? 'Custom (mm:ss)' : `Spotify: ${song.duration ? formatDuration(song.duration) : 'Unknown'}`}
                             </p>
                           </div>
                           <div>

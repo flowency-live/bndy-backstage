@@ -58,7 +58,7 @@ function getVarianceColor(variance: number): string {
 }
 
 // Sortable song card component
-function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver, drawerOpen }: {
+function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver, drawerOpen, isEditing, editValue, onStartEdit, onEditChange, onFinishEdit }: {
   song: SetlistSong;
   setId: string;
   idx: number;
@@ -67,6 +67,11 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   showSegue: boolean;
   isOver: boolean;
   drawerOpen: boolean;
+  isEditing: boolean;
+  editValue: string;
+  onStartEdit: (songId: string, currentTitle: string) => void;
+  onEditChange: (value: string) => void;
+  onFinishEdit: () => void;
 }) {
   const {
     attributes,
@@ -100,8 +105,36 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
           {idx + 1}.
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="font-medium truncate text-xs">{song.title}</div>
+        <div className="flex-1 min-w-0 group">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={onFinishEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onFinishEdit();
+                if (e.key === 'Escape') onFinishEdit();
+              }}
+              className="w-full px-1 py-0.5 text-xs border border-orange-500 rounded"
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <div className="flex items-center gap-1">
+              <div className="font-medium truncate text-xs">{song.title}</div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartEdit(song.id, song.title);
+                }}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-orange-500 shrink-0"
+                title="Edit title"
+              >
+                <i className="fas fa-edit text-[10px]"></i>
+              </button>
+            </div>
+          )}
         </div>
         {!drawerOpen && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap shrink-0">
@@ -246,6 +279,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const [collapsedSets, setCollapsedSets] = useState<Set<string>>(new Set());
   const [editingTargetDuration, setEditingTargetDuration] = useState<string | null>(null);
   const [tempTargetDuration, setTempTargetDuration] = useState<number>(0);
+  const [editingSongTitle, setEditingSongTitle] = useState<string | null>(null);
+  const [tempSongTitle, setTempSongTitle] = useState<string>('');
 
   // Drag and drop state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -729,6 +764,35 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setHasUnsavedChanges(true);
   };
 
+  const handleStartEditSongTitle = (songId: string, currentTitle: string) => {
+    setEditingSongTitle(songId);
+    setTempSongTitle(currentTitle);
+  };
+
+  const handleEditSongTitleChange = (value: string) => {
+    setTempSongTitle(value);
+  };
+
+  const handleFinishEditSongTitle = () => {
+    if (!workingSetlist || !editingSongTitle) return;
+
+    const trimmedTitle = tempSongTitle.trim();
+    if (trimmedTitle && trimmedTitle !== editingSongTitle) {
+      const updatedSets = workingSetlist.sets.map(set => ({
+        ...set,
+        songs: set.songs.map(song =>
+          song.id === editingSongTitle ? { ...song, title: trimmedTitle } : song
+        ),
+      }));
+
+      setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+      setHasUnsavedChanges(true);
+    }
+
+    setEditingSongTitle(null);
+    setTempSongTitle('');
+  };
+
   const handleUpdateName = () => {
     if (tempName.trim() && tempName !== workingSetlist?.name) {
       setWorkingSetlist({ ...workingSetlist!, name: tempName });
@@ -1054,7 +1118,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
           <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
             {/* Sets area - 50% width on mobile when drawer is open */}
-            <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0`}>
+            <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0 relative`}>
+              {/* Scroll gutter on mobile - transparent touch area on right side */}
+              <div className="lg:hidden absolute top-0 right-0 bottom-0 w-8 pointer-events-auto z-20" style={{ touchAction: 'pan-y' }}></div>
               <div className="space-y-6">
                 {(workingSetlist || setlist).sets.map((set) => {
                   const totalDuration = getSetTotalDuration(set);
@@ -1073,28 +1139,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                         {/* Mobile layout - stacked */}
                         <div className="flex flex-col gap-1 sm:hidden">
                           <div className="flex items-center justify-between">
-                            <div
-                              className="flex items-center space-x-2 flex-1 cursor-pointer"
-                              onClick={() => {
-                                // Make this set active
-                                setActiveSetId(set.id);
-                                // If this set is currently collapsed, expand it
-                                if (collapsedSets.has(set.id)) {
-                                  setCollapsedSets(prev => {
-                                    const newSet = new Set(prev);
-                                    newSet.delete(set.id);
-                                    return newSet;
-                                  });
-                                }
-                              }}
-                            >
+                            <div className="flex items-center space-x-2 flex-1">
                               <input
                                 type="radio"
                                 name="activeSet"
                                 checked={isActive}
-                                onChange={() => {}}
+                                onChange={() => {
+                                  // Make this set active
+                                  setActiveSetId(set.id);
+                                  // If this set is currently collapsed, expand it
+                                  if (collapsedSets.has(set.id)) {
+                                    setCollapsedSets(prev => {
+                                      const newSet = new Set(prev);
+                                      newSet.delete(set.id);
+                                      return newSet;
+                                    });
+                                  }
+                                }}
                                 className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
-                                onClick={(e) => e.stopPropagation()}
                               />
                               <h3 className="font-semibold text-sm">{set.name}</h3>
                             </div>
@@ -1130,9 +1192,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               type="radio"
                               name="activeSet"
                               checked={isActive}
-                              onChange={() => {}}
+                              onChange={() => {
+                                // Make this set active
+                                setActiveSetId(set.id);
+                                // If this set is currently collapsed, expand it
+                                if (collapsedSets.has(set.id)) {
+                                  setCollapsedSets(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(set.id);
+                                    return newSet;
+                                  });
+                                }
+                              }}
                               className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
                             />
                             <h3 className="font-semibold">{set.name}</h3>
                           </div>
@@ -1183,6 +1255,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                     showSegue={song.segueInto && idx < set.songs.length - 1}
                                     isOver={overId === song.id}
                                     drawerOpen={drawerOpen}
+                                    isEditing={editingSongTitle === song.id}
+                                    editValue={tempSongTitle}
+                                    onStartEdit={handleStartEditSongTitle}
+                                    onEditChange={handleEditSongTitleChange}
+                                    onFinishEdit={handleFinishEditSongTitle}
                                   />
                                 );
                               });
