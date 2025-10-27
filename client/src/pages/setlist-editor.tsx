@@ -269,6 +269,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId, "v3"],
     queryFn: async () => {
+      console.log('[SETLIST EDIT] ========== START API FETCH (SETLIST) ==========');
+      console.log('[SETLIST EDIT] Fetching from:', `https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`);
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
         credentials: "include",
         headers: {
@@ -277,24 +280,37 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
 
       if (!response.ok) {
+        console.log('[SETLIST EDIT] API FAILED:', response.status, response.statusText);
         throw new Error("Failed to fetch setlist");
       }
 
+      console.log('[SETLIST EDIT] API response received, parsing JSON...');
       const setlistData = await response.json();
 
-      console.log('[SETLIST EDIT API] Fetched setlist:', setlistData.name);
+      console.log('[SETLIST EDIT] Raw API data:', JSON.stringify(setlistData, null, 2));
+      console.log('[SETLIST EDIT] Setlist name:', setlistData.name);
+      console.log('[SETLIST EDIT] Number of sets:', setlistData.sets?.length || 0);
 
       const allSongs: any[] = [];
-      setlistData.sets?.forEach((set: any) => {
-        set.songs?.forEach((song: any) => {
+      setlistData.sets?.forEach((set: any, setIdx: number) => {
+        console.log(`[SETLIST EDIT] --- Set ${setIdx + 1}: "${set.name}" ---`);
+        console.log(`[SETLIST EDIT] Set has ${set.songs?.length || 0} songs`);
+
+        set.songs?.forEach((song: any, songIdx: number) => {
           allSongs.push(song);
+          const tuning = song.tuning || 'UNDEFINED';
+          console.log(`[SETLIST EDIT]   Song ${songIdx + 1}: "${song.title}" | duration: ${song.duration || 'NONE'}s | tuning: ${tuning}`);
+
           if (song.tuning && song.tuning !== 'standard') {
-            console.log(`[SETLIST EDIT API] Non-standard tuning: "${song.title}" -> ${song.tuning}`);
+            console.log(`[SETLIST EDIT]   *** NON-STANDARD TUNING DETECTED: ${song.tuning} ***`);
           }
         });
       });
 
-      console.log('[SETLIST EDIT API]', allSongs.length, 'total songs,', allSongs.filter(s => s.tuning !== 'standard').length, 'non-standard');
+      const nonStandardCount = allSongs.filter(s => s.tuning !== 'standard').length;
+      const totalDuration = allSongs.reduce((sum, s) => sum + (s.duration || 0), 0);
+      console.log(`[SETLIST EDIT] Summary: ${allSongs.length} total songs, ${totalDuration}s total, ${nonStandardCount} non-standard tunings`);
+      console.log('[SETLIST EDIT] ========== END API FETCH (SETLIST) ==========');
 
       return setlistData;
     },
@@ -363,9 +379,26 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Initialize working copy when setlist loads
   useEffect(() => {
+    console.log('[SETLIST EDIT SYNC] ========== SYNC EFFECT TRIGGERED ==========');
+    console.log('[SETLIST EDIT SYNC] setlist exists:', !!setlist);
+    console.log('[SETLIST EDIT SYNC] workingSetlist exists:', !!workingSetlist);
+    console.log('[SETLIST EDIT SYNC] hasUnsavedChanges:', hasUnsavedChanges);
+
     if (setlist) {
       // Initialize workingSetlist if it doesn't exist
       if (!workingSetlist) {
+        console.log('[SETLIST EDIT SYNC] Initializing workingSetlist from setlist...');
+        const allSongs: any[] = [];
+        setlist.sets?.forEach((set: any) => {
+          set.songs?.forEach((song: any) => {
+            allSongs.push(song);
+          });
+        });
+        console.log('[SETLIST EDIT SYNC] Copying', allSongs.length, 'songs to workingSetlist');
+        allSongs.forEach((song, idx) => {
+          console.log(`[SETLIST EDIT SYNC]   Song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'}`);
+        });
+
         setWorkingSetlist(setlist);
         if (setlist.sets.length > 0 && !activeSetId) {
           setActiveSetId(setlist.sets[0].id);
@@ -373,9 +406,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       }
       // Update workingSetlist with fresh data if no unsaved changes
       else if (!hasUnsavedChanges) {
+        console.log('[SETLIST EDIT SYNC] Updating workingSetlist from setlist (no unsaved changes)...');
+        const allSongs: any[] = [];
+        setlist.sets?.forEach((set: any) => {
+          set.songs?.forEach((song: any) => {
+            allSongs.push(song);
+          });
+        });
+        console.log('[SETLIST EDIT SYNC] Updating with', allSongs.length, 'songs');
+        allSongs.forEach((song, idx) => {
+          console.log(`[SETLIST EDIT SYNC]   Song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'}`);
+        });
+
         setWorkingSetlist(setlist);
+      } else {
+        console.log('[SETLIST EDIT SYNC] Skipping sync - has unsaved changes');
       }
     }
+    console.log('[SETLIST EDIT SYNC] ========== END SYNC EFFECT ==========');
   }, [setlist, workingSetlist, activeSetId, hasUnsavedChanges]);
 
   // Warn user about unsaved changes when leaving page
@@ -1160,19 +1208,29 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           id={`set-container-${set.id}`}
                         >
                           <DroppableSetContainer setId={set.id}>
-                            {set.songs?.map((song, idx) => (
-                              <SortableSongCard
-                                key={song.id}
-                                song={song}
-                                setId={set.id}
-                                idx={idx}
-                                onToggleSegue={handleToggleSegue}
-                                onRemove={handleRemoveSong}
-                                showSegue={song.segueInto && idx < set.songs.length - 1}
-                                isOver={overId === song.id}
-                                drawerOpen={drawerOpen}
-                              />
-                            ))}
+                            {(() => {
+                              console.log(`[SETLIST EDIT RENDER] ========== RENDERING SET: "${set.name}" ==========`);
+                              console.log(`[SETLIST EDIT RENDER] Set has ${set.songs.length} songs`);
+                              return set.songs?.map((song, idx) => {
+                                console.log(`[SETLIST EDIT RENDER] Rendering song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'} | duration: ${song.duration || 'NONE'}s`);
+                                if (song.tuning && song.tuning !== 'standard') {
+                                  console.log(`[SETLIST EDIT RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
+                                }
+                                return (
+                                  <SortableSongCard
+                                    key={song.id}
+                                    song={song}
+                                    setId={set.id}
+                                    idx={idx}
+                                    onToggleSegue={handleToggleSegue}
+                                    onRemove={handleRemoveSong}
+                                    showSegue={song.segueInto && idx < set.songs.length - 1}
+                                    isOver={overId === song.id}
+                                    drawerOpen={drawerOpen}
+                                  />
+                                );
+                              });
+                            })()}
                             {set.songs.length === 0 && (
                               <div className="text-center text-muted-foreground text-sm py-8">
                                 Drag songs here

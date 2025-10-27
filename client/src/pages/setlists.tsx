@@ -55,6 +55,9 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v3"],
     queryFn: async () => {
+      console.log('[SETLISTS READONLY] ========== START API FETCH ==========');
+      console.log('[SETLISTS READONLY] Fetching from:', `https://api.bndy.co.uk/api/artists/${artistId}/setlists`);
+
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
         credentials: "include",
         headers: {
@@ -63,26 +66,41 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
       });
 
       if (!response.ok) {
+        console.log('[SETLISTS READONLY] API FAILED:', response.status, response.statusText);
         throw new Error("Failed to fetch setlists");
       }
 
+      console.log('[SETLISTS READONLY] API response received, parsing JSON...');
       const data = await response.json();
 
-      console.log('[SETLISTS API] Fetched:', data.length, 'setlists');
+      console.log('[SETLISTS READONLY] Raw API data:', JSON.stringify(data, null, 2));
+      console.log('[SETLISTS READONLY] Number of setlists:', data.length);
 
-      data.forEach((setlist: Setlist) => {
+      data.forEach((setlist: Setlist, setlistIdx: number) => {
+        console.log(`[SETLISTS READONLY] --- Setlist ${setlistIdx + 1}: "${setlist.name}" ---`);
+        console.log(`[SETLISTS READONLY] Setlist has ${setlist.sets?.length || 0} sets`);
+
         const allSongs: SetlistSong[] = [];
-        setlist.sets?.forEach((set: SetlistSet) => {
-          set.songs?.forEach((song: SetlistSong) => {
+        setlist.sets?.forEach((set: SetlistSet, setIdx: number) => {
+          console.log(`[SETLISTS READONLY]   Set ${setIdx + 1}: "${set.name}" has ${set.songs?.length || 0} songs`);
+
+          set.songs?.forEach((song: SetlistSong, songIdx: number) => {
             allSongs.push(song);
+            const tuning = song.tuning || 'UNDEFINED';
+            console.log(`[SETLISTS READONLY]     Song ${songIdx + 1}: "${song.title}" | duration: ${song.duration || 'NONE'}s | tuning: ${tuning}`);
+
             if (song.tuning && song.tuning !== 'standard') {
-              console.log(`[SETLISTS API] Non-standard tuning: "${song.title}" -> ${song.tuning}`);
+              console.log(`[SETLISTS READONLY]     *** NON-STANDARD TUNING DETECTED: ${song.tuning} ***`);
             }
           });
         });
-        console.log(`[SETLISTS API] "${setlist.name}":`, allSongs.length, 'total songs,', allSongs.filter(s => s.tuning !== 'standard').length, 'non-standard');
+
+        const nonStandardCount = allSongs.filter(s => s.tuning !== 'standard').length;
+        const totalDuration = allSongs.reduce((sum, s) => sum + (s.duration || 0), 0);
+        console.log(`[SETLISTS READONLY] Summary for "${setlist.name}": ${allSongs.length} songs, ${totalDuration}s total, ${nonStandardCount} non-standard tunings`);
       });
 
+      console.log('[SETLISTS READONLY] ========== END API FETCH ==========');
       return data;
     },
     enabled: !!artistId,
@@ -640,25 +658,35 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             {isSetExpanded && (
                               <div className="border-t border-border bg-muted/10 p-3">
                                 <div className="space-y-1">
-                                  {set.songs.map((song, idx) => (
-                                    <div
-                                      key={song.id}
-                                      className="flex items-center text-sm text-muted-foreground gap-2"
-                                    >
-                                      <span className="w-6 text-xs">{idx + 1}.</span>
-                                      <span className="flex-1 flex items-center gap-1">
-                                        <span>{song.title}</span>
-                                        {song.tuning && song.tuning !== 'standard' && (
-                                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                                            {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+                                  {(() => {
+                                    console.log(`[SETLISTS READONLY RENDER] ========== RENDERING SET: "${set.name}" ==========`);
+                                    console.log(`[SETLISTS READONLY RENDER] Set has ${set.songs.length} songs`);
+                                    return set.songs.map((song, idx) => {
+                                      console.log(`[SETLISTS READONLY RENDER] Rendering song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'} | duration: ${song.duration || 'NONE'}s`);
+                                      if (song.tuning && song.tuning !== 'standard') {
+                                        console.log(`[SETLISTS READONLY RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
+                                      }
+                                      return (
+                                        <div
+                                          key={song.id}
+                                          className="flex items-center text-sm text-muted-foreground gap-2"
+                                        >
+                                          <span className="w-6 text-xs">{idx + 1}.</span>
+                                          <span className="flex-1 flex items-center gap-1">
+                                            <span>{song.title}</span>
+                                            {song.tuning && song.tuning !== 'standard' && (
+                                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
+                                                {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+                                              </span>
+                                            )}
                                           </span>
-                                        )}
-                                      </span>
-                                      <span className="text-xs">
-                                        {song.duration ? formatDuration(song.duration) : '--'}
-                                      </span>
-                                    </div>
-                                  ))}
+                                          <span className="text-xs">
+                                            {song.duration ? formatDuration(song.duration) : '--'}
+                                          </span>
+                                        </div>
+                                      );
+                                    });
+                                  })()}
                                   {set.songs.length === 0 && (
                                     <div className="text-xs italic text-muted-foreground/60">
                                       No songs yet
