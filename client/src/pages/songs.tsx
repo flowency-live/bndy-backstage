@@ -536,9 +536,16 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0 px-2 py-1.5">
-                      <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
-                        {song.title}
-                      </h3>
+                      <div className="flex items-center gap-1">
+                        <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
+                          {song.title}
+                        </h3>
+                        {song.tuning && song.tuning !== 'standard' && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
+                            {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
