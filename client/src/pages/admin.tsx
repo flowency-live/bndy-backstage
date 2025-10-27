@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { useSectionTheme } from "@/hooks/use-section-theme";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { queryClient } from "@/lib/queryClient";
@@ -30,7 +29,6 @@ interface AdminProps {
 
 export default function Admin({ artistId, membership }: AdminProps) {
   // Apply band theme for admin/management pages
-  useSectionTheme('band');
   
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
@@ -58,7 +57,6 @@ function formatDuration(seconds?: number): string {
 
 export default function Songs({ artistId, membership }: SongsProps) {
   // Apply songs theme
-  useSectionTheme('songs');
 
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();

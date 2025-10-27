@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import type { Event, ArtistMembership, EVENT_TYPES } from "@/types/api";
@@ -32,7 +31,6 @@ interface CalendarProps {
 
 export default function Calendar({ artistId, membership }: CalendarProps) {
   // Apply calendar theme
-  useSectionTheme('calendar');
 
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();

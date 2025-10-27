@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { useSectionTheme } from "@/hooks/use-section-theme";
 import { format } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { ArtistMembership } from "@/types/api";
@@ -55,7 +54,6 @@ interface Invite {
 
 export default function Members({ artistId, membership }: MembersProps) {
   // Apply band theme for management pages
-  useSectionTheme('band');
 
   const [, setLocation] = useLocation();
   const { session } = useServerAuth();

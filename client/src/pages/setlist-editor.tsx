@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
-import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import { PageHeader } from "@/components/layout";
@@ -274,7 +273,6 @@ function DroppableSetContainer({ setId, children }: {
 }
 
 export default function SetlistEditor({ artistId, setlistId, membership }: SetlistEditorProps) {
-  useSectionTheme('songs');
 
   const [, setLocation] = useLocation();
   const { toast } = useToast();
