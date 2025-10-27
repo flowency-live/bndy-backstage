@@ -129,6 +129,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
+    placeholderData: undefined,
   });
 
   // Get band members using new band-scoped API
@@ -536,24 +537,24 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0 px-2 py-1.5">
-                      <div className="flex items-center gap-1">
-                        <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
-                          {song.title}
-                        </h3>
-                        {song.tuning && song.tuning !== 'standard' && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                            {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
+                        {song.title}
+                      </h3>
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
-                    {/* Duration and BPM - visible on all screen sizes */}
+                    {/* Duration, BPM, and Tuning - visible on all screen sizes */}
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
-                      {song.duration && (
-                        <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {song.duration && (
+                          <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
+                        )}
+                        {song.tuning && song.tuning !== 'standard' && (
+                          <span className="px-1 py-0.5 text-[9px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
+                            ↓D
+                          </span>
+                        )}
+                      </div>
                       {song.bpm && (
                         <div className="whitespace-nowrap">{song.bpm} BPM</div>
                       )}
