@@ -107,9 +107,6 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
                 {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
               </span>
             )}
-            <span className="px-1 py-0.5 text-[8px] bg-blue-500 text-white rounded shrink-0">
-              {song.tuning || 'NONE'}
-            </span>
           </div>
         </div>
         {!drawerOpen && (
@@ -285,14 +282,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const setlistData = await response.json();
 
-      // Log tuning data for each song in the setlist
+      console.log('[SETLIST EDIT API] Fetched setlist:', setlistData.name);
+
+      const allSongs: any[] = [];
       setlistData.sets?.forEach((set: any) => {
         set.songs?.forEach((song: any) => {
+          allSongs.push(song);
           if (song.tuning && song.tuning !== 'standard') {
-            console.log(`[TUNING] Setlist: "${song.title}" = ${song.tuning}`);
+            console.log(`[SETLIST EDIT API] Non-standard tuning: "${song.title}" -> ${song.tuning}`);
           }
         });
       });
+
+      console.log('[SETLIST EDIT API]', allSongs.length, 'total songs,', allSongs.filter(s => s.tuning !== 'standard').length, 'non-standard');
 
       return setlistData;
     },
@@ -320,35 +322,19 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const data = await response.json();
 
-      // Validate: Ensure we have an array
       if (!Array.isArray(data)) {
-        console.error('[PLAYBOOK] Invalid response - not an array:', data);
+        console.error('[SETLIST EDIT PLAYBOOK] Invalid response');
         return [];
       }
 
-      console.log(`[PLAYBOOK] Fetched ${data.length} songs from API`);
+      console.log('[SETLIST EDIT PLAYBOOK] Raw response:', data.length, 'songs');
 
-      // Filter out any null/undefined items before mapping
-      const validItems = data.filter(item => {
-        if (!item) {
-          console.warn('[PLAYBOOK] Skipping null/undefined item');
-          return false;
-        }
-        if (!item.globalSong) {
-          console.warn('[PLAYBOOK] Skipping item without globalSong:', item.id);
-          return false;
-        }
-        return true;
-      });
-
-      console.log(`[PLAYBOOK] ${validItems.length} valid songs after filtering`);
+      const validItems = data.filter(item => item && item.globalSong);
 
       const mappedItems = validItems.map((item: any) => {
-        const duration = item.globalSong?.duration || 0;
         const tuning = item.tuning || 'standard';
-
         if (tuning !== 'standard') {
-          console.log(`[TUNING] Playbook: "${item.globalSong?.title}" = ${tuning}`);
+          console.log(`[SETLIST EDIT PLAYBOOK] Non-standard tuning: "${item.globalSong?.title}" -> ${tuning}`);
         }
 
         return {
@@ -359,20 +345,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           album: item.globalSong?.album || '',
           spotifyUrl: item.globalSong?.spotifyUrl || '',
           imageUrl: item.globalSong?.albumImageUrl || null,
-          duration: duration,
+          duration: item.globalSong?.duration || 0,
           tuning: tuning,
         };
       });
 
-      // Defensive sort: Filter out any undefined/null items that somehow got through
       const safeItems = mappedItems.filter(item => item && item.title);
+      console.log('[SETLIST EDIT PLAYBOOK] Transformed:', safeItems.filter(s => s.tuning !== 'standard').length, 'non-standard tunings');
 
-      return safeItems.sort((a, b) => {
-        // Extra safety: should never hit these conditions now, but just in case
-        if (!a || !a.title) return 1;
-        if (!b || !b.title) return -1;
-        return a.title.localeCompare(b.title);
-      });
+      return safeItems.sort((a, b) => a.title.localeCompare(b.title));
     },
     enabled: !!artistId,
     staleTime: 0, // Always refetch - don't use stale cache

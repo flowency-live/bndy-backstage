@@ -97,12 +97,14 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       const data = await response.json();
 
-      // Transform the API response to match our interface
-      return data.map((item: any) => {
-        const duration = item.globalSong?.duration || null;
+      console.log('[PLAYBOOK API] Raw response:', data.length, 'songs');
 
-        // Log duration data for debugging
-        console.log(`[SONGS PAGE] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Has globalSong: ${!!item.globalSong} - Raw duration:`, item.globalSong?.duration);
+      // Transform the API response to match our interface
+      const transformed = data.map((item: any) => {
+        const tuning = item.tuning || 'standard';
+        if (tuning !== 'standard') {
+          console.log(`[PLAYBOOK API] Non-standard tuning found: "${item.globalSong?.title}" -> ${tuning}`);
+        }
 
         return {
           id: item.id,
@@ -115,15 +117,18 @@ export default function Songs({ artistId, membership }: SongsProps) {
           previewUrl: item.previewUrl || null,
           addedByMembershipId: item.added_by_membership_id,
           createdAt: item.created_at,
-          duration: duration,
+          duration: item.globalSong?.duration || null,
           key: item.globalSong?.metadata?.key || null,
-          tuning: item.tuning || 'standard',
+          tuning: tuning,
           notes: item.notes || '',
           additionalUrl: item.additional_url || '',
           readiness: item.readiness || [],
           vetos: item.vetos || [],
         };
       });
+
+      console.log('[PLAYBOOK API] Transformed:', transformed.filter(s => s.tuning !== 'standard').length, 'non-standard tunings');
+      return transformed;
     },
     enabled: !!artistId,
     staleTime: 0,

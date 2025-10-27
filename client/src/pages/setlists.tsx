@@ -55,7 +55,6 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v2"],
     queryFn: async () => {
-      console.log('[SETLISTS] Starting fetch...');
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
         credentials: "include",
         headers: {
@@ -69,18 +68,21 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
       const data = await response.json();
 
-      // Log tuning data for debugging
+      console.log('[SETLISTS API] Fetched:', data.length, 'setlists');
+
       data.forEach((setlist: Setlist) => {
+        const allSongs: SetlistSong[] = [];
         setlist.sets?.forEach((set: SetlistSet) => {
           set.songs?.forEach((song: SetlistSong) => {
+            allSongs.push(song);
             if (song.tuning && song.tuning !== 'standard') {
-              console.log(`[TUNING] Readonly Setlist "${setlist.name}": "${song.title}" = ${song.tuning}`);
+              console.log(`[SETLISTS API] Non-standard tuning: "${song.title}" -> ${song.tuning}`);
             }
           });
         });
+        console.log(`[SETLISTS API] "${setlist.name}":`, allSongs.length, 'total songs,', allSongs.filter(s => s.tuning !== 'standard').length, 'non-standard');
       });
 
-      console.log('[SETLISTS] Fetch completed, returning data');
       return data;
     },
     enabled: !!artistId,
@@ -638,32 +640,25 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             {isSetExpanded && (
                               <div className="border-t border-border bg-muted/10 p-3">
                                 <div className="space-y-1">
-                                  {set.songs.map((song, idx) => {
-                                    // Debug: log each song's tuning value
-                                    console.log(`[READONLY SONG] "${song.title}" tuning:`, song.tuning, 'full song:', song);
-                                    return (
-                                      <div
-                                        key={song.id}
-                                        className="flex items-center text-sm text-muted-foreground gap-2"
-                                      >
-                                        <span className="w-6 text-xs">{idx + 1}.</span>
-                                        <span className="flex-1 flex items-center gap-1">
-                                          <span>{song.title}</span>
-                                          {song.tuning && song.tuning !== 'standard' && (
-                                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                                              {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
-                                            </span>
-                                          )}
-                                          <span className="px-1 py-0.5 text-[8px] bg-purple-500 text-white rounded">
-                                            {song.tuning || 'NO_TUNING'}
+                                  {set.songs.map((song, idx) => (
+                                    <div
+                                      key={song.id}
+                                      className="flex items-center text-sm text-muted-foreground gap-2"
+                                    >
+                                      <span className="w-6 text-xs">{idx + 1}.</span>
+                                      <span className="flex-1 flex items-center gap-1">
+                                        <span>{song.title}</span>
+                                        {song.tuning && song.tuning !== 'standard' && (
+                                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
+                                            {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
                                           </span>
-                                        </span>
-                                        <span className="text-xs">
-                                          {song.duration ? formatDuration(song.duration) : '--'}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
+                                        )}
+                                      </span>
+                                      <span className="text-xs">
+                                        {song.duration ? formatDuration(song.duration) : '--'}
+                                      </span>
+                                    </div>
+                                  ))}
                                   {set.songs.length === 0 && (
                                     <div className="text-xs italic text-muted-foreground/60">
                                       No songs yet
