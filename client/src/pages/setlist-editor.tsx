@@ -382,13 +382,20 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Initialize working copy when setlist loads
   useEffect(() => {
-    if (setlist && !workingSetlist) {
-      setWorkingSetlist(setlist);
-      if (setlist.sets.length > 0 && !activeSetId) {
-        setActiveSetId(setlist.sets[0].id);
+    if (setlist) {
+      // Initialize workingSetlist if it doesn't exist
+      if (!workingSetlist) {
+        setWorkingSetlist(setlist);
+        if (setlist.sets.length > 0 && !activeSetId) {
+          setActiveSetId(setlist.sets[0].id);
+        }
+      }
+      // Update workingSetlist with fresh data if no unsaved changes
+      else if (!hasUnsavedChanges) {
+        setWorkingSetlist(setlist);
       }
     }
-  }, [setlist, workingSetlist, activeSetId]);
+  }, [setlist, workingSetlist, activeSetId, hasUnsavedChanges]);
 
   // Warn user about unsaved changes when leaving page
   useEffect(() => {
