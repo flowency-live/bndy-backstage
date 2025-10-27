@@ -107,8 +107,6 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
                 {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
               </span>
             ) : null}
-            {/* Debug: Always show tuning value */}
-            <span className="px-1 py-0.5 text-[8px] bg-red-500 text-white rounded shrink-0">{song.tuning || 'NO_TUNING'}</span>
           </div>
         </div>
         {!drawerOpen && (
@@ -332,7 +330,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       const mappedItems = validItems.map((item: any) => {
         const duration = item.globalSong?.duration || 0;
         const tuning = item.tuning || 'standard';
-        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Tuning: ${tuning} - Badge will show: ${tuning && tuning !== 'standard'}`);
 
         return {
           id: item.id,
