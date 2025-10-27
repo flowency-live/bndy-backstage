@@ -272,6 +272,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      // Also invalidate setlists so title/duration changes reflect in setlists
+      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
       toast({ title: "Song updated" });
       setEditedSongs({});
     },
@@ -686,17 +688,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration (seconds)</label>
-                            <input
-                              type="number"
-                              placeholder="225"
-                              value={editedSongs[song.id]?.duration ?? song.duration ?? ''}
-                              onChange={(e) => setEditedSongs(prev => ({
-                                ...prev,
-                                [song.id]: { ...prev[song.id], duration: e.target.value ? parseInt(e.target.value) : null }
-                              }))}
-                              className="w-full px-2 py-1 text-sm border rounded"
-                            />
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
+                            <div className="w-full px-2 py-1 text-sm border rounded bg-muted/30 text-muted-foreground">
+                              {song.duration ? formatDuration(song.duration) : 'Unknown'}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">Duration is from Spotify and cannot be edited</p>
                           </div>
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Key</label>
