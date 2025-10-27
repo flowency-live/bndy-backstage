@@ -102,11 +102,14 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1">
             <div className="font-medium truncate text-xs">{song.title}</div>
-            {song.tuning && song.tuning !== 'standard' ? (
+            {song.tuning && song.tuning !== 'standard' && (
               <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
                 {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
               </span>
-            ) : null}
+            )}
+            <span className="px-1 py-0.5 text-[8px] bg-blue-500 text-white rounded shrink-0">
+              {song.tuning || 'NONE'}
+            </span>
           </div>
         </div>
         {!drawerOpen && (
