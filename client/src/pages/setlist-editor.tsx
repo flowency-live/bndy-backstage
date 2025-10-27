@@ -57,13 +57,15 @@ function getVarianceColor(variance: number): string {
 }
 
 // Sortable song card component
-function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver }: {
+function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver, drawerOpen }: {
   song: SetlistSong;
   setId: string;
   idx: number;
   onToggleSegue: (setId: string, songId: string) => void;
   onRemove: (setId: string, songId: string) => void;
   showSegue: boolean;
+  isOver: boolean;
+  drawerOpen: boolean;
 }) {
   const {
     attributes,
@@ -98,7 +100,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-1 sm:space-x-2">
-            <div className="font-medium truncate text-xs sm:text-sm">{song.title}</div>
+            <div className="font-medium truncate text-xs">{song.title}</div>
             {song.tuning && song.tuning !== 'standard' && (
               <span className="px-1 py-0.5 text-xs font-semibold bg-yellow-500 text-black rounded shrink-0">
                 {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
@@ -106,9 +108,11 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
             )}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-          {song.duration ? formatDuration(song.duration) : '0:00'}
-        </div>
+        {!drawerOpen && (
+          <div className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+            {song.duration ? formatDuration(song.duration) : '0:00'}
+          </div>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -169,23 +173,19 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
       {...attributes}
       {...listeners}
       onClick={(e) => onQuickAdd(song.id, e)}
-      className={`flex items-center gap-2 bg-background border rounded p-2 transition-colors select-none ${
+      className={`flex items-center gap-1 sm:gap-2 bg-background border rounded p-1 sm:p-2 transition-colors select-none ${
         isInSetlist
           ? 'border-green-500/30 opacity-60'
           : 'border-border hover:border-orange-500/50 cursor-pointer lg:cursor-grab active:cursor-grabbing'
       }`}
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2">
-          <div className="font-medium truncate text-sm">{song.title}</div>
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="font-medium truncate text-xs">{song.title}</div>
           {isInSetlist && (
-            <i className="fas fa-check text-green-500 text-xs" title="Already in setlist"></i>
+            <i className="fas fa-check text-green-500 text-xs shrink-0" title="Already in setlist"></i>
           )}
         </div>
-        <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
-      </div>
-      <div className="text-xs text-muted-foreground whitespace-nowrap">
-        {song.duration ? formatDuration(song.duration) : '--'}
       </div>
     </div>
   );
@@ -1054,6 +1054,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 onRemove={handleRemoveSong}
                                 showSegue={song.segueInto && idx < set.songs.length - 1}
                                 isOver={overId === song.id}
+                                drawerOpen={drawerOpen}
                               />
                             ))}
                             {set.songs.length === 0 && (
@@ -1141,10 +1142,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         </div>
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null} zIndex={1000}>
         {activeId ? (
-          <div className="flex items-center gap-2 bg-background border-2 border-orange-500 rounded p-2 shadow-lg opacity-90">
-            <div className="font-medium text-sm">
+          <div className="flex items-center gap-2 bg-orange-500 text-white border-2 border-orange-600 rounded p-2 shadow-2xl" style={{ cursor: 'grabbing' }}>
+            <i className="fas fa-grip-vertical text-xs"></i>
+            <div className="font-medium text-xs">
               {(() => {
                 // Find the active song being dragged
                 if (activeId.startsWith('playbook-')) {
