@@ -92,6 +92,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         {...attributes}
         {...listeners}
         className="flex items-center gap-1 sm:gap-2 bg-background border border-border rounded p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
       >
         {/* Position number */}
         <div className="w-5 sm:w-6 text-center text-xs sm:text-sm font-bold text-foreground shrink-0">
@@ -166,10 +167,15 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const combinedStyle = {
+    ...style,
+    touchAction: 'none',
+  };
+
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={combinedStyle}
       {...attributes}
       {...listeners}
       onClick={(e) => onQuickAdd(song.id, e)}
@@ -1142,13 +1148,23 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         </div>
       </div>
 
-      <DragOverlay dropAnimation={null} zIndex={1000}>
+      <DragOverlay dropAnimation={null}>
         {activeId ? (
-          <div className="flex items-center gap-2 bg-orange-500 text-white border-2 border-orange-600 rounded p-2 shadow-2xl" style={{ cursor: 'grabbing' }}>
-            <i className="fas fa-grip-vertical text-xs"></i>
-            <div className="font-medium text-xs">
+          <div
+            className="flex items-center gap-2 bg-orange-500 text-white border-2 border-orange-600 rounded p-3 shadow-2xl"
+            style={{
+              cursor: 'grabbing',
+              position: 'fixed',
+              zIndex: 9999,
+              pointerEvents: 'none',
+              touchAction: 'none',
+            }}
+          >
+            <i className="fas fa-grip-vertical text-sm"></i>
+            <div className="font-bold text-sm">
               {(() => {
                 // Find the active song being dragged
+                console.log('[DRAG OVERLAY] Rendering for activeId:', activeId);
                 if (activeId.startsWith('playbook-')) {
                   const songId = activeId.replace('playbook-', '');
                   const song = playbookSongs.find(s => s.id === songId);
