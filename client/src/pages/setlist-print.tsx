@@ -86,7 +86,7 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
       {/* Close button - only visible on screen */}
       <div className="no-print fixed top-4 right-4 z-50">
         <button
-          onClick={() => setLocation(`/artists/${artistId}/setlists`)}
+          onClick={() => setLocation('/setlists')}
           className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded shadow-lg"
         >
           <i className="fas fa-times mr-2"></i>
