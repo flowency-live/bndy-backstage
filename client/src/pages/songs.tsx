@@ -694,6 +694,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Duration (mm:ss)</label>
                             <input
+                              key={`duration-${song.id}-${song.custom_duration || song.duration}`}
                               type="text"
                               placeholder={song.duration ? formatDuration(song.duration) : '0:00'}
                               defaultValue={
