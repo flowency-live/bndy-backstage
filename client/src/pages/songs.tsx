@@ -126,6 +126,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
       });
     },
     enabled: !!artistId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Get band members using new band-scoped API
