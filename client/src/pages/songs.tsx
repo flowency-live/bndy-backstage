@@ -692,19 +692,19 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Duration (mm:ss)</label>
                             <input
                               type="text"
                               placeholder={song.duration ? formatDuration(song.duration) : '0:00'}
-                              value={
-                                editedSongs[song.id]?.custom_duration !== undefined
-                                  ? formatDuration(editedSongs[song.id].custom_duration)
-                                  : song.custom_duration
+                              defaultValue={
+                                song.custom_duration
                                   ? formatDuration(song.custom_duration)
+                                  : song.duration
+                                  ? formatDuration(song.duration)
                                   : ''
                               }
-                              onChange={(e) => {
-                                const value = e.target.value;
+                              onBlur={(e) => {
+                                const value = e.target.value.trim();
                                 // Parse mm:ss format
                                 const match = value.match(/^(\d+):(\d{2})$/);
                                 if (match) {
@@ -725,7 +725,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {song.custom_duration ? 'Custom (mm:ss)' : `Spotify: ${song.duration ? formatDuration(song.duration) : 'Unknown'}`}
+                              {song.custom_duration ? 'Custom override' : 'From Spotify'}
                             </p>
                           </div>
                           <div>

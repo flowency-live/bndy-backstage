@@ -113,9 +113,19 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
               onChange={(e) => onEditChange(e.target.value)}
               onBlur={onFinishEdit}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') onFinishEdit();
-                if (e.key === 'Escape') onFinishEdit();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onFinishEdit();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onFinishEdit();
+                }
               }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
               className="w-full px-1 py-0.5 text-xs border border-orange-500 rounded"
               autoFocus
               onClick={(e) => e.stopPropagation()}
@@ -1119,9 +1129,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
             {/* Sets area - 50% width on mobile when drawer is open */}
             <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0 relative`}>
-              {/* Scroll gutter on mobile - transparent touch area on right side */}
-              <div className="lg:hidden absolute top-0 right-0 bottom-0 w-8 pointer-events-auto z-20" style={{ touchAction: 'pan-y' }}></div>
-              <div className="space-y-6">
+              {/* Scroll gutter on mobile - visual indicator on right side */}
+              <div className="lg:hidden absolute top-0 right-0 bottom-0 w-12 pointer-events-auto z-20 bg-gradient-to-l from-muted/20 to-transparent border-l border-border/50" style={{ touchAction: 'pan-y' }}>
+                <div className="flex items-center justify-center h-full opacity-40">
+                  <i className="fas fa-grip-lines-vertical text-muted-foreground"></i>
+                </div>
+              </div>
+              <div className="space-y-6 pr-12 lg:pr-0">
                 {(workingSetlist || setlist).sets.map((set) => {
                   const totalDuration = getSetTotalDuration(set);
                   const variance = getDurationVariance(totalDuration, set.targetDuration);
@@ -1144,18 +1158,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 type="radio"
                                 name="activeSet"
                                 checked={isActive}
-                                onChange={() => {
-                                  // Make this set active
-                                  setActiveSetId(set.id);
-                                  // If this set is currently collapsed, expand it
-                                  if (collapsedSets.has(set.id)) {
-                                    setCollapsedSets(prev => {
-                                      const newSet = new Set(prev);
-                                      newSet.delete(set.id);
-                                      return newSet;
-                                    });
-                                  }
-                                }}
+                                onChange={() => setActiveSetId(set.id)}
                                 className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
                               />
                               <h3 className="font-semibold text-sm">{set.name}</h3>
@@ -1192,18 +1195,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               type="radio"
                               name="activeSet"
                               checked={isActive}
-                              onChange={() => {
-                                // Make this set active
-                                setActiveSetId(set.id);
-                                // If this set is currently collapsed, expand it
-                                if (collapsedSets.has(set.id)) {
-                                  setCollapsedSets(prev => {
-                                    const newSet = new Set(prev);
-                                    newSet.delete(set.id);
-                                    return newSet;
-                                  });
-                                }
-                              }}
+                              onChange={() => setActiveSetId(set.id)}
                               className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
                             />
                             <h3 className="font-semibold">{set.name}</h3>
