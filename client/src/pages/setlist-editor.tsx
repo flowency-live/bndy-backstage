@@ -329,7 +329,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
       const mappedItems = validItems.map((item: any) => {
         const duration = item.globalSong?.duration || 0;
-        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s`);
+        const tuning = item.tuning || 'standard';
+        console.log(`[PLAYBOOK] Song: "${item.globalSong?.title}" - Duration: ${duration}s - Tuning: ${tuning}`);
 
         return {
           id: item.id,
@@ -340,7 +341,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           spotifyUrl: item.globalSong?.spotifyUrl || '',
           imageUrl: item.globalSong?.albumImageUrl || null,
           duration: duration,
-          tuning: item.tuning || 'standard',
+          tuning: tuning,
         };
       });
 
