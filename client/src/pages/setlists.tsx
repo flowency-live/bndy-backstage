@@ -66,7 +66,20 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
         throw new Error("Failed to fetch setlists");
       }
 
-      return response.json();
+      const data = await response.json();
+
+      // Log tuning data for debugging
+      data.forEach((setlist: Setlist) => {
+        setlist.sets?.forEach((set: SetlistSet) => {
+          set.songs?.forEach((song: SetlistSong) => {
+            if (song.tuning && song.tuning !== 'standard') {
+              console.log(`[TUNING] Readonly Setlist "${setlist.name}": "${song.title}" = ${song.tuning}`);
+            }
+          });
+        });
+      });
+
+      return data;
     },
     enabled: !!artistId,
     staleTime: 0, // Always consider data stale

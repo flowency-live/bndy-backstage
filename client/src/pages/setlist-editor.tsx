@@ -280,7 +280,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         throw new Error("Failed to fetch setlist");
       }
 
-      return response.json();
+      const setlistData = await response.json();
+
+      // Log tuning data for each song in the setlist
+      setlistData.sets?.forEach((set: any) => {
+        set.songs?.forEach((song: any) => {
+          if (song.tuning && song.tuning !== 'standard') {
+            console.log(`[TUNING] Setlist: "${song.title}" = ${song.tuning}`);
+          }
+        });
+      });
+
+      return setlistData;
     },
     enabled: !!artistId && !!setlistId,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
@@ -330,6 +341,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       const mappedItems = validItems.map((item: any) => {
         const duration = item.globalSong?.duration || 0;
         const tuning = item.tuning || 'standard';
+
+        if (tuning !== 'standard') {
+          console.log(`[TUNING] Playbook: "${item.globalSong?.title}" = ${tuning}`);
+        }
 
         return {
           id: item.id,
