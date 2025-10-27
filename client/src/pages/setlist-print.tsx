@@ -70,6 +70,9 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
           .no-print {
             display: none !important;
           }
+          footer {
+            display: none !important;
+          }
         }
         @media screen {
           .print-container {
@@ -99,31 +102,31 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
           >
             {/* Set header */}
             <div className="mb-8 text-center">
-              <h1 className="text-4xl font-bold mb-2">{set.name}</h1>
-              <p className="text-xl text-muted-foreground">{setlist.name}</p>
+              <h1 className="text-5xl font-bold text-black mb-2">{set.name}</h1>
+              <p className="text-2xl font-bold text-black">{setlist.name}</p>
             </div>
 
             {/* Song list */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {set.songs.map((song, idx) => (
                 <div
                   key={song.id}
-                  className="flex items-center gap-4 text-lg border-b border-border pb-2"
+                  className="flex items-center gap-4 text-xl border-b border-black pb-2"
                 >
                   {/* Track number */}
-                  <div className="w-12 text-right font-bold text-muted-foreground shrink-0">
+                  <div className="w-12 text-right font-bold text-black shrink-0">
                     {idx + 1}.
                   </div>
 
                   {/* Track name */}
-                  <div className="flex-1 font-medium">
+                  <div className="flex-1 font-bold text-black">
                     {song.title}
                   </div>
 
                   {/* Tuning badge */}
                   <div className="shrink-0">
                     {song.tuning && song.tuning !== 'standard' && (
-                      <span className={`px-3 py-1 text-sm font-bold rounded ${
+                      <span className={`px-3 py-1 text-base font-bold rounded ${
                         song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
                         song.tuning === 'eb' ? 'bg-blue-500 text-white' :
                         'bg-gray-400 text-black'
