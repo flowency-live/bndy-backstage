@@ -898,50 +898,61 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setLocation("/setlists")}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <i className="fas fa-arrow-left"></i>
-                </button>
-                <h1 className="text-2xl font-serif font-bold">{workingSetlist?.name || setlist.name}</h1>
-                <button
-                  onClick={() => {
-                    setTempName(workingSetlist?.name || setlist.name);
-                    setEditingName(true);
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                  title="Edit setlist name"
-                >
-                  <i className="fas fa-edit"></i>
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Save setlist"
-                  disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
-                >
-                  <i className="fas fa-save mr-1"></i> Save
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Discard changes"
-                  disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
-                >
-                  <i className="fas fa-times mr-1"></i> Cancel
-                </button>
-                {updateSetlistMutation.isPending && (
-                  <span className="text-sm text-muted-foreground animate-pulse">
-                    <i className="fas fa-spinner fa-spin"></i> Saving...
-                  </span>
-                )}
-                {hasUnsavedChanges && !updateSetlistMutation.isPending && (
-                  <span className="text-sm text-yellow-600">
-                    <i className="fas fa-exclamation-circle mr-1"></i> Unsaved changes
-                  </span>
-                )}
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button
+                    onClick={() => setLocation("/setlists")}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  {/* Hide setlist name on mobile when drawer is open */}
+                  <h1 className={`text-lg sm:text-2xl font-serif font-bold ${drawerOpen ? 'hidden sm:block' : ''}`}>
+                    {workingSetlist?.name || setlist.name}
+                  </h1>
+                  <button
+                    onClick={() => {
+                      setTempName(workingSetlist?.name || setlist.name);
+                      setEditingName(true);
+                    }}
+                    className={`text-muted-foreground hover:text-foreground ${drawerOpen ? 'hidden sm:inline-block' : ''}`}
+                    title="Edit setlist name"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <button
+                    onClick={handleSave}
+                    className="bg-green-500 hover:bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Save setlist"
+                    disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
+                  >
+                    <i className="fas fa-save"></i>
+                    <span className="ml-1 hidden sm:inline">Save</span>
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Discard changes"
+                    disabled={!hasUnsavedChanges || updateSetlistMutation.isPending}
+                  >
+                    <i className="fas fa-times"></i>
+                    <span className="ml-1 hidden sm:inline">Cancel</span>
+                  </button>
+                  {updateSetlistMutation.isPending && (
+                    <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">
+                      <i className="fas fa-spinner fa-spin"></i>
+                      <span className="ml-1 hidden sm:inline">Saving...</span>
+                    </span>
+                  )}
+                  {hasUnsavedChanges && !updateSetlistMutation.isPending && (
+                    <span className="text-xs sm:text-sm text-yellow-600" title="Unsaved changes">
+                      <i className="fas fa-exclamation-circle"></i>
+                      <span className="ml-1 hidden sm:inline">Unsaved changes</span>
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -968,28 +979,47 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                   const variance = getDurationVariance(totalDuration, set.targetDuration);
                   const varianceColor = getVarianceColor(variance);
 
+                  const isCollapsed = collapsedSets.has(set.id);
+                  const isActive = activeSetId === set.id;
+
                   return (
                     <div key={set.id} className="bg-card border-y sm:border sm:rounded border-border overflow-hidden">
-                      <div className="bg-muted/30 p-2 sm:p-3 border-b border-border flex items-center justify-between text-xs sm:text-sm">
-                        <div
-                          className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setActiveSetId(set.id)}
-                          title="Click to make this the active set for quick-add"
-                        >
-                          {/* Active set radio button */}
-                          <input
-                            type="radio"
-                            name="activeSet"
-                            checked={activeSetId === set.id}
-                            onChange={() => setActiveSetId(set.id)}
-                            className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
-                          />
-                          <h3 className="font-semibold">{set.name}</h3>
-                        </div>
-                        <div className="flex items-center space-x-3 text-sm">
-                          <div className={`font-medium ${varianceColor}`}>
-                            {formatDuration(totalDuration)} / {
-                              editingTargetDuration === set.id ? (
+                      {/* Set header - redesigned for mobile */}
+                      <div
+                        className="bg-muted/30 p-2 sm:p-3 border-b border-border cursor-pointer hover:bg-muted/40 transition-colors"
+                        onClick={() => {
+                          // Clicking header makes this the active set AND expands it (collapses others)
+                          setActiveSetId(set.id);
+                          // If this set is collapsed, expand it and collapse all others
+                          if (isCollapsed) {
+                            setCollapsedSets(new Set());
+                          }
+                        }}
+                      >
+                        {/* Mobile layout - stacked */}
+                        <div className="flex flex-col gap-1 sm:hidden">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                name="activeSet"
+                                checked={isActive}
+                                onChange={() => {}}
+                                className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <h3 className="font-semibold text-sm">{set.name}</h3>
+                              <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'} text-xs text-muted-foreground`}></i>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                          <div className={`flex items-center justify-between text-xs ${varianceColor}`}>
+                            <div>
+                              <span className="font-medium">{formatDuration(totalDuration)}</span>
+                              <span className="text-muted-foreground mx-1">/</span>
+                              {editingTargetDuration === set.id ? (
                                 <input
                                   type="number"
                                   min="1"
@@ -1011,8 +1041,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                       setEditingTargetDuration(null);
                                     }
                                   }}
-                                  className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                  className="w-12 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
                                   autoFocus
+                                  onClick={(e) => e.stopPropagation()}
                                 />
                               ) : (
                                 <span
@@ -1021,25 +1052,88 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                     setEditingTargetDuration(set.id);
                                     setTempTargetDuration(Math.round(set.targetDuration / 60));
                                   }}
-                                  className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-muted-foreground hover:border-orange-500"
-                                  title="Click to edit target duration"
+                                  className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-current"
                                 >
                                   {formatDuration(set.targetDuration)}
                                 </span>
-                              )
-                            }
-                            <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
+                              )}
+                            </div>
+                            <div className="font-medium">
+                              ({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)
+                            </div>
                           </div>
-                          <span className="text-muted-foreground">
-                            {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
-                          </span>
-                          <button
-                            onClick={() => toggleSetCollapse(set.id)}
-                            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                            title={collapsedSets.has(set.id) ? "Expand set" : "Collapse set"}
-                          >
-                            <i className={`fas fa-chevron-${collapsedSets.has(set.id) ? 'down' : 'up'}`}></i>
-                          </button>
+                        </div>
+
+                        {/* Desktop layout - horizontal */}
+                        <div className="hidden sm:flex items-center justify-between text-sm">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="activeSet"
+                              checked={isActive}
+                              onChange={() => {}}
+                              className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <h3 className="font-semibold">{set.name}</h3>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className={`font-medium ${varianceColor}`}>
+                              {formatDuration(totalDuration)} / {
+                                editingTargetDuration === set.id ? (
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={tempTargetDuration}
+                                    onChange={(e) => setTempTargetDuration(parseInt(e.target.value) || 0)}
+                                    onBlur={() => {
+                                      if (tempTargetDuration > 0) {
+                                        handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
+                                      } else {
+                                        setEditingTargetDuration(null);
+                                      }
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        if (tempTargetDuration > 0) {
+                                          handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
+                                        }
+                                      } else if (e.key === 'Escape') {
+                                        setEditingTargetDuration(null);
+                                      }
+                                    }}
+                                    className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <span
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingTargetDuration(set.id);
+                                      setTempTargetDuration(Math.round(set.targetDuration / 60));
+                                    }}
+                                    className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-muted-foreground hover:border-orange-500"
+                                  >
+                                    {formatDuration(set.targetDuration)}
+                                  </span>
+                                )
+                              }
+                              <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
+                            </div>
+                            <span className="text-muted-foreground">
+                              {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSetCollapse(set.id);
+                              }}
+                              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                            >
+                              <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'}`}></i>
+                            </button>
+                          </div>
                         </div>
                       </div>
 
