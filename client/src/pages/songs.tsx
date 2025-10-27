@@ -637,6 +637,21 @@ export default function Songs({ artistId, membership }: SongsProps) {
                   {isExpanded && currentView === 'playbook' && (
                     <div className="px-4 pb-4 border-t bg-muted/50 animate-expand overflow-hidden">
                       <div className="pt-4 space-y-3 animate-fade-in-up">
+                        {/* Title field */}
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Title</label>
+                          <input
+                            type="text"
+                            placeholder="Song title"
+                            value={editedSongs[song.id]?.title ?? song.title ?? ''}
+                            onChange={(e) => setEditedSongs(prev => ({
+                              ...prev,
+                              [song.id]: { ...prev[song.id], title: e.target.value }
+                            }))}
+                            className="w-full px-2 py-1 text-sm border rounded"
+                          />
+                        </div>
+
                         {/* Editable metadata fields */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div>
