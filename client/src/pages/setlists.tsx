@@ -53,7 +53,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
   // Fetch all setlists for this artist
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"],
+    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v2"],
     queryFn: async () => {
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
         credentials: "include",
