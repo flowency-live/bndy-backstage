@@ -85,6 +85,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
     staleTime: 0, // Always consider data stale
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window regains focus
+    placeholderData: undefined, // Don't show stale data while refetching
   });
 
   // Create setlist mutation
