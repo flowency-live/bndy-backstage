@@ -1129,13 +1129,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           <div className={`flex gap-2 lg:gap-4 relative ${drawerOpen ? 'lg:flex-row' : 'flex-col lg:flex-row'}`}>
             {/* Sets area - 50% width on mobile when drawer is open */}
             <div className={`transition-all duration-300 ${drawerOpen ? 'w-1/2 lg:flex-1' : 'w-full lg:flex-1'} min-w-0 relative`}>
-              {/* Scroll gutter on mobile - visual indicator on right side */}
-              <div className="lg:hidden absolute top-0 right-0 bottom-0 w-12 pointer-events-auto z-20 bg-gradient-to-l from-muted/20 to-transparent border-l border-border/50" style={{ touchAction: 'pan-y' }}>
-                <div className="flex items-center justify-center h-full opacity-40">
-                  <i className="fas fa-grip-lines-vertical text-muted-foreground"></i>
+              {/* Scroll gutter on mobile - visual indicator on right side - only show when drawer closed */}
+              {!drawerOpen && (
+                <div className="lg:hidden absolute top-0 right-0 bottom-0 w-12 pointer-events-auto z-20 bg-gradient-to-l from-muted/20 to-transparent border-l border-border/50" style={{ touchAction: 'pan-y' }}>
+                  <div className="flex items-center justify-center h-full opacity-40">
+                    <i className="fas fa-grip-lines-vertical text-muted-foreground"></i>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-6 pr-12 lg:pr-0">
+              )}
+              <div className={`space-y-6 ${drawerOpen ? '' : 'pr-12'} lg:pr-0`}>
                 {(workingSetlist || setlist).sets.map((set) => {
                   const totalDuration = getSetTotalDuration(set);
                   const variance = getDurationVariance(totalDuration, set.targetDuration);

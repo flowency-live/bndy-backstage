@@ -705,21 +705,31 @@ export default function Songs({ artistId, membership }: SongsProps) {
                               }
                               onBlur={(e) => {
                                 const value = e.target.value.trim();
+                                const currentDisplayedDuration = song.custom_duration || song.duration;
+
                                 // Parse mm:ss format
                                 const match = value.match(/^(\d+):(\d{2})$/);
                                 if (match) {
                                   const minutes = parseInt(match[1]);
                                   const seconds = parseInt(match[2]);
                                   const totalSeconds = minutes * 60 + seconds;
-                                  setEditedSongs(prev => ({
-                                    ...prev,
-                                    [song.id]: { ...prev[song.id], custom_duration: totalSeconds }
-                                  }));
+
+                                  // Mark as edited if different from what's currently shown
+                                  // OR if we're setting a custom value for the first time
+                                  if (totalSeconds !== currentDisplayedDuration) {
+                                    setEditedSongs(prev => ({
+                                      ...prev,
+                                      [song.id]: { ...prev[song.id], custom_duration: totalSeconds }
+                                    }));
+                                  }
                                 } else if (value === '') {
-                                  setEditedSongs(prev => ({
-                                    ...prev,
-                                    [song.id]: { ...prev[song.id], custom_duration: null }
-                                  }));
+                                  // Clear custom duration if field is empty
+                                  if (song.custom_duration) {
+                                    setEditedSongs(prev => ({
+                                      ...prev,
+                                      [song.id]: { ...prev[song.id], custom_duration: null }
+                                    }));
+                                  }
                                 }
                               }}
                               className="w-full px-2 py-1 text-sm border rounded"
