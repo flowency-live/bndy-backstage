@@ -264,8 +264,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // Increased delay to allow scrolling on mobile
-        tolerance: 8,
+        delay: 400, // Long delay to allow scrolling on mobile
+        tolerance: 10,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -1068,24 +1068,26 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                     <div key={set.id} className="bg-card border-y sm:border sm:rounded border-border overflow-hidden">
                       {/* Set header - redesigned for mobile */}
                       <div
-                        className="bg-muted/30 p-2 sm:p-3 border-b border-border cursor-pointer hover:bg-muted/40 transition-colors"
-                        onClick={() => {
-                          // Make this set active
-                          setActiveSetId(set.id);
-                          // If this set is currently collapsed, expand it
-                          if (collapsedSets.has(set.id)) {
-                            setCollapsedSets(prev => {
-                              const newSet = new Set(prev);
-                              newSet.delete(set.id);
-                              return newSet;
-                            });
-                          }
-                        }}
+                        className="bg-muted/30 p-2 sm:p-3 border-b border-border"
                       >
                         {/* Mobile layout - stacked */}
                         <div className="flex flex-col gap-1 sm:hidden">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
+                            <div
+                              className="flex items-center space-x-2 flex-1 cursor-pointer"
+                              onClick={() => {
+                                // Make this set active
+                                setActiveSetId(set.id);
+                                // If this set is currently collapsed, expand it
+                                if (collapsedSets.has(set.id)) {
+                                  setCollapsedSets(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(set.id);
+                                    return newSet;
+                                  });
+                                }
+                              }}
+                            >
                               <input
                                 type="radio"
                                 name="activeSet"
@@ -1095,8 +1097,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 onClick={(e) => e.stopPropagation()}
                               />
                               <h3 className="font-semibold text-sm">{set.name}</h3>
-                              <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'} text-xs text-muted-foreground`}></i>
                             </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSetCollapse(set.id);
+                              }}
+                              className="text-muted-foreground hover:text-foreground p-2 transition-colors"
+                            >
+                              <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'} text-base`}></i>
+                            </button>
                             <div className="text-xs text-muted-foreground">
                               {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
                             </div>

@@ -289,32 +289,27 @@ export default function Songs({ artistId, membership }: SongsProps) {
     song.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort songs by readiness (most ready first) and then by vetos (vetoed songs last)
+  // Sort songs alphabetically by title
   const sortedSongs = [...filteredSongs].sort((a, b) => {
-    // Defensive: handle undefined/null items
-    if (!a || !a.vetos) return 1;
-    if (!b || !b.vetos) return -1;
+    return a.title.localeCompare(b.title);
+  });
 
-    const aVetos = a.vetos.length;
-    const bVetos = b.vetos.length;
+  // Group songs alphabetically by first letter
+  const groupedSongs = sortedSongs.reduce((acc, song) => {
+    const firstLetter = song.title.charAt(0).toUpperCase();
+    const group = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(song);
+    return acc;
+  }, {} as Record<string, SongWithDetails[]>);
 
-    // Songs with vetos go to bottom
-    if (aVetos > 0 && bVetos === 0) return 1;
-    if (bVetos > 0 && aVetos === 0) return -1;
-
-    // Calculate readiness scores
-    const getReadinessScore = (song: SongWithDetails) => {
-      if (!song || !song.readiness) return 0;
-      let score = 0;
-      song.readiness.forEach(r => {
-        if (r.status === "green") score += 3;
-        else if (r.status === "amber") score += 2;
-        else if (r.status === "red") score += 1;
-      });
-      return score;
-    };
-
-    return getReadinessScore(b) - getReadinessScore(a);
+  // Get sorted group keys
+  const groupKeys = Object.keys(groupedSongs).sort((a, b) => {
+    if (a === '#') return 1;
+    if (b === '#') return -1;
+    return a.localeCompare(b);
   });
 
   const toggleExpanded = (songId: string) => {
@@ -494,8 +489,16 @@ export default function Songs({ artistId, membership }: SongsProps) {
             </button>
           </div>
         ) : (
-          <div className="space-y-1" style={{ overflow: 'visible' }}>
-            {sortedSongs.map((song) => {
+          <div className="space-y-4" style={{ overflow: 'visible' }}>
+            {groupKeys.map((letter) => (
+              <div key={letter}>
+                {/* Alphabetic group header */}
+                <div className="sticky top-0 z-10 bg-muted/90 backdrop-blur-sm px-3 py-1.5 mb-1 rounded">
+                  <h3 className="text-sm font-bold text-foreground">{letter}</h3>
+                </div>
+                {/* Songs in this group */}
+                <div className="space-y-1">
+                  {groupedSongs[letter].map((song) => {
               const readinessCounts = getReadinessCount(song);
               const userReadiness = getUserReadiness(song);
               const userVeto = getUserVeto(song);
@@ -907,6 +910,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
                 </div>
               );
             })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
         </div>
