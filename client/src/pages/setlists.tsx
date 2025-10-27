@@ -55,6 +55,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v2"],
     queryFn: async () => {
+      console.log('[SETLISTS] Starting fetch...');
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
         credentials: "include",
         headers: {
@@ -79,13 +80,14 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
         });
       });
 
+      console.log('[SETLISTS] Fetch completed, returning data');
       return data;
     },
     enabled: !!artistId,
-    staleTime: 0, // Always consider data stale
-    refetchOnMount: 'always', // Always refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    placeholderData: undefined, // Don't show stale data while refetching
+    staleTime: 0,
+    gcTime: 0, // Don't cache at all
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Create setlist mutation
