@@ -264,8 +264,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150, // Reduced delay for better mobile responsiveness
-        tolerance: 5,
+        delay: 250, // Increased delay to allow scrolling on mobile
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -549,7 +549,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     // Check if dropped directly on a set container
     if (overIdStr.startsWith('set-container-')) {
       targetSetId = overIdStr.replace('set-container-', '');
-      targetIndex = 0; // Add to beginning if dropped on container
+      // Find the set to determine if we should add to beginning or end
+      const targetSet = workingSetlist.sets.find(s => s.id === targetSetId);
+      targetIndex = targetSet && targetSet.songs.length > 0 ? targetSet.songs.length : 0;
     } else {
       // Dropped on a song - find which set and position
       for (const set of workingSetlist.sets) {
@@ -1068,14 +1070,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                       <div
                         className="bg-muted/30 p-2 sm:p-3 border-b border-border cursor-pointer hover:bg-muted/40 transition-colors"
                         onClick={() => {
-                          // If clicking the already-active set, toggle its collapse state
-                          if (isActive) {
-                            toggleSetCollapse(set.id);
-                          } else {
-                            // Clicking a different set makes it active and expands it (collapses others)
-                            setActiveSetId(set.id);
-                            // Expand this set and collapse all others
-                            setCollapsedSets(new Set());
+                          // Make this set active
+                          setActiveSetId(set.id);
+                          // If this set is currently collapsed, expand it
+                          if (collapsedSets.has(set.id)) {
+                            setCollapsedSets(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(set.id);
+                              return newSet;
+                            });
                           }
                         }}
                       >
