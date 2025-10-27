@@ -490,8 +490,8 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             className="bg-background border border-border rounded-lg overflow-hidden"
                           >
                             {/* Set header */}
-                            <div className="p-3 flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
+                            <div className="p-2 flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-1">
                                 {/* Expand/collapse button */}
                                 <button
                                   onClick={() => {
@@ -656,7 +656,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
                             {/* Expandable song list */}
                             {isSetExpanded && (
-                              <div className="border-t border-border bg-muted/10 p-3">
+                              <div className="border-t border-border bg-muted/10 px-2 py-1.5">
                                 <div className="space-y-1">
                                   {(() => {
                                     console.log(`[SETLISTS READONLY RENDER] ========== RENDERING SET: "${set.name}" ==========`);
@@ -677,8 +677,12 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                           </span>
                                           <span className="flex items-center gap-1 text-xs">
                                             {song.tuning && song.tuning !== 'standard' && (
-                                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                                                {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+                                              <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
+                                                song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                                                song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                                                'bg-gray-400 text-black'
+                                              }`}>
+                                                {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
                                               </span>
                                             )}
                                             <span>{song.duration ? formatDuration(song.duration) : '--'}</span>

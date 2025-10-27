@@ -105,8 +105,12 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         {!drawerOpen && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap shrink-0">
             {song.tuning && song.tuning !== 'standard' && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+              <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
+                song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                'bg-gray-400 text-black'
+              }`}>
+                {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
               </span>
             )}
             <span>{song.duration ? formatDuration(song.duration) : '0:00'}</span>
@@ -187,8 +191,12 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
         <div className="flex items-center space-x-1 sm:space-x-2">
           <div className="font-medium truncate text-xs">{song.title}</div>
           {song.tuning && song.tuning !== 'standard' && (
-            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-              {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+            <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
+              song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+              song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+              'bg-gray-400 text-black'
+            }`}>
+              {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
             </span>
           )}
           {isInSetlist && (
@@ -1081,44 +1089,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                             <div>
                               <span className="font-medium">{formatDuration(totalDuration)}</span>
                               <span className="text-muted-foreground mx-1">/</span>
-                              {editingTargetDuration === set.id ? (
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={tempTargetDuration}
-                                  onChange={(e) => setTempTargetDuration(parseInt(e.target.value) || 0)}
-                                  onBlur={() => {
-                                    if (tempTargetDuration > 0) {
-                                      handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
-                                    } else {
-                                      setEditingTargetDuration(null);
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      if (tempTargetDuration > 0) {
-                                        handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
-                                      }
-                                    } else if (e.key === 'Escape') {
-                                      setEditingTargetDuration(null);
-                                    }
-                                  }}
-                                  className="w-12 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                  autoFocus
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              ) : (
-                                <span
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingTargetDuration(set.id);
-                                    setTempTargetDuration(Math.round(set.targetDuration / 60));
-                                  }}
-                                  className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-current"
-                                >
-                                  {formatDuration(set.targetDuration)}
-                                </span>
-                              )}
+                              <span>{formatDuration(set.targetDuration)}</span>
                             </div>
                             <div className="font-medium">
                               ({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)
@@ -1141,46 +1112,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                           </div>
                           <div className="flex items-center space-x-3">
                             <div className={`font-medium ${varianceColor}`}>
-                              {formatDuration(totalDuration)} / {
-                                editingTargetDuration === set.id ? (
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={tempTargetDuration}
-                                    onChange={(e) => setTempTargetDuration(parseInt(e.target.value) || 0)}
-                                    onBlur={() => {
-                                      if (tempTargetDuration > 0) {
-                                        handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
-                                      } else {
-                                        setEditingTargetDuration(null);
-                                      }
-                                    }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        if (tempTargetDuration > 0) {
-                                          handleUpdateTargetDuration(set.id, tempTargetDuration * 60);
-                                        }
-                                      } else if (e.key === 'Escape') {
-                                        setEditingTargetDuration(null);
-                                      }
-                                    }}
-                                    className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                ) : (
-                                  <span
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingTargetDuration(set.id);
-                                      setTempTargetDuration(Math.round(set.targetDuration / 60));
-                                    }}
-                                    className="cursor-pointer hover:text-orange-500 transition-colors border-b border-dashed border-muted-foreground hover:border-orange-500"
-                                  >
-                                    {formatDuration(set.targetDuration)}
-                                  </span>
-                                )
-                              }
+                              {formatDuration(totalDuration)} / {formatDuration(set.targetDuration)}
                               <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
                             </div>
                             <span className="text-muted-foreground">
@@ -1262,13 +1194,24 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               </div>
 
               <div className="p-2 border-b space-y-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search songs..."
-                  className="w-full px-2 py-1.5 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search songs..."
+                    className="w-full px-2 py-1.5 pr-7 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Clear search"
+                    >
+                      <i className="fas fa-times text-xs"></i>
+                    </button>
+                  )}
+                </div>
                 <label className="flex items-center space-x-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"

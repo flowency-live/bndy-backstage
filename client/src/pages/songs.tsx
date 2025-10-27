@@ -392,14 +392,23 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
         {/* Search and Multi-Select Controls */}
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search songs by title or artist..."
-              className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 pr-8 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                title="Clear search"
+              >
+                <i className="fas fa-times text-xs"></i>
+              </button>
+            )}
           </div>
           <button
             onClick={() => {
@@ -552,8 +561,12 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
                         {song.tuning && song.tuning !== 'standard' && (
-                          <span className="px-1 py-0.5 text-[9px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                            ↓D
+                          <span className={`px-1 py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${
+                            song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                            song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                            'bg-gray-400 text-black'
+                          }`}>
+                            {song.tuning === 'drop-d' ? '↓D' : song.tuning === 'eb' ? 'E♭' : song.tuning.toUpperCase()}
                           </span>
                         )}
                         {song.duration && (
