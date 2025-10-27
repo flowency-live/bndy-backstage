@@ -546,13 +546,13 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     {/* Duration, BPM, and Tuning - visible on all screen sizes */}
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
-                        {song.duration && (
-                          <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
-                        )}
                         {song.tuning && song.tuning !== 'standard' && (
                           <span className="px-1 py-0.5 text-[9px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
                             ↓D
                           </span>
+                        )}
+                        {song.duration && (
+                          <div className="whitespace-nowrap">{formatDuration(song.duration)}</div>
                         )}
                       </div>
                       {song.bpm && (
