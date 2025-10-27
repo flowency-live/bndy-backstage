@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { useSectionTheme } from "@/hooks/use-section-theme";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirm } from "@/hooks/use-confirm";
 import { PageHeader } from "@/components/layout";
 import type { ArtistMembership, Artist } from "@/types/api";
 import type { Setlist, SetlistSet, SetlistSong, PlaybookSong } from "@/types/setlist";
@@ -234,6 +235,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const queryClient = useQueryClient();
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
@@ -968,7 +970,18 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button
-                    onClick={() => setLocation("/setlists")}
+                    onClick={async () => {
+                      if (hasUnsavedChanges) {
+                        const confirmed = await confirm({
+                          title: 'Unsaved Changes',
+                          description: 'You have unsaved changes. Are you sure you want to leave without saving?',
+                          confirmText: 'Discard Changes',
+                          variant: 'destructive',
+                        });
+                        if (!confirmed) return;
+                      }
+                      setLocation("/setlists");
+                    }}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <i className="fas fa-arrow-left"></i>
