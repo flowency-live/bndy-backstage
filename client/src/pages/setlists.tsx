@@ -672,16 +672,16 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                           className="flex items-center text-sm text-muted-foreground gap-2"
                                         >
                                           <span className="w-6 text-xs">{idx + 1}.</span>
-                                          <span className="flex-1 flex items-center gap-1">
-                                            <span>{song.title}</span>
+                                          <span className="flex-1">
+                                            {song.title}
+                                          </span>
+                                          <span className="flex items-center gap-1 text-xs">
                                             {song.tuning && song.tuning !== 'standard' && (
                                               <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
                                                 {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
                                               </span>
                                             )}
-                                          </span>
-                                          <span className="text-xs">
-                                            {song.duration ? formatDuration(song.duration) : '--'}
+                                            <span>{song.duration ? formatDuration(song.duration) : '--'}</span>
                                           </span>
                                         </div>
                                       );

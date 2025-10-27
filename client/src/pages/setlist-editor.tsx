@@ -100,18 +100,16 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1">
-            <div className="font-medium truncate text-xs">{song.title}</div>
-            {song.tuning && song.tuning !== 'standard' && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-                {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
-              </span>
-            )}
-          </div>
+          <div className="font-medium truncate text-xs">{song.title}</div>
         </div>
         {!drawerOpen && (
-          <div className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-            {song.duration ? formatDuration(song.duration) : '0:00'}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap shrink-0">
+            {song.tuning && song.tuning !== 'standard' && (
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
+                {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
+              </span>
+            )}
+            <span>{song.duration ? formatDuration(song.duration) : '0:00'}</span>
           </div>
         )}
         <button
@@ -190,7 +188,7 @@ function DraggablePlaybookSong({ song, isInSetlist, onQuickAdd }: {
           <div className="font-medium truncate text-xs">{song.title}</div>
           {song.tuning && song.tuning !== 'standard' && (
             <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-400 text-black rounded shrink-0 whitespace-nowrap">
-              {song.tuning === 'drop-d' ? 'Drop D' : song.tuning.toUpperCase()}
+              {song.tuning === 'drop-d' ? '↓D' : song.tuning.toUpperCase()}
             </span>
           )}
           {isInSetlist && (
