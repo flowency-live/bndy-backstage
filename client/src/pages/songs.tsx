@@ -479,7 +479,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
               const userReadiness = getUserReadiness(song);
               const userVeto = getUserVeto(song);
               const isExpanded = expandedSongs.has(song.id);
-              const hasVetos = song.vetos.length > 0;
+              const hasVetos = song.vetos?.length > 0;
               const isSelected = selectedSongs.includes(song.id);
               const selectionIndex = selectedSongs.indexOf(song.id);
 
@@ -570,7 +570,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       </div>
 
                       {/* Veto indicators */}
-                      {song.vetos.length > 0 && (
+                      {song.vetos?.length > 0 && (
                         <span className="text-base" data-testid={`vetos-${song.id}`}>
                           {"💩".repeat(Math.min(song.vetos.length, 3))}
                         </span>
