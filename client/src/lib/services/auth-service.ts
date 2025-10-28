@@ -245,6 +245,52 @@ class AuthService {
   }
 
   /**
+   * Request email magic link for authentication
+   */
+  async requestEmailMagicLink(email: string): Promise<{
+    success: boolean;
+    requestId: string;
+    expiresIn: number;
+  }> {
+    const response = await this.apiRequest<{
+      success: boolean;
+      requestId: string;
+      expiresIn: number;
+      message?: string;
+    }>('/auth/email/request-magic', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    return response;
+  }
+
+  /**
+   * Check if phone/email already exists (for welcome message)
+   */
+  async checkIdentity(phone?: string, email?: string): Promise<{
+    exists: boolean;
+    displayName?: string;
+    method: 'phone' | 'email';
+  }> {
+    const response = await this.apiRequest<{
+      exists: boolean;
+      displayName?: string;
+      method: 'phone' | 'email';
+    }>('/auth/check-identity', {
+      method: 'POST',
+      body: JSON.stringify({ phone, email }),
+    });
+    return response;
+  }
+
+  /**
+   * Get Apple OAuth URL
+   */
+  getAppleAuthUrl(): string {
+    return `${this.baseUrl}/auth/apple`;
+  }
+
+  /**
    * Accept an artist invitation
    */
   async acceptInvite(token: string): Promise<{

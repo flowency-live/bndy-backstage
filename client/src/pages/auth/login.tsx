@@ -11,15 +11,19 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Phone, Mail } from "lucide-react"
 
 type AuthStep = 'phone' | 'verify'
+type EmailStep = 'email' | 'check-inbox'
 
 export default function Login() {
   // Force dark mode for branding consistency
   useForceDarkMode()
-  
+
   const [, setLocation] = useLocation()
   const [step, setStep] = useState<AuthStep>('phone')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
+  const [email, setEmail] = useState('')
+  const [emailStep, setEmailStep] = useState<EmailStep>('email')
+  const [welcomeMessage, setWelcomeMessage] = useState('Welcome!')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
@@ -77,15 +81,24 @@ export default function Login() {
     }
 
     setLoading(true)
-    
+
     // Convert formatted phone to E.164 format (+44XXXXXXXXXX)
     const digits = phone.replace(/\D/g, '')
     // UK mobile numbers start with 07, convert to +44 7
     const e164Phone = digits.startsWith('07') ? `+44${digits.slice(1)}` : `+44${digits}`
-    
+
     try {
+      // Check if user exists to customize welcome message
+      const identity = await authService.checkIdentity(e164Phone, undefined)
+
+      if (identity.exists && identity.displayName) {
+        setWelcomeMessage(`Welcome back, ${identity.displayName}!`)
+      } else {
+        setWelcomeMessage('Welcome to bndy!')
+      }
+
       const { error } = await sendOTP(e164Phone)
-      
+
       if (error) {
         throw error
       } else {
@@ -180,6 +193,81 @@ export default function Login() {
     }
   }
 
+  const handleAppleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      // Simple redirect to OAuth flow
+      const oauthUrl = authService.getAppleAuthUrl();
+      window.location.href = oauthUrl;
+    } catch (error) {
+      setGoogleLoading(false);
+      toast({
+        title: "Error",
+        description: "Failed to start Apple sign-in. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to continue",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // Check if user exists to customize welcome message
+      const identity = await authService.checkIdentity(undefined, email)
+
+      if (identity.exists && identity.displayName) {
+        setWelcomeMessage(`Welcome back, ${identity.displayName}!`)
+      } else {
+        setWelcomeMessage('Welcome to bndy!')
+      }
+
+      // Send magic link
+      await authService.requestEmailMagicLink(email)
+
+      toast({
+        title: "Check your email!",
+        description: "We sent you a magic link to sign in",
+        variant: "default"
+      })
+
+      setEmailStep('check-inbox')
+    } catch (error: any) {
+      toast({
+        title: "Error sending magic link",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEmailBack = () => {
+    setEmailStep('email')
+    setEmail('')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
       <div className="text-center animate-fade-in max-w-md w-full">
@@ -196,13 +284,20 @@ export default function Login() {
         {/* Auth form with tabs */}
         <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
           <Tabs defaultValue="phone" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 Phone
               </TabsTrigger>
-              <TabsTrigger value="social" className="flex items-center gap-2">
+              <TabsTrigger value="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
+                Email
+              </TabsTrigger>
+              <TabsTrigger value="social" className="flex items-center gap-2">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                </svg>
                 Social
               </TabsTrigger>
             </TabsList>
@@ -210,7 +305,7 @@ export default function Login() {
             <TabsContent value="phone">
               {step === 'phone' ? (
             <>
-              <h2 className="text-2xl font-serif text-foreground mb-2">Welcome Back</h2>
+              <h2 className="text-2xl font-serif text-foreground mb-2">{welcomeMessage}</h2>
               <p className="text-muted-foreground font-sans mb-6">Enter your phone number to sign in</p>
               
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
@@ -296,6 +391,71 @@ export default function Login() {
           )}
             </TabsContent>
 
+            <TabsContent value="email">
+              {emailStep === 'email' ? (
+                <>
+                  <h2 className="text-2xl font-serif text-foreground mb-2">{welcomeMessage}</h2>
+                  <p className="text-muted-foreground font-sans mb-6">Enter your email to receive a magic link</p>
+
+                  <form onSubmit={handleEmailSubmit} className="space-y-4">
+                    <div>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="text-center text-lg font-sans"
+                        data-testid="input-email"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-brand-accent hover:bg-brand-accent-light text-white font-sans py-3"
+                      disabled={loading}
+                      data-testid="button-send-magic-link"
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Sending magic link...
+                        </div>
+                      ) : (
+                        "Send magic link"
+                      )}
+                    </Button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-serif text-foreground mb-2">Check your email</h2>
+                  <p className="text-muted-foreground font-sans mb-6">
+                    We sent a magic link to {email}
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 rounded-lg p-4 text-center">
+                      <Mail className="h-12 w-12 mx-auto mb-2 text-brand-accent" />
+                      <p className="text-sm text-muted-foreground">
+                        Click the link in your email to sign in
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleEmailBack}
+                      className="w-full text-muted-foreground hover:text-foreground font-sans"
+                      data-testid="button-email-back"
+                    >
+                      Use different email
+                    </Button>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+
             <TabsContent value="social">
               <h2 className="text-2xl font-serif text-foreground mb-2">Welcome Back</h2>
               <p className="text-muted-foreground font-sans mb-6">Sign in with your social account</p>
@@ -322,6 +482,27 @@ export default function Login() {
                         <path fill="none" d="M1 1h22v22H1z"/>
                       </svg>
                       Continue with Google
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleAppleSignIn}
+                  className="w-full bg-black hover:bg-gray-900 text-white border border-gray-800 font-sans py-3"
+                  disabled={googleLoading}
+                  data-testid="button-apple-signin"
+                >
+                  {googleLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Redirecting to Apple...
+                    </div>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                      </svg>
+                      Continue with Apple
                     </>
                   )}
                 </Button>
