@@ -808,7 +808,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">{/* Mobile-first layout - header is now handled by MobileNavHeader */}
+    <div className="bg-gradient-subtle animate-fade-in-up">
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
