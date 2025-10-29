@@ -26,6 +26,7 @@ export default function Login() {
   const [welcomeMessage, setWelcomeMessage] = useState('Welcome!')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [appleLoading, setAppleLoading] = useState(false)
   const [error, setError] = useState('')
   // Server auth handles authentication server-side
   const { toast } = useToast()
@@ -194,13 +195,13 @@ export default function Login() {
   }
 
   const handleAppleSignIn = async () => {
-    setGoogleLoading(true);
+    setAppleLoading(true);
     try {
       // Simple redirect to OAuth flow
       const oauthUrl = authService.getAppleAuthUrl();
       window.location.href = oauthUrl;
     } catch (error) {
-      setGoogleLoading(false);
+      setAppleLoading(false);
       toast({
         title: "Error",
         description: "Failed to start Apple sign-in. Please try again.",
@@ -269,20 +270,22 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
-      <div className="text-center animate-fade-in max-w-md w-full">
-        {/* Band logo */}
-        <div className="mb-4 sm:mb-8" data-testid="logo-container">
-          <div className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
-            <BndyLogo 
-              className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40"
-              holeColor="rgb(30 41 59)" 
-            />
+    <div className="min-h-screen bg-gradient-subtle flex flex-col">
+      {/* Main content - takes remaining space */}
+      <div className="flex-1 flex flex-col items-center justify-start sm:justify-center p-4 pt-8 sm:pt-4">
+        <div className="text-center animate-fade-in max-w-md w-full">
+          {/* Band logo */}
+          <div className="mb-6 sm:mb-8" data-testid="logo-container">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
+              <BndyLogo
+                className="w-32 h-32 sm:w-32 sm:h-32 md:w-40 md:h-40"
+                holeColor="rgb(30 41 59)"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Auth form with tabs */}
-        <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
+          {/* Auth form with tabs - fixed min-height to prevent jumping */}
+          <div className="bg-card rounded-xl p-6 shadow-lg border border-border min-h-[420px] flex flex-col">
           <Tabs defaultValue="phone" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="phone" className="flex items-center gap-2">
@@ -293,12 +296,8 @@ export default function Login() {
                 <Mail className="h-4 w-4" />
                 Email
               </TabsTrigger>
-              <TabsTrigger value="social" className="flex items-center gap-2">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                </svg>
-                Social
+              <TabsTrigger value="social">
+                Socials
               </TabsTrigger>
             </TabsList>
 
@@ -519,10 +518,10 @@ export default function Login() {
                 <Button
                   onClick={handleAppleSignIn}
                   className="w-full bg-black hover:bg-gray-900 text-white border border-gray-800 font-sans py-3"
-                  disabled={googleLoading}
+                  disabled={appleLoading}
                   data-testid="button-apple-signin"
                 >
-                  {googleLoading ? (
+                  {appleLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Redirecting to Apple...
@@ -540,7 +539,20 @@ export default function Login() {
             </TabsContent>
           </Tabs>
         </div>
+        </div>
+      </div>
 
+      {/* Footer - sticky at bottom */}
+      <div className="p-4 text-center">
+        <a
+          href="https://bndy.co.uk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span>Powered by</span>
+          <span className="font-semibold text-brand-accent">bndy beat</span>
+        </a>
       </div>
     </div>
   )
