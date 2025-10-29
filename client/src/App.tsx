@@ -32,6 +32,7 @@ import OAuthResult from "@/pages/oauth-result";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import Footer from "@/components/ui/footer";
+import { useLocation as useWouterLocation } from "wouter";
 
 // Godmode pages
 import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
@@ -247,6 +248,22 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const [location] = useWouterLocation();
+
+  // Only show footer on auth/login pages
+  const showFooter = location === '/' || location === '/login' || location.startsWith('/auth') || location.startsWith('/invite');
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1">
+        <Router />
+      </div>
+      {showFooter && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -256,12 +273,7 @@ function App() {
             <UserProvider>
               <GoogleMapsProvider>
                 <Layout>
-                  <div className="min-h-screen flex flex-col">
-                    <div className="flex-1">
-                      <Router />
-                    </div>
-                    <Footer />
-                  </div>
+                  <AppContent />
                   <Toaster />
                 </Layout>
               </GoogleMapsProvider>

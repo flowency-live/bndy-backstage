@@ -270,9 +270,9 @@ export default function Login() {
   }
 
   return (
-    <div className="h-screen bg-gradient-subtle flex flex-col overflow-hidden">
-      {/* Main content - takes available space, scrolls INTERNALLY if needed */}
-      <div className="flex-1 flex flex-col items-center justify-start sm:justify-center p-3 pt-4 sm:p-4 min-h-0">
+    <div className="min-h-screen bg-gradient-subtle pb-20">
+      {/* Main content - with bottom padding to account for fixed footer */}
+      <div className="flex flex-col items-center justify-start sm:justify-center p-3 pt-4 sm:p-4">
         <div className="text-center animate-fade-in max-w-md w-full overflow-y-auto">
           {/* Band logo - LARGER on mobile as requested */}
           <div className="mb-3 sm:mb-6" data-testid="logo-container">

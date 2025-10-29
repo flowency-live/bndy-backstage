@@ -2,7 +2,7 @@ import BndyBadge from './bndy-badge';
 
 const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border py-2 flex-shrink-0" data-testid="footer">
+    <footer className="fixed bottom-0 left-0 right-0 bg-card border-t border-border py-2 z-40" data-testid="footer">
       <div className="container mx-auto px-3">
         {/* Horizontal layout: Badge on left, copyright + strapline stacked on right */}
         <div className="flex items-center gap-4 md:gap-6">
