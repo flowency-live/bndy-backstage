@@ -10,16 +10,11 @@ const Footer = () => {
           {/* Badge - double height */}
           <BndyBadge size="large" className="flex-shrink-0" />
 
-          {/* Copyright and Strapline - vertically stacked, left-aligned */}
+          {/* Strapline and Copyright - vertically stacked, left-aligned */}
           <div className="flex flex-col text-left leading-tight flex-1 min-w-0">
-            
-            {/* Copyright */}
-            <span className="text-muted-foreground text-sm mb-1" data-testid="copyright">
-              © 2025 bndy
-            </span>
 
             {/* Strapline - responsive layout */}
-            <div className="text-sm">
+            <div className="text-sm mb-1">
               {/* Desktop: single line - force no wrap */}
               <div className="hidden md:block whitespace-nowrap" data-testid="strapline-desktop">
                 <span className="text-foreground">Keeping </span>
@@ -27,10 +22,10 @@ const Footer = () => {
                 <span className="text-foreground"> Music </span>
                 <span className="text-orange-500 font-bold">ALIVE</span>
               </div>
-              
-              {/* Mobile: K/M left-aligned, E's right-aligned, whole block left-aligned in footer */}
+
+              {/* Mobile: K/M left-aligned, E's right-aligned, reduced gap */}
               <div className="block md:hidden font-bold" data-testid="strapline-mobile">
-                <div className="grid grid-cols-[max-content_max-content] gap-x-1 items-center">
+                <div className="grid grid-cols-[max-content_max-content] gap-x-0.5 items-center">
                   <span className="text-foreground text-left">Keeping</span>
                   <span className="text-cyan-400 text-right">LIVE</span>
                   <span className="text-foreground text-left">Music</span>
@@ -38,6 +33,11 @@ const Footer = () => {
                 </div>
               </div>
             </div>
+
+            {/* Copyright */}
+            <span className="text-muted-foreground text-sm" data-testid="copyright">
+              © 2025 bndy
+            </span>
 
           </div>
 
