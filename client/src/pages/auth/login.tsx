@@ -270,20 +270,22 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
-        <div className="text-center animate-fade-in max-w-md w-full">
-          {/* Band logo */}
-          <div className="mb-6 sm:mb-8" data-testid="logo-container">
-            <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
+    <div className="h-screen bg-gradient-subtle flex flex-col overflow-hidden">
+      {/* Main content - scrollable if needed */}
+      <div className="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="text-center animate-fade-in max-w-md w-full py-4">
+          {/* Band logo - smaller on mobile to fit viewport */}
+          <div className="mb-4 sm:mb-6" data-testid="logo-container">
+            <div className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center mx-auto">
               <BndyLogo
-                className="w-32 h-32 sm:w-32 sm:h-32 md:w-40 md:h-40"
+                className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40"
                 holeColor="rgb(30 41 59)"
               />
             </div>
           </div>
 
           {/* Auth form with tabs - fixed min-height to prevent jumping */}
-          <div className="bg-card rounded-xl p-6 shadow-lg border border-border min-h-[320px] flex flex-col">
+          <div className="bg-card rounded-xl p-5 sm:p-6 shadow-lg border border-border min-h-[280px] sm:min-h-[320px] flex flex-col">
           <Tabs defaultValue="phone" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="phone" className="flex items-center gap-2">
