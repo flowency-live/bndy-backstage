@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import BndyLogo from "@/components/ui/bndy-logo"
-import Footer from "@/components/ui/footer"
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Phone, Mail } from "lucide-react"
@@ -271,9 +270,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex flex-col">
-      {/* Main content - takes remaining space */}
-      <div className="flex-1 flex flex-col items-center justify-start sm:justify-center p-4 pt-8 sm:pt-4">
+    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
         <div className="text-center animate-fade-in max-w-md w-full">
           {/* Band logo */}
           <div className="mb-6 sm:mb-8" data-testid="logo-container">
@@ -541,10 +538,6 @@ export default function Login() {
           </Tabs>
         </div>
         </div>
-      </div>
-
-      {/* Footer - anchored at bottom */}
-      <Footer />
     </div>
   )
 }
