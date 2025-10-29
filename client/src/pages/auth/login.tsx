@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import BndyLogo from "@/components/ui/bndy-logo"
+import Footer from "@/components/ui/footer"
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Phone, Mail } from "lucide-react"
@@ -542,18 +543,8 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer - sticky at bottom */}
-      <div className="p-4 text-center">
-        <a
-          href="https://bndy.co.uk"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <span>Powered by</span>
-          <span className="font-semibold text-brand-accent">bndy beat</span>
-        </a>
-      </div>
+      {/* Footer - anchored at bottom */}
+      <Footer />
     </div>
   )
 }
