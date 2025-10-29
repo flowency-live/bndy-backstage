@@ -442,15 +442,45 @@ export default function Login() {
                       </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleEmailBack}
-                      className="w-full text-muted-foreground hover:text-foreground font-sans"
-                      data-testid="button-email-back"
-                    >
-                      Use different email
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={async () => {
+                          setLoading(true)
+                          try {
+                            await authService.requestEmailMagicLink(email)
+                            toast({
+                              title: "Magic link resent!",
+                              description: "Check your email for the new link",
+                              variant: "default"
+                            })
+                          } catch (error: any) {
+                            toast({
+                              title: "Error resending",
+                              description: error.message || "Please try again",
+                              variant: "destructive"
+                            })
+                          } finally {
+                            setLoading(false)
+                          }
+                        }}
+                        className="flex-1"
+                        disabled={loading}
+                        data-testid="button-resend-magic-link"
+                      >
+                        {loading ? "Resending..." : "Resend link"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleEmailBack}
+                        className="flex-1"
+                        data-testid="button-email-back"
+                      >
+                        Use different email
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
