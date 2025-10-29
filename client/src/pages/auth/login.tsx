@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import BndyLogo from "@/components/ui/bndy-logo"
+import Footer from "@/components/ui/footer"
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Phone, Mail } from "lucide-react"
@@ -541,6 +542,7 @@ export default function Login() {
         </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
