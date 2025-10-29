@@ -286,7 +286,7 @@ export default function Login() {
           </div>
 
           {/* Auth form with tabs - fixed min-height to prevent jumping */}
-          <div className="bg-card rounded-xl p-6 shadow-lg border border-border min-h-[420px] flex flex-col">
+          <div className="bg-card rounded-xl p-6 shadow-lg border border-border min-h-[320px] flex flex-col">
           <Tabs defaultValue="phone" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="phone" className="flex items-center gap-2">
