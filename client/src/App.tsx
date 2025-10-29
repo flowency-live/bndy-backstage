@@ -255,7 +255,7 @@ function App() {
             <UserProvider>
               <GoogleMapsProvider>
                 <Layout>
-                  <div className="min-h-screen flex flex-col">
+                  <div className="min-h-screen flex flex-col max-w-full overflow-x-hidden">
                     <div className="flex-1">
                       <Router />
                     </div>

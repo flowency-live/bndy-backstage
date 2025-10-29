@@ -59,7 +59,7 @@ export function AppLayout({ children, artistId, membership, isLoading = false }:
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row max-w-full overflow-x-hidden">
       {/* Mobile Navigation Header */}
       <MobileNavHeader
         currentArtistId={artistId}
@@ -76,7 +76,7 @@ export function AppLayout({ children, artistId, membership, isLoading = false }:
       </div>
 
       {/* Main Content - Mobile first with bottom padding for nav */}
-      <main className="flex-1 min-h-0 pb-20 lg:pb-0">
+      <main className="flex-1 min-h-0 pb-20 lg:pb-0 max-w-full overflow-x-hidden">
         {children}
       </main>
     </div>
