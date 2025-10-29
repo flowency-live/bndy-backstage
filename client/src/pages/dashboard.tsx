@@ -818,7 +818,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         {/* Calendar & Gigs Section */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 max-w-[900px]">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Calendar"
               icon={<Calendar />}
@@ -849,7 +849,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         {/* Song Lists Section */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Song Lists</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 max-w-[900px]">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Playbook"
               icon={<Music />}
