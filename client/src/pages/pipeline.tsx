@@ -55,7 +55,7 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
     { id: 'voting' as TabType, label: 'Voting', count: votingCount },
     { id: 'review' as TabType, label: 'Review', count: reviewCount },
     { id: 'practice' as TabType, label: 'Practice', count: null },
-    { id: 'archived' as TabType, label: 'Archived', count: null }
+    { id: 'archived' as TabType, label: 'Other', count: null }
   ];
 
   return (
@@ -92,7 +92,7 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
             data-testid="button-suggest-song"
           >
             <i className="fas fa-plus"></i>
-            <span className="hidden sm:inline">Suggest Song</span>
+            <span>Suggest Song</span>
           </button>
         </div>
 
