@@ -61,36 +61,15 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Tabs Navigation - navigate to actual routes */}
+        {/* Pipeline Header with Add Button */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2 border-b border-border">
-            <button
-              onClick={() => setLocation("/songs")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
-            >
-              Playbook
-            </button>
-            <button
-              onClick={() => setLocation("/setlists")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
-            >
-              Setlists
-            </button>
-            <button
-              onClick={() => setLocation("/pipeline")}
-              className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
-            >
-              Pipeline
-            </button>
-          </div>
-
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-            data-testid="button-add-song"
+            className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            data-testid="button-suggest-song"
           >
             <i className="fas fa-plus"></i>
-            <span className="hidden sm:inline">Add Song</span>
+            <span className="hidden sm:inline">Suggest Song</span>
           </button>
         </div>
 

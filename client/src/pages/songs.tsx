@@ -419,12 +419,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
             >
               Setlists
             </button>
-            <button
-              onClick={() => setLocation("/songs")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
-            >
-              Pipeline
-            </button>
           </div>
 
           <button
