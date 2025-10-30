@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import VotingTab from "@/components/pipeline/voting-tab";
-import ReviewTab from "@/components/pipeline/review-tab";
 import PracticeTab from "@/components/pipeline/practice-tab";
 import ArchivedTab from "@/components/pipeline/archived-tab";
 import AddSuggestionModal from "@/components/pipeline/modals/add-suggestion-modal";
@@ -14,7 +13,7 @@ interface PipelineProps {
   membership: ArtistMembership & { artist: Artist };
 }
 
-type TabType = 'voting' | 'review' | 'practice' | 'archived';
+type TabType = 'voting' | 'practice' | 'archived';
 
 export default function Pipeline({ artistId, membership }: PipelineProps) {
   const [, setLocation] = useLocation();
@@ -37,23 +36,8 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
     refetchInterval: 30000
   });
 
-  const { data: reviewCount = 0 } = useQuery({
-    queryKey: ['pipeline-count', artistId, 'review'],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=review`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) return 0;
-      const songs = await response.json();
-      return songs.length;
-    },
-    refetchInterval: 30000
-  });
-
   const tabs = [
     { id: 'voting' as TabType, label: 'Voting', count: votingCount },
-    { id: 'review' as TabType, label: 'Review', count: reviewCount },
     { id: 'practice' as TabType, label: 'Practice', count: null },
     { id: 'archived' as TabType, label: 'Other', count: null }
   ];
@@ -100,9 +84,6 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
         <div>
         {activeTab === 'voting' && (
           <VotingTab artistId={artistId} membership={membership} />
-        )}
-        {activeTab === 'review' && (
-          <ReviewTab artistId={artistId} membership={membership} />
         )}
         {activeTab === 'practice' && (
           <PracticeTab artistId={artistId} membership={membership} />
