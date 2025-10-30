@@ -718,16 +718,21 @@ export default function Songs({ artistId, membership }: SongsProps) {
                         </div>
                       )}
                       {/* Play/Pause button overlay - always visible with opacity */}
-                      {song.previewUrl && (
+                      {song.spotifyUrl && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            playPreview(song.id, song.previewUrl!);
+                            if (song.previewUrl) {
+                              playPreview(song.id, song.previewUrl);
+                            } else {
+                              // No preview available, open in Spotify
+                              window.open(song.spotifyUrl, '_blank');
+                            }
                           }}
                           className="absolute inset-0 bg-black/40 hover:bg-black/60 flex items-center justify-center transition-all"
-                          title="Play 30-second preview"
+                          title={song.previewUrl ? "Play 30-second preview" : "Open in Spotify (no preview available)"}
                         >
-                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : 'fa-play'} text-white text-lg drop-shadow-lg`}></i>
+                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : song.previewUrl ? 'fa-play' : 'fa-external-link-alt'} text-white text-lg drop-shadow-lg`}></i>
                         </button>
                       )}
                     </div>
