@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Music, RefreshCw, Edit, Trash2, Save, X, Search, CheckCircle } from 'lucide-react';
+import { Music, RefreshCw, Edit, Trash2, Save, X, Search, CheckCircle, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   getAllSongs,
   updateSong,
@@ -21,6 +22,8 @@ export default function SongsPage() {
   const [songsError, setSongsError] = useState<string | null>(null);
   const [songFilter, setSongFilter] = useState<'all' | 'featured' | 'has-streaming' | 'has-audio' | 'has-genre'>('all');
   const [songSearch, setSongSearch] = useState('');
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [decadeFilter, setDecadeFilter] = useState<string>('all');
   const [editingSong, setEditingSong] = useState<string | null>(null);
   const [songEditForm, setSongEditForm] = useState<Song | null>(null);
   const [deletingSong, setDeletingSong] = useState<string | null>(null);
@@ -45,10 +48,34 @@ export default function SongsPage() {
     fetchSongs();
   }, []);
 
-  // Reset page when search changes
+  // Reset page when search/filters change
   useEffect(() => {
     setSongPage(1);
-  }, [songSearch, songFilter]);
+  }, [songSearch, songFilter, genreFilter, decadeFilter]);
+
+  // Extract unique genres and decades from songs
+  const uniqueGenres = Array.from(new Set(songs.map(s => s.genre).filter(Boolean))).sort();
+  const uniqueDecades = Array.from(new Set(
+    songs
+      .filter(s => s.releaseDate)
+      .map(s => {
+        const year = new Date(s.releaseDate!).getFullYear();
+        return `${Math.floor(year / 10) * 10}s`;
+      })
+  )).sort();
+
+  // Helper function to get decade from releaseDate
+  const getDecade = (releaseDate: string | null): string => {
+    if (!releaseDate) return '';
+    const year = new Date(releaseDate).getFullYear();
+    return `${Math.floor(year / 10) * 10}s`;
+  };
+
+  // Helper function to get year from releaseDate
+  const getYear = (releaseDate: string | null): number | null => {
+    if (!releaseDate) return null;
+    return new Date(releaseDate).getFullYear();
+  };
 
   // Song Handlers
   const handleSongEditStart = (song: Song) => {
@@ -95,10 +122,19 @@ export default function SongsPage() {
                          (s.genre && String(s.genre).toLowerCase().includes(songSearch.toLowerCase())) ||
                          (s.album && String(s.album).toLowerCase().includes(songSearch.toLowerCase()));
     if (!matchesSearch) return false;
-    if (songFilter === 'featured') return s.isFeatured;
-    if (songFilter === 'has-streaming') return !!(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl);
-    if (songFilter === 'has-audio') return !!s.audioFileUrl;
-    if (songFilter === 'has-genre') return !!s.genre;
+
+    // Apply standard filter
+    if (songFilter === 'featured' && !s.isFeatured) return false;
+    if (songFilter === 'has-streaming' && !(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl)) return false;
+    if (songFilter === 'has-audio' && !s.audioFileUrl) return false;
+    if (songFilter === 'has-genre' && !s.genre) return false;
+
+    // Apply genre filter
+    if (genreFilter !== 'all' && s.genre !== genreFilter) return false;
+
+    // Apply decade filter
+    if (decadeFilter !== 'all' && getDecade(s.releaseDate) !== decadeFilter) return false;
+
     return true;
   });
 
@@ -130,7 +166,7 @@ export default function SongsPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -145,6 +181,7 @@ export default function SongsPage() {
             Refresh
           </Button>
         </div>
+
         <div className="flex gap-2 flex-wrap">
           <Button
             variant={songFilter === 'all' ? 'default' : 'outline'}
@@ -182,6 +219,51 @@ export default function SongsPage() {
             Genre ({songStats.hasGenre})
           </Button>
         </div>
+
+        <div className="flex gap-3 items-center flex-wrap">
+          <div className="flex items-center gap-2">
+            <Music className="h-4 w-4 text-muted-foreground" />
+            <Select value={genreFilter} onValueChange={setGenreFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by genre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genres</SelectItem>
+                {uniqueGenres.map(genre => (
+                  <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Select value={decadeFilter} onValueChange={setDecadeFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Filter by decade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Decades</SelectItem>
+                {uniqueDecades.map(decade => (
+                  <SelectItem key={decade} value={decade}>{decade}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(genreFilter !== 'all' || decadeFilter !== 'all') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setGenreFilter('all');
+                setDecadeFilter('all');
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {songsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
@@ -195,7 +277,9 @@ export default function SongsPage() {
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Title</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artist</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Album</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genre</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Year</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Duration</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Featured</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
@@ -215,8 +299,94 @@ export default function SongsPage() {
                         <div className="font-medium">{song.title}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm">{song.artistName}</td>
-                    <td className="px-4 py-3 text-sm">{song.genre || '-'}</td>
+                    <td className="px-4 py-3">
+                      {editingSong === song.id ? (
+                        <Input
+                          value={songEditForm?.artistName || ''}
+                          onChange={(e) => setSongEditForm(prev => prev ? {...prev, artistName: e.target.value} : null)}
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        <div className="text-sm">{song.artistName}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingSong === song.id ? (
+                        <Input
+                          value={songEditForm?.album || ''}
+                          onChange={(e) => setSongEditForm(prev => prev ? {...prev, album: e.target.value} : null)}
+                          className="h-8 text-sm"
+                          placeholder="Album"
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">{song.album || '-'}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingSong === song.id ? (
+                        <Select
+                          value={songEditForm?.genre || ''}
+                          onValueChange={(value) => setSongEditForm(prev => prev ? {...prev, genre: value} : null)}
+                        >
+                          <SelectTrigger className="h-8 w-[140px]">
+                            <SelectValue placeholder="Genre" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Rock">Rock</SelectItem>
+                            <SelectItem value="Alternative Rock">Alternative Rock</SelectItem>
+                            <SelectItem value="Pop">Pop</SelectItem>
+                            <SelectItem value="Punk">Punk</SelectItem>
+                            <SelectItem value="Pop Punk">Pop Punk</SelectItem>
+                            <SelectItem value="Indie Rock">Indie Rock</SelectItem>
+                            <SelectItem value="Metal">Metal</SelectItem>
+                            <SelectItem value="Grunge">Grunge</SelectItem>
+                            <SelectItem value="Britpop">Britpop</SelectItem>
+                            <SelectItem value="Post-Punk">Post-Punk</SelectItem>
+                            <SelectItem value="Electronic">Electronic</SelectItem>
+                            <SelectItem value="Synth-pop">Synth-pop</SelectItem>
+                            <SelectItem value="Disco">Disco</SelectItem>
+                            <SelectItem value="Reggae">Reggae</SelectItem>
+                            <SelectItem value="Soul">Soul</SelectItem>
+                            <SelectItem value="Country">Country</SelectItem>
+                            <SelectItem value="Indie Pop">Indie Pop</SelectItem>
+                            <SelectItem value="Psychedelic Rock">Psychedelic Rock</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm">
+                          {song.genre ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">
+                              {song.genre}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {editingSong === song.id ? (
+                        <Input
+                          type="number"
+                          min="1960"
+                          max="2030"
+                          value={getYear(songEditForm?.releaseDate || null) || ''}
+                          onChange={(e) => {
+                            const year = parseInt(e.target.value);
+                            if (year >= 1960 && year <= 2030) {
+                              setSongEditForm(prev => prev ? {...prev, releaseDate: `${year}-01-01`} : null);
+                            }
+                          }}
+                          className="h-8 w-[80px] text-sm"
+                          placeholder="Year"
+                        />
+                      ) : (
+                        <div className="text-sm flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          {getYear(song.releaseDate) || '-'}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm">{formatDuration(song.duration)}</td>
                     <td className="px-4 py-3">
                       {song.isFeatured && <CheckCircle className="h-4 w-4 text-green-500" />}

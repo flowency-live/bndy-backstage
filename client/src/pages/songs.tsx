@@ -27,6 +27,8 @@ interface SongWithDetails {
   tuning?: string;
   notes?: string;
   additionalUrl?: string;
+  genre?: string;
+  releaseDate?: string;
   readiness: Array<{
     id: string;
     songId: string;
@@ -72,6 +74,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [decadeFilter, setDecadeFilter] = useState<string>('all');
+  const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -121,6 +126,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
           tuning: tuning,
           notes: item.notes || '',
           additionalUrl: item.additional_url || '',
+          genre: item.globalSong?.genre || null,
+          releaseDate: item.globalSong?.releaseDate || null,
           readiness: item.readiness || [],
           vetos: item.vetos || [],
         };
@@ -281,21 +288,52 @@ export default function Songs({ artistId, membership }: SongsProps) {
     },
   });
 
-  // Filter by search query first
-  const filteredSongs = songs.filter(song =>
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Helper to get decade from releaseDate
+  const getDecade = (releaseDate?: string): string => {
+    if (!releaseDate) return 'Unknown';
+    const year = new Date(releaseDate).getFullYear();
+    return `${Math.floor(year / 10) * 10}s`;
+  };
+
+  // Extract unique genres and decades
+  const uniqueGenres = Array.from(new Set(songs.map(s => s.genre).filter(Boolean))).sort();
+  const uniqueDecades = Array.from(new Set(
+    songs
+      .filter(s => s.releaseDate)
+      .map(s => getDecade(s.releaseDate))
+  )).sort();
+
+  // Filter by search query, genre, and decade
+  const filteredSongs = songs.filter(song => {
+    const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         song.artist.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (genreFilter !== 'all' && song.genre !== genreFilter) return false;
+    if (decadeFilter !== 'all' && getDecade(song.releaseDate) !== decadeFilter) return false;
+
+    return true;
+  });
 
   // Sort songs alphabetically by title
   const sortedSongs = [...filteredSongs].sort((a, b) => {
     return a.title.localeCompare(b.title);
   });
 
-  // Group songs alphabetically by first letter
+  // Group songs based on groupBy setting
   const groupedSongs = sortedSongs.reduce((acc, song) => {
-    const firstLetter = song.title.charAt(0).toUpperCase();
-    const group = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+    let group: string;
+
+    if (groupBy === 'genre') {
+      group = song.genre || 'Unknown Genre';
+    } else if (groupBy === 'decade') {
+      group = getDecade(song.releaseDate);
+    } else {
+      // Alphabetical
+      const firstLetter = song.title.charAt(0).toUpperCase();
+      group = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+    }
+
     if (!acc[group]) {
       acc[group] = [];
     }
@@ -305,9 +343,20 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   // Get sorted group keys
   const groupKeys = Object.keys(groupedSongs).sort((a, b) => {
-    if (a === '#') return 1;
-    if (b === '#') return -1;
-    return a.localeCompare(b);
+    if (groupBy === 'alpha') {
+      if (a === '#') return 1;
+      if (b === '#') return -1;
+      return a.localeCompare(b);
+    } else if (groupBy === 'decade') {
+      if (a === 'Unknown') return 1;
+      if (b === 'Unknown') return -1;
+      return a.localeCompare(b);
+    } else {
+      // Genre
+      if (a === 'Unknown Genre') return 1;
+      if (b === 'Unknown Genre') return -1;
+      return a.localeCompare(b);
+    }
   });
 
   const toggleExpanded = (songId: string) => {
@@ -384,6 +433,68 @@ export default function Songs({ artistId, membership }: SongsProps) {
             <i className="fas fa-plus"></i>
             <span className="hidden sm:inline">Add Song</span>
           </button>
+        </div>
+
+        {/* Filter Controls - Mobile Optimized */}
+        <div className="mb-4 space-y-3">
+          {/* Filter Dropdowns Row */}
+          <div className="flex flex-wrap gap-2">
+            {/* Genre Filter */}
+            <div className="flex-1 min-w-[140px]">
+              <select
+                value={genreFilter}
+                onChange={(e) => setGenreFilter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="all">All Genres</option>
+                {uniqueGenres.map(genre => (
+                  <option key={genre} value={genre}>{genre}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Decade Filter */}
+            <div className="flex-1 min-w-[120px]">
+              <select
+                value={decadeFilter}
+                onChange={(e) => setDecadeFilter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="all">All Decades</option>
+                {uniqueDecades.map(decade => (
+                  <option key={decade} value={decade}>{decade}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Group By */}
+            <div className="flex-1 min-w-[140px]">
+              <select
+                value={groupBy}
+                onChange={(e) => setGroupBy(e.target.value as 'alpha' | 'genre' | 'decade')}
+                className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="alpha">Group: A-Z</option>
+                <option value="genre">Group: Genre</option>
+                <option value="decade">Group: Decade</option>
+              </select>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(genreFilter !== 'all' || decadeFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setGenreFilter('all');
+                  setDecadeFilter('all');
+                }}
+                className="px-3 py-2 text-sm border border-border bg-background text-foreground hover:bg-muted rounded whitespace-nowrap"
+                title="Clear filters"
+              >
+                <i className="fas fa-times mr-1"></i>
+                <span className="hidden sm:inline">Clear</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Search and Multi-Select Controls */}
