@@ -36,7 +36,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   // Group songs into three categories
   const groupedSongs = songs.reduce((acc, song) => {
     const voteCount = Object.keys(song.votes || {}).length;
-    const hasUserVote = song.votes?.[session?.user?.id];
+    const hasUserVote = song.votes?.[session?.user?.cognitoId];
 
     // Calculate total score for sorting
     const totalScore = Object.values(song.votes || {}).reduce(
@@ -120,7 +120,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
               <VotingSongCard
                 key={song.id}
                 song={song}
-                userId={session?.user?.id || ''}
+                userId={session?.user?.cognitoId || ''}
                 memberCount={memberCount}
                 isExpanded={expandedSongId === song.id}
                 onToggleExpand={() => handleToggleExpand(song.id)}
@@ -146,7 +146,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
               <VotingSongCard
                 key={song.id}
                 song={song}
-                userId={session?.user?.id || ''}
+                userId={session?.user?.cognitoId || ''}
                 memberCount={memberCount}
                 isExpanded={expandedSongId === song.id}
                 onToggleExpand={() => handleToggleExpand(song.id)}
@@ -172,7 +172,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
               <VotingSongCard
                 key={song.id}
                 song={song}
-                userId={session?.user?.id || ''}
+                userId={session?.user?.cognitoId || ''}
                 memberCount={memberCount}
                 isExpanded={expandedSongId === song.id}
                 onToggleExpand={() => handleToggleExpand(song.id)}

@@ -108,13 +108,21 @@ export default function VotingSongCard({
       >
         <div className="flex gap-3">
           {/* Album Art */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 relative group">
             {song.globalSong.thumbnail_url ? (
-              <img
-                src={song.globalSong.thumbnail_url}
-                alt={song.globalSong.title}
-                className="w-16 h-16 rounded object-cover"
-              />
+              <>
+                <img
+                  src={song.globalSong.thumbnail_url}
+                  alt={song.globalSong.title}
+                  className="w-16 h-16 rounded object-cover"
+                />
+                {/* Play icon overlay */}
+                {song.globalSong.spotify_url && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i className="fas fa-play text-white text-lg"></i>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
                 <i className="fas fa-music text-muted-foreground"></i>
