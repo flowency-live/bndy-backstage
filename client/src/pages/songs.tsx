@@ -8,6 +8,7 @@ import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
 import { SpotifyPlayer, useSpotifyPlayer } from "@/components/spotify-player";
+import SpotifySettings from "@/components/spotify-settings";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface SongWithDetails {
@@ -78,6 +79,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [decadeFilter, setDecadeFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
+  const [showSpotifySettings, setShowSpotifySettings] = useState(false);
 
   // Spotify player
   const { accessToken, deviceId, setDeviceId, playTrack, isReady: spotifyReady } = useSpotifyPlayer();
@@ -500,6 +502,43 @@ export default function Songs({ artistId, membership }: SongsProps) {
             )}
           </div>
         </div>
+
+        {/* Spotify Connection Banner */}
+        {!spotifyReady && (
+          <div data-spotify-banner className="mb-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <i className="fab fa-spotify text-green-500 text-2xl"></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Connect Spotify to Play Songs In-App
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Connect your Spotify Premium account to play songs directly in BNDY without leaving the app.
+                </p>
+                <button
+                  onClick={() => setShowSpotifySettings(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
+                >
+                  <i className="fab fa-spotify"></i>
+                  Connect Spotify
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  // Dismiss banner for this session
+                  const banner = document.querySelector('[data-spotify-banner]');
+                  if (banner) banner.remove();
+                }}
+                className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                title="Dismiss"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Search and Multi-Select Controls */}
         <div className="flex items-center gap-2 mb-4">
@@ -1091,6 +1130,12 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
+
+      {/* Spotify Settings Modal */}
+      <SpotifySettings
+        isOpen={showSpotifySettings}
+        onClose={() => setShowSpotifySettings(false)}
+      />
 
       {/* Spotify Player */}
       <SpotifyPlayer accessToken={accessToken} onPlayerReady={setDeviceId} />
