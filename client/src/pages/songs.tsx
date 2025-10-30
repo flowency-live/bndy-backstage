@@ -717,40 +717,26 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <i className="fas fa-music text-muted-foreground text-sm"></i>
                         </div>
                       )}
-                      {/* Play/Pause button overlay */}
+                      {/* Play/Pause button overlay - always visible with opacity */}
                       {song.previewUrl && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             playPreview(song.id, song.previewUrl!);
                           }}
-                          className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute inset-0 bg-black/40 hover:bg-black/60 flex items-center justify-center transition-all"
                           title="Play 30-second preview"
                         >
-                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : 'fa-play'} text-white text-lg`}></i>
+                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : 'fa-play'} text-white text-lg drop-shadow-lg`}></i>
                         </button>
                       )}
                     </div>
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0 px-2 py-1.5">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-sm text-foreground truncate flex-1" data-testid={`song-title-${song.id}`}>
-                          {song.title}
-                        </h3>
-                        {song.spotifyUrl && (
-                          <a
-                            href={song.spotifyUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-green-500 hover:text-green-600 transition-colors flex-shrink-0"
-                            title="Open in Spotify"
-                          >
-                            <i className="fab fa-spotify text-base"></i>
-                          </a>
-                        )}
-                      </div>
+                      <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
+                        {song.title}
+                      </h3>
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
