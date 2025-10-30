@@ -76,7 +76,7 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
             data-testid="button-suggest-song"
           >
             <i className="fas fa-plus"></i>
-            <span>Suggest Song</span>
+            <span className="hidden sm:inline">Suggest Song</span>
           </button>
         </div>
 
