@@ -21,7 +21,7 @@ export default function SpotifyEmbedPlayer({ spotifyUrl, onClose }: SpotifyEmbed
     }
 
     if (trackId) {
-      return `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`;
+      return `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
     }
 
     return "";
