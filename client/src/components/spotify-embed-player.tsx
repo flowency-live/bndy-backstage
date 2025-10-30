@@ -21,7 +21,7 @@ export default function SpotifyEmbedPlayer({ spotifyUrl, onClose }: SpotifyEmbed
     }
 
     if (trackId) {
-      return `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
+      return `https://open.spotify.com/embed/track/${trackId}?utm_source=generator`;
     }
 
     return "";
@@ -45,12 +45,12 @@ export default function SpotifyEmbedPlayer({ spotifyUrl, onClose }: SpotifyEmbed
 
         {/* Spotify embed iframe */}
         <iframe
+          key={embedUrl}
           src={embedUrl}
           width="100%"
           height="100%"
           frameBorder="0"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
           title="Spotify Player"
         />
       </div>
