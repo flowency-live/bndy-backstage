@@ -173,7 +173,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
           album: item.globalSong?.album || '',
           spotifyUrl: item.globalSong?.spotifyUrl || '',
           imageUrl: item.globalSong?.albumImageUrl || null,
-          previewUrl: item.previewUrl || null,
+          previewUrl: item.globalSong?.previewUrl || null,
           addedByMembershipId: item.added_by_membership_id,
           createdAt: item.created_at,
           duration: item.globalSong?.duration || null,
