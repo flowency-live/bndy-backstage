@@ -8,10 +8,22 @@ interface SpotifyEmbedPlayerProps {
 export default function SpotifyEmbedPlayer({ spotifyUrl, onClose }: SpotifyEmbedPlayerProps) {
   const getSpotifyEmbedUrl = (url: string): string => {
     if (!url) return "";
-    if (url.includes("spotify.com/track") || url.includes("open.spotify.com/track")) {
-      const trackId = url.split("/track/")[1]?.split("?")[0];
+
+    let trackId = "";
+
+    // Handle Spotify URI format: spotify:track:xxxxx
+    if (url.startsWith("spotify:track:")) {
+      trackId = url.split("spotify:track:")[1];
+    }
+    // Handle Spotify URL format: https://open.spotify.com/track/xxxxx
+    else if (url.includes("spotify.com/track") || url.includes("open.spotify.com/track")) {
+      trackId = url.split("/track/")[1]?.split("?")[0];
+    }
+
+    if (trackId) {
       return `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`;
     }
+
     return "";
   };
 
