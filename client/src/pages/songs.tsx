@@ -7,6 +7,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
+import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface SongWithDetails {
@@ -77,61 +78,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [decadeFilter, setDecadeFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
-  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-
-  // Play preview function
-  const playPreview = (songId: string, previewUrl: string) => {
-    // Stop current audio if playing
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
-    }
-
-    // If clicking the same song, toggle pause/play
-    if (currentlyPlayingId === songId && audioElement) {
-      if (audioElement.paused) {
-        audioElement.play();
-      } else {
-        audioElement.pause();
-        setCurrentlyPlayingId(null);
-      }
-      return;
-    }
-
-    // Create new audio element
-    const audio = new Audio(previewUrl);
-    audio.volume = 0.8;
-
-    audio.onended = () => {
-      setCurrentlyPlayingId(null);
-      setAudioElement(null);
-    };
-
-    audio.onerror = () => {
-      toast({
-        title: "Playback error",
-        description: "Unable to play preview. Try opening in Spotify.",
-        variant: "destructive"
-      });
-      setCurrentlyPlayingId(null);
-      setAudioElement(null);
-    };
-
-    audio.play();
-    setAudioElement(audio);
-    setCurrentlyPlayingId(songId);
-  };
-
-  // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      if (audioElement) {
-        audioElement.pause();
-        audioElement.currentTime = 0;
-      }
-    };
-  }, [audioElement]);
+  const [currentlyPlayingSong, setCurrentlyPlayingSong] = useState<{ id: string; spotifyUrl: string } | null>(null);
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -717,22 +664,17 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <i className="fas fa-music text-muted-foreground text-sm"></i>
                         </div>
                       )}
-                      {/* Play/Pause button overlay - always visible with opacity */}
+                      {/* Play button overlay - always visible with opacity */}
                       {song.spotifyUrl && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (song.previewUrl) {
-                              playPreview(song.id, song.previewUrl);
-                            } else {
-                              // No preview available, open in Spotify
-                              window.open(song.spotifyUrl, '_blank');
-                            }
+                            setCurrentlyPlayingSong({ id: song.id, spotifyUrl: song.spotifyUrl });
                           }}
                           className="absolute inset-0 bg-black/40 hover:bg-black/60 flex items-center justify-center transition-all"
-                          title={song.previewUrl ? "Play 30-second preview" : "Open in Spotify (no preview available)"}
+                          title="Play in Spotify player"
                         >
-                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : song.previewUrl ? 'fa-play' : 'fa-external-link-alt'} text-white text-lg drop-shadow-lg`}></i>
+                          <i className={`fas ${currentlyPlayingSong?.id === song.id ? 'fa-pause' : 'fa-play'} text-white text-lg drop-shadow-lg`}></i>
                         </button>
                       )}
                     </div>
@@ -1142,6 +1084,14 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
+
+      {/* Spotify Embed Player */}
+      {currentlyPlayingSong && (
+        <SpotifyEmbedPlayer
+          spotifyUrl={currentlyPlayingSong.spotifyUrl}
+          onClose={() => setCurrentlyPlayingSong(null)}
+        />
+      )}
     </div>
   );
 }
