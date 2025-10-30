@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,7 @@ export default function Invite() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [accepting, setAccepting] = useState(false);
+  const hasAttemptedAutoAccept = useRef(false);
 
   // Store invite token in localStorage on mount
   useEffect(() => {
@@ -77,10 +78,12 @@ export default function Invite() {
       !loadingInvite &&
       !loadingAuth &&
       inviteDetails &&
-      localStorage.getItem('pendingInvite') === token;
+      localStorage.getItem('pendingInvite') === token &&
+      !hasAttemptedAutoAccept.current;
 
     if (shouldAutoAccept) {
       console.log('🎫 INVITE: Auto-accepting invite after profile completion');
+      hasAttemptedAutoAccept.current = true;
       handleAcceptInvite();
     }
   }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, inviteDetails]);
