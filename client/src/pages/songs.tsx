@@ -584,7 +584,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
               <i className="fas fa-spinner fa-spin text-4xl text-brand-primary mb-4 animate-pulse-soft"></i>
               <div className="absolute inset-0 animate-pulse-orange"></div>
             </div>
-            <p className="text-muted-foreground animate-shimmer">Loading practice list...</p>
+            <p className="text-muted-foreground animate-shimmer">Loading your songs...</p>
           </div>
         ) : sortedSongs.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-2xl shadow-lg">
