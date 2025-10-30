@@ -61,27 +61,15 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Pipeline Header with Add Button */}
+        {/* Tabs Navigation - same layout as songs.tsx */}
         <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="ml-auto bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-            data-testid="button-suggest-song"
-          >
-            <i className="fas fa-plus"></i>
-            <span className="hidden sm:inline">Suggest Song</span>
-          </button>
-        </div>
-
-        {/* Pipeline Tab Navigation */}
-        <div className="border-b border-border mb-6">
-          <div className="flex overflow-x-auto">
+          <div className="flex gap-2 border-b border-border">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex-shrink-0 px-4 py-3 text-sm font-medium transition-colors
+                  px-4 py-2 font-medium transition-colors
                   ${activeTab === tab.id
                     ? 'text-orange-500 border-b-2 border-orange-500'
                     : 'text-muted-foreground hover:text-foreground'
@@ -97,6 +85,15 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
               </button>
             ))}
           </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            data-testid="button-suggest-song"
+          >
+            <i className="fas fa-plus"></i>
+            <span className="hidden sm:inline">Suggest Song</span>
+          </button>
         </div>
 
         {/* Tab Content */}
