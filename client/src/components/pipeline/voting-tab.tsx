@@ -30,20 +30,8 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     refetchInterval: 30000
   });
 
-  // Get member count for vote progress
-  const { data: memberCount = 1 } = useQuery({
-    queryKey: ['members-count', artistId],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/memberships`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) return 1;
-      const members = await response.json();
-      return members.length;
-    }
-  });
+  // TODO: Get actual member count from membership prop/context
+  const memberCount = 1;
 
   // Sort songs: needs user vote first, then already voted
   const sortedSongs = [...songs].sort((a, b) => {

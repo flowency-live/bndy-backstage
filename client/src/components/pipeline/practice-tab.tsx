@@ -30,19 +30,8 @@ export default function PracticeTab({ artistId, membership }: PracticeTabProps) 
     refetchInterval: 30000
   });
 
-  const { data: memberCount = 1 } = useQuery({
-    queryKey: ['members-count', artistId],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/memberships`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) return 1;
-      const members = await response.json();
-      return members.length;
-    }
-  });
+  // TODO: Get actual member count from membership prop/context
+  const memberCount = 1;
 
   // Sort: needs RAG status first
   const sortedSongs = [...songs].sort((a, b) => {
