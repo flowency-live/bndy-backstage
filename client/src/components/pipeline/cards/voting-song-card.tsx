@@ -116,10 +116,10 @@ export default function VotingSongCard({
                   alt={song.globalSong.title}
                   className="w-16 h-16 rounded object-cover"
                 />
-                {/* Play icon overlay */}
+                {/* Play icon overlay - always visible */}
                 {song.globalSong.spotify_url && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i className="fas fa-play text-white text-lg"></i>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                    <i className="fas fa-play text-white text-lg drop-shadow-lg"></i>
                   </div>
                 )}
               </>
