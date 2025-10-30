@@ -16,7 +16,9 @@ interface SongSearchResult {
   source: "bndy" | "spotify"; // Track source for visual differentiation
   spotifyId?: string; // Only present for Spotify results
   duration?: number | null;
-  genre?: string;
+  genre?: string | null;
+  releaseDate?: string | null;
+  previewUrl?: string | null;
 }
 
 interface AddSongModalProps {
@@ -74,7 +76,9 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
           albumImageUrl: songData.imageUrl,
           spotifyUrl: songData.spotifyUrl,
           duration: songData.duration,
-          genre: songData.genre || "",
+          genre: songData.genre || null,
+          releaseDate: songData.releaseDate || null,
+          previewUrl: songData.previewUrl || null,
         }),
       });
 
@@ -170,16 +174,19 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
         );
 
         spotifySongs = spotifyResult.value.tracks.items
-          .map((track: SpotifyTrack) => ({
+          .map((track: any) => ({
             id: track.id,
             title: track.name,
-            artistName: track.artists.map(a => a.name).join(", "),
+            artistName: track.artists.map((a: any) => a.name).join(", "),
             album: track.album.name,
             imageUrl: track.album.images.length > 0 ? track.album.images[track.album.images.length - 1].url : null,
             spotifyUrl: track.external_urls.spotify,
             source: "spotify" as const,
             spotifyId: track.id,
             duration: Math.floor(track.duration_ms / 1000),
+            genre: track.genre || null,
+            releaseDate: track.album.release_date || null,
+            previewUrl: track.preview_url || null,
           }))
           .filter(song => {
             const key = `${song.title.toLowerCase().trim()}|${song.artistName.toLowerCase().trim()}`;
