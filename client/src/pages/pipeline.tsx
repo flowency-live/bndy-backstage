@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { PageHeader } from "@/components/layout";
 import VotingTab from "@/components/pipeline/voting-tab";
 import ReviewTab from "@/components/pipeline/review-tab";
 import PracticeTab from "@/components/pipeline/practice-tab";
 import ArchivedTab from "@/components/pipeline/archived-tab";
 import AddSuggestionModal from "@/components/pipeline/modals/add-suggestion-modal";
+import FloatingActionButton from "@/components/floating-action-button";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface PipelineProps {
@@ -59,12 +59,6 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
 
   return (
     <div className="min-h-screen pb-20">
-      <PageHeader
-        title="Song Pipeline"
-        actionLabel="+ Suggest Song"
-        onActionClick={() => setShowAddModal(true)}
-      />
-
       {/* Tab Navigation */}
       <div className="border-b border-border bg-card">
         <div className="flex overflow-x-auto">
@@ -119,6 +113,9 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
           }}
         />
       )}
+
+      {/* Floating Action Button */}
+      <FloatingActionButton onClick={() => setShowAddModal(true)} />
     </div>
   );
 }
