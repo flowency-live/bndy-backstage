@@ -103,10 +103,10 @@ export default function VotingSongCard({
     >
       {/* Collapsed Card */}
       <div
-        className="p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+        className="p-2 cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={!isExpanded ? onToggleExpand : undefined}
       >
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {/* Album Art */}
           <div className="flex-shrink-0 relative group">
             {song.globalSong.thumbnail_url ? (
@@ -138,26 +138,19 @@ export default function VotingSongCard({
             <p className="text-sm text-muted-foreground truncate">
               {song.globalSong.artist_name}
             </p>
-            {song.suggested_comment && !isExpanded && (
-              <p className="text-sm text-muted-foreground italic truncate mt-1">
-                "{song.suggested_comment}"
-              </p>
-            )}
-            <div className="mt-2">
+          </div>
+
+          {/* Vote Status & Button Column */}
+          {!isExpanded && (
+            <div className="flex-shrink-0 flex flex-col items-end justify-center gap-2">
               <VoteProgressBadge
                 voteCount={voteCount}
                 memberCount={memberCount}
                 userHasVoted={userHasVoted}
               />
-            </div>
-          </div>
-
-          {/* Vote Button */}
-          {!isExpanded && (
-            <div className="flex-shrink-0 flex items-center">
               <button
                 className={`
-                  px-4 py-2 rounded-lg font-medium transition-all
+                  px-3 py-1.5 rounded-lg font-medium text-sm transition-all
                   ${needsUserVote
                     ? 'bg-orange-500 text-white hover:bg-orange-600 animate-pulse'
                     : 'bg-primary/20 text-primary hover:bg-primary/30'
