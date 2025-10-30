@@ -7,8 +7,6 @@ import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
-import { SpotifyPlayer, useSpotifyPlayer } from "@/components/spotify-player";
-import SpotifySettings from "@/components/spotify-settings";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface SongWithDetails {
@@ -79,10 +77,61 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [decadeFilter, setDecadeFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
-  const [showSpotifySettings, setShowSpotifySettings] = useState(false);
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
-  // Spotify player
-  const { accessToken, deviceId, setDeviceId, playTrack, isReady: spotifyReady } = useSpotifyPlayer();
+  // Play preview function
+  const playPreview = (songId: string, previewUrl: string) => {
+    // Stop current audio if playing
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    }
+
+    // If clicking the same song, toggle pause/play
+    if (currentlyPlayingId === songId && audioElement) {
+      if (audioElement.paused) {
+        audioElement.play();
+      } else {
+        audioElement.pause();
+        setCurrentlyPlayingId(null);
+      }
+      return;
+    }
+
+    // Create new audio element
+    const audio = new Audio(previewUrl);
+    audio.volume = 0.8;
+
+    audio.onended = () => {
+      setCurrentlyPlayingId(null);
+      setAudioElement(null);
+    };
+
+    audio.onerror = () => {
+      toast({
+        title: "Playback error",
+        description: "Unable to play preview. Try opening in Spotify.",
+        variant: "destructive"
+      });
+      setCurrentlyPlayingId(null);
+      setAudioElement(null);
+    };
+
+    audio.play();
+    setAudioElement(audio);
+    setCurrentlyPlayingId(songId);
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+    };
+  }, [audioElement]);
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -503,43 +552,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
           </div>
         </div>
 
-        {/* Spotify Connection Banner */}
-        {!spotifyReady && (
-          <div data-spotify-banner className="mb-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <i className="fab fa-spotify text-green-500 text-2xl"></i>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground mb-1">
-                  Connect Spotify to Play Songs In-App
-                </h3>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Connect your Spotify Premium account to play songs directly in BNDY without leaving the app.
-                </p>
-                <button
-                  onClick={() => setShowSpotifySettings(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2"
-                >
-                  <i className="fab fa-spotify"></i>
-                  Connect Spotify
-                </button>
-              </div>
-              <button
-                onClick={() => {
-                  // Dismiss banner for this session
-                  const banner = document.querySelector('[data-spotify-banner]');
-                  if (banner) banner.remove();
-                }}
-                className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                title="Dismiss"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Search and Multi-Select Controls */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex-1 relative">
@@ -705,31 +717,40 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           <i className="fas fa-music text-muted-foreground text-sm"></i>
                         </div>
                       )}
-                      {/* Play button overlay */}
-                      {song.spotifyUrl && (
+                      {/* Play/Pause button overlay */}
+                      {song.previewUrl && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (spotifyReady) {
-                              playTrack(song.spotifyUrl);
-                            } else {
-                              // Fallback: open in Spotify
-                              window.open(song.spotifyUrl, '_blank');
-                            }
+                            playPreview(song.id, song.previewUrl!);
                           }}
                           className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          title={spotifyReady ? 'Play in BNDY' : 'Open in Spotify'}
+                          title="Play 30-second preview"
                         >
-                          <i className="fas fa-play text-white text-lg"></i>
+                          <i className={`fas ${currentlyPlayingId === song.id ? 'fa-pause' : 'fa-play'} text-white text-lg`}></i>
                         </button>
                       )}
                     </div>
 
                     {/* Song info */}
                     <div className="flex-1 min-w-0 px-2 py-1.5">
-                      <h3 className="font-medium text-sm text-foreground truncate" data-testid={`song-title-${song.id}`}>
-                        {song.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-sm text-foreground truncate flex-1" data-testid={`song-title-${song.id}`}>
+                          {song.title}
+                        </h3>
+                        {song.spotifyUrl && (
+                          <a
+                            href={song.spotifyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-green-500 hover:text-green-600 transition-colors flex-shrink-0"
+                            title="Open in Spotify"
+                          >
+                            <i className="fab fa-spotify text-base"></i>
+                          </a>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
@@ -1130,15 +1151,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
-
-      {/* Spotify Settings Modal */}
-      <SpotifySettings
-        isOpen={showSpotifySettings}
-        onClose={() => setShowSpotifySettings(false)}
-      />
-
-      {/* Spotify Player */}
-      <SpotifyPlayer accessToken={accessToken} onPlayerReady={setDeviceId} />
     </div>
   );
 }
