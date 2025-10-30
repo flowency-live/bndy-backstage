@@ -7,6 +7,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
 import { PageHeader } from "@/components/layout";
+import { SpotifyPlayer, useSpotifyPlayer } from "@/components/spotify-player";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface SongWithDetails {
@@ -77,6 +78,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [decadeFilter, setDecadeFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
+
+  // Spotify player
+  const { accessToken, deviceId, setDeviceId, playTrack, isReady: spotifyReady } = useSpotifyPlayer();
 
   // Check for Spotify settings from localStorage
   useEffect(() => {
@@ -649,8 +653,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       </div>
                     )}
 
-                    {/* Album artwork - reduced height */}
-                    <div className="w-12 h-12 bg-muted flex-shrink-0 overflow-hidden">
+                    {/* Album artwork with play button */}
+                    <div className="w-12 h-12 bg-muted flex-shrink-0 overflow-hidden relative group">
                       {song.imageUrl ? (
                         <img
                           src={song.imageUrl}
@@ -661,6 +665,24 @@ export default function Songs({ artistId, membership }: SongsProps) {
                         <div className="w-full h-full flex items-center justify-center">
                           <i className="fas fa-music text-muted-foreground text-sm"></i>
                         </div>
+                      )}
+                      {/* Play button overlay */}
+                      {song.spotifyUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (spotifyReady) {
+                              playTrack(song.spotifyUrl);
+                            } else {
+                              // Fallback: open in Spotify
+                              window.open(song.spotifyUrl, '_blank');
+                            }
+                          }}
+                          className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          title={spotifyReady ? 'Play in BNDY' : 'Open in Spotify'}
+                        >
+                          <i className="fas fa-play text-white text-lg"></i>
+                        </button>
                       )}
                     </div>
 
@@ -1069,6 +1091,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       {/* Confirmation Dialog */}
       <ConfirmDialog />
+
+      {/* Spotify Player */}
+      <SpotifyPlayer accessToken={accessToken} onPlayerReady={setDeviceId} />
     </div>
   );
 }
