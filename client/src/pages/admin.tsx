@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { ArtistMembership, Artist } from "@/types/api";
+import { invitesService, type Invite } from "@/lib/services/invites-service";
 import { EVENT_TYPES, EVENT_TYPE_CONFIG } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -677,15 +678,18 @@ export default function Admin({ artistId, membership }: AdminProps) {
                             try {
                               const response = await apiRequest("POST", `/api/artists/${artistId}/invites/general`);
                               const data = await response.json();
-                              
+
                               // Copy to clipboard
                               await navigator.clipboard.writeText(data.inviteLink);
-                              
+
                               toast({
                                 title: "Invite link generated!",
                                 description: "Link has been copied to your clipboard. Share it with people you want to invite.",
                                 variant: "default"
                               });
+
+                              // Refresh invite list
+                              queryClient.invalidateQueries({ queryKey: ['/api/artists', artistId, 'invites'] });
                             } catch (error: any) {
                               toast({
                                 title: "Error generating link",
@@ -744,8 +748,11 @@ export default function Admin({ artistId, membership }: AdminProps) {
                                 description: `Magic link sent to ${invitePhone}`,
                                 variant: "default"
                               });
-                              
+
                               setInvitePhone("");
+
+                              // Refresh invite list
+                              queryClient.invalidateQueries({ queryKey: ['/api/artists', artistId, 'invites'] });
                             } catch (error: any) {
                               toast({
                                 title: "Error sending invite",
@@ -764,11 +771,8 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       </div>
                     </div>
 
-                    {/* TODO: Active Magic Links List - backend storage not implemented yet */}
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-semibold text-foreground mb-2">Active Magic Links</h4>
-                      <p className="text-sm text-muted-foreground">Generated links are temporary and not stored.</p>
-                    </div>
+                    {/* Active Invites List */}
+                    <ActiveInvitesList artistId={artistId} />
                   </div>
                 )}
               </div>
@@ -892,6 +896,181 @@ export default function Admin({ artistId, membership }: AdminProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Active Invites List Component
+function ActiveInvitesList({ artistId }: { artistId: string }) {
+  const { toast } = useToast();
+
+  const { data: invites, isLoading, refetch } = useQuery<Invite[]>({
+    queryKey: ['/api/artists', artistId, 'invites'],
+    queryFn: () => invitesService.listInvites(artistId),
+  });
+
+  const disableMutation = useMutation({
+    mutationFn: (token: string) => invitesService.disableInvite(token),
+    onSuccess: () => {
+      toast({
+        title: "Invite disabled",
+        description: "The invite link has been disabled",
+        variant: "default"
+      });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error disabling invite",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const copyToClipboard = async (token: string) => {
+    const link = invitesService.getInviteLink(token);
+    await navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copied!",
+      description: "Invite link copied to clipboard",
+      variant: "default"
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 bg-muted/50 rounded-lg">
+        <p className="text-sm text-muted-foreground">Loading invites...</p>
+      </div>
+    );
+  }
+
+  const activeInvites = invites?.filter(inv => inv.status === 'active') || [];
+  const now = Math.floor(Date.now() / 1000);
+
+  if (activeInvites.length === 0) {
+    return (
+      <div className="p-4 bg-muted/50 rounded-lg">
+        <h4 className="font-semibold text-foreground mb-2">Active Magic Links</h4>
+        <p className="text-sm text-muted-foreground">No active invites. Generate a link above to get started.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <h4 className="font-semibold text-foreground">Active Magic Links ({activeInvites.length})</h4>
+      {activeInvites.map((invite) => {
+        const isExpired = invite.expiresAt < now;
+        const expiresDate = new Date(invite.expiresAt * 1000);
+        const createdDate = new Date(invite.createdAt);
+
+        return (
+          <div
+            key={invite.token}
+            className="p-4 bg-card border border-border rounded-lg space-y-3"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant={isExpired ? "secondary" : "default"}>
+                    {invite.inviteType === 'phone-specific' ? 'Phone' : 'General'}
+                  </Badge>
+                  {isExpired && (
+                    <Badge variant="destructive">Expired</Badge>
+                  )}
+                  {invite.acceptanceCount > 0 && (
+                    <Badge variant="outline">
+                      <i className="fas fa-users text-xs mr-1"></i>
+                      {invite.acceptanceCount} joined
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="flex items-center gap-1">
+                    <i className="fas fa-clock w-3"></i>
+                    <span>Created {format(createdDate, 'MMM d, h:mm a')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <i className="fas fa-hourglass-end w-3"></i>
+                    <span>Expires {format(expiresDate, 'MMM d, h:mm a')}</span>
+                  </div>
+                  {invite.phone && (
+                    <div className="flex items-center gap-1">
+                      <i className="fas fa-phone w-3"></i>
+                      <span>{invite.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => copyToClipboard(invite.token)}
+                  variant="outline"
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  <i className="fas fa-copy mr-2"></i>
+                  Copy Link
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="whitespace-nowrap"
+                    >
+                      <i className="fas fa-ban mr-2"></i>
+                      Disable
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Disable Invite Link?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will prevent anyone from using this invite link.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => disableMutation.mutate(invite.token)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Disable Invite
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+
+            {invite.acceptedBy && invite.acceptedBy.length > 0 && (
+              <div className="pt-3 border-t border-border">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  Accepted by {invite.acceptedBy.length} {invite.acceptedBy.length === 1 ? 'person' : 'people'}:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {invite.acceptedBy.slice(0, 5).map((acceptance, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {format(new Date(acceptance.acceptedAt), 'MMM d')}
+                    </Badge>
+                  ))}
+                  {invite.acceptedBy.length > 5 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{invite.acceptedBy.length - 5} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
