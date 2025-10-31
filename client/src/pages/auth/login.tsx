@@ -10,6 +10,7 @@ import Footer from "@/components/ui/footer"
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Phone, Mail } from "lucide-react"
+import { queryClient } from "@/lib/queryClient"
 
 type AuthStep = 'phone' | 'verify'
 type EmailStep = 'email' | 'check-inbox'
@@ -152,6 +153,9 @@ export default function Login() {
         description: "Welcome to bndy",
         variant: "default"
       })
+
+      // Invalidate auth queries so invite page gets fresh session
+      queryClient.invalidateQueries({ queryKey: ['/api/me'] })
 
       // Check for pending invite token
       const pendingInvite = localStorage.getItem('pendingInvite')
