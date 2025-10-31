@@ -33,11 +33,11 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   console.log('VOTING TAB - FULL MEMBERSHIP OBJECT:', membership);
   console.log('VOTING TAB - ARTIST OBJECT:', membership.artist);
 
-  const memberCount = membership.artist?.member_count || 1;
+  const memberCount = membership.artist?.memberCount || 1;
 
   console.log('VOTING TAB DEBUG:', {
     memberCount,
-    artistMemberCount: membership.artist?.member_count,
+    artistMemberCount: membership.artist?.memberCount,
     hasArtistObject: !!membership.artist,
     artistKeys: membership.artist ? Object.keys(membership.artist) : [],
     songsCount: songs.length,

@@ -28,7 +28,8 @@ export interface Artist {
   locationLng?: number;
   displayColour?: string; // Hex color for gig events on calendar (default: #f97316 Orange 500)
   genres?: string[];
-  artist_type?: string;
+  artistType?: string; // camelCase version
+  artist_type?: string; // Legacy snake_case version
   profileImageUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
@@ -36,7 +37,8 @@ export interface Artist {
   socialMediaUrls?: Array<{ type: string; url: string }>;
   isVerified?: boolean;
   followerCount?: number;
-  member_count?: number;
+  memberCount?: number; // camelCase version (used by frontend)
+  member_count?: number; // Legacy snake_case version (backend)
   allowedEventTypes?: string[];
   created_at: string;
   updated_at: string;
