@@ -64,13 +64,31 @@ export default function Invite() {
     retry: false
   });
 
+  // Fetch user memberships to check if they have existing artists
+  const { data: membershipsData, isLoading: loadingMemberships } = useQuery<{ user: { id: string }, artists: any[] }>({
+    queryKey: ["api-memberships-me"],
+    queryFn: async () => {
+      const response = await fetch("https://api.bndy.co.uk/api/memberships/me", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch memberships");
+      }
+      return response.json();
+    },
+    enabled: !!authResponse?.user,
+    retry: false
+  });
+
   const isAuthenticated = !!authResponse?.user;
   const hasRequiredFields = authResponse?.user?.firstName &&
                            authResponse?.user?.lastName &&
                            authResponse?.user?.displayName;
   const profileComplete = authResponse?.user?.profileCompleted || hasRequiredFields;
+  const membershipCount = membershipsData?.artists?.length || 0;
 
-  // Auto-redirect authenticated users to dashboard (invite handled silently by user-context)
+  // Auto-redirect ONLY users with 0 memberships to dashboard (invite handled silently)
+  // Users with existing memberships should see the confirmation page
   useEffect(() => {
     const shouldRedirectToDashboard =
       token &&
@@ -78,16 +96,18 @@ export default function Invite() {
       !accepting &&
       !loadingInvite &&
       !loadingAuth &&
+      !loadingMemberships &&
       inviteDetails &&
       localStorage.getItem('pendingInvite') === token &&
-      !hasAttemptedProfileRedirect.current;
+      !hasAttemptedProfileRedirect.current &&
+      membershipCount === 0;
 
     if (shouldRedirectToDashboard) {
-      console.log('🎫 INVITE: Authenticated user, redirecting to dashboard (invite will be handled silently)');
+      console.log('🎫 INVITE: New user (0 memberships), redirecting to dashboard for silent accept');
       hasAttemptedProfileRedirect.current = true;
       setLocation('/dashboard');
     }
-  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, inviteDetails]);
+  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount]);
 
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {

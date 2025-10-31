@@ -126,7 +126,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [userProfile]);
 
-  // Handle pending invite silently in background
+  // Handle pending invite silently ONLY for users with 0 memberships (new users)
   useEffect(() => {
     const processPendingInvite = async () => {
       const pendingInvite = localStorage.getItem('pendingInvite');
@@ -135,7 +135,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log('🎫 USER CONTEXT: Processing pending invite silently');
+      // Only auto-accept for users with 0 memberships (brand new users)
+      // Users with existing memberships should see the confirmation page
+      const membershipCount = userProfile.artists?.length || 0;
+      if (membershipCount > 0) {
+        console.log('🎫 USER CONTEXT: User has existing memberships, skipping silent accept');
+        return;
+      }
+
+      console.log('🎫 USER CONTEXT: New user (0 memberships), processing invite silently');
       hasProcessedInvite.current = true;
 
       try {

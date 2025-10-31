@@ -157,12 +157,14 @@ export default function Login() {
       // Invalidate auth queries for fresh session data
       queryClient.invalidateQueries({ queryKey: ['/api/me'] })
 
-      // Always redirect to dashboard - MemberGate handles profile, user-context handles invite
+      // Check for pending invite and redirect accordingly
       const pendingInvite = localStorage.getItem('pendingInvite')
       if (pendingInvite) {
-        console.log('📱 LOGIN: Found pending invite, redirecting to dashboard')
+        console.log('📱 LOGIN: Found pending invite, redirecting to invite page')
+        setLocation(`/invite/${pendingInvite}`)
+      } else {
+        setLocation('/dashboard')
       }
-      setLocation('/dashboard')
     } catch (error: any) {
       toast({
         title: "Invalid code",
