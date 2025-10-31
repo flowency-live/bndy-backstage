@@ -47,6 +47,16 @@ export default function VotingSongCard({
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
 
+  console.log('VOTING CARD DEBUG:', {
+    songTitle: song.globalSong?.title,
+    userId,
+    userVote,
+    voteCount,
+    memberCount,
+    userHasVoted,
+    allVotes: song.votes
+  });
+
   const voteMutation = useMutation({
     mutationFn: async (voteValue: number) => {
       const response = await fetch(

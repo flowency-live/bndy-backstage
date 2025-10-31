@@ -45,7 +45,9 @@
       "Bash(export MSYS_NO_PATHCONV=1)",
       "Bash(mkdir:*)",
       "Bash(aws dynamodb delete-item:*)",
-      "Bash(aws dynamodb update-item:*)"
+      "Bash(aws dynamodb update-item:*)",
+      "Bash(aws logs describe-log-groups:*)",
+      "Bash(aws dynamodb list-tables:*)"
     ],
     "deny": [],
     "ask": []
