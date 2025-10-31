@@ -147,22 +147,23 @@ export default function Login() {
         throw error
       }
 
-      // Successful authentication - check for pending invite
+      // Successful authentication
       toast({
         title: "Signed in successfully!",
         description: "Welcome to bndy",
         variant: "default"
       })
 
-      // Invalidate auth queries so invite page gets fresh session
+      // Invalidate auth queries for fresh session data
       queryClient.invalidateQueries({ queryKey: ['/api/me'] })
 
       // Check for pending invite token
       const pendingInvite = localStorage.getItem('pendingInvite')
 
       if (pendingInvite) {
-        console.log('📱 LOGIN: Found pending invite, redirecting to /invite/' + pendingInvite)
-        setLocation(`/invite/${pendingInvite}`)
+        console.log('📱 LOGIN: Found pending invite, redirecting to /profile to complete onboarding')
+        // Redirect to profile page - invite will be handled after profile completion
+        setLocation('/profile')
       } else {
         // No pending invite - MemberGate will handle profile check
         setLocation('/dashboard')
