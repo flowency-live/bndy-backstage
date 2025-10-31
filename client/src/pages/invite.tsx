@@ -150,6 +150,15 @@ export default function Invite() {
       setLocation('/dashboard');
     } catch (error: any) {
       console.error('🎫 INVITE: Accept error:', error);
+
+      // Check if user is already a member - treat as success
+      if (error.message && error.message.includes('already a member')) {
+        console.log('🎫 INVITE: User already member, clearing pendingInvite and redirecting');
+        localStorage.removeItem('pendingInvite');
+        setLocation('/dashboard');
+        return;
+      }
+
       toast({
         title: "Failed to Accept Invitation",
         description: error.message || "Please try again",
