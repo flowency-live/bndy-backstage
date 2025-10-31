@@ -41,7 +41,11 @@
       "Bash(aws lambda list-functions:*)",
       "Bash(aws dynamodb scan:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(export MSYS_NO_PATHCONV=1)",
+      "Bash(mkdir:*)",
+      "Bash(aws dynamodb delete-item:*)",
+      "Bash(aws dynamodb update-item:*)"
     ],
     "deny": [],
     "ask": []

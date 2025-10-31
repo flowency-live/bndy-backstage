@@ -175,7 +175,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         throw new Error("Not authenticated");
       }
 
-      const response = await apiRequest("DELETE", `/api/artists/${artistId}/members/${membershipId}`);
+      const response = await apiRequest("DELETE", `/api/memberships/${membershipId}`);
       return response.json();
     },
     onSuccess: () => {
