@@ -30,8 +30,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     refetchInterval: 30000
   });
 
-  // TODO: Get actual member count from membership prop/context
-  const memberCount = 1;
+  const memberCount = membership.artist.member_count || 1;
 
   // Group songs into three categories
   const groupedSongs = songs.reduce((acc, song) => {

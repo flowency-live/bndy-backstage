@@ -148,6 +148,22 @@ export default function VotingSongCard({
                 memberCount={memberCount}
                 userHasVoted={userHasVoted}
               />
+              {userHasVoted && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="font-medium">Your vote:</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <i
+                        key={star}
+                        className={`fas fa-star ${
+                          star <= userVote ? 'text-yellow-500' : 'text-gray-300'
+                        }`}
+                        style={{ fontSize: '10px' }}
+                      ></i>
+                    ))}
+                  </div>
+                </div>
+              )}
               <button
                 className={`
                   px-3 py-1.5 rounded-lg font-medium text-sm transition-all

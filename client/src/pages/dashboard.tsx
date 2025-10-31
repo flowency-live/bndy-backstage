@@ -873,7 +873,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               icon={<GitBranch />}
               color="hsl(45, 93%, 47%)"
               count={Math.max(0, totalSongs - 5)}
-              onClick={() => setLocation("/songs")}
+              onClick={() => setLocation("/pipeline")}
               className="animate-stagger-3"
             />
           </div>
