@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import type { User, ArtistMembership } from "@/types/api";
+import { authService } from "@/lib/services/auth-service";
 
 interface UserProfile {
   user: User;
@@ -38,6 +39,8 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const { session, isAuthenticated, loading: authLoading, signOut } = useServerAuth();
   const [currentArtistId, setCurrentArtistId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const hasProcessedInvite = useRef(false);
 
   // Layer 2: Get user profile
   const { data: userProfileData, isLoading: profileLoading } = useQuery<User>({
@@ -122,6 +125,45 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.log('🎨 USER CONTEXT: ⏸️ Multiple artists, no saved selection - waiting for user to select');
     }
   }, [userProfile]);
+
+  // Handle pending invite silently in background
+  useEffect(() => {
+    const processPendingInvite = async () => {
+      const pendingInvite = localStorage.getItem('pendingInvite');
+
+      if (!pendingInvite || hasProcessedInvite.current || !isAuthenticated || !userProfile) {
+        return;
+      }
+
+      console.log('🎫 USER CONTEXT: Processing pending invite silently');
+      hasProcessedInvite.current = true;
+
+      try {
+        const result = await authService.acceptInvite(pendingInvite);
+        console.log('🎫 USER CONTEXT: Invite accepted successfully', result);
+
+        // Clear pending invite
+        localStorage.removeItem('pendingInvite');
+
+        // Set new artist as active context
+        localStorage.setItem('bndy-selected-artist-id', result.artist.id);
+        setCurrentArtistId(result.artist.id);
+
+        // Refresh memberships to include new one
+        queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
+      } catch (error: any) {
+        console.error('🎫 USER CONTEXT: Failed to accept invite', error);
+
+        // If already a member, treat as success
+        if (error.message && error.message.includes('already a member')) {
+          console.log('🎫 USER CONTEXT: User already member, clearing pendingInvite');
+          localStorage.removeItem('pendingInvite');
+        }
+      }
+    };
+
+    processPendingInvite();
+  }, [isAuthenticated, userProfile, queryClient]);
 
   // Find current membership (null if no artist context)
   const currentMembership = currentArtistId

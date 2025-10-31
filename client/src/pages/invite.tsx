@@ -70,12 +70,11 @@ export default function Invite() {
                            authResponse?.user?.displayName;
   const profileComplete = authResponse?.user?.profileCompleted || hasRequiredFields;
 
-  // Auto-redirect to profile if authenticated but profile incomplete (returning from login)
+  // Auto-redirect authenticated users to dashboard (invite handled silently by user-context)
   useEffect(() => {
-    const shouldRedirectToProfile =
+    const shouldRedirectToDashboard =
       token &&
       isAuthenticated &&
-      !profileComplete &&
       !accepting &&
       !loadingInvite &&
       !loadingAuth &&
@@ -83,32 +82,12 @@ export default function Invite() {
       localStorage.getItem('pendingInvite') === token &&
       !hasAttemptedProfileRedirect.current;
 
-    if (shouldRedirectToProfile) {
-      console.log('🎫 INVITE: Authenticated but profile incomplete, auto-redirecting to profile');
+    if (shouldRedirectToDashboard) {
+      console.log('🎫 INVITE: Authenticated user, redirecting to dashboard (invite will be handled silently)');
       hasAttemptedProfileRedirect.current = true;
-      setLocation('/profile');
+      setLocation('/dashboard');
     }
-  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, inviteDetails]);
-
-  // Auto-accept invite after profile completion (returning from /profile)
-  useEffect(() => {
-    const shouldAutoAccept =
-      token &&
-      isAuthenticated &&
-      profileComplete &&
-      !accepting &&
-      !loadingInvite &&
-      !loadingAuth &&
-      inviteDetails &&
-      localStorage.getItem('pendingInvite') === token &&
-      !hasAttemptedAutoAccept.current;
-
-    if (shouldAutoAccept) {
-      console.log('🎫 INVITE: Auto-accepting invite after profile completion');
-      hasAttemptedAutoAccept.current = true;
-      handleAcceptInvite();
-    }
-  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, inviteDetails]);
+  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, inviteDetails]);
 
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {
