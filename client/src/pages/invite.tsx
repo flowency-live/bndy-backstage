@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/services/auth-service";
 import BndyLogo from "@/components/ui/bndy-logo";
+import { queryClient } from "@/lib/queryClient";
 
 interface InviteDetails {
   token: string;
@@ -24,6 +25,7 @@ export default function Invite() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [accepting, setAccepting] = useState(false);
+  const hasAttemptedProfileRedirect = useRef(false);
   const hasAttemptedAutoAccept = useRef(false);
 
   // Store invite token in localStorage on mount
@@ -68,6 +70,26 @@ export default function Invite() {
                            authResponse?.user?.displayName;
   const profileComplete = authResponse?.user?.profileCompleted || hasRequiredFields;
 
+  // Auto-redirect to profile if authenticated but profile incomplete (returning from login)
+  useEffect(() => {
+    const shouldRedirectToProfile =
+      token &&
+      isAuthenticated &&
+      !profileComplete &&
+      !accepting &&
+      !loadingInvite &&
+      !loadingAuth &&
+      inviteDetails &&
+      localStorage.getItem('pendingInvite') === token &&
+      !hasAttemptedProfileRedirect.current;
+
+    if (shouldRedirectToProfile) {
+      console.log('🎫 INVITE: Authenticated but profile incomplete, auto-redirecting to profile');
+      hasAttemptedProfileRedirect.current = true;
+      setLocation('/profile');
+    }
+  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, inviteDetails]);
+
   // Auto-accept invite after profile completion (returning from /profile)
   useEffect(() => {
     const shouldAutoAccept =
@@ -97,13 +119,8 @@ export default function Invite() {
     }
 
     if (!profileComplete) {
-      // Profile incomplete - MemberGate will redirect to /profile
-      console.log('🎫 INVITE: Profile incomplete, redirecting to profile');
-      toast({
-        title: "Complete Your Profile",
-        description: "Please complete your profile to accept this invitation",
-        variant: "default"
-      });
+      // Profile incomplete - automatically redirect to profile (no button click needed)
+      console.log('🎫 INVITE: Profile incomplete, auto-redirecting to profile');
       setLocation("/profile");
       return;
     }
@@ -119,6 +136,9 @@ export default function Invite() {
       // Set the new artist as the active context
       console.log('🎫 INVITE: Setting new artist as active context:', result.artist.id);
       localStorage.setItem('bndy-selected-artist-id', result.artist.id);
+
+      // Invalidate memberships query to refresh artist context
+      queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
 
       toast({
         title: "Welcome to the Band!",
