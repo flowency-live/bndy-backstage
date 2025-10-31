@@ -30,16 +30,30 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     refetchInterval: 30000
   });
 
-  console.log('VOTING TAB - FULL MEMBERSHIP OBJECT:', membership);
-  console.log('VOTING TAB - ARTIST OBJECT:', membership.artist);
+  // Query ACTUAL member count from memberships table, not cached field
+  const { data: actualMemberCount = 0 } = useQuery({
+    queryKey: ['artist-member-count', artistId],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/memberships/artist/${artistId}`,
+        { credentials: 'include' }
+      );
 
-  const memberCount = membership.artist?.memberCount || 1;
+      if (!response.ok) {
+        throw new Error('Failed to fetch member count');
+      }
+
+      const data = await response.json();
+      return data.memberships?.filter((m: any) => m.status === 'active').length || 0;
+    },
+    refetchInterval: 60000 // Refresh every minute
+  });
+
+  const memberCount = actualMemberCount || 1;
 
   console.log('VOTING TAB DEBUG:', {
     memberCount,
-    artistMemberCount: membership.artist?.memberCount,
-    hasArtistObject: !!membership.artist,
-    artistKeys: membership.artist ? Object.keys(membership.artist) : [],
+    actualMemberCount,
     songsCount: songs.length,
     currentUserId: session?.user?.cognitoId
   });

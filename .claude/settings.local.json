@@ -47,7 +47,8 @@
       "Bash(aws dynamodb delete-item:*)",
       "Bash(aws dynamodb update-item:*)",
       "Bash(aws logs describe-log-groups:*)",
-      "Bash(aws dynamodb list-tables:*)"
+      "Bash(aws dynamodb list-tables:*)",
+      "Bash(aws dynamodb get-item:*)"
     ],
     "deny": [],
     "ask": []
