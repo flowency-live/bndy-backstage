@@ -2,7 +2,7 @@
   "name": "BNDY Backstage",
   "short_name": "bndy",
   "description": "Schedule and manage band practices, gigs, and member availability",
-  "start_url": "/dashboard",
+  "start_url": "/launch",
   "display": "standalone",
   "background_color": "#1a1f2e",
   "theme_color": "#f97316",

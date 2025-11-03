@@ -11,6 +11,7 @@ import MemberGate from "@/components/member-gate";
 import ProfileGate from "@/components/profile-gate";
 import Layout, { AppLayout } from "@/components/layout";
 import Landing from "@/pages/landing";
+import Launch from "@/pages/launch";
 import Dashboard from "@/pages/dashboard";
 import MyArtists from "@/pages/my-artists";
 import Invite from "@/pages/invite";
@@ -46,6 +47,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/launch" component={Launch} />
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={OAuthCallback} />
       <Route path="/auth-success" component={AuthSuccess} />
