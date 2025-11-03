@@ -884,8 +884,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
                 )}
               </div>
             )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
