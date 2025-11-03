@@ -890,6 +890,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               return 'border-red-500 bg-red-50 text-red-800 dark:border-red-400 dark:bg-red-500/20 dark:text-red-200';
                             case 'practice':
                               return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
+                            case 'rehearsal':
+                              return 'border-orange-500 bg-orange-50 text-orange-800 dark:border-orange-400 dark:bg-orange-500/20 dark:text-orange-200';
                             case 'gig':
                             case 'public_gig':
                               return 'text-white dark:text-white'; // Only text color for gigs, border/bg set inline
@@ -945,6 +947,8 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                               return 'border-red-500 bg-red-50 text-red-800 dark:border-red-400 dark:bg-red-500/20 dark:text-red-200';
                             case 'practice':
                               return 'border-blue-500 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-500/20 dark:text-blue-200';
+                            case 'rehearsal':
+                              return 'border-orange-500 bg-orange-50 text-orange-800 dark:border-orange-400 dark:bg-orange-500/20 dark:text-orange-200';
                             case 'gig':
                             case 'public_gig':
                               return 'text-white dark:text-white'; // Only text color for gigs, border/bg set inline

@@ -107,7 +107,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
         isPublic: false,
       });
     }
-  }, [selectedEvent]); // Only depend on selectedEvent to avoid race conditions
+  }, [selectedEvent, isOpen]); // Re-initialize when modal opens
 
   // Separate useEffect for updating form when creating new events
   useEffect(() => {
