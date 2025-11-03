@@ -89,12 +89,12 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-3' : ''}>
+    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-1.5' : ''}>
       {/* Segue connector - shows visual link between segued songs */}
       {prevSongHasSegue && !isOver && (
-        <div className="flex items-center justify-center -mb-3 relative z-10">
-          <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md">
-            <i className="fas fa-link text-[10px]"></i>
+        <div className="flex items-center justify-center -my-1.5 relative z-10">
+          <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-background">
+            <i className="fas fa-link text-[8px]"></i>
           </div>
         </div>
       )}
@@ -105,9 +105,13 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
       <div
         {...attributes}
         {...listeners}
-        className={`flex items-center gap-1 sm:gap-2 bg-background border ${
-          prevSongHasSegue ? 'border-t-2 border-t-blue-500 rounded-b' : 'border-border'
-        } ${showSegue ? 'border-b-2 border-b-blue-500 rounded-t' : 'rounded'} p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing`}
+        className={`flex items-center gap-1 sm:gap-2 bg-background ${
+          prevSongHasSegue
+            ? 'border-x border-b border-t-0 border-border rounded-b'
+            : showSegue
+            ? 'border-x border-t border-b-0 border-border rounded-t'
+            : 'border border-border rounded'
+        } p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing`}
         style={{ touchAction: 'none' }}
       >
         {/* Position number */}
