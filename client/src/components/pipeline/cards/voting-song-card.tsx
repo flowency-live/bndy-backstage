@@ -236,40 +236,35 @@ export default function VotingSongCard({
 
           {/* Vote Status & Button Column */}
           {!isExpanded && (
-            <div className="flex-shrink-0 flex flex-col items-end justify-center gap-2">
+            <div className="flex-shrink-0 flex flex-col items-end justify-center gap-1.5">
               <VoteProgressBadge
                 voteCount={voteCount}
                 memberCount={memberCount}
                 userHasVoted={userHasVoted}
                 scorePercentage={scorePercentage}
               />
-              {userHasVoted && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="font-medium">Your vote:</span>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <i
-                        key={star}
-                        className={`fas fa-star ${
-                          star <= userVote ? 'text-yellow-500' : 'text-gray-300'
-                        }`}
-                        style={{ fontSize: '10px' }}
-                      ></i>
-                    ))}
-                  </div>
+              {userHasVoted ? (
+                <div
+                  className="flex gap-0.5 cursor-pointer hover:scale-110 transition-transform"
+                  title="Change your vote"
+                >
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <i
+                      key={star}
+                      className={`fas fa-star ${
+                        star <= userVote ? 'text-yellow-500' : 'text-gray-300'
+                      }`}
+                      style={{ fontSize: '14px' }}
+                    ></i>
+                  ))}
                 </div>
+              ) : (
+                <button
+                  className="px-3 py-1.5 rounded-lg font-medium text-xs bg-orange-500 text-white hover:bg-orange-600 animate-pulse transition-all"
+                >
+                  VOTE NOW
+                </button>
               )}
-              <button
-                className={`
-                  px-3 py-1.5 rounded-lg font-medium text-sm transition-all
-                  ${needsUserVote
-                    ? 'bg-orange-500 text-white hover:bg-orange-600 animate-pulse'
-                    : 'bg-primary/20 text-primary hover:bg-primary/30'
-                  }
-                `}
-              >
-                {needsUserVote ? 'VOTE NOW' : 'Change Vote'}
-              </button>
             </div>
           )}
         </div>
