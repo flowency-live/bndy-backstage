@@ -132,7 +132,6 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
       return;
     }
 
-    console.log('Starting combined search for:', query);
     setIsSearching(true);
 
     try {
@@ -160,7 +159,6 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
           duration: song.duration,
           genre: song.genre,
         }));
-        console.log('Found', bndySongs.length, 'songs in bndy-songs');
       }
 
       // Process Spotify results and deduplicate
@@ -192,16 +190,12 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
             const key = `${song.title.toLowerCase().trim()}|${song.artistName.toLowerCase().trim()}`;
             return !bndyKeys.has(key);
           });
-
-        console.log('Found', spotifySongs.length, 'unique Spotify songs (after deduplication)');
       }
 
       // Combine results: bndy-songs first, then Spotify
       const combinedResults = [...bndySongs, ...spotifySongs];
       setSearchResults(combinedResults);
-      console.log('Total results:', combinedResults.length);
     } catch (error) {
-      console.error('Search error:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);

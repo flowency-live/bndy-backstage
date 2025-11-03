@@ -773,7 +773,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
     // Has artists but none selected - show artist selection tiles IN dashboard
     if (userProfile?.artists && userProfile.artists.length > 0) {
-      console.log('🎯 DASHBOARD: Has artists, no selection - showing artist selection tiles');
       return (
         <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
           <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
@@ -796,7 +795,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     }
 
     // Still loading userProfile - show spinner
-    console.log('🎯 DASHBOARD: User profile still loading');
     return <BndySpinnerOverlay />;
   }
 

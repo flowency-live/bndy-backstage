@@ -25,28 +25,20 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
 
   const checkAuth = async () => {
     try {
-      console.log('SERVER AUTH: Checking authentication status');
       setLoading(true);
 
       const authResponse = await authService.checkAuth();
 
       if (authResponse) {
-        console.log('SERVER AUTH: Authentication successful', {
-          userId: authResponse.user?.id,
-          username: authResponse.user?.username
-        });
-
         setUser(authResponse.user);
         setSession(authResponse);
         setBands([]); // No artist memberships yet - will implement later
       } else {
-        console.log('SERVER AUTH: Not authenticated');
         setUser(null);
         setBands([]);
         setSession(null);
       }
     } catch (error) {
-      console.error('SERVER AUTH: Auth check failed:', error);
       setUser(null);
       setBands([]);
       setSession(null);
@@ -56,16 +48,12 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
   };
 
   const signOut = async () => {
-    console.log('🔧 SERVER AUTH: Sign out initiated');
-
     // Clear client-side state immediately
     setUser(null);
     setBands([]);
     setSession(null);
 
     try {
-      console.log('🔧 SERVER AUTH: Calling logout API');
-
       // Call logout API with explicit timeout
       await Promise.race([
         authService.signOut(),
@@ -73,15 +61,11 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
           setTimeout(() => reject(new Error('Logout timeout')), 5000)
         )
       ]);
-
-      console.log('🔧 SERVER AUTH: Logout API completed successfully');
     } catch (error) {
-      console.error('🔧 SERVER AUTH: Logout API failed:', error);
       // Continue to redirect even if API call failed
     }
 
     // Always redirect to login after attempting logout
-    console.log('🔧 SERVER AUTH: Redirecting to login');
     window.location.href = '/login';
   };
 

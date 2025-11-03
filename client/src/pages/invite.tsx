@@ -31,7 +31,6 @@ export default function Invite() {
   // Store invite token in localStorage on mount
   useEffect(() => {
     if (token) {
-      console.log('🎫 INVITE: Storing invite token in localStorage:', token);
       localStorage.setItem('pendingInvite', token);
     }
   }, [token]);
@@ -103,7 +102,6 @@ export default function Invite() {
       membershipCount === 0;
 
     if (shouldRedirectToDashboard) {
-      console.log('🎫 INVITE: New user (0 memberships), redirecting to dashboard for silent accept');
       hasAttemptedProfileRedirect.current = true;
       setLocation('/dashboard');
     }
@@ -112,14 +110,12 @@ export default function Invite() {
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {
       // Not logged in - redirect to login (token already in localStorage)
-      console.log('🎫 INVITE: Not authenticated, redirecting to login');
       setLocation("/login");
       return;
     }
 
     if (!profileComplete) {
       // Profile incomplete - automatically redirect to profile (no button click needed)
-      console.log('🎫 INVITE: Profile incomplete, auto-redirecting to profile');
       setLocation("/profile");
       return;
     }
@@ -127,13 +123,11 @@ export default function Invite() {
     // Authenticated and profile complete - accept invite
     setAccepting(true);
     try {
-      console.log('🎫 INVITE: Accepting invite:', token);
       const result = await authService.acceptInvite(token!);
 
       localStorage.removeItem('pendingInvite');
 
       // Set the new artist as the active context
-      console.log('🎫 INVITE: Setting new artist as active context:', result.artist.id);
       localStorage.setItem('bndy-selected-artist-id', result.artist.id);
 
       // Invalidate memberships query to refresh artist context
@@ -148,11 +142,8 @@ export default function Invite() {
       // Redirect to dashboard - UserProvider will load the artist context
       setLocation('/dashboard');
     } catch (error: any) {
-      console.error('🎫 INVITE: Accept error:', error);
-
       // Check if user is already a member - treat as success
       if (error.message && error.message.includes('already a member')) {
-        console.log('🎫 INVITE: User already member, clearing pendingInvite and redirecting');
         localStorage.removeItem('pendingInvite');
         setLocation('/dashboard');
         return;

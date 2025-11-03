@@ -80,7 +80,6 @@ class UsersService {
 
       return {} as T;
     } catch (error) {
-      console.error(`Users API Error (${endpoint}):`, error);
       throw error;
     }
   }

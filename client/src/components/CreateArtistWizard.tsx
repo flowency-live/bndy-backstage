@@ -112,7 +112,6 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
       setNameAvailable(data.available);
       setExistingArtists(data.matches || []);
     } catch (error) {
-      console.error('Error checking name:', error);
       setNameAvailable(null);
       setExistingArtists([]);
       toast({
@@ -173,11 +172,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
       return await response.json();
     },
     onSuccess: (response) => {
-      console.log('🎨 Artist created successfully:', response);
-
       // Set artist as active context
       const artistId = response.artist.id;
-      console.log('🎯 Setting artist context:', artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
 
       toast({
@@ -189,7 +185,6 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
       queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
       queryClient.invalidateQueries({ queryKey: ["users-profile"] });
 
-      console.log('🔄 Reloading page to activate artist context...');
       setTimeout(() => {
         window.location.reload();
       }, 500);

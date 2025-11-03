@@ -45,44 +45,15 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     checkAuth();
   }, []);
 
-  // Debug current auth state
-  console.log('🔧 MEMBER GATE: Current state:', {
-    authLoading,
-    contextLoading,
-    isAuthenticated,
-    hasUser: !!contextUserProfile?.user,
-    artistsCount: contextUserProfile?.artists?.length || 0,
-    currentArtistId,
-    allowNoContextForDashboard,
-    isRedirecting
-  });
-
   // Use data from user-context (already fetched and managed)
   const userProfile = contextUserProfile;
 
   // Handle authentication redirects
   useEffect(() => {
-    console.log('🔧 MEMBER GATE: Authentication redirect check triggered');
-    console.log('🔧 MEMBER GATE: Auth state details:', {
-      authLoading,
-      contextLoading,
-      isAuthenticated,
-      hasUser: !!userProfile?.user,
-      isRedirecting
-    });
-
     // Only redirect if we're absolutely sure the user is not authenticated
     if (!authLoading && !isAuthenticated) {
-      console.log('🔧 MEMBER GATE: ❌ REDIRECTING TO LOGIN - User not authenticated');
       setIsRedirecting(true);
       setLocation('/login');
-    } else {
-      console.log('🔧 MEMBER GATE: ✅ Not redirecting to login');
-      console.log('🔧 MEMBER GATE: Stay reason:', {
-        authLoading: authLoading ? 'still loading' : 'done',
-        contextLoading: contextLoading ? 'still loading' : 'done',
-        isAuthenticated: isAuthenticated ? 'authenticated' : 'not authenticated'
-      });
     }
   }, [authLoading, isAuthenticated, setLocation, isRedirecting, contextLoading, userProfile]);
 

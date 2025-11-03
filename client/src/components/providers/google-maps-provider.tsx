@@ -39,19 +39,14 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
   }, [autoLoad]);
 
   const loadGoogleMapsScript = useCallback(() => {
-    console.log('[GoogleMaps] loadGoogleMapsScript called');
-
     // Check if script already exists
     if (document.getElementById('google-maps-script')) {
-      console.log('[GoogleMaps] Script already exists in DOM');
       return;
     }
 
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    console.log('[GoogleMaps] API Key configured:', apiKey ? 'YES (length: ' + apiKey.length + ')' : 'NO - MISSING!');
 
     if (!apiKey) {
-      console.error('[GoogleMaps] VITE_GOOGLE_MAPS_API_KEY is not configured!');
       setIsError(true);
       setIsLoading(false);
       return;
@@ -63,33 +58,24 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
     script.async = true;
     script.defer = true;
 
-    console.log('[GoogleMaps] Creating script tag:', script.src.replace(apiKey, 'API_KEY_HIDDEN'));
-
     script.onload = () => {
-      console.log('[GoogleMaps] Script loaded successfully');
       setIsLoaded(true);
       setIsLoading(false);
       const available = initGoogleMapsCheck();
-      console.log('[GoogleMaps] Google Maps available after load:', available);
     };
 
     script.onerror = (error) => {
-      console.error('[GoogleMaps] Failed to load Google Maps script:', error);
       setIsError(true);
       setIsLoading(false);
     };
 
     document.head.appendChild(script);
-    console.log('[GoogleMaps] Script tag appended to document head');
   }, []);
 
   // Function to manually load Google Maps when needed
   const loadGoogleMaps = useCallback(async (): Promise<boolean> => {
-    console.log('[GoogleMaps] loadGoogleMaps called. isLoaded:', isLoaded, 'isLoading:', isLoading, 'isError:', isError);
-
     // If already loaded, return true
     if (isLoaded) {
-      console.log('[GoogleMaps] Already loaded, returning true');
       return true;
     }
 
@@ -98,7 +84,6 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
     const googleMapsAvailable = initGoogleMapsCheck();
 
     if (scriptExists && googleMapsAvailable) {
-      console.log('[GoogleMaps] Script exists and Google Maps available, updating state');
       setIsLoaded(true);
       setIsLoading(false);
       return true;
@@ -106,7 +91,6 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
 
     // If already loading, wait for result by checking DOM directly
     if (isLoading || scriptExists) {
-      console.log('[GoogleMaps] Already loading, waiting for result...');
       return new Promise<boolean>((resolve) => {
         let checkCount = 0;
         const checkInterval = setInterval(() => {
@@ -115,21 +99,15 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
           const available = initGoogleMapsCheck();
 
           if (available) {
-            console.log('[GoogleMaps] Load complete while waiting');
             clearInterval(checkInterval);
             setIsLoaded(true);
             setIsLoading(false);
             resolve(true);
           }
-
-          if (checkCount % 10 === 0) {
-            console.log(`[GoogleMaps] Still waiting... (${checkCount * 100}ms)`);
-          }
         }, 100);
 
         // Timeout after 10 seconds
         setTimeout(() => {
-          console.warn('[GoogleMaps] Timeout waiting for script (10s)');
           clearInterval(checkInterval);
           const available = initGoogleMapsCheck();
           if (available) {
@@ -146,7 +124,6 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
     }
 
     // Set loading state and load script
-    console.log('[GoogleMaps] Starting new load...');
     setIsLoading(true);
     loadGoogleMapsScript();
 
@@ -158,12 +135,7 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
         // Check actual Google Maps availability, not stale state
         const available = initGoogleMapsCheck();
 
-        if (checkCount % 10 === 0) {
-          console.log(`[GoogleMaps] Still waiting... (${checkCount * 100}ms)`);
-        }
-
         if (available) {
-          console.log('[GoogleMaps] Load successful');
           clearInterval(checkInterval);
           setIsLoaded(true);
           setIsLoading(false);
@@ -173,7 +145,6 @@ export function GoogleMapsProvider({ children, autoLoad = false }: GoogleMapsPro
 
       // Timeout after 10 seconds
       setTimeout(() => {
-        console.error('[GoogleMaps] Timeout loading script (10s)');
         clearInterval(checkInterval);
         const available = initGoogleMapsCheck();
         if (available) {

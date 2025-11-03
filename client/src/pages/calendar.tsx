@@ -484,7 +484,6 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
         description: `Downloaded ${filename}`,
       });
     } catch (error) {
-      console.error("Failed to export calendar:", error);
       toast({
         title: "Export failed",
         description: "Failed to export calendar. Please try again.",
@@ -527,12 +526,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       } else {
         toast({
           title: "Calendar URLs",
-          description: "Check the console for calendar subscription URLs",
+          description: "Calendar subscription URL copied to clipboard",
         });
-        console.log("Calendar subscription URLs:", data.urls);
       }
     } catch (error) {
-      console.error("Failed to get calendar URLs:", error);
       toast({
         title: "Failed to get URLs",
         description: "Failed to get calendar URLs. Please try again.",

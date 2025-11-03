@@ -83,7 +83,6 @@ export default function AgentEventsPage() {
     try {
       const result = await extractFromGigsNews();
       await fetchEventQueue();
-      console.log(`Extracted ${result.extracted} events, ${result.queued} added to queue`);
     } catch (err) {
       setQueueError(err instanceof Error ? err.message : 'Failed to extract events from gigs-news');
     } finally {
@@ -115,7 +114,6 @@ export default function AgentEventsPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       if (errorMessage.includes('503')) {
-        console.log('API Gateway timeout (expected) - reloading queue in 10s...');
         setTimeout(async () => {
           await fetchEventQueue();
           setHtmlInput('');

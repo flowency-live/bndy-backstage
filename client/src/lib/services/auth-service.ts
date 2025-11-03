@@ -80,7 +80,6 @@ class AuthService {
 
       return await response.json();
     } catch (error) {
-      console.error(`Auth API Error [${endpoint}]:`, error);
       throw error;
     }
   }

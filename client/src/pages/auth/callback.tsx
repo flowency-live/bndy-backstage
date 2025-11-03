@@ -6,7 +6,6 @@ export default function OAuthCallback() {
     const error = params.get('error');
 
     if (error) {
-      console.error('🔧 OAUTH: Error:', error, params.get('error_description'));
       window.location.href = '/login?error=' + encodeURIComponent(error);
     }
   }, []);

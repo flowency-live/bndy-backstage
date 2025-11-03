@@ -87,7 +87,6 @@ class SpotifyService {
 
       return await response.json();
     } catch (error) {
-      console.error(`Spotify API Error [${endpoint}]:`, error);
       throw error;
     }
   }

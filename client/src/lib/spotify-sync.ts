@@ -27,7 +27,7 @@ class SpotifySync {
         try {
           this.settings = JSON.parse(stored);
         } catch (e) {
-          console.warn('Failed to parse stored Spotify settings');
+          // Failed to parse settings
         }
       }
     }
@@ -57,7 +57,6 @@ class SpotifySync {
 
       return response.ok;
     } catch (error) {
-      console.warn('Failed to add track to Spotify:', error);
       return false;
     }
   }
@@ -78,7 +77,6 @@ class SpotifySync {
 
       return response.ok;
     } catch (error) {
-      console.warn('Failed to remove track from Spotify:', error);
       return false;
     }
   }

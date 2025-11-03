@@ -88,15 +88,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Check both new and legacy keys for backward compatibility
     const savedArtistId = localStorage.getItem('bndy-selected-artist-id') || localStorage.getItem('bndy-selected-context-id') || localStorage.getItem('bndy-selected-band-id');
 
-    console.log('🎨 USER CONTEXT: Artist selection logic triggered', {
-      hasSavedArtistId: !!savedArtistId,
-      savedArtistId: savedArtistId ? savedArtistId.substring(0, 8) + '...' : 'none',
-      artistsCount: userProfile?.artists?.length || 0,
-      artistIds: userProfile?.artists?.map(a => a.artist_id.substring(0, 8) + '...') || []
-    });
-
     if (savedArtistId && userProfile?.artists?.some(a => a.artist_id === savedArtistId)) {
-      console.log('🎨 USER CONTEXT: ✅ Restoring saved artist selection from localStorage');
       setCurrentArtistId(savedArtistId);
       // Migrate to new key
       localStorage.setItem('bndy-selected-artist-id', savedArtistId);
@@ -105,24 +97,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } else if (userProfile?.artists?.length === 1) {
       // Auto-select if only one artist
       const artistId = userProfile.artists[0].artist_id;
-      console.log('🎨 USER CONTEXT: ✅ Auto-selecting single artist', {
-        artistId: artistId.substring(0, 8) + '...',
-        artistName: userProfile.artists[0].name
-      });
       setCurrentArtistId(artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
     } else if (savedArtistId && userProfile?.artists && !userProfile.artists.some(a => a.artist_id === savedArtistId)) {
       // Clear invalid artist selection
-      console.log('🎨 USER CONTEXT: ❌ Clearing invalid artist selection', {
-        savedArtistId: savedArtistId.substring(0, 8) + '...',
-        reason: 'Artist not found in current memberships'
-      });
       localStorage.removeItem('bndy-selected-artist-id');
       localStorage.removeItem('bndy-selected-band-id');
       localStorage.removeItem('bndy-selected-context-id');
       setCurrentArtistId(null);
-    } else if (userProfile?.artists && userProfile.artists.length > 1 && !savedArtistId) {
-      console.log('🎨 USER CONTEXT: ⏸️ Multiple artists, no saved selection - waiting for user to select');
     }
   }, [userProfile]);
 
@@ -139,16 +121,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Users with existing memberships should see the confirmation page
       const membershipCount = userProfile.artists?.length || 0;
       if (membershipCount > 0) {
-        console.log('🎫 USER CONTEXT: User has existing memberships, skipping silent accept');
         return;
       }
 
-      console.log('🎫 USER CONTEXT: New user (0 memberships), processing invite silently');
       hasProcessedInvite.current = true;
 
       try {
         const result = await authService.acceptInvite(pendingInvite);
-        console.log('🎫 USER CONTEXT: Invite accepted successfully', result);
 
         // Clear pending invite
         localStorage.removeItem('pendingInvite');
@@ -160,11 +139,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         // Refresh memberships to include new one
         queryClient.invalidateQueries({ queryKey: ["api-memberships-me"] });
       } catch (error: any) {
-        console.error('🎫 USER CONTEXT: Failed to accept invite', error);
-
         // If already a member, treat as success
         if (error.message && error.message.includes('already a member')) {
-          console.log('🎫 USER CONTEXT: User already member, clearing pendingInvite');
           localStorage.removeItem('pendingInvite');
         }
       }

@@ -27,31 +27,19 @@ export async function searchGooglePlaces(
   artistLocationLat?: number,
   artistLocationLng?: number
 ): Promise<google.maps.places.PlaceResult[]> {
-  console.log('[Google Places] searchGooglePlaces called with query:', query, 'location:', artistLocation, 'lat:', artistLocationLat, 'lng:', artistLocationLng);
-
   // First check if Google Maps is available
   if (!googleMapsAvailable) {
-    console.log('[Google Places] Checking if Google Maps is available...');
     googleMapsAvailable = initGoogleMapsCheck();
-    console.log('[Google Places] initGoogleMapsCheck result:', googleMapsAvailable);
   }
 
   // If Google Maps is not available, return empty array
   if (!googleMapsAvailable) {
-    console.warn('[Google Places] Google Maps Places API is not available for venue search');
-    console.warn('[Google Places] window.google:', typeof window.google);
-    console.warn('[Google Places] window.google.maps:', typeof window.google?.maps);
-    console.warn('[Google Places] window.google.maps.places:', typeof window.google?.maps?.places);
     return [];
   }
-
-  console.log('[Google Places] Google Maps API is available, proceeding with search');
 
   try {
     // Try the newer Place API (matches location autocomplete approach)
     if (google.maps.places.Place && (google.maps.places.Place as any).searchByText) {
-      console.log('[Google Places] Using new Place.searchByText API');
-
       // Build request - simple query with structured location bias
       const request: any = {
         textQuery: query, // Simple query - no location text to avoid fuzzy match confusion
@@ -61,27 +49,19 @@ export async function searchGooglePlaces(
 
       // Add location bias if stored lat/lng available
       if (artistLocationLat && artistLocationLng) {
-        console.log('[Google Places] Adding locationBias with stored coordinates:', artistLocationLat, artistLocationLng);
         request.locationBias = {
           circle: {
             center: { latitude: artistLocationLat, longitude: artistLocationLng },
             radius: 80000.0, // 80km radius for UK coverage
           }
         };
-      } else {
-        console.log('[Google Places] No stored coordinates, searching without location bias');
       }
-
-      console.log('[Google Places] Calling Place.searchByText with request:', request);
 
       const { places } = await (google.maps.places.Place as any).searchByText(request);
 
       if (!places || places.length === 0) {
-        console.log('[Google Places] No results from searchByText');
         return [];
       }
-
-      console.log('[Google Places] searchByText returned', places.length, 'results');
 
       // Convert new API format to PlaceResult format for compatibility
       const results: google.maps.places.PlaceResult[] = places.map((place: any) => ({
@@ -94,17 +74,13 @@ export async function searchGooglePlaces(
         },
       }));
 
-      console.log('[Google Places] Returning', results.length, 'converted results');
       return results;
     } else {
-      console.warn('[Google Places] New Place API not available, falling back to basic region search');
-
       // Fallback: If new API not available, return empty (requires Maps JavaScript API)
       // This prevents the ApiNotActivatedMapError
       return [];
     }
   } catch (error) {
-    console.error('[Google Places] Exception during search:', error);
     return [];
   }
 }
@@ -121,7 +97,6 @@ export async function getPlaceDetails(
 
   // If Google Maps is not available, return null
   if (!googleMapsAvailable) {
-    console.warn('Google Maps Places API is not available for place details');
     return null;
   }
 
@@ -140,7 +115,6 @@ export async function getPlaceDetails(
           if (status === google.maps.places.PlacesServiceStatus.OK && place) {
             resolve(place);
           } else {
-            console.warn(`Place Details API error: ${status}`);
             resolve(null);
           }
         }
@@ -149,7 +123,6 @@ export async function getPlaceDetails(
 
     return placeDetails;
   } catch (error) {
-    console.error('Error getting place details:', error);
     return null;
   }
 }
@@ -183,7 +156,6 @@ export async function searchLocationAutocomplete(
 
   // If Google Maps is not available, return empty array
   if (!googleMapsAvailable) {
-    console.warn("[Location Autocomplete] Google Maps Places API is not available");
     return [];
   }
 
@@ -234,7 +206,6 @@ export async function searchLocationAutocomplete(
 
       const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
         const timeoutId = setTimeout(() => {
-          console.error('[Location Autocomplete] Request timed out');
           resolve([]);
         }, 10000);
 
@@ -250,7 +221,6 @@ export async function searchLocationAutocomplete(
             if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
               resolve(predictions);
             } else {
-              console.warn(`[Location Autocomplete] Error status: ${status}`);
               resolve([]);
             }
           }
@@ -260,7 +230,6 @@ export async function searchLocationAutocomplete(
       return predictions;
     }
   } catch (error) {
-    console.error('[Location Autocomplete] Error:', error);
     return [];
   }
 }

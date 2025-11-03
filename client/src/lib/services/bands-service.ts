@@ -93,7 +93,6 @@ class BandsService {
 
       return await response.json();
     } catch (error) {
-      console.error(`Bands API Error [${endpoint}]:`, error);
       throw error;
     }
   }

@@ -104,7 +104,6 @@ export async function getAllArtists(): Promise<Artist[]> {
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching artists:', error);
     throw error;
   }
 }
@@ -122,7 +121,6 @@ export async function getArtistById(artistId: string): Promise<Artist | null> {
     }
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching artist ${artistId}:`, error);
     throw error;
   }
 }
@@ -143,7 +141,6 @@ export async function createArtist(artistData: Omit<Artist, 'id' | 'createdAt' |
 
     return await response.json();
   } catch (error) {
-    console.error('Error creating artist:', error);
     throw error;
   }
 }
@@ -164,7 +161,6 @@ export async function updateArtist(artistId: string, artistData: Partial<Artist>
 
     return await response.json();
   } catch (error) {
-    console.error(`Error updating artist ${artistId}:`, error);
     throw error;
   }
 }
@@ -179,7 +175,6 @@ export async function deleteArtist(artistId: string): Promise<void> {
       throw new Error(`Failed to delete artist: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error deleting artist ${artistId}:`, error);
     throw error;
   }
 }
@@ -193,7 +188,6 @@ export async function getAllSongs(): Promise<Song[]> {
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching songs:', error);
     throw error;
   }
 }
@@ -211,7 +205,6 @@ export async function getSongById(songId: string): Promise<Song | null> {
     }
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching song ${songId}:`, error);
     throw error;
   }
 }
@@ -232,7 +225,6 @@ export async function createSong(songData: Omit<Song, 'id' | 'createdAt' | 'upda
 
     return await response.json();
   } catch (error) {
-    console.error('Error creating song:', error);
     throw error;
   }
 }
@@ -253,7 +245,6 @@ export async function updateSong(songId: string, songData: Partial<Song>): Promi
 
     return await response.json();
   } catch (error) {
-    console.error(`Error updating song ${songId}:`, error);
     throw error;
   }
 }
@@ -268,7 +259,6 @@ export async function deleteSong(songId: string): Promise<void> {
       throw new Error(`Failed to delete song: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error deleting song ${songId}:`, error);
     throw error;
   }
 }
@@ -282,7 +272,6 @@ export async function getAllVenues(): Promise<Venue[]> {
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching venues:', error);
     throw error;
   }
 }
@@ -300,7 +289,6 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
     }
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching venue ${venueId}:`, error);
     throw error;
   }
 }
@@ -321,7 +309,6 @@ export async function createVenue(venueData: Omit<Venue, 'id' | 'createdAt' | 'u
 
     return await response.json();
   } catch (error) {
-    console.error('Error creating venue:', error);
     throw error;
   }
 }
@@ -342,7 +329,6 @@ export async function updateVenue(venueId: string, venueData: Partial<Venue>): P
 
     return await response.json();
   } catch (error) {
-    console.error(`Error updating venue ${venueId}:`, error);
     throw error;
   }
 }
@@ -357,7 +343,6 @@ export async function deleteVenue(venueId: string): Promise<void> {
       throw new Error(`Failed to delete venue: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error deleting venue ${venueId}:`, error);
     throw error;
   }
 }
@@ -398,7 +383,6 @@ export async function getAllUsers(): Promise<User[]> {
     const data = await response.json();
     return data.users || [];
   } catch (error) {
-    console.error('Error fetching users:', error);
     throw error;
   }
 }
@@ -414,7 +398,6 @@ export async function deleteUser(userId: string): Promise<void> {
       throw new Error(`Failed to delete user: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error deleting user ${userId}:`, error);
     throw error;
   }
 }
@@ -431,7 +414,6 @@ export async function getAllMemberships(): Promise<Membership[]> {
     const data = await response.json();
     return data.memberships || [];
   } catch (error) {
-    console.error('Error fetching memberships:', error);
     throw error;
   }
 }
@@ -507,7 +489,6 @@ export async function getEventQueue(): Promise<QueueItem[]> {
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching event queue:', error);
     throw error;
   }
 }
@@ -522,7 +503,6 @@ export async function approveQueueItem(queueId: string): Promise<void> {
       throw new Error(`Failed to approve queue item: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error approving queue item ${queueId}:`, error);
     throw error;
   }
 }
@@ -537,7 +517,6 @@ export async function rejectQueueItem(queueId: string): Promise<void> {
       throw new Error(`Failed to reject queue item: ${response.status}`);
     }
   } catch (error) {
-    console.error(`Error rejecting queue item ${queueId}:`, error);
     throw error;
   }
 }
@@ -552,7 +531,6 @@ export async function loadPOCResults(): Promise<void> {
       throw new Error(`Failed to load POC results: ${response.status}`);
     }
   } catch (error) {
-    console.error('Error loading POC results:', error);
     throw error;
   }
 }
@@ -568,7 +546,6 @@ export async function extractFromGigsNews(): Promise<{ extracted: number; queued
     }
     return await response.json();
   } catch (error) {
-    console.error('Error extracting from gigs-news:', error);
     throw error;
   }
 }
@@ -588,7 +565,6 @@ export async function extractFromHTML(html: string): Promise<{ extracted: number
     }
     return await response.json();
   } catch (error) {
-    console.error('Error extracting from HTML:', error);
     throw error;
   }
 }
@@ -631,7 +607,6 @@ export async function extractVenuesFromHTML(html: string): Promise<VenueEnrichme
     }
     return await response.json();
   } catch (error) {
-    console.error('Error extracting venues from HTML:', error);
     throw error;
   }
 }

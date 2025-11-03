@@ -160,7 +160,6 @@ export default function Login() {
       // Check for pending invite and redirect accordingly
       const pendingInvite = localStorage.getItem('pendingInvite')
       if (pendingInvite) {
-        console.log('📱 LOGIN: Found pending invite, redirecting to invite page')
         setLocation(`/invite/${pendingInvite}`)
       } else {
         setLocation('/dashboard')

@@ -21,7 +21,6 @@ export default function AuthSuccess() {
     if (sessionToken) {
       // Set cookie client-side
       document.cookie = `bndy_session=${sessionToken}; Max-Age=604800; Path=/; Secure; SameSite=Lax`;
-      console.log('✅ Session cookie set from URL parameter');
 
       // Remove session param from URL
       window.history.replaceState({}, '', '/auth-success');

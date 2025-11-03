@@ -92,7 +92,6 @@ class IssuesService {
 
       return {} as T;
     } catch (error) {
-      console.error(`Issues API Error (${endpoint}):`, error);
       throw error;
     }
   }
