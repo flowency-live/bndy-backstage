@@ -26,7 +26,7 @@ export function OnboardingTour() {
           element: '[data-testid="nav-dashboard"]',
           popover: {
             title: 'Welcome to bndy!',
-            description: 'Let\'s take a quick tour of your artist management platform. The Dashboard is your command center - see upcoming events, recent activity, and key metrics at a glance.',
+            description: 'Let\'s take a quick tour of bndy. The Dashboard is your command center - see upcoming events and access the main areas from the tiles.',
             side: 'right',
             align: 'start'
           }
@@ -35,7 +35,7 @@ export function OnboardingTour() {
           element: '[data-testid="nav-calendar"]',
           popover: {
             title: 'Calendar',
-            description: 'Never miss a gig! View all your events in a beautiful calendar layout. Add new events, manage dates, and keep your schedule organized.',
+            description: 'View all your events in a beautiful calendar layout. Add new gigs, rehearsals, your unavailability...',
             side: 'right',
             align: 'start'
           }
@@ -44,7 +44,7 @@ export function OnboardingTour() {
           element: '[data-testid="nav-playbook"]',
           popover: {
             title: 'Playbook',
-            description: 'Your musical arsenal. Manage your setlists, songs, and repertoire. Perfect for planning performances and tracking your material.',
+            description: 'Manage your setlists, songs, and repertoire. Perfect for planning performances and tracking your material.',
             side: 'right',
             align: 'start'
           }
@@ -53,7 +53,7 @@ export function OnboardingTour() {
           element: '[data-testid="nav-pipeline"]',
           popover: {
             title: 'Pipeline',
-            description: 'Track your opportunities from inquiry to booking. Manage leads, quotes, and potential gigs in one organized workspace.',
+            description: 'Your new song pipeline, from recommendations, full band voting and practice lists.',
             side: 'right',
             align: 'start'
           }

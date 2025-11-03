@@ -26,7 +26,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     icon: Music,
-    label: "Playbook & Setlists",
+    label: "Playbook",
     href: "/songs",
     color: "hsl(45, 93%, 47%)",
     description: ""
