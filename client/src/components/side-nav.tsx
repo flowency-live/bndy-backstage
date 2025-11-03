@@ -5,7 +5,8 @@ import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
-import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield, Zap } from "lucide-react";
+import { restartOnboardingTour } from "@/components/onboarding-tour";
+import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -399,6 +400,18 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     View Issues
                   </DropdownMenuItem>
 
+                  <DropdownMenuItem
+                    onClick={() => {
+                      restartOnboardingTour();
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className="cursor-pointer"
+                    data-testid="button-restart-tour"
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Restart Tour
+                  </DropdownMenuItem>
+
                   {currentMembership && (
                     <DropdownMenuItem
                       onClick={handleExitArtist}
@@ -409,11 +422,11 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                       Exit Artist
                     </DropdownMenuItem>
                   )}
-                  
+
                   <DropdownMenuSeparator />
-                  
-                  <DropdownMenuItem 
-                    onClick={handleSignOut} 
+
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
                     className="cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     data-testid="button-logout"
                   >

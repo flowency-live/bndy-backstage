@@ -12,6 +12,7 @@ import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { useToast } from "@/hooks/use-toast";
+import { restartOnboardingTour } from "@/components/onboarding-tour";
 import {
   Menu,
   X,
@@ -19,7 +20,8 @@ import {
   ChevronDown,
   LogOut,
   Bug,
-  Shield
+  Shield,
+  HelpCircle
 } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
@@ -274,6 +276,18 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         >
                           <i className="fas fa-user h-4 w-4 mr-2"></i>
                           View Profile
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            restartOnboardingTour();
+                            setIsOpen(false);
+                          }}
+                          className="w-full justify-start text-muted-foreground hover:text-foreground"
+                          data-testid="button-restart-tour"
+                        >
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          Restart Tour
                         </Button>
                         <Button
                           variant="ghost"

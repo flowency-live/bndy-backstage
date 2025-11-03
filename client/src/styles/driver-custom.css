@@ -1,0 +1,135 @@
+/* Driver.js Custom Branding for bndy */
+
+/* Popover styling */
+.driver-popover {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  max-width: 400px;
+}
+
+/* Title */
+.driver-popover-title {
+  font-family: var(--font-serif), serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.75rem;
+}
+
+/* Description */
+.driver-popover-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1rem;
+}
+
+/* Progress text */
+.driver-popover-progress-text {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+/* Buttons */
+.driver-popover-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+/* Next button - bndy orange */
+.driver-popover-next-btn {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
+  color: white;
+  filter: brightness(1);
+}
+
+.driver-popover-next-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--primary), 0.4);
+}
+
+/* Previous button */
+.driver-popover-prev-btn {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.driver-popover-prev-btn:hover {
+  background: hsl(var(--muted));
+  filter: brightness(0.95);
+}
+
+/* Close button */
+.driver-popover-close-btn {
+  color: hsl(var(--muted-foreground));
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.driver-popover-close-btn:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+/* Arrow */
+.driver-popover-arrow {
+  border-color: hsl(var(--card));
+}
+
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: hsl(var(--card));
+}
+
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: hsl(var(--card));
+}
+
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: hsl(var(--card));
+}
+
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: hsl(var(--card));
+}
+
+/* Highlighted element */
+.driver-active-element {
+  border-radius: 8px;
+}
+
+/* Overlay */
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: 90vw;
+    margin: 1rem;
+  }
+
+  .driver-popover-title {
+    font-size: 1.1rem;
+  }
+
+  .driver-popover-description {
+    font-size: 0.9rem;
+  }
+}

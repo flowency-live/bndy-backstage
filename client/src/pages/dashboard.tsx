@@ -18,6 +18,8 @@ import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import ImageUpload from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import CreateArtistWizard from "@/components/CreateArtistWizard";
+import { OnboardingTour } from "@/components/onboarding-tour";
+import "@/styles/driver-custom.css";
 
 // All icons verified as valid lucide-react exports
 
@@ -830,6 +832,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
   return (
     <div className="bg-gradient-subtle animate-fade-in-up">
+      {/* Onboarding Tour - Shows once for new users */}
+      <OnboardingTour />
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
