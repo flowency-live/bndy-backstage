@@ -94,8 +94,8 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             </SheetTrigger>
 
             {/* Mobile Navigation Sheet */}
-            <SheetContent side="left" className="w-full sm:w-80 p-0">
-              <div className="flex flex-col h-full">
+            <SheetContent side="left" className="w-full sm:w-80 p-0 overflow-y-auto">
+              <div className="flex flex-col min-h-full">
                 {/* Header */}
                 <div className="p-6 border-b border-border">
                   <div className="flex items-center mb-4">
@@ -233,7 +233,6 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                           <div className="font-medium flex items-center gap-2">
                             {item.label}
                           </div>
-                          <div className="text-sm text-muted-foreground">{item.description}</div>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </button>

@@ -64,8 +64,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
   };
 
   const handleSignOut = async () => {
-    console.log('Side Nav: Sign out button clicked');
-
     // Clear localStorage
     localStorage.removeItem('bndy-selected-artist-id');
     localStorage.removeItem('bndy-selected-band-id');
@@ -103,9 +101,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
       <div className={`
         fixed top-0 left-0 h-screen w-64 bg-card shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:shadow-none
+        lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col min-h-full">
           {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
@@ -329,7 +327,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                       <div className="font-medium flex items-center gap-2">
                         {item.label}
                       </div>
-                      <div className="text-sm text-muted-foreground">{item.description}</div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </button>

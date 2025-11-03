@@ -15,41 +15,41 @@ export const navigationItems: NavigationItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     color: "hsl(220, 13%, 51%)",
-    description: "Overview & quick actions"
+    description: ""
   },
   {
     icon: Calendar,
     label: "Calendar",
     href: "/calendar",
     color: "hsl(271, 91%, 65%)",
-    description: "Schedule & events"
+    description: ""
   },
   {
     icon: Music,
-    label: "Playbook",
+    label: "Playbook & Setlists",
     href: "/songs",
     color: "hsl(45, 93%, 47%)",
-    description: "Performance-ready songs & setlists"
+    description: ""
   },
   {
     icon: ListChecks,
-    label: "Pipeline",
+    label: "Song Pipeline",
     href: "/pipeline",
     color: "hsl(25, 95%, 53%)",
-    description: "Suggest, vote & practice songs"
+    description: ""
   },
   {
     icon: Settings,
     label: "Manage Artist",
     href: "/admin",
     color: "hsl(220, 13%, 51%)",
-    description: "Artist management & settings"
+    description: ""
   },
   {
     icon: User,
-    label: "Profile",
+    label: "My Profile",
     href: "/profile",
     color: "hsl(220, 13%, 51%)",
-    description: "Personal settings"
+    description: ""
   }
 ];

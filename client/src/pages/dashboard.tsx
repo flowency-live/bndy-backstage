@@ -721,13 +721,36 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch band members");
       }
 
       const data = await response.json();
       return data.members;
+    },
+    enabled: !!session && !!artistId,
+  });
+
+  // Get pipeline count (voting + review + practice)
+  const { data: pipelineCount = 0 } = useQuery({
+    queryKey: ['pipeline-count', artistId],
+    queryFn: async () => {
+      const [votingResponse, reviewResponse, practiceResponse] = await Promise.all([
+        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
+        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' }),
+        fetch(`/api/artists/${artistId}/pipeline?status=practice`, { credentials: 'include' })
+      ]);
+
+      if (!votingResponse.ok || !reviewResponse.ok || !practiceResponse.ok) return 0;
+
+      const [votingSongs, reviewSongs, practiceSongs] = await Promise.all([
+        votingResponse.json(),
+        reviewResponse.json(),
+        practiceResponse.json()
+      ]);
+
+      return votingSongs.length + reviewSongs.length + practiceSongs.length;
     },
     enabled: !!session && !!artistId,
   });
@@ -870,7 +893,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               title="Pipeline"
               icon={<GitBranch />}
               color="hsl(45, 93%, 47%)"
-              count={Math.max(0, totalSongs - 5)}
+              count={pipelineCount}
               onClick={() => setLocation("/pipeline")}
               className="animate-stagger-3"
             />

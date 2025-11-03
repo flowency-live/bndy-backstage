@@ -48,7 +48,13 @@
       "Bash(aws dynamodb update-item:*)",
       "Bash(aws logs describe-log-groups:*)",
       "Bash(aws dynamodb list-tables:*)",
-      "Bash(aws dynamodb get-item:*)"
+      "Bash(aws dynamodb get-item:*)",
+      "Bash(aws apigatewayv2 get-authorizers:*)",
+      "Bash(npm install)",
+      "Bash(git restore:*)",
+      "Bash(aws apigatewayv2 get-route:*)",
+      "Bash(aws apigatewayv2:*)",
+      "Bash(aws lambda add-permission:*)"
     ],
     "deny": [],
     "ask": []
