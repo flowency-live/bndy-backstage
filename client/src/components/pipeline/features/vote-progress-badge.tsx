@@ -15,25 +15,16 @@ export default function VoteProgressBadge({
   const isHighScore = scorePercentage !== undefined && scorePercentage >= 80;
 
   return (
-    <div className="flex items-center gap-2">
-      {!isComplete && (
-        <span className="text-lg">⏳</span>
-      )}
-      {isComplete && isHighScore && (
-        <span className="text-lg">🚀</span>
-      )}
-      <span className={`text-sm font-medium ${
+    <div className="flex items-center gap-1.5">
+      <span className={`text-xs font-semibold ${
         userHasVoted ? 'text-green-500' : 'text-orange-500'
       }`}>
-        {voteCount}/{memberCount} votes
+        {voteCount}/{memberCount}
       </span>
       {isComplete && scorePercentage !== undefined && (
-        <span className="text-sm font-medium text-foreground">
-          ({scorePercentage}%)
+        <span className="text-xs font-medium text-muted-foreground">
+          {scorePercentage}%
         </span>
-      )}
-      {userHasVoted && !isComplete && (
-        <span className="text-green-500 text-sm">✓ You voted</span>
       )}
     </div>
   );
