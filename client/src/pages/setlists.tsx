@@ -319,12 +319,6 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
             >
               Setlists
             </button>
-            <button
-              onClick={() => setLocation("/songs")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
-            >
-              Pipeline
-            </button>
           </div>
 
           <button
@@ -490,27 +484,26 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             className="bg-background border border-border rounded-lg overflow-hidden"
                           >
                             {/* Set header */}
-                            <div className="p-2 flex items-center justify-between">
-                              <div className="flex items-center gap-2 flex-1">
-                                {/* Expand/collapse button */}
-                                <button
-                                  onClick={() => {
-                                    setExpandedSets(prev => {
-                                      const newSet = new Set(prev);
-                                      if (newSet.has(set.id)) {
-                                        newSet.delete(set.id);
-                                      } else {
-                                        newSet.add(set.id);
-                                      }
-                                      return newSet;
-                                    });
-                                  }}
-                                  className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                  <i className={`fas fa-chevron-${isSetExpanded ? 'down' : 'right'} text-sm`}></i>
-                                </button>
+                            <div className="p-2 flex items-center justify-between gap-2">
+                              <button
+                                onClick={() => {
+                                  setExpandedSets(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(set.id)) {
+                                      newSet.delete(set.id);
+                                    } else {
+                                      newSet.add(set.id);
+                                    }
+                                    return newSet;
+                                  });
+                                }}
+                                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                              >
+                                <i className={`fas fa-chevron-${isSetExpanded ? 'down' : 'right'} text-sm`}></i>
+                              </button>
 
-                                {/* Editable set name with icon */}
+                              {/* Set name - editable */}
+                              <div className="flex items-center gap-1 min-w-0 shrink">
                                 {editingSetName === set.id ? (
                                   <input
                                     type="text"
@@ -544,43 +537,54 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                         setEditingSetName(null);
                                       }
                                     }}
-                                    className="font-semibold px-2 py-1 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500 w-32"
+                                    className="font-semibold px-2 py-1 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500 w-20"
                                     autoFocus
                                   />
                                 ) : (
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold">{set.name}</span>
+                                  <>
+                                    <span className="font-semibold text-sm whitespace-nowrap">{set.name}</span>
                                     <button
                                       onClick={() => {
                                         setEditingSetName(set.id);
                                         setTempSetName(set.name);
                                       }}
-                                      className="text-muted-foreground hover:text-orange-500 transition-colors"
+                                      className="text-muted-foreground hover:text-orange-500 transition-colors shrink-0"
                                       title="Edit set name"
                                     >
                                       <i className="fas fa-edit text-xs"></i>
                                     </button>
-                                  </div>
+                                  </>
                                 )}
-
-                                <span className="text-sm text-muted-foreground">
-                                  ({set.songs.length} song{set.songs.length !== 1 ? 's' : ''})
-                                </span>
                               </div>
 
-                              {/* Set duration with edit icons */}
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <span className={setColor}>{formatDuration(setDuration)}</span>
-                                  <span className="text-muted-foreground">/</span>
-                                  {/* Editable target duration with icon */}
-                                  {editingSetDuration === set.id ? (
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={tempSetDuration}
-                                      onChange={(e) => setTempSetDuration(parseInt(e.target.value) || 0)}
-                                      onBlur={() => {
+                              <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                ({set.songs.length})
+                              </span>
+
+                              {/* Duration and controls */}
+                              <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                                <span className={`text-xs ${setColor} whitespace-nowrap`}>{formatDuration(setDuration)}</span>
+                                <span className="text-xs text-muted-foreground">/</span>
+                                {editingSetDuration === set.id ? (
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={tempSetDuration}
+                                    onChange={(e) => setTempSetDuration(parseInt(e.target.value) || 0)}
+                                    onBlur={() => {
+                                      if (tempSetDuration > 0 && tempSetDuration !== Math.round(set.targetDuration / 60)) {
+                                        const updatedSets = setlist.sets.map(s =>
+                                          s.id === set.id ? { ...s, targetDuration: tempSetDuration * 60 } : s
+                                        );
+                                        updateSetlistMutation.mutate({
+                                          setlistId: setlist.id,
+                                          updates: { sets: updatedSets }
+                                        });
+                                      }
+                                      setEditingSetDuration(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
                                         if (tempSetDuration > 0 && tempSetDuration !== Math.round(set.targetDuration / 60)) {
                                           const updatedSets = setlist.sets.map(s =>
                                             s.id === set.id ? { ...s, targetDuration: tempSetDuration * 60 } : s
@@ -591,44 +595,29 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                           });
                                         }
                                         setEditingSetDuration(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingSetDuration(null);
+                                      }
+                                    }}
+                                    className="w-14 px-1 py-0.5 text-xs border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <>
+                                    <span className="text-xs whitespace-nowrap">{formatDuration(set.targetDuration)}</span>
+                                    <button
+                                      onClick={() => {
+                                        setEditingSetDuration(set.id);
+                                        setTempSetDuration(Math.round(set.targetDuration / 60));
                                       }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          if (tempSetDuration > 0 && tempSetDuration !== Math.round(set.targetDuration / 60)) {
-                                            const updatedSets = setlist.sets.map(s =>
-                                              s.id === set.id ? { ...s, targetDuration: tempSetDuration * 60 } : s
-                                            );
-                                            updateSetlistMutation.mutate({
-                                              setlistId: setlist.id,
-                                              updates: { sets: updatedSets }
-                                            });
-                                          }
-                                          setEditingSetDuration(null);
-                                        } else if (e.key === 'Escape') {
-                                          setEditingSetDuration(null);
-                                        }
-                                      }}
-                                      className="w-16 px-1 py-0.5 border border-orange-500 rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-orange-500"
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <>
-                                      <span>{formatDuration(set.targetDuration)}</span>
-                                      <button
-                                        onClick={() => {
-                                          setEditingSetDuration(set.id);
-                                          setTempSetDuration(Math.round(set.targetDuration / 60));
-                                        }}
-                                        className="text-muted-foreground hover:text-orange-500 transition-colors"
-                                        title="Edit target duration (minutes)"
-                                      >
-                                        <i className="fas fa-edit text-xs"></i>
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                      className="text-muted-foreground hover:text-orange-500 transition-colors"
+                                      title="Edit target duration (minutes)"
+                                    >
+                                      <i className="fas fa-edit text-xs"></i>
+                                    </button>
+                                  </>
+                                )}
 
-                                {/* Remove set button - always visible */}
                                 <button
                                   onClick={async () => {
                                     const confirmed = await confirm({
@@ -646,10 +635,10 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                       });
                                     }
                                   }}
-                                  className="text-red-500 hover:text-red-600 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
+                                  className="text-red-500 hover:text-red-600 p-1 rounded hover:bg-red-500/10 transition-colors"
                                   title="Remove set"
                                 >
-                                  <i className="fas fa-times text-sm"></i>
+                                  <i className="fas fa-times text-xs"></i>
                                 </button>
                               </div>
                             </div>

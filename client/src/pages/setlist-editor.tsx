@@ -89,12 +89,12 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-2' : ''}>
+    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-3' : ''}>
       {/* Segue connector - shows visual link between segued songs */}
       {prevSongHasSegue && !isOver && (
-        <div className="flex items-center justify-center -mb-2 relative z-10">
-          <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg">
-            <i className="fas fa-link text-xs"></i>
+        <div className="flex items-center justify-center -mb-3 relative z-10">
+          <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md">
+            <i className="fas fa-link text-[10px]"></i>
           </div>
         </div>
       )}
@@ -106,7 +106,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
         {...attributes}
         {...listeners}
         className={`flex items-center gap-1 sm:gap-2 bg-background border ${
-          prevSongHasSegue ? 'border-t-2 border-t-blue-500' : 'border-border'
+          prevSongHasSegue ? 'border-t-2 border-t-blue-500 rounded-b' : 'border-border'
         } ${showSegue ? 'border-b-2 border-b-blue-500 rounded-t' : 'rounded'} p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing`}
         style={{ touchAction: 'none' }}
       >
@@ -909,13 +909,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   };
 
   // Discard all changes and reset to last saved state
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!setlist) return;
 
     if (hasUnsavedChanges) {
-      const confirmed = window.confirm(
-        "You have unsaved changes. Are you sure you want to discard them?"
-      );
+      const confirmed = await confirm({
+        title: "Discard changes?",
+        description: "You have unsaved changes. Are you sure you want to discard them?",
+        confirmText: "Discard",
+        variant: "destructive",
+      });
       if (!confirmed) return;
     }
 
