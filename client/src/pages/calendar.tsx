@@ -288,8 +288,9 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       eventName = parts.join(" ");
       if (!eventName) eventName = "Gig";
     } else if (event.type === "rehearsal" || event.type === "other") {
-      // Format: Just the title (time is prepended by display logic on line 940)
-      eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
+      // Format: Title Time (e.g., "Rehearsal 19:00" or "Gig Practice 19:00")
+      const title = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
+      eventName = event.startTime ? `${title} ${event.startTime}` : title;
     } else {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }
@@ -931,7 +932,7 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                             onClick={() => showEventDetailsModal(event)}
                             data-testid={`event-${event.id}`}
                           >
-                            {event.type === 'gig' || event.type === 'unavailable' ? getEventDisplayName(event) : (event.startTime ? `${event.startTime} • ${getEventDisplayName(event)}` : getEventDisplayName(event))}
+                            {getEventDisplayName(event)}
                           </div>
                         );
                       })}
