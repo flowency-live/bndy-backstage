@@ -287,6 +287,10 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
       if (event.title) parts.push(event.title);
       eventName = parts.join(" ");
       if (!eventName) eventName = "Gig";
+    } else if (event.type === "rehearsal" || event.type === "other") {
+      // Format: Title Time (e.g., "Rehearsal 19:00" or "Gig Practice 19:00")
+      const title = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
+      eventName = event.startTime ? `${title} ${event.startTime}` : title;
     } else {
       eventName = event.title || EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.label || "Event";
     }

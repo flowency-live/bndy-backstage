@@ -25,18 +25,18 @@ export const navigationItems: NavigationItem[] = [
     description: "Schedule & events"
   },
   {
-    icon: ListChecks,
-    label: "Pipeline",
-    href: "/pipeline",
-    color: "hsl(25, 95%, 53%)",
-    description: "Suggest, vote & practice songs"
-  },
-  {
     icon: Music,
     label: "Playbook",
     href: "/songs",
     color: "hsl(45, 93%, 47%)",
     description: "Performance-ready songs & setlists"
+  },
+  {
+    icon: ListChecks,
+    label: "Pipeline",
+    href: "/pipeline",
+    color: "hsl(25, 95%, 53%)",
+    description: "Suggest, vote & practice songs"
   },
   {
     icon: Settings,

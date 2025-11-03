@@ -21,17 +21,23 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   const [activeTab, setActiveTab] = useState<TabType>('voting');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Query vote counts for badge display
+  // Query vote counts for badge display (voting + review)
   const { data: votingCount = 0 } = useQuery({
     queryKey: ['pipeline-count', artistId, 'voting'],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=voting`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) return 0;
-      const songs = await response.json();
-      return songs.length;
+      const [votingResponse, reviewResponse] = await Promise.all([
+        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
+        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' })
+      ]);
+
+      if (!votingResponse.ok || !reviewResponse.ok) return 0;
+
+      const [votingSongs, reviewSongs] = await Promise.all([
+        votingResponse.json(),
+        reviewResponse.json()
+      ]);
+
+      return votingSongs.length + reviewSongs.length;
     },
     refetchInterval: 30000
   });

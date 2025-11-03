@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
@@ -41,11 +40,18 @@ export default function VotingSongCard({
 }: VotingSongCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userVote = song.votes?.[userId]?.value ?? null;
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
+
+  // Calculate score percentage
+  const totalScore = Object.values(song.votes || {}).reduce(
+    (sum, vote: any) => sum + (vote.value || 0),
+    0
+  );
+  const maxScore = memberCount * 5;
+  const scorePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
   console.log('VOTING CARD DEBUG:', {
     songTitle: song.globalSong?.title,
@@ -54,6 +60,7 @@ export default function VotingSongCard({
     voteCount,
     memberCount,
     userHasVoted,
+    scorePercentage,
     allVotes: song.votes
   });
 
@@ -93,13 +100,90 @@ export default function VotingSongCard({
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `/api/artists/${song.artist_id}/pipeline/${song.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include'
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete suggestion');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id, 'voting'] });
+      queryClient.invalidateQueries({ queryKey: ['pipeline-count', song.artist_id] });
+      toast({
+        title: 'Suggestion removed',
+        description: 'The song has been removed from the pipeline'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const response = await fetch(
+        `/api/artists/${song.artist_id}/pipeline/${song.id}/status`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: newStatus })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to change status');
+      }
+
+      return response.json();
+    },
+    onSuccess: (_, newStatus) => {
+      queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id] });
+      const statusLabels: Record<string, string> = {
+        practice: 'Practice',
+        parked: 'Parked',
+        discarded: 'Discarded'
+      };
+      toast({
+        title: 'Song moved',
+        description: `Song moved to ${statusLabels[newStatus] || newStatus}`
+      });
+      onToggleExpand(); // Collapse after moving
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to move song. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  });
+
   const handleVote = async (value: number) => {
-    setIsSubmitting(true);
     await voteMutation.mutateAsync(value);
-    setIsSubmitting(false);
+  };
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to remove this suggestion?')) {
+      deleteMutation.mutate();
+    }
   };
 
   const needsUserVote = !userHasVoted;
+  const isSuggester = song.suggested_by_user_id === userId;
 
   return (
     <div
@@ -157,6 +241,7 @@ export default function VotingSongCard({
                 voteCount={voteCount}
                 memberCount={memberCount}
                 userHasVoted={userHasVoted}
+                scorePercentage={scorePercentage}
               />
               {userHasVoted && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -213,21 +298,83 @@ export default function VotingSongCard({
             </div>
           )}
 
-          {/* Voting Controls */}
-          <VotingControls
-            currentVote={userVote}
-            onVote={handleVote}
-          />
+          {/* Voting Controls or Status Actions */}
+          {voteCount >= memberCount ? (
+            // All votes received - show status action buttons
+            <div className="space-y-3">
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <p className="text-sm font-medium text-foreground mb-1">
+                  <i className="fas fa-check-circle text-green-500 mr-2"></i>
+                  All votes received
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Move this song to the next stage
+                </p>
+              </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={onToggleExpand}
-              className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => statusMutation.mutate('practice')}
+                  disabled={statusMutation.isPending}
+                  className="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  <i className="fas fa-guitar block mb-1"></i>
+                  Practice
+                </button>
+                <button
+                  onClick={() => statusMutation.mutate('parked')}
+                  disabled={statusMutation.isPending}
+                  className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-500 font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  <i className="fas fa-pause-circle block mb-1"></i>
+                  Park
+                </button>
+                <button
+                  onClick={() => statusMutation.mutate('discarded')}
+                  disabled={statusMutation.isPending}
+                  className="px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  <i className="fas fa-times-circle block mb-1"></i>
+                  Discard
+                </button>
+              </div>
+
+              <button
+                onClick={onToggleExpand}
+                className="w-full px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            // Still collecting votes - show voting controls
+            <>
+              <VotingControls
+                currentVote={userVote}
+                onVote={handleVote}
+              />
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <button
+                  onClick={onToggleExpand}
+                  className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </button>
+                {isSuggester && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-4 py-2 rounded-lg border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i className="fas fa-trash mr-2"></i>
+                    {deleteMutation.isPending ? 'Removing...' : 'Remove'}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

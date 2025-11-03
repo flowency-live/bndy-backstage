@@ -16,16 +16,23 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['pipeline', artistId, 'voting'],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=voting`,
-        { credentials: 'include' }
-      );
+      // Fetch both 'voting' and 'review' status songs in parallel
+      const [votingResponse, reviewResponse] = await Promise.all([
+        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
+        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' })
+      ]);
 
-      if (!response.ok) {
+      if (!votingResponse.ok || !reviewResponse.ok) {
         throw new Error('Failed to fetch voting songs');
       }
 
-      return response.json();
+      const [votingSongs, reviewSongs] = await Promise.all([
+        votingResponse.json(),
+        reviewResponse.json()
+      ]);
+
+      // Merge both arrays
+      return [...votingSongs, ...reviewSongs];
     },
     refetchInterval: 30000
   });

@@ -641,7 +641,7 @@ export default function EventModal({ isOpen, onClose, selectedDate, selectedEven
             } else {
               setFormData(prev => ({ ...prev, endTime: time }));
             }
-            setShowTimePicker(false);
+            // Don't close here - TimePickerModal handles closing after minute selection
           }}
           title={`Select ${timePickerType === "start" ? "Start" : "End"} Time`}
         />

@@ -69,7 +69,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedSongs, setExpandedSongs] = useState<Set<string>>(new Set());
   const [spotifyPlaylistId, setSpotifyPlaylistId] = useState<string | null>(null);
-  const [currentView] = useState<'playbook' | 'setlists' | 'pipeline'>('playbook');
+  const [currentView] = useState<'playbook' | 'setlists'>('playbook');
   const [editedSongs, setEditedSongs] = useState<Record<string, any>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
