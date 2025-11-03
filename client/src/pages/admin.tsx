@@ -477,7 +477,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       <ImageUpload
                         value={artistSettings.avatar || undefined}
                         onChange={(value) => setArtistSettings(prev => ({ ...prev, avatar: value }))}
-                        placeholder="Upload band logo"
+                        placeholder="Upload artist logo"
                         size="lg"
                         data-testid="band-avatar-upload"
                       />
@@ -492,7 +492,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                       type="text"
                       value={artistSettings.name}
                       onChange={(e) => setArtistSettings(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter band name"
+                      placeholder="Enter artist name"
                       className="focus:border-brand-primary focus:ring-brand-primary"
                       data-testid="input-band-name"
                       required
@@ -578,7 +578,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           type="url"
                           value={artistSettings.facebookUrl}
                           onChange={(e) => setArtistSettings(prev => ({ ...prev, facebookUrl: e.target.value }))}
-                          placeholder="facebook.com/yourband"
+                          placeholder="facebook.com/yourartist"
                           className="flex-1"
                         />
                       </div>
@@ -592,7 +592,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           type="url"
                           value={artistSettings.instagramUrl}
                           onChange={(e) => setArtistSettings(prev => ({ ...prev, instagramUrl: e.target.value }))}
-                          placeholder="instagram.com/yourband"
+                          placeholder="instagram.com/yourartist"
                           className="flex-1"
                         />
                       </div>
@@ -606,7 +606,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           type="url"
                           value={artistSettings.youtubeUrl}
                           onChange={(e) => setArtistSettings(prev => ({ ...prev, youtubeUrl: e.target.value }))}
-                          placeholder="youtube.com/@yourband"
+                          placeholder="youtube.com/@yourartist"
                           className="flex-1"
                         />
                       </div>
@@ -634,7 +634,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           type="url"
                           value={artistSettings.twitterUrl}
                           onChange={(e) => setArtistSettings(prev => ({ ...prev, twitterUrl: e.target.value }))}
-                          placeholder="x.com/yourband"
+                          placeholder="x.com/yourartist"
                           className="flex-1"
                         />
                       </div>
@@ -648,7 +648,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           type="url"
                           value={artistSettings.websiteUrl}
                           onChange={(e) => setArtistSettings(prev => ({ ...prev, websiteUrl: e.target.value }))}
-                          placeholder="yourband.com"
+                          placeholder="yourartist.com"
                           className="flex-1"
                         />
                       </div>

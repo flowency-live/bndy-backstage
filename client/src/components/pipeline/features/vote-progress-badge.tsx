@@ -26,6 +26,9 @@ export default function VoteProgressBadge({
           {scorePercentage}%
         </span>
       )}
+      {isComplete && isHighScore && (
+        <span className="text-base animate-bounce">⭐</span>
+      )}
     </div>
   );
 }
