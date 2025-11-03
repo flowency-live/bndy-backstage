@@ -681,7 +681,16 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
                         {song.guitarChordsUrl && (
-                          <i className="fas fa-guitar text-orange-500 text-sm" title="Guitar chords available"></i>
+                          <a
+                            href={song.guitarChordsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="hover:scale-110 transition-transform"
+                            title="View guitar chords/tabs"
+                          >
+                            <i className="fas fa-guitar text-orange-500 text-sm"></i>
+                          </a>
                         )}
                         {song.tuning && song.tuning !== 'standard' && (
                           <span className={`py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${
