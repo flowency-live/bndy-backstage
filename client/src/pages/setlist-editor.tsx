@@ -89,11 +89,11 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-1.5' : ''}>
-      {/* Segue connector - shows visual link between segued songs */}
+    <div ref={setNodeRef} style={style} className="relative">
+      {/* Segue connector - just the link icon overlapping cards */}
       {prevSongHasSegue && !isOver && (
-        <div className="flex items-center justify-center -my-1.5 relative z-10">
-          <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-background">
+        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-20">
+          <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-background">
             <i className="fas fa-link text-[8px]"></i>
           </div>
         </div>
@@ -105,13 +105,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
       <div
         {...attributes}
         {...listeners}
-        className={`flex items-center gap-1 sm:gap-2 bg-background ${
-          prevSongHasSegue
-            ? 'border-x border-b border-t-0 border-border rounded-b'
-            : showSegue
-            ? 'border-x border-t border-b-0 border-border rounded-t'
-            : 'border border-border rounded'
-        } p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing`}
+        className="flex items-center gap-1 sm:gap-2 bg-background border border-border rounded p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
         style={{ touchAction: 'none' }}
       >
         {/* Position number */}
@@ -194,16 +188,6 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
           <i className="fas fa-times text-xs"></i>
         </button>
       </div>
-      {showSegue && (
-        <div className="flex items-center justify-center py-0.5">
-          <div className="flex items-center space-x-2 text-blue-500 text-xs">
-            <div className="w-12 h-0.5 bg-blue-500"></div>
-            <i className="fas fa-chevron-down text-xs"></i>
-            <div className="w-12 h-0.5 bg-blue-500"></div>
-            <span className="text-xs font-semibold">SEGUE</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -108,37 +108,50 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
 
             {/* Song list */}
             <div className="space-y-4">
-              {set.songs.map((song, idx) => (
-                <div
-                  key={song.id}
-                  className="flex items-center gap-4 text-xl border-b border-black pb-2"
-                >
-                  {/* Track number */}
-                  <div className="w-12 text-right font-bold text-black shrink-0">
-                    {idx + 1}.
-                  </div>
+              {set.songs.map((song, idx) => {
+                const prevSong = idx > 0 ? set.songs[idx - 1] : null;
+                const showSegueIcon = prevSong?.segueInto;
 
-                  {/* Track name */}
-                  <div className="flex-1 font-bold text-black">
-                    {song.title}
-                  </div>
-
-                  {/* Tuning badge */}
-                  <div className="shrink-0">
-                    {song.tuning && song.tuning !== 'standard' && (
-                      <span className={`px-3 py-1 text-base font-bold rounded ${
-                        song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-                        song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-                        'bg-gray-400 text-black'
-                      }`}>
-                        {song.tuning === 'drop-d' ? 'Drop D' :
-                         song.tuning === 'eb' ? 'Eb' :
-                         song.tuning.toUpperCase()}
-                      </span>
+                return (
+                  <div key={song.id} className="relative">
+                    {/* Segue indicator */}
+                    {showSegueIcon && (
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+                        <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center border-2 border-white">
+                          <i className="fas fa-link text-xs"></i>
+                        </div>
+                      </div>
                     )}
+
+                    <div className="flex items-center gap-4 text-xl border-b border-black pb-2">
+                      {/* Track number */}
+                      <div className="w-12 text-right font-bold text-black shrink-0">
+                        {idx + 1}.
+                      </div>
+
+                      {/* Track name */}
+                      <div className="flex-1 font-bold text-black">
+                        {song.title}
+                      </div>
+
+                      {/* Tuning badge */}
+                      <div className="shrink-0">
+                        {song.tuning && song.tuning !== 'standard' && (
+                          <span className={`px-3 py-1 text-base font-bold rounded ${
+                            song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                            song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                            'bg-gray-400 text-black'
+                          }`}>
+                            {song.tuning === 'drop-d' ? 'Drop D' :
+                             song.tuning === 'eb' ? 'Eb' :
+                             song.tuning.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
