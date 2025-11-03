@@ -340,28 +340,8 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-3">
-            {/* Godmode, AgentEvents, Issue Report & Theme Toggle */}
+            {/* Issue Report & Theme Toggle */}
             <div className="flex justify-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('/godmode', '_blank')}
-                className="h-8 w-8 p-0 text-foreground hover:bg-muted"
-                data-testid="button-godmode"
-                title="Admin Godmode"
-              >
-                <Shield className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open('/agentevents', '_blank')}
-                className="h-8 w-8 p-0 text-foreground hover:bg-muted"
-                data-testid="button-agentevents"
-                title="Agent Events"
-              >
-                <Zap className="h-4 w-4" />
-              </Button>
               <Button
                 variant="ghost"
                 size="sm"

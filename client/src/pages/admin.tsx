@@ -390,63 +390,55 @@ export default function Admin({ artistId, membership }: AdminProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="p-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Back Link - consistent across all tabs */}
-          <button
-            onClick={() => setLocation("/dashboard")}
-            className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
-            data-testid="button-back"
-          >
-            <i className="fas fa-arrow-left text-xs"></i>
-            Back
-          </button>
-
-          {/* Tab Navigation */}
-          <div className="bg-card rounded-t-2xl border-b border-border">
-            <div className="flex space-x-0 px-1 pt-1">
-              <button
-                onClick={() => setActiveTab('artist')}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === 'artist'
-                    ? 'bg-background text-foreground border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-                data-testid="tab-artist"
-              >
-                <i className="fas fa-cog mr-2"></i>
-                Artist Settings
-              </button>
-              <button
-                onClick={() => setActiveTab('members')}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === 'members'
-                    ? 'bg-background text-foreground border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-                data-testid="tab-members"
-              >
-                <i className="fas fa-users mr-2"></i>
-                Members
-              </button>
-              <button
-                onClick={() => setActiveTab('spotify')}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === 'spotify'
-                    ? 'bg-background text-foreground border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-                data-testid="tab-spotify"
-              >
-                <i className="fab fa-spotify mr-2"></i>
-                Spotify
-              </button>
-            </div>
+    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Tab Navigation - consistent with Pipeline/Playbook */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-2 border-b border-border">
+            <button
+              onClick={() => setActiveTab('artist')}
+              className={`
+                px-4 py-2 font-medium transition-colors
+                ${activeTab === 'artist'
+                  ? 'text-orange-500 border-b-2 border-orange-500'
+                  : 'text-muted-foreground hover:text-foreground'
+                }
+              `}
+              data-testid="tab-artist"
+            >
+              Artist Settings
+            </button>
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`
+                px-4 py-2 font-medium transition-colors
+                ${activeTab === 'members'
+                  ? 'text-orange-500 border-b-2 border-orange-500'
+                  : 'text-muted-foreground hover:text-foreground'
+                }
+              `}
+              data-testid="tab-members"
+            >
+              Members
+            </button>
+            <button
+              onClick={() => setActiveTab('spotify')}
+              className={`
+                px-4 py-2 font-medium transition-colors
+                ${activeTab === 'spotify'
+                  ? 'text-orange-500 border-b-2 border-orange-500'
+                  : 'text-muted-foreground hover:text-foreground'
+                }
+              `}
+              data-testid="tab-spotify"
+            >
+              Spotify
+            </button>
           </div>
-          
-          <div className="bg-card rounded-b-2xl shadow-lg overflow-hidden">
-            <div className="p-6">
+        </div>
+
+        {/* Tab Content */}
+        <div>
             {/* Artist Settings Tab */}
             {activeTab === 'artist' && (
               <div>
