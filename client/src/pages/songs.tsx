@@ -28,6 +28,7 @@ interface SongWithDetails {
   tuning?: string;
   notes?: string;
   additionalUrl?: string;
+  guitarChordsUrl?: string;
   genre?: string;
   releaseDate?: string;
   readiness: Array<{
@@ -123,6 +124,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
           tuning: tuning,
           notes: item.notes || '',
           additionalUrl: item.additional_url || '',
+          guitarChordsUrl: item.guitar_chords_url || '',
           genre: item.globalSong?.genre || null,
           releaseDate: item.globalSong?.releaseDate || null,
           readiness: item.readiness || [],
@@ -678,6 +680,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
                     {/* Duration, BPM, and Tuning - visible on all screen sizes */}
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
+                        {song.guitarChordsUrl && (
+                          <i className="fas fa-guitar text-orange-500 text-sm" title="Guitar chords available"></i>
+                        )}
                         {song.tuning && song.tuning !== 'standard' && (
                           <span className={`py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${
                             song.tuning === 'drop-d' ? 'bg-yellow-400 text-black px-1' :
@@ -890,6 +895,20 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             onChange={(e) => setEditedSongs(prev => ({
                               ...prev,
                               [song.id]: { ...prev[song.id], additional_url: e.target.value }
+                            }))}
+                            className="w-full px-2 py-1 text-sm border rounded"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Guitar Chords URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={editedSongs[song.id]?.guitar_chords_url ?? song.guitarChordsUrl ?? ''}
+                            onChange={(e) => setEditedSongs(prev => ({
+                              ...prev,
+                              [song.id]: { ...prev[song.id], guitar_chords_url: e.target.value }
                             }))}
                             className="w-full px-2 py-1 text-sm border rounded"
                           />
