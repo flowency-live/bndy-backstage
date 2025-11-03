@@ -41,26 +41,15 @@ export default function ProfileGate({ children, userProfile }: ProfileGateProps)
 
     const profileComplete = user.profileCompleted || hasRequiredFields;
 
-    console.log('🔒 PROFILE GATE: Checking profile', {
-      firstName: !!user.firstName,
-      lastName: !!user.lastName,
-      displayName: !!user.displayName,
-      profileComplete
-    });
-
     // Redirect to profile page if incomplete
     if (!profileComplete) {
       // Don't redirect if already on profile page (prevents infinite loop)
       if (location === '/profile') {
-        console.log('🔒 PROFILE GATE: ❌ Profile incomplete but already on /profile - no redirect');
         setHasChecked(true);
         return;
       }
 
-      console.log('🔒 PROFILE GATE: ❌ Profile incomplete - redirecting to /profile');
       setLocation('/profile');
-    } else {
-      console.log('🔒 PROFILE GATE: ✅ Profile complete - allowing access');
     }
 
     setHasChecked(true);

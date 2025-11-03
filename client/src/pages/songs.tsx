@@ -103,14 +103,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
       const data = await response.json();
 
-      console.log('[PLAYBOOK API] Raw response:', data.length, 'songs');
-
       // Transform the API response to match our interface
       const transformed = data.map((item: any) => {
         const tuning = item.tuning || 'standard';
-        if (tuning !== 'standard') {
-          console.log(`[PLAYBOOK API] Non-standard tuning found: "${item.globalSong?.title}" -> ${tuning}`);
-        }
 
         return {
           id: item.id,
@@ -135,7 +130,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
         };
       });
 
-      console.log('[PLAYBOOK API] Transformed:', transformed.filter(s => s.tuning !== 'standard').length, 'non-standard tunings');
       return transformed;
     },
     enabled: !!artistId,

@@ -58,26 +58,10 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
 
   const memberCount = actualMemberCount || 1;
 
-  console.log('VOTING TAB DEBUG:', {
-    memberCount,
-    actualMemberCount,
-    songsCount: songs.length,
-    currentUserId: session?.user?.cognitoId
-  });
-
   // Group songs into three categories
   const groupedSongs = songs.reduce((acc, song) => {
     const voteCount = Object.keys(song.votes || {}).length;
     const hasUserVote = song.votes?.[session?.user?.cognitoId];
-
-    console.log('SONG DEBUG:', {
-      songId: song.id,
-      title: song.globalSong?.title,
-      votes: song.votes,
-      voteCount,
-      hasUserVote: !!hasUserVote,
-      userVoteValue: hasUserVote?.value
-    });
 
     // Calculate total score for sorting
     const totalScore = Object.values(song.votes || {}).reduce(

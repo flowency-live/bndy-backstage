@@ -291,7 +291,6 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
             <div className="p-6 text-center text-muted-foreground">
               <i className="fas fa-search text-4xl mb-4 text-muted-foreground/50"></i>
               <p className="text-sm sm:text-base">Start typing to search for songs</p>
-              <p className="text-xs mt-2 text-muted-foreground/70">Searches your library first, then Spotify</p>
             </div>
           )}
 

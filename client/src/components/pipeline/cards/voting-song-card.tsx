@@ -53,17 +53,6 @@ export default function VotingSongCard({
   const maxScore = memberCount * 5;
   const scorePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
-  console.log('VOTING CARD DEBUG:', {
-    songTitle: song.globalSong?.title,
-    userId,
-    userVote,
-    voteCount,
-    memberCount,
-    userHasVoted,
-    scorePercentage,
-    allVotes: song.votes
-  });
-
   const voteMutation = useMutation({
     mutationFn: async (voteValue: number) => {
       const response = await fetch(

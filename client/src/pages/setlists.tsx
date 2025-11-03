@@ -55,9 +55,6 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v3"],
     queryFn: async () => {
-      console.log('[SETLISTS READONLY] ========== START API FETCH ==========');
-      console.log('[SETLISTS READONLY] Fetching from:', `https://api.bndy.co.uk/api/artists/${artistId}/setlists`);
-
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
         credentials: "include",
         headers: {
@@ -66,41 +63,10 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
       });
 
       if (!response.ok) {
-        console.log('[SETLISTS READONLY] API FAILED:', response.status, response.statusText);
         throw new Error("Failed to fetch setlists");
       }
 
-      console.log('[SETLISTS READONLY] API response received, parsing JSON...');
       const data = await response.json();
-
-      console.log('[SETLISTS READONLY] Raw API data:', JSON.stringify(data, null, 2));
-      console.log('[SETLISTS READONLY] Number of setlists:', data.length);
-
-      data.forEach((setlist: Setlist, setlistIdx: number) => {
-        console.log(`[SETLISTS READONLY] --- Setlist ${setlistIdx + 1}: "${setlist.name}" ---`);
-        console.log(`[SETLISTS READONLY] Setlist has ${setlist.sets?.length || 0} sets`);
-
-        const allSongs: SetlistSong[] = [];
-        setlist.sets?.forEach((set: SetlistSet, setIdx: number) => {
-          console.log(`[SETLISTS READONLY]   Set ${setIdx + 1}: "${set.name}" has ${set.songs?.length || 0} songs`);
-
-          set.songs?.forEach((song: SetlistSong, songIdx: number) => {
-            allSongs.push(song);
-            const tuning = song.tuning || 'UNDEFINED';
-            console.log(`[SETLISTS READONLY]     Song ${songIdx + 1}: "${song.title}" | duration: ${song.duration || 'NONE'}s | tuning: ${tuning}`);
-
-            if (song.tuning && song.tuning !== 'standard') {
-              console.log(`[SETLISTS READONLY]     *** NON-STANDARD TUNING DETECTED: ${song.tuning} ***`);
-            }
-          });
-        });
-
-        const nonStandardCount = allSongs.filter(s => s.tuning !== 'standard').length;
-        const totalDuration = allSongs.reduce((sum, s) => sum + (s.duration || 0), 0);
-        console.log(`[SETLISTS READONLY] Summary for "${setlist.name}": ${allSongs.length} songs, ${totalDuration}s total, ${nonStandardCount} non-standard tunings`);
-      });
-
-      console.log('[SETLISTS READONLY] ========== END API FETCH ==========');
       return data;
     },
     enabled: !!artistId,
@@ -281,21 +247,18 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   // Calculate total duration for a set
   const getSetTotalDuration = (set: SetlistSet): number => {
     const total = set.songs.reduce((total, song) => total + (song.duration || 0), 0);
-    console.log(`[LIST] Set "${set.name}" total: ${total}s from ${set.songs.length} songs`);
     return total;
   };
 
   // Calculate total duration for entire setlist
   const getSetlistTotalDuration = (setlist: Setlist): number => {
     const total = setlist.sets.reduce((total, set) => total + getSetTotalDuration(set), 0);
-    console.log(`[LIST] Setlist "${setlist.name}" total: ${total}s`);
     return total;
   };
 
   // Calculate total target duration for setlist
   const getSetlistTargetDuration = (setlist: Setlist): number => {
     const total = setlist.sets.reduce((total, set) => total + set.targetDuration, 0);
-    console.log(`[LIST] Target duration: ${total}s`);
     return total;
   };
 
@@ -647,16 +610,9 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             {isSetExpanded && (
                               <div className="border-t border-border bg-muted/10 px-2 py-1.5">
                                 <div className="space-y-1">
-                                  {(() => {
-                                    console.log(`[SETLISTS READONLY RENDER] ========== RENDERING SET: "${set.name}" ==========`);
-                                    console.log(`[SETLISTS READONLY RENDER] Set has ${set.songs.length} songs`);
-                                    return set.songs.map((song, idx) => {
-                                      console.log(`[SETLISTS READONLY RENDER] Rendering song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'} | duration: ${song.duration || 'NONE'}s`);
-                                      if (song.tuning && song.tuning !== 'standard') {
-                                        console.log(`[SETLISTS READONLY RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
-                                      }
-                                      const songKey = `${setlist.id}-${song.id}`;
-                                      return (
+                                  {set.songs.map((song, idx) => {
+                                    const songKey = `${setlist.id}-${song.id}`;
+                                    return (
                                         <div
                                           key={song.id}
                                           className="flex items-center text-sm text-muted-foreground gap-2 group"
@@ -727,8 +683,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                           </span>
                                         </div>
                                       );
-                                    });
-                                  })()}
+                                  })}
                                   {set.songs.length === 0 && (
                                     <div className="text-xs italic text-muted-foreground/60">
                                       No songs yet

@@ -331,9 +331,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId, "v3"],
     queryFn: async () => {
-      console.log('[SETLIST EDIT] ========== START API FETCH (SETLIST) ==========');
-      console.log('[SETLIST EDIT] Fetching from:', `https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`);
-
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
         credentials: "include",
         headers: {
@@ -342,38 +339,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
 
       if (!response.ok) {
-        console.log('[SETLIST EDIT] API FAILED:', response.status, response.statusText);
         throw new Error("Failed to fetch setlist");
       }
 
-      console.log('[SETLIST EDIT] API response received, parsing JSON...');
       const setlistData = await response.json();
-
-      console.log('[SETLIST EDIT] Raw API data:', JSON.stringify(setlistData, null, 2));
-      console.log('[SETLIST EDIT] Setlist name:', setlistData.name);
-      console.log('[SETLIST EDIT] Number of sets:', setlistData.sets?.length || 0);
-
-      const allSongs: any[] = [];
-      setlistData.sets?.forEach((set: any, setIdx: number) => {
-        console.log(`[SETLIST EDIT] --- Set ${setIdx + 1}: "${set.name}" ---`);
-        console.log(`[SETLIST EDIT] Set has ${set.songs?.length || 0} songs`);
-
-        set.songs?.forEach((song: any, songIdx: number) => {
-          allSongs.push(song);
-          const tuning = song.tuning || 'UNDEFINED';
-          console.log(`[SETLIST EDIT]   Song ${songIdx + 1}: "${song.title}" | duration: ${song.duration || 'NONE'}s | tuning: ${tuning}`);
-
-          if (song.tuning && song.tuning !== 'standard') {
-            console.log(`[SETLIST EDIT]   *** NON-STANDARD TUNING DETECTED: ${song.tuning} ***`);
-          }
-        });
-      });
-
-      const nonStandardCount = allSongs.filter(s => s.tuning !== 'standard').length;
-      const totalDuration = allSongs.reduce((sum, s) => sum + (s.duration || 0), 0);
-      console.log(`[SETLIST EDIT] Summary: ${allSongs.length} total songs, ${totalDuration}s total, ${nonStandardCount} non-standard tunings`);
-      console.log('[SETLIST EDIT] ========== END API FETCH (SETLIST) ==========');
-
       return setlistData;
     },
     enabled: !!artistId && !!setlistId,
@@ -401,19 +370,13 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       const data = await response.json();
 
       if (!Array.isArray(data)) {
-        console.error('[SETLIST EDIT PLAYBOOK] Invalid response');
         return [];
       }
-
-      console.log('[SETLIST EDIT PLAYBOOK] Raw response:', data.length, 'songs');
 
       const validItems = data.filter(item => item && item.globalSong);
 
       const mappedItems = validItems.map((item: any) => {
         const tuning = item.tuning || 'standard';
-        if (tuning !== 'standard') {
-          console.log(`[SETLIST EDIT PLAYBOOK] Non-standard tuning: "${item.globalSong?.title}" -> ${tuning}`);
-        }
 
         return {
           id: item.id,
@@ -429,7 +392,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
 
       const safeItems = mappedItems.filter(item => item && item.title);
-      console.log('[SETLIST EDIT PLAYBOOK] Transformed:', safeItems.filter(s => s.tuning !== 'standard').length, 'non-standard tunings');
 
       return safeItems.sort((a, b) => a.title.localeCompare(b.title));
     },
@@ -441,26 +403,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Initialize working copy when setlist loads
   useEffect(() => {
-    console.log('[SETLIST EDIT SYNC] ========== SYNC EFFECT TRIGGERED ==========');
-    console.log('[SETLIST EDIT SYNC] setlist exists:', !!setlist);
-    console.log('[SETLIST EDIT SYNC] workingSetlist exists:', !!workingSetlist);
-    console.log('[SETLIST EDIT SYNC] hasUnsavedChanges:', hasUnsavedChanges);
-
     if (setlist) {
       // Initialize workingSetlist if it doesn't exist
       if (!workingSetlist) {
-        console.log('[SETLIST EDIT SYNC] Initializing workingSetlist from setlist...');
-        const allSongs: any[] = [];
-        setlist.sets?.forEach((set: any) => {
-          set.songs?.forEach((song: any) => {
-            allSongs.push(song);
-          });
-        });
-        console.log('[SETLIST EDIT SYNC] Copying', allSongs.length, 'songs to workingSetlist');
-        allSongs.forEach((song, idx) => {
-          console.log(`[SETLIST EDIT SYNC]   Song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'}`);
-        });
-
         setWorkingSetlist(setlist);
         if (setlist.sets.length > 0 && !activeSetId) {
           setActiveSetId(setlist.sets[0].id);
@@ -468,24 +413,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       }
       // Update workingSetlist with fresh data if no unsaved changes
       else if (!hasUnsavedChanges) {
-        console.log('[SETLIST EDIT SYNC] Updating workingSetlist from setlist (no unsaved changes)...');
-        const allSongs: any[] = [];
-        setlist.sets?.forEach((set: any) => {
-          set.songs?.forEach((song: any) => {
-            allSongs.push(song);
-          });
-        });
-        console.log('[SETLIST EDIT SYNC] Updating with', allSongs.length, 'songs');
-        allSongs.forEach((song, idx) => {
-          console.log(`[SETLIST EDIT SYNC]   Song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'}`);
-        });
-
         setWorkingSetlist(setlist);
-      } else {
-        console.log('[SETLIST EDIT SYNC] Skipping sync - has unsaved changes');
       }
     }
-    console.log('[SETLIST EDIT SYNC] ========== END SYNC EFFECT ==========');
   }, [setlist, workingSetlist, activeSetId, hasUnsavedChanges]);
 
   // Removed browser beforeunload handler - we use custom confirm dialog instead
@@ -493,15 +423,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
     mutationFn: async (updates: Partial<Setlist>) => {
-      console.log('[SAVE] Starting mutation with updates:', updates);
-      console.log('[SAVE] Number of sets:', updates.sets?.length);
-      updates.sets?.forEach((set, idx) => {
-        console.log(`[SAVE] Set ${idx + 1}: "${set.name}" has ${set.songs.length} songs`);
-        set.songs.forEach(song => {
-          console.log(`[SAVE]   - ${song.title}: ${song.duration}s`);
-        });
-      });
-
       const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
         method: "PUT",
         credentials: "include",
@@ -511,20 +432,15 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         body: JSON.stringify(updates),
       });
 
-      console.log('[SAVE] Response status:', response.status);
-
       if (!response.ok) {
         const error = await response.json();
-        console.error('[SAVE] ERROR:', error);
         throw new Error(error.error || "Failed to update setlist");
       }
 
       const data = await response.json();
-      console.log('[SAVE] Response data:', data);
       return data;
     },
     onError: (error: Error) => {
-      console.error('[SAVE] Mutation failed:', error);
       toast({
         title: "Failed to update setlist",
         description: error.message,
@@ -532,7 +448,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       });
     },
     onSuccess: (data, variables, context: any) => {
-      console.log('[SAVE] Mutation succeeded, updating cache with:', data);
       // Update cache with server response
       queryClient.setQueryData(
         ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
@@ -552,7 +467,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Drag event handlers
   const handleDragStart = (event: DragStartEvent) => {
-    console.log('[DND] Drag started:', event.active.id);
     setActiveId(event.active.id as string);
   };
 
@@ -565,13 +479,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }
 
     setOverId(over.id as string);
-    console.log('[DND] Drag over:', { active: active.id, over: over.id });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
-    console.log('[DND] Drag ended:', { active: active.id, over: over?.id });
 
     setActiveId(null);
     setOverId(null);
@@ -646,8 +557,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       imageUrl: playbookSong.imageUrl,
     };
 
-    console.log('[DND] Adding from playbook:', newSong.title, 'to set', targetSetId, 'at index', targetIndex);
-
     const updatedSets = workingSetlist.sets.map(set => {
       if (set.id === targetSetId) {
         const newSongs = [...set.songs];
@@ -689,11 +598,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
     // If moving within same set and to same position, do nothing
     if (sourceSetId === targetSetId && sourceIndex === targetIndex) {
-      console.log('[DND] Same position, no change needed');
       return;
     }
-
-    console.log('[DND] Moving song:', songToMove.title, 'from', sourceSetId, sourceIndex, 'to', targetSetId, targetIndex);
 
     const updatedSets = workingSetlist.sets.map(set => {
       // Remove from source set
@@ -891,7 +797,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       { sets: workingSetlist.sets, name: workingSetlist.name },
       {
         onSuccess: (data) => {
-          console.log('[SAVE] Successfully saved to database');
           setHasUnsavedChanges(false);
           // Update the query cache with saved data
           queryClient.setQueryData(
