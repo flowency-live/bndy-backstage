@@ -34,6 +34,9 @@ export interface Artist {
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   websiteUrl?: string | null;
+  youtubeUrl?: string | null;
+  spotifyUrl?: string | null;
+  twitterUrl?: string | null;
   socialMediaUrls?: Array<{ type: string; url: string }>;
   isVerified?: boolean;
   followerCount?: number;

@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/ui/image-upload";
 import LocationAutocomplete from "@/components/ui/location-autocomplete";
+import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter, FaGlobe } from "react-icons/fa6";
 
 interface AdminProps {
   artistId: string;
@@ -61,6 +62,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
     locationLng: artistData?.locationLng || membership.artist?.locationLng || undefined,
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
     displayColour: artistData?.displayColour || membership.artist?.displayColour || '#f97316', // Orange 500
+    facebookUrl: artistData?.facebookUrl || '',
+    instagramUrl: artistData?.instagramUrl || '',
+    websiteUrl: artistData?.websiteUrl || '',
+    youtubeUrl: artistData?.youtubeUrl || '',
+    spotifyUrl: artistData?.spotifyUrl || '',
+    twitterUrl: artistData?.twitterUrl || '',
   });
 
   // Update form when artist data loads
@@ -74,6 +81,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLng: artistData.locationLng || undefined,
         avatar: artistData.profileImageUrl || null,
         displayColour: artistData.displayColour || '#f97316', // Orange 500
+        facebookUrl: artistData.facebookUrl || '',
+        instagramUrl: artistData.instagramUrl || '',
+        websiteUrl: artistData.websiteUrl || '',
+        youtubeUrl: artistData.youtubeUrl || '',
+        spotifyUrl: artistData.spotifyUrl || '',
+        twitterUrl: artistData.twitterUrl || '',
       });
     }
   }, [artistData]);
@@ -210,6 +223,12 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLng: settings.locationLng,
         profileImageUrl: settings.avatar,
         displayColour: settings.displayColour,
+        facebookUrl: settings.facebookUrl || null,
+        instagramUrl: settings.instagramUrl || null,
+        websiteUrl: settings.websiteUrl || null,
+        youtubeUrl: settings.youtubeUrl || null,
+        spotifyUrl: settings.spotifyUrl || null,
+        twitterUrl: settings.twitterUrl || null,
       });
 
       return response.json();
@@ -543,6 +562,96 @@ export default function Admin({ artistId, membership }: AdminProps) {
                           title={preset.name}
                         />
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Social Media Links */}
+                  <div>
+                    <Label className="text-card-foreground font-semibold mb-3 block">Social Media</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Facebook */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-[#1877F2] flex items-center justify-center flex-shrink-0">
+                          <FaFacebook className="w-5 h-5 text-white" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.facebookUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, facebookUrl: e.target.value }))}
+                          placeholder="facebook.com/yourband"
+                          className="flex-1"
+                        />
+                      </div>
+
+                      {/* Instagram */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] flex items-center justify-center flex-shrink-0">
+                          <FaInstagram className="w-5 h-5 text-white" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.instagramUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                          placeholder="instagram.com/yourband"
+                          className="flex-1"
+                        />
+                      </div>
+
+                      {/* YouTube */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-[#FF0000] flex items-center justify-center flex-shrink-0">
+                          <FaYoutube className="w-5 h-5 text-white" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.youtubeUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                          placeholder="youtube.com/@yourband"
+                          className="flex-1"
+                        />
+                      </div>
+
+                      {/* Spotify */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-[#1DB954] flex items-center justify-center flex-shrink-0">
+                          <FaSpotify className="w-5 h-5 text-white" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.spotifyUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, spotifyUrl: e.target.value }))}
+                          placeholder="open.spotify.com/artist/..."
+                          className="flex-1"
+                        />
+                      </div>
+
+                      {/* X (Twitter) */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-black dark:bg-white flex items-center justify-center flex-shrink-0">
+                          <FaXTwitter className="w-5 h-5 text-white dark:text-black" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.twitterUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, twitterUrl: e.target.value }))}
+                          placeholder="x.com/yourband"
+                          className="flex-1"
+                        />
+                      </div>
+
+                      {/* Website */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center flex-shrink-0">
+                          <FaGlobe className="w-5 h-5 text-white" />
+                        </div>
+                        <Input
+                          type="url"
+                          value={artistSettings.websiteUrl}
+                          onChange={(e) => setArtistSettings(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                          placeholder="yourband.com"
+                          className="flex-1"
+                        />
+                      </div>
                     </div>
                   </div>
 
