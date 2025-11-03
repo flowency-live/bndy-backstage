@@ -21,61 +21,63 @@ export function OnboardingTour() {
     const driverObj = driver({
       showProgress: true,
       showButtons: ['next', 'previous', 'close'],
+      animate: true,
+      overlayOpacity: 0.2,
+      smoothScroll: true,
       steps: [
         {
           element: '[data-testid="nav-dashboard"]',
           popover: {
             title: 'Welcome to bndy!',
-            description: 'Let\'s take a quick tour of bndy. The Dashboard is your command center - see upcoming events and access the main areas from the tiles.',
+            description: 'Your command center for managing events, songs, and band activities.',
             side: 'right',
-            align: 'start'
+            align: 'center'
           }
         },
         {
           element: '[data-testid="nav-calendar"]',
           popover: {
             title: 'Calendar',
-            description: 'View all your events in a beautiful calendar layout. Add new gigs, rehearsals, your unavailability...',
+            description: 'View and manage all your gigs, rehearsals, and availability in one place.',
             side: 'right',
-            align: 'start'
+            align: 'center'
           }
         },
         {
           element: '[data-testid="nav-playbook"]',
           popover: {
             title: 'Playbook',
-            description: 'Manage your setlists, songs, and repertoire. Perfect for planning performances and tracking your material.',
+            description: 'Your song library and setlists - perfect for planning performances.',
             side: 'right',
-            align: 'start'
+            align: 'center'
           }
         },
         {
           element: '[data-testid="nav-pipeline"]',
           popover: {
             title: 'Pipeline',
-            description: 'Your new song pipeline, from recommendations, full band voting and practice lists.',
+            description: 'Collaborate on new songs with voting and practice tracking.',
             side: 'right',
-            align: 'start'
+            align: 'center'
           }
         },
         {
           element: '[data-testid="nav-admin"]',
           popover: {
             title: 'Admin',
-            description: 'Control your artist profile, manage band members, and handle settings. Your band\'s headquarters for everything administrative.',
+            description: 'Manage your artist profile, band members, and settings.',
             side: 'right',
-            align: 'start'
+            align: 'center'
           }
         },
         {
           popover: {
-            title: 'You\'re all set!',
-            description: 'That\'s it! You can restart this tour anytime from your profile menu. Ready to rock? Let\'s get started!',
+            title: 'Ready to rock!',
+            description: 'You can restart this tour anytime from your profile menu.',
           }
         }
       ],
       onDestroyed: () => {
-        // Mark onboarding as complete when tour ends (completed or skipped)
         localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
         setHasCompletedOnboarding(true);
       },
