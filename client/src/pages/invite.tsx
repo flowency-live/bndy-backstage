@@ -86,6 +86,37 @@ export default function Invite() {
   const profileComplete = authResponse?.user?.profileCompleted || hasRequiredFields;
   const membershipCount = membershipsData?.artists?.length || 0;
 
+  // Check if user already has membership with this artist
+  const alreadyHasMembership = membershipsData?.artists?.some(
+    (artist: any) => artist.id === inviteDetails?.artistId
+  );
+
+  // Smart redirect: If user is already a member, skip invite flow entirely
+  useEffect(() => {
+    if (
+      !loadingInvite &&
+      !loadingAuth &&
+      !loadingMemberships &&
+      isAuthenticated &&
+      inviteDetails &&
+      alreadyHasMembership &&
+      !hasAttemptedProfileRedirect.current
+    ) {
+      hasAttemptedProfileRedirect.current = true;
+      localStorage.removeItem('pendingInvite');
+
+      toast({
+        title: "You're already a member!",
+        description: `Taking you to your dashboard...`,
+        variant: "default"
+      });
+
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 1000);
+    }
+  }, [loadingInvite, loadingAuth, loadingMemberships, isAuthenticated, inviteDetails, alreadyHasMembership, toast, setLocation]);
+
   // Auto-redirect ONLY users with 0 memberships to dashboard (invite handled silently)
   // Users with existing memberships should see the confirmation page
   useEffect(() => {
@@ -99,13 +130,14 @@ export default function Invite() {
       inviteDetails &&
       localStorage.getItem('pendingInvite') === token &&
       !hasAttemptedProfileRedirect.current &&
-      membershipCount === 0;
+      membershipCount === 0 &&
+      !alreadyHasMembership;
 
     if (shouldRedirectToDashboard) {
       hasAttemptedProfileRedirect.current = true;
       setLocation('/dashboard');
     }
-  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount]);
+  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership]);
 
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {
@@ -125,6 +157,7 @@ export default function Invite() {
     try {
       const result = await authService.acceptInvite(token!);
 
+      // Clean up invite token
       localStorage.removeItem('pendingInvite');
 
       // Set the new artist as the active context
@@ -144,6 +177,7 @@ export default function Invite() {
     } catch (error: any) {
       // Check if user is already a member - treat as success
       if (error.message && error.message.includes('already a member')) {
+        // Clean up invite token
         localStorage.removeItem('pendingInvite');
         setLocation('/dashboard');
         return;
@@ -157,6 +191,16 @@ export default function Invite() {
       setAccepting(false);
     }
   };
+
+  // Safety check: Clear stale invite tokens on mount if user already has membership
+  useEffect(() => {
+    if (!loadingMemberships && isAuthenticated && alreadyHasMembership && token) {
+      const pendingToken = localStorage.getItem('pendingInvite');
+      if (pendingToken === token) {
+        localStorage.removeItem('pendingInvite');
+      }
+    }
+  }, [loadingMemberships, isAuthenticated, alreadyHasMembership, token]);
 
   const handleDecline = () => {
     if (token) {

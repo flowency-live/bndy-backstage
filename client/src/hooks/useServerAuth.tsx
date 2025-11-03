@@ -69,9 +69,23 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
     window.location.href = '/login';
   };
 
-  // Removed automatic checkAuth on mount - auth is checked lazily when needed by protected routes
-
   const isAuthenticated = !!user && !!session;
+
+  // Automatic session check on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Periodic session refresh (every 15 minutes)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      checkAuth();
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const value = {
     user,

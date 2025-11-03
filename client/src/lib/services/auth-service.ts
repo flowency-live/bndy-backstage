@@ -85,14 +85,48 @@ class AuthService {
   }
 
   /**
+   * Save session backup to localStorage for PWA/standalone mode
+   */
+  private saveSessionBackup(session: AuthResponse): void {
+    try {
+      localStorage.setItem('bndy-session-backup', JSON.stringify({
+        userId: session.user.id,
+        displayName: session.user.displayName,
+        expiresAt: session.session.expiresAt,
+        savedAt: Date.now()
+      }));
+    } catch (error) {
+      // Silently fail if localStorage unavailable
+    }
+  }
+
+  /**
+   * Clear session backup from localStorage
+   */
+  private clearSessionBackup(): void {
+    try {
+      localStorage.removeItem('bndy-session-backup');
+    } catch (error) {
+      // Silently fail
+    }
+  }
+
+  /**
    * Check current authentication status
    */
   async checkAuth(): Promise<AuthResponse | null> {
     try {
       const response = await this.apiRequest<AuthResponse>('/api/me');
+
+      // Save session backup for PWA/standalone mode
+      if (response) {
+        this.saveSessionBackup(response);
+      }
+
       return response;
     } catch (error) {
-      // Return null for auth failures (not authenticated)
+      // Clear backup on auth failure
+      this.clearSessionBackup();
       return null;
     }
   }
@@ -101,6 +135,7 @@ class AuthService {
    * Sign out the current user
    */
   async signOut(): Promise<void> {
+    this.clearSessionBackup();
     await this.apiRequest('/auth/logout', {
       method: 'POST',
     });
