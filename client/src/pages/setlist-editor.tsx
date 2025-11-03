@@ -57,7 +57,7 @@ function getVarianceColor(variance: number): string {
 }
 
 // Sortable song card component
-function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver, drawerOpen, isEditing, editValue, onStartEdit, onEditChange, onFinishEdit }: {
+function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue, isOver, drawerOpen, isEditing, editValue, onStartEdit, onEditChange, onFinishEdit, prevSongHasSegue }: {
   song: SetlistSong;
   setId: string;
   idx: number;
@@ -71,6 +71,7 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   onStartEdit: (songId: string, currentTitle: string) => void;
   onEditChange: (value: string) => void;
   onFinishEdit: () => void;
+  prevSongHasSegue?: boolean;
 }) {
   const {
     attributes,
@@ -88,7 +89,15 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className={prevSongHasSegue ? '-mt-2' : ''}>
+      {/* Segue connector - shows visual link between segued songs */}
+      {prevSongHasSegue && !isOver && (
+        <div className="flex items-center justify-center -mb-2 relative z-10">
+          <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg">
+            <i className="fas fa-link text-xs"></i>
+          </div>
+        </div>
+      )}
       {/* Insertion indicator - shows where drop will happen */}
       {isOver && (
         <div className="h-1 bg-orange-500 rounded-full mb-1 shadow-lg"></div>
@@ -96,7 +105,9 @@ function SortableSongCard({ song, setId, idx, onToggleSegue, onRemove, showSegue
       <div
         {...attributes}
         {...listeners}
-        className="flex items-center gap-1 sm:gap-2 bg-background border border-border rounded p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing"
+        className={`flex items-center gap-1 sm:gap-2 bg-background border ${
+          prevSongHasSegue ? 'border-t-2 border-t-blue-500' : 'border-border'
+        } ${showSegue ? 'border-b-2 border-b-blue-500 rounded-t' : 'rounded'} p-1 sm:p-2 hover:border-orange-500/50 transition-colors select-none cursor-grab active:cursor-grabbing`}
         style={{ touchAction: 'none' }}
       >
         {/* Position number */}
@@ -477,18 +488,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     console.log('[SETLIST EDIT SYNC] ========== END SYNC EFFECT ==========');
   }, [setlist, workingSetlist, activeSetId, hasUnsavedChanges]);
 
-  // Warn user about unsaved changes when leaving page
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+  // Removed browser beforeunload handler - we use custom confirm dialog instead
 
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
@@ -700,10 +700,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (set.id === sourceSetId) {
         const newSongs = set.songs.filter(s => s.id !== songId);
 
+        // Clear segue flag on the song before the moved song (if it had segue into the moved song)
+        if (sourceIndex > 0) {
+          newSongs[sourceIndex - 1] = { ...newSongs[sourceIndex - 1], segueInto: false };
+        }
+
         // If source and target are same set, we need to adjust target index
         if (sourceSetId === targetSetId) {
           const adjustedIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-          newSongs.splice(adjustedIndex, 0, songToMove);
+          // Clear segue flag on the moved song (reorder breaks segue)
+          newSongs.splice(adjustedIndex, 0, { ...songToMove, segueInto: false });
           return {
             ...set,
             songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
@@ -719,7 +725,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       // Add to target set (if different from source)
       if (set.id === targetSetId && sourceSetId !== targetSetId) {
         const newSongs = [...set.songs];
-        newSongs.splice(targetIndex, 0, songToMove);
+        // Clear segue flag on the moved song (moving to different set breaks segue)
+        newSongs.splice(targetIndex, 0, { ...songToMove, segueInto: false });
         return {
           ...set,
           songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
@@ -1236,6 +1243,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 if (song.tuning && song.tuning !== 'standard') {
                                   console.log(`[SETLIST EDIT RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
                                 }
+                                const prevSongHasSegue = idx > 0 && set.songs[idx - 1]?.segueInto;
                                 return (
                                   <SortableSongCard
                                     key={song.id}
@@ -1252,6 +1260,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                     onStartEdit={handleStartEditSongTitle}
                                     onEditChange={handleEditSongTitleChange}
                                     onFinishEdit={handleFinishEditSongTitle}
+                                    prevSongHasSegue={prevSongHasSegue}
                                   />
                                 );
                               });
