@@ -1153,46 +1153,34 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
                   return (
                     <div key={set.id} className="bg-card border-y sm:border sm:rounded border-border overflow-hidden">
-                      {/* Set header - redesigned for mobile */}
+                      {/* Set header - compact mobile-first design */}
                       <div
-                        className="bg-muted/30 p-2 sm:p-3 border-b border-border"
+                        className="bg-muted/30 px-1 py-1.5 sm:p-3 border-b border-border"
                       >
-                        {/* Mobile layout - stacked */}
-                        <div className="flex flex-col gap-1 sm:hidden">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2 flex-1">
-                              <input
-                                type="radio"
-                                name="activeSet"
-                                checked={isActive}
-                                onChange={() => setActiveSetId(set.id)}
-                                className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
-                              />
-                              <h3 className="font-semibold text-sm">{set.name}</h3>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleSetCollapse(set.id);
-                              }}
-                              className="text-muted-foreground hover:text-foreground p-2 transition-colors"
-                            >
-                              <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'} text-base`}></i>
-                            </button>
-                            <div className="text-xs text-muted-foreground">
-                              {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
-                            </div>
+                        {/* Mobile layout - single line with everything */}
+                        <div className="flex items-center gap-1 sm:hidden text-xs">
+                          <input
+                            type="radio"
+                            name="activeSet"
+                            checked={isActive}
+                            onChange={() => setActiveSetId(set.id)}
+                            className="w-3.5 h-3.5 text-orange-500 focus:ring-orange-500 cursor-pointer shrink-0"
+                          />
+                          <h3 className="font-semibold whitespace-nowrap">{set.name}</h3>
+                          <span className="text-muted-foreground whitespace-nowrap">({set.songs.length})</span>
+                          <div className={`ml-auto flex items-center gap-1 font-medium ${varianceColor} shrink-0`}>
+                            <span className="whitespace-nowrap">{formatDuration(totalDuration)}/{formatDuration(set.targetDuration)}</span>
+                            <span className="whitespace-nowrap">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
                           </div>
-                          <div className={`flex items-center justify-between text-xs ${varianceColor}`}>
-                            <div>
-                              <span className="font-medium">{formatDuration(totalDuration)}</span>
-                              <span className="text-muted-foreground mx-1">/</span>
-                              <span>{formatDuration(set.targetDuration)}</span>
-                            </div>
-                            <div className="font-medium">
-                              ({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)
-                            </div>
-                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSetCollapse(set.id);
+                            }}
+                            className="text-muted-foreground hover:text-foreground p-1 transition-colors shrink-0 ml-0.5"
+                          >
+                            <i className={`fas fa-chevron-${isCollapsed ? 'down' : 'up'} text-sm`}></i>
+                          </button>
                         </div>
 
                         {/* Desktop layout - horizontal */}
