@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,19 @@ export default function ProfileForm({
     },
   });
 
+  // Update form values when initialData changes (fixes hometown not populating in edit mode)
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        firstName: initialData.firstName || "",
+        lastName: initialData.lastName || "",
+        displayName: initialData.displayName || "",
+        hometown: initialData.hometown || "",
+        instrument: initialData.instrument || undefined,
+      });
+      setAvatarUrl(initialData.avatarUrl || null);
+    }
+  }, [initialData, form]);
 
   const handleSubmit = async (data: InsertUserProfile | UpdateUserProfile) => {
     try {
