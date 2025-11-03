@@ -10,6 +10,7 @@ import IssueForm from "@/components/ui/issue-form";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
+import { formatDisplayName } from "@/lib/display-name-utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   Menu,
@@ -127,7 +128,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                                 {currentMembership.artist?.name || currentMembership.name}
                               </div>
                               <div className="text-sm text-muted-foreground truncate">
-                                {currentMembership.resolved_display_name || currentMembership.display_name} • {currentMembership.role}
+                                {formatDisplayName(currentMembership.resolved_display_name || currentMembership.display_name)} • {currentMembership.role}
                               </div>
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -186,7 +187,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                                   {membership.artist?.name || membership.name}
                                 </div>
                                 <div className="text-sm text-muted-foreground truncate">
-                                  {membership.resolved_display_name || membership.display_name} • {membership.role}
+                                  {formatDisplayName(membership.resolved_display_name || membership.display_name)} • {membership.role}
                                 </div>
                               </div>
                             </DropdownMenuItem>

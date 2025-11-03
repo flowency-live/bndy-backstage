@@ -37,10 +37,14 @@ export default function LocationAutocomplete({
   const initialValue = useRef(value);
   const justSelectedRef = useRef(false); // Track if user just selected from dropdown
 
-  // Sync external value changes
+  // Sync external value changes and update initialValue ref
   useEffect(() => {
+    // Update initialValue ref when value changes from parent (like form reset)
+    if (value && value !== searchTerm) {
+      initialValue.current = value;
+    }
     setSearchTerm(value);
-  }, [value]);
+  }, [value, searchTerm]);
 
   // Handle search with debouncing
   useEffect(() => {

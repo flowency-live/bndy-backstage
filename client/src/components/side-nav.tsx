@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
+import { formatDisplayName } from "@/lib/display-name-utils";
 import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -145,7 +146,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                         )}
                         <div className="text-left min-w-0 flex-1">
                           <div className="font-medium text-sm truncate text-foreground">{currentMembership.artist?.name || currentMembership.name}</div>
-                          <div className="text-xs text-muted-foreground truncate">{currentMembership.resolved_display_name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{formatDisplayName(currentMembership.resolved_display_name)}</div>
                         </div>
                       </>
                     ) : (

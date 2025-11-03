@@ -462,7 +462,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
             {activeTab === 'artist' && (
               <div>
                 <div className="mb-4">
-                  <h2 className="text-2xl font-serif font-bold text-brand-primary">Artist Profile</h2>
+                  <h2 className="text-2xl font-serif font-bold text-foreground">Artist Profile</h2>
                 </div>
 
                 <form onSubmit={(e) => {
@@ -691,7 +691,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
             {activeTab === 'members' && (
               <div>
                 <div className="mb-4">
-                  <h2 className="text-2xl font-serif font-bold text-brand-primary">Members</h2>
+                  <h2 className="text-2xl font-serif font-bold text-foreground">Members</h2>
                 </div>
 
                 {/* Current Members */}
@@ -765,7 +765,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
                 {/* Magic Link Invites - only for admins and owners */}
                 {(membership.role === 'admin' || membership.role === 'owner') && (
                   <div className="border-t pt-4">
-                    <h3 className="text-xl font-sans font-semibold text-brand-primary mb-4">Magic Link Invites</h3>
+                    <h3 className="text-xl font-sans font-semibold text-foreground mb-4">Magic Link Invites</h3>
 
                     {/* General Invite Link */}
                     <div className="mb-4 p-4 bg-muted/50 rounded-lg">
