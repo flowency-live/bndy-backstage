@@ -850,6 +850,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               color="hsl(271, 91%, 65%)"
               onClick={() => setLocation("/calendar")}
               className="animate-stagger-1"
+              data-testid="tile-calendar"
             />
 
             <DashboardTile
@@ -859,6 +860,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               count={upcomingGigs}
               onClick={() => setLocation("/gigs")}
               className="animate-stagger-2"
+              data-testid="tile-gigs"
             />
 
             <DashboardTile
@@ -867,6 +869,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               color="hsl(220, 13%, 51%)"
               onClick={() => setLocation("/admin")}
               className="animate-stagger-3"
+              data-testid="tile-admin"
             />
           </div>
         </div>
@@ -882,6 +885,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               count={totalSongs}
               onClick={() => setLocation("/songs")}
               className="animate-stagger-1"
+              data-testid="tile-playbook"
             />
 
             <DashboardTile
@@ -891,6 +895,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               count={setlists.length}
               onClick={() => setLocation("/setlists")}
               className="animate-stagger-2"
+              data-testid="tile-setlists"
             />
 
             <DashboardTile
@@ -900,6 +905,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               count={pipelineCount}
               onClick={() => setLocation("/pipeline")}
               className="animate-stagger-3"
+              data-testid="tile-pipeline"
             />
           </div>
         </div>

@@ -22,58 +22,55 @@ export function OnboardingTour() {
       showProgress: true,
       showButtons: ['next', 'previous', 'close'],
       animate: true,
-      overlayOpacity: 0.2,
+      overlayOpacity: 0.5,
       smoothScroll: true,
       steps: [
         {
-          element: '[data-testid="nav-dashboard"]',
           popover: {
             title: 'Welcome to bndy!',
-            description: 'Your command center for managing events, songs, and band activities.',
-            side: 'right',
-            align: 'center'
+            description: 'Let\'s take a quick tour of your dashboard',
           }
         },
         {
-          element: '[data-testid="nav-calendar"]',
+          element: '[data-testid="tile-calendar"]',
           popover: {
             title: 'Calendar',
-            description: 'View and manage all your gigs, rehearsals, and availability in one place.',
-            side: 'right',
+            description: 'View and manage all your gigs, rehearsals, and availability',
+            side: 'bottom',
             align: 'center'
           }
         },
         {
-          element: '[data-testid="nav-playbook"]',
+          element: '[data-testid="tile-playbook"]',
           popover: {
             title: 'Playbook',
-            description: 'Your song library and setlists - perfect for planning performances.',
-            side: 'right',
+            description: 'Your song library and setlists',
+            side: 'bottom',
             align: 'center'
           }
         },
         {
-          element: '[data-testid="nav-pipeline"]',
+          element: '[data-testid="tile-pipeline"]',
           popover: {
             title: 'Pipeline',
-            description: 'Collaborate on new songs with voting and practice tracking.',
-            side: 'right',
+            description: 'Collaborate on new songs with voting',
+            side: 'bottom',
             align: 'center'
           }
         },
         {
-          element: '[data-testid="nav-admin"]',
+          element: '[data-testid="tile-admin"]',
           popover: {
             title: 'Admin',
-            description: 'Manage your artist profile, band members, and settings.',
-            side: 'right',
+            description: 'Manage your artist profile and band members',
+            side: 'bottom',
             align: 'center'
           }
         },
         {
           popover: {
             title: 'Ready to rock!',
-            description: 'You can restart this tour anytime from your profile menu.',
+            description: 'Restart this tour anytime from your profile menu',
           }
         }
       ],
