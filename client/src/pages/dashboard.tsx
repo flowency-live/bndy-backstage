@@ -837,8 +837,13 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
       {/* Main Content Container - Edge to Edge on Mobile */}
       <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
-        {/* Gig Alert Banner */}
-        <GigAlertBanner artistId={artistId} className="mb-3 sm:mb-4" />
+        {/* Gig Alert Banner - receives events from dashboard to avoid duplicate API call */}
+        <GigAlertBanner
+          artistId={artistId}
+          events={upcomingEvents}
+          isLoading={eventsLoading}
+          className="mb-3 sm:mb-4"
+        />
 
         {/* Calendar & Gigs Section */}
         <div className="mb-6 sm:mb-8">

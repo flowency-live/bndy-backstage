@@ -123,7 +123,9 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 text-xl border-b border-black pb-2">
+                    <div className={`flex items-center gap-4 text-xl pb-2 ${
+                      !song.segueInto ? 'border-b border-black' : ''
+                    }`}>
                       {/* Track number */}
                       <div className="w-12 text-right font-bold text-black shrink-0">
                         {idx + 1}.

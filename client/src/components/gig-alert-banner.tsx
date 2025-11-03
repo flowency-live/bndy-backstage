@@ -1,17 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useServerAuth } from "@/hooks/useServerAuth";
 import type { Event } from "@/types/api";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 
 interface GigAlertBannerProps {
   artistId: string;
+  events: Event[];           // NEW: receive from parent
+  isLoading?: boolean;       // NEW: loading state
   className?: string;
 }
 
-export default function GigAlertBanner({ artistId, className = "" }: GigAlertBannerProps) {
-  const { session } = useServerAuth();
-
+export default function GigAlertBanner({
+  artistId,
+  events,
+  isLoading,
+  className = ""
+}: GigAlertBannerProps) {
   // Get today's and tomorrow's dates
   const today = new Date();
   const tomorrow = new Date(today);
@@ -20,38 +23,16 @@ export default function GigAlertBanner({ artistId, className = "" }: GigAlertBan
   const todayStr = format(today, "yyyy-MM-dd");
   const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 
-  // Fetch today's and tomorrow's events
-  const { data: upcomingGigs = [] } = useQuery<Event[]>({
-    queryKey: ["/api/artists", artistId, "events", "upcoming-gigs", todayStr],
-    queryFn: async () => {
-      if (!session) {
-        throw new Error("Not authenticated");
-      }
+  // Show skeleton while loading
+  if (isLoading) {
+    return <div className="w-full h-16 bg-muted animate-pulse rounded-lg mb-3 sm:mb-4" />;
+  }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/calendar?startDate=${todayStr}&endDate=${tomorrowStr}`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch events");
-      }
-
-      const data = await response.json();
-
-      // Banner shows only THIS artist's gigs (not other artists)
-      const artistEvents = data.artistEvents || [];
-
-      // Filter for gigs only (today or tomorrow)
-      return artistEvents.filter((event: Event) =>
-        event.type === "gig" &&
-        (event.date === todayStr || event.date === tomorrowStr)
-      );
-    },
-    enabled: !!session && !!artistId,
-  });
+  // Filter events client-side for gigs only (today or tomorrow)
+  const upcomingGigs = events.filter((event: Event) =>
+    event.type === "gig" &&
+    (event.date === todayStr || event.date === tomorrowStr)
+  );
 
   const todayGigs = upcomingGigs.filter(g => g.date === todayStr);
   const tomorrowGigs = upcomingGigs.filter(g => g.date === tomorrowStr);
