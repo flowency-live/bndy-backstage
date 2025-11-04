@@ -13,6 +13,7 @@ import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { useToast } from "@/hooks/use-toast";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
+import { useServerAuth } from "@/hooks/useServerAuth";
 import {
   Menu,
   X,
@@ -38,12 +39,26 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [isOpen, setIsOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
   const { toast } = useToast();
+  const { signOut } = useServerAuth();
   const { clearArtistSelection, userProfile, selectArtist, currentArtistId } = useUser();
 
   const handleExitArtist = () => {
     clearArtistSelection();
     setLocation('/dashboard');
     setIsOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    // Clear localStorage
+    localStorage.removeItem('bndy-selected-artist-id');
+    localStorage.removeItem('bndy-selected-band-id');
+    localStorage.removeItem('bndy-current-user');
+
+    // Close the sheet
+    setIsOpen(false);
+
+    // Call signOut (which handles redirect)
+    await signOut();
   };
 
   // Don't show header on auth pages
@@ -291,10 +306,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         </Button>
                         <Button
                           variant="ghost"
-                          onClick={() => {
-                            logout();
-                            setIsOpen(false);
-                          }}
+                          onClick={handleSignOut}
                           className="w-full justify-start text-muted-foreground hover:text-foreground"
                           data-testid="button-sign-out"
                         >
