@@ -317,21 +317,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Fetch setlist from database
   const { data: setlist, isLoading: setlistLoading } = useQuery<Setlist>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId, "v3"],
+    queryKey: ["/api/artists", artistId, "setlists", setlistId, "v3"],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch setlist");
-      }
-
-      const setlistData = await response.json();
-      return setlistData;
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.getSetlist(artistId, setlistId);
     },
     enabled: !!artistId && !!setlistId,
     staleTime: 0,
@@ -342,20 +332,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
 
   // Fetch playbook songs
   const { data: playbookSongs = [], isLoading: songsLoading } = useQuery<PlaybookSong[]>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
+    queryKey: ["/api/artists", artistId, "songs"],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch songs");
-      }
-
-      const data = await response.json();
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      const data = await songsService.getArtistSongs(artistId);
 
       if (!Array.isArray(data)) {
         return [];
@@ -411,22 +392,9 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
   // Update setlist mutation with optimistic updates
   const updateSetlistMutation = useMutation({
     mutationFn: async (updates: Partial<Setlist>) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update setlist");
-      }
-
-      const data = await response.json();
-      return data;
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.updateSetlist(artistId, setlistId, updates);
     },
     onError: (error: Error) => {
       toast({
@@ -438,7 +406,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     onSuccess: (data, variables, context: any) => {
       // Update cache with server response
       queryClient.setQueryData(
-        ["https://api.bndy.co.uk/api/artists", artistId, "setlists", setlistId],
+        ["/api/artists", artistId, "setlists", setlistId],
         data
       );
 

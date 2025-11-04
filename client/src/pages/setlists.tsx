@@ -53,21 +53,11 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
 
   // Fetch all setlists for this artist
   const { data: setlists = [], isLoading } = useQuery<Setlist[]>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists", "v3"],
+    queryKey: ["/api/artists", artistId, "setlists", "v3"],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch setlists");
-      }
-
-      const data = await response.json();
-      return data;
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.getArtistSetlists(artistId);
     },
     enabled: !!artistId,
     staleTime: 0,
@@ -79,27 +69,12 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   // Create setlist mutation
   const createSetlistMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          created_by_membership_id: membership.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create setlist");
-      }
-
-      return response.json();
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.createSetlist(artistId, { name });
     },
     onSuccess: (newSetlist) => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
       toast({ title: "Setlist created!" });
       setShowCreateModal(false);
       setNewSetlistName('');
@@ -117,23 +92,12 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   // Delete setlist mutation
   const deleteSetlistMutation = useMutation({
     mutationFn: async (setlistId: string) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete setlist");
-      }
-
-      return response.json();
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.deleteSetlist(artistId, setlistId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
       toast({ title: "Setlist deleted" });
     },
     onError: (error: Error) => {
@@ -148,26 +112,13 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   // Copy setlist mutation
   const copySetlistMutation = useMutation({
     mutationFn: async (setlistId: string) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}/copy`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          created_by_membership_id: membership.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to copy setlist");
-      }
-
-      return response.json();
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      const setlist = setlists.find(s => s.id === setlistId);
+      return setlistsService.duplicateSetlist(artistId, setlistId, `${setlist?.name || 'Setlist'} (Copy)`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
       toast({ title: "Setlist copied!" });
     },
     onError: (error: Error) => {
@@ -182,24 +133,12 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   // Update setlist mutation
   const updateSetlistMutation = useMutation({
     mutationFn: async ({ setlistId, updates }: { setlistId: string; updates: Partial<Setlist> }) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists/${setlistId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update setlist");
-      }
-
-      return response.json();
+      // Use setlists-service instead of direct fetch
+      const { setlistsService } = await import("@/lib/services/setlists-service");
+      return setlistsService.updateSetlist(artistId, setlistId, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
       toast({ title: "Setlist updated!" });
     },
     onError: (error: Error) => {
