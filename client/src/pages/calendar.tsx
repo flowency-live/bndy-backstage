@@ -416,9 +416,12 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
   const getAgendaEvents = () => {
     return events
       .filter(event => {
+        // Filter out unavailability events in agenda view
+        if (event.type === 'unavailable') return false;
+
         const eventDate = new Date(event.date + 'T00:00:00');
         const eventEndDate = event.endDate ? new Date(event.endDate + 'T00:00:00') : eventDate;
-        
+
         // Include events that start, end, or span within the current month
         return (eventDate >= monthStart && eventDate <= monthEnd) ||
                (eventEndDate >= monthStart && eventEndDate <= monthEnd) ||
@@ -1037,21 +1040,21 @@ export default function Calendar({ artistId, membership }: CalendarProps) {
                 return (
                 <div
                   key={event.id}
-                  className="bg-card rounded-lg p-4 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-card rounded-lg p-3 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => showEventDetailsModal(event)}
                   data-testid={`agenda-event-${event.id}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground"
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground"
                          style={{ backgroundColor }}>
-                      <span className="text-xl">{EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
+                      <span className="text-lg">{EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]?.icon || EVENT_TYPE_CONFIG.practice.icon}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-sans font-semibold text-card-foreground">
+                      <h4 className="font-sans font-semibold text-sm text-card-foreground">
                         {getEventDisplayName(event)}
                       </h4>
-                      <p className="text-muted-foreground">
-                        {format(new Date(event.date + 'T00:00:00'), "EEEE, MMMM do")}
+                      <p className="text-muted-foreground text-sm">
+                        {format(new Date(event.date + 'T00:00:00'), "EEE d MMM")}
                         {event.startTime && ` • ${formatEventTime(event)}`}
                       </p>
                       {(event.venue || event.location) && (
