@@ -112,6 +112,14 @@ class BandsService {
   }
 
   /**
+   * Get artist members (new architecture)
+   */
+  async getArtistMembers(artistId: string): Promise<any> {
+    const response = await this.apiRequest<{ members: any[] }>(`/api/artists/${artistId}/members`);
+    return response.members || response;
+  }
+
+  /**
    * Get band events within date range
    */
   async getBandEvents(bandId: string, startDate: string, endDate: string): Promise<BandEvent[]> {

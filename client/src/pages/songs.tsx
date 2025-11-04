@@ -89,20 +89,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   // Get songs for this band using new band-scoped API
   const { data: songs = [], isLoading } = useQuery<SongWithDetails[]>({
-    queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
+    queryKey: ["/api/artists", artistId, "songs"],
     queryFn: async () => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch songs");
-      }
-
-      const data = await response.json();
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      const data = await songsService.getArtistSongs(artistId);
 
       // Transform the API response to match our interface
       const transformed = data.map((item: any) => {
@@ -145,46 +136,21 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const { data: artistMembers = [] } = useQuery<(ArtistMembership & { user: any })[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch artist members");
-      }
-
-      const data = await response.json();
-      return data.members;
+      // Use bands-service instead of direct fetch
+      const { bandsService } = await import("@/lib/services/bands-service");
+      return bandsService.getArtistMembers(artistId);
     },
     enabled: !!session?.access_token && !!artistId,
   });
 
   const updateReadinessMutation = useMutation({
     mutationFn: async ({ songId, status }: { songId: string; status: "red" | "amber" | "green" }) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-      
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/readiness`, {
-        method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json" 
-        },
-        body: JSON.stringify({ membershipId: membership.id, status }),
-      });
-      if (!response.ok) throw new Error("Failed to update readiness");
-      return response.json();
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      return songsService.updateReadiness(artistId, songId, status);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update readiness", variant: "destructive" });
@@ -193,32 +159,12 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   const toggleVetoMutation = useMutation({
     mutationFn: async ({ songId, hasVeto }: { songId: string; hasVeto: boolean }) => {
-      if (!session?.access_token) {
-        throw new Error("No access token");
-      }
-      
-      if (hasVeto) {
-        const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/veto/${membership.id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-        });
-        if (!response.ok) throw new Error("Failed to remove veto");
-      } else {
-        const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/songs/${songId}/veto`, {
-          method: "POST",
-          headers: { 
-            "Authorization": `Bearer ${session.access_token}`,
-            "Content-Type": "application/json" 
-          },
-          body: JSON.stringify({ membershipId: membership.id }),
-        });
-        if (!response.ok) throw new Error("Failed to add veto");
-      }
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      return songsService.toggleVeto(artistId, songId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
     },
     onError: () => {
       toast({ title: "Failed to update", variant: "destructive" });
@@ -227,28 +173,13 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   const deleteSongMutation = useMutation({
     mutationFn: async (songData: { songId: string; spotifyId: string }) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook/${songData.songId}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete song");
-      }
-
-      // 204 No Content returns empty body, don't try to parse JSON
-      if (response.status === 204) {
-        return { success: true };
-      }
-
-      return response.json();
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      await songsService.deleteSong(artistId, songData.songId);
+      return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
       toast({ title: "Song removed from playbook" });
     },
     onError: (error: Error) => {
@@ -258,26 +189,14 @@ export default function Songs({ artistId, membership }: SongsProps) {
 
   const updateSongMutation = useMutation({
     mutationFn: async ({ songId, updates }: { songId: string; updates: any }) => {
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook/${songId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update song");
-      }
-
-      return response.json();
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
+      return songsService.updateSong(artistId, songId, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
       // Also invalidate setlists so title/duration changes reflect in setlists
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
       toast({ title: "Song updated" });
       setEditedSongs({});
     },

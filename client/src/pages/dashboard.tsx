@@ -611,18 +611,13 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       const nextMonth = new Date();
       nextMonth.setMonth(today.getMonth() + 1);
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/calendar?startDate=${format(today, "yyyy-MM-dd")}&endDate=${format(nextMonth, "yyyy-MM-dd")}`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch events");
-      }
-
-      const data = await response.json();
+      // Use events-service instead of direct fetch
+      const { eventsService } = await import("@/lib/services/events-service");
+      const data = await eventsService.getArtistCalendar(
+        artistId,
+        format(today, "yyyy-MM-dd"),
+        format(nextMonth, "yyyy-MM-dd")
+      );
 
       // Dashboard shows only THIS artist's events (not user unavailability or other artists)
       const artistEvents = data.artistEvents || [];
