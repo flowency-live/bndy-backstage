@@ -157,10 +157,48 @@ export default function Login() {
       // Invalidate auth queries for fresh session data
       queryClient.invalidateQueries({ queryKey: ['/api/me'] })
 
-      // Check for pending invite and redirect accordingly
+      // Check for pending invite and validate before redirecting
       const pendingInvite = localStorage.getItem('pendingInvite')
       if (pendingInvite) {
-        setLocation(`/invite/${pendingInvite}`)
+        try {
+          // Check if user is already a member of the invite's artist
+          const inviteResponse = await fetch(`https://api.bndy.co.uk/api/invites/${pendingInvite}`, {
+            credentials: 'include'
+          })
+
+          if (!inviteResponse.ok) {
+            // Invalid invite - clear and go to dashboard
+            localStorage.removeItem('pendingInvite')
+            setLocation('/dashboard')
+            return
+          }
+
+          const inviteDetails = await inviteResponse.json()
+
+          // Check current memberships
+          const membershipsResponse = await fetch('https://api.bndy.co.uk/api/memberships/me', {
+            credentials: 'include'
+          })
+
+          if (membershipsResponse.ok) {
+            const memberships = await membershipsResponse.json()
+            const alreadyMember = memberships.artists?.some((a: any) => a.id === inviteDetails.artistId)
+
+            if (alreadyMember) {
+              // Already a member - clear stale invite and go to dashboard
+              localStorage.removeItem('pendingInvite')
+              setLocation('/dashboard')
+              return
+            }
+          }
+
+          // Still need to accept invite
+          setLocation(`/invite/${pendingInvite}`)
+        } catch (error) {
+          // Error checking invite - clear and go to dashboard
+          localStorage.removeItem('pendingInvite')
+          setLocation('/dashboard')
+        }
       } else {
         setLocation('/dashboard')
       }
