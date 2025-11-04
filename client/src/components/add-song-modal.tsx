@@ -39,79 +39,21 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
 
   const addSongMutation = useMutation({
     mutationFn: async (songData: SongSearchResult) => {
-      // If song is from bndy-songs, add directly to playbook using existing song_id
-      if (songData.source === "bndy") {
-        const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            song_id: songData.id,
-            added_by_membership_id: membership.id,
-          }),
-        });
+      // Use songs-service instead of direct fetch
+      const { songsService } = await import("@/lib/services/songs-service");
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to add song");
-        }
-
-        return response.json();
+      if (!songData.spotifyUrl) {
+        throw new Error("Spotify URL is required");
       }
 
-      // If song is from Spotify, first create in bndy-songs, then add to playbook
-      // Step 1: Create global song
-      const createSongResponse = await fetch(`https://api.bndy.co.uk/api/songs`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          title: songData.title,
-          artistName: songData.artistName,
-          album: songData.album,
-          albumImageUrl: songData.imageUrl,
-          spotifyUrl: songData.spotifyUrl,
-          duration: songData.duration,
-          genre: songData.genre || null,
-          releaseDate: songData.releaseDate || null,
-          previewUrl: songData.previewUrl || null,
-        }),
+      // Add song with Spotify URL - service handles both existing and new songs
+      return songsService.addSong(artistId, {
+        spotifyUrl: songData.spotifyUrl,
       });
-
-      if (!createSongResponse.ok) {
-        const error = await createSongResponse.json();
-        throw new Error(error.error || "Failed to create song");
-      }
-
-      const createdSong = await createSongResponse.json();
-
-      // Step 2: Add to playbook
-      const addToPlaybookResponse = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          song_id: createdSong.id,
-          added_by_membership_id: membership.id,
-        }),
-      });
-
-      if (!addToPlaybookResponse.ok) {
-        const error = await addToPlaybookResponse.json();
-        throw new Error(error.error || "Failed to add to playbook");
-      }
-
-      return addToPlaybookResponse.json();
     },
     onSuccess: () => {
       // Invalidate the songs list query to refresh the playbook view
-      queryClient.invalidateQueries({ queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "songs"] });
       toast({ title: "Song added to playbook!" });
       onClose();
       setSearchQuery("");
