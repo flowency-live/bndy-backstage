@@ -71,11 +71,6 @@ export function ServerAuthProvider({ children }: ServerAuthProviderProps) {
 
   const isAuthenticated = !!user && !!session;
 
-  // Automatic session check on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   // Periodic session refresh (every 15 minutes)
   useEffect(() => {
     if (!isAuthenticated) return;
