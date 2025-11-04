@@ -19,7 +19,7 @@ interface VenueAddModalProps {
     website?: string;
     phone?: string;
     postcode?: string;
-    socialMediaURLs?: string[];
+    socialMediaUrls?: string[];
   }) => Promise<void>;
 }
 
@@ -86,9 +86,9 @@ export default function VenueAddModal({
     setSaving(true);
     try {
       // Build social media URLs array
-      const socialMediaURLs: string[] = [];
-      if (formData.facebook.trim()) socialMediaURLs.push(formData.facebook.trim());
-      if (formData.instagram.trim()) socialMediaURLs.push(formData.instagram.trim());
+      const socialMediaUrls: string[] = [];
+      if (formData.facebook.trim()) socialMediaUrls.push(formData.facebook.trim());
+      if (formData.instagram.trim()) socialMediaUrls.push(formData.instagram.trim());
 
       await onSave({
         name: formData.name.trim(),
@@ -99,7 +99,7 @@ export default function VenueAddModal({
         website: formData.website.trim() || undefined,
         phone: formData.phone.trim() || undefined,
         postcode: formData.postcode.trim() || undefined,
-        socialMediaURLs: socialMediaURLs.length > 0 ? socialMediaURLs : undefined,
+        socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : undefined,
       });
 
       // Reset form

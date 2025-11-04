@@ -53,7 +53,7 @@ export interface Venue {
   phone: string;
   postcode: string;
   facilities: string[];
-  socialMediaURLs: Array<string | { platform: string; url: string }>;
+  socialMediaUrls: Array<string | { platform: string; url: string }>;
   profileImageUrl: string | null;
   standardTicketed: boolean;
   standardTicketInformation: string;

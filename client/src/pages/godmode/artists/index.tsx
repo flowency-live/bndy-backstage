@@ -283,9 +283,9 @@ export default function ArtistsPage() {
                             <Globe className="h-4 w-4" />
                           </a>
                         )}
-                        {artist.socialMediaURLs && Array.isArray(artist.socialMediaURLs) && artist.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
+                        {artist.socialMediaUrls && Array.isArray(artist.socialMediaUrls) && artist.socialMediaUrls.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
                           <a
-                            href={artist.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
+                            href={artist.socialMediaUrls.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"

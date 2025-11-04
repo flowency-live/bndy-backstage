@@ -348,8 +348,8 @@ export default function GodmodePage() {
     if (venueFilter === 'no-place-id') return !v.googlePlaceId;
     if (venueFilter === 'no-socials') {
       const hasSocials = v.website ||
-                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
-                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
+                        (v.socialMediaUrls && Array.isArray(v.socialMediaUrls) &&
+                         v.socialMediaUrls.some((url: string) => url && typeof url === 'string' &&
                                                (url.includes('facebook.com') || url.includes('instagram.com'))));
       return !hasSocials;
     }
@@ -401,8 +401,8 @@ export default function GodmodePage() {
     noPlaceId: venues.filter(v => !v.googlePlaceId).length,
     noSocials: venues.filter(v => {
       const hasSocials = v.website ||
-                        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
-                         v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
+                        (v.socialMediaUrls && Array.isArray(v.socialMediaUrls) &&
+                         v.socialMediaUrls.some((url: string) => url && typeof url === 'string' &&
                                                (url.includes('facebook.com') || url.includes('instagram.com'))));
       return !hasSocials;
     }).length,
@@ -569,9 +569,9 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {venue.socialMediaURLs && Array.isArray(venue.socialMediaURLs) && venue.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
+                            {venue.socialMediaUrls && Array.isArray(venue.socialMediaUrls) && venue.socialMediaUrls.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
                               <a
-                                href={venue.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
+                                href={venue.socialMediaUrls.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800"
@@ -772,9 +772,9 @@ export default function GodmodePage() {
                                 <Globe className="h-4 w-4" />
                               </a>
                             )}
-                            {artist.socialMediaURLs && Array.isArray(artist.socialMediaURLs) && artist.socialMediaURLs.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
+                            {artist.socialMediaUrls && Array.isArray(artist.socialMediaUrls) && artist.socialMediaUrls.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
                               <a
-                                href={artist.socialMediaURLs.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
+                                href={artist.socialMediaUrls.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800"

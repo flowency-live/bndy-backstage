@@ -60,8 +60,8 @@ export default function GodmodeDashboard() {
     noPlaceId: venues.filter(v => !v.googlePlaceId).length,
     noSocials: venues.filter(v => {
       const hasSocials = v.website ||
-        (v.socialMediaURLs && Array.isArray(v.socialMediaURLs) &&
-          v.socialMediaURLs.some((url: string) => url && typeof url === 'string' &&
+        (v.socialMediaUrls && Array.isArray(v.socialMediaUrls) &&
+          v.socialMediaUrls.some((url: string) => url && typeof url === 'string' &&
             (url.includes('facebook.com') || url.includes('instagram.com'))));
       return !hasSocials;
     }).length,

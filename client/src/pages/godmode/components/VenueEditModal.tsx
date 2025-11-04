@@ -49,9 +49,9 @@ export default function VenueEditModal({
     if (platform === 'facebook' && editForm.facebookUrl) return editForm.facebookUrl;
     if (platform === 'instagram' && editForm.instagramUrl) return editForm.instagramUrl;
 
-    // Check socialMediaURLs array
-    if (editForm.socialMediaURLs && Array.isArray(editForm.socialMediaURLs)) {
-      const found = editForm.socialMediaURLs.find((item: any) =>
+    // Check socialMediaUrls array
+    if (editForm.socialMediaUrls && Array.isArray(editForm.socialMediaUrls)) {
+      const found = editForm.socialMediaUrls.find((item: any) =>
         typeof item === 'object' && item.platform === platform
       );
       if (found && typeof found === 'object' && 'url' in found) {
@@ -59,7 +59,7 @@ export default function VenueEditModal({
       }
 
       // Also check if it's just an array of URL strings
-      const urlString = editForm.socialMediaURLs.find((url: any) =>
+      const urlString = editForm.socialMediaUrls.find((url: any) =>
         typeof url === 'string' && (
           (platform === 'facebook' && url.includes('facebook.com')) ||
           (platform === 'instagram' && url.includes('instagram.com'))
@@ -82,8 +82,8 @@ export default function VenueEditModal({
     if (platform === 'facebook') updated.facebookUrl = url || undefined;
     if (platform === 'instagram') updated.instagramUrl = url || undefined;
 
-    // Update socialMediaURLs array
-    const socialArray = Array.isArray(updated.socialMediaURLs) ? [...updated.socialMediaURLs] : [];
+    // Update socialMediaUrls array
+    const socialArray = Array.isArray(updated.socialMediaUrls) ? [...updated.socialMediaUrls] : [];
     const existingIndex = socialArray.findIndex((item: any) =>
       typeof item === 'object' && item.platform === platform
     );
@@ -102,7 +102,7 @@ export default function VenueEditModal({
       }
     }
 
-    updated.socialMediaURLs = socialArray;
+    updated.socialMediaUrls = socialArray;
 
     setEditForm(updated);
     setHasChanges(true);
