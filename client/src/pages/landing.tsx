@@ -1,13 +1,30 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { useForceDarkMode } from "@/hooks/use-force-dark-mode";
+import { useServerAuth } from "@/hooks/useServerAuth";
 
 export default function Landing() {
   // Force dark mode for branding consistency
   useForceDarkMode()
-  
+
   const [, setLocation] = useLocation();
+  const { checkAuth, isAuthenticated } = useServerAuth();
+
+  // Check for existing session on mount - redirect to dashboard if already logged in
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      await checkAuth();
+    };
+    checkExistingSession();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/dashboard');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleSignIn = () => {
     setLocation("/login");

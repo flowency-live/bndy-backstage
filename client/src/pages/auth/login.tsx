@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLocation } from "wouter"
 import { useServerAuth } from "@/hooks/useServerAuth"
 import { authService } from "@/lib/services/auth-service"
@@ -30,8 +30,22 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [appleLoading, setAppleLoading] = useState(false)
   const [error, setError] = useState('')
-  // Server auth handles authentication server-side
+  const { checkAuth, isAuthenticated } = useServerAuth()
   const { toast } = useToast()
+
+  // Check for existing session on mount - redirect to dashboard if already logged in
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      await checkAuth()
+    }
+    checkExistingSession()
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/dashboard')
+    }
+  }, [isAuthenticated, setLocation])
 
   const sendOTP = async (phone: string) => {
     try {
