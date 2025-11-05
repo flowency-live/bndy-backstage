@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, RefreshCw, Edit, Trash2, Save, X, Globe, Facebook, List, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { MapPin, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,8 +23,6 @@ export default function VenuesPage() {
   const [venuesError, setVenuesError] = useState<string | null>(null);
   const [venueFilter, setVenueFilter] = useState<'all' | 'no-place-id' | 'no-socials'>('all');
   const [venueSearch, setVenueSearch] = useState('');
-  const [editingVenue, setEditingVenue] = useState<string | null>(null);
-  const [venueEditForm, setVenueEditForm] = useState<Venue | null>(null);
   const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
   const [venuePage, setVenuePage] = useState(1);
   const venuesPerPage = 25;
@@ -61,19 +59,11 @@ export default function VenuesPage() {
 
   // Venue Handlers
   const handleVenueEditStart = (venue: Venue) => {
-    setEditingVenue(venue.id);
-    setVenueEditForm({ ...venue });
-  };
-
-  const handleVenueEditSave = async () => {
-    if (!venueEditForm) return;
-    try {
-      const updated = await updateVenue(venueEditForm.id, venueEditForm);
-      setVenues(venues.map(v => v.id === updated.id ? updated : v));
-      setEditingVenue(null);
-      setVenueEditForm(null);
-    } catch (err) {
-      setVenuesError(err instanceof Error ? err.message : 'Failed to save');
+    // Find the index of this venue in the venues array
+    const venueIndex = venues.findIndex(v => v.id === venue.id);
+    if (venueIndex >= 0) {
+      setVenueEditIndex(venueIndex);
+      setVenueEditModalOpen(true);
     }
   };
 
@@ -243,31 +233,17 @@ export default function VenuesPage() {
                       }
                     </td>
                     <td className="px-4 py-3">
-                      {editingVenue === venue.id ? (
-                        <Input
-                          value={venueEditForm?.name || ''}
-                          onChange={(e) => setVenueEditForm(prev => prev ? {...prev, name: e.target.value} : null)}
-                          className="h-8"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{venue.name}</span>
-                          {venue.name && venues.filter(v => v.name && String(v.name).toLowerCase() === String(venue.name).toLowerCase()).length > 1 && (
-                            <AlertCircle className="h-4 w-4 text-orange-500" title="Duplicate name detected" />
-                          )}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{venue.name}</span>
+                        {venue.name && venues.filter(v => v.name && String(v.name).toLowerCase() === String(venue.name).toLowerCase()).length > 1 && (
+                          <span title="Duplicate name detected">
+                            <AlertCircle className="h-4 w-4 text-orange-500" />
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
-                      {editingVenue === venue.id ? (
-                        <Input
-                          value={venueEditForm?.address || ''}
-                          onChange={(e) => setVenueEditForm(prev => prev ? {...prev, address: e.target.value} : null)}
-                          className="h-8"
-                        />
-                      ) : (
-                        <div className="text-sm max-w-xs truncate">{venue.address}</div>
-                      )}
+                      <div className="text-sm max-w-xs truncate">{venue.address}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
@@ -297,7 +273,9 @@ export default function VenuesPage() {
                               className="text-blue-600 hover:text-blue-800"
                               title="Facebook"
                             >
-                              <Facebook className="h-4 w-4" />
+                              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                              </svg>
                             </a>
                           );
                         })()}
@@ -322,30 +300,23 @@ export default function VenuesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        {editingVenue === venue.id ? (
-                          <>
-                            <Button size="sm" variant="default" onClick={handleVenueEditSave}>
-                              <Save className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingVenue(null)}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => handleVenueEditStart(venue)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleVenueDelete(venue.id)}
-                              disabled={deletingVenue === venue.id}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVenueEditStart(venue)}
+                          title="Edit venue details"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleVenueDelete(venue.id)}
+                          disabled={deletingVenue === venue.id}
+                          title="Delete venue"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -389,12 +360,12 @@ export default function VenuesPage() {
       {/* Confirmation Dialog */}
       <ConfirmDialog />
 
-      {/* Batch Edit Modal */}
-      {venueEditModalOpen && filteredVenues.length > 0 && (
+      {/* Edit Modal */}
+      {venueEditModalOpen && venues.length > 0 && (
         <VenueEditModal
           open={venueEditModalOpen}
           onClose={() => setVenueEditModalOpen(false)}
-          venues={filteredVenues}
+          venues={venues}
           currentIndex={venueEditIndex}
           onSave={handleVenueBatchSave}
           onNavigate={setVenueEditIndex}

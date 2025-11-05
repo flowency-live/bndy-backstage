@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, X, Plus } from 'lucide-react';
 import VenueAutocomplete from '@/components/ui/venue-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import type { Venue } from '@/types/api';
@@ -29,6 +29,7 @@ export default function VenueEditModal({
   const [editForm, setEditForm] = useState<Venue | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [newOtherName, setNewOtherName] = useState('');
 
   const currentVenue = venues[currentIndex];
 
@@ -165,6 +166,45 @@ export default function VenueEditModal({
     setHasChanges(true);
   };
 
+  const handleAddOtherName = () => {
+    if (!editForm || !newOtherName.trim()) return;
+
+    const nameVariants = editForm.nameVariants || [];
+    if (nameVariants.includes(newOtherName.trim())) {
+      toast({
+        title: 'Duplicate Name',
+        description: 'This name already exists in the list',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setEditForm({
+      ...editForm,
+      nameVariants: [...nameVariants, newOtherName.trim()],
+    });
+    setNewOtherName('');
+    setHasChanges(true);
+  };
+
+  const handleRemoveOtherName = (nameToRemove: string) => {
+    if (!editForm) return;
+
+    const nameVariants = editForm.nameVariants || [];
+    setEditForm({
+      ...editForm,
+      nameVariants: nameVariants.filter(name => name !== nameToRemove),
+    });
+    setHasChanges(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddOtherName();
+    }
+  };
+
   if (!editForm) return null;
 
   const isFirst = currentIndex === 0;
@@ -203,7 +243,7 @@ export default function VenueEditModal({
         <div className="space-y-4 py-4">
           {/* Venue Name */}
           <div>
-            <Label htmlFor="venue-name">Venue Name</Label>
+            <Label htmlFor="venue-name">Venue Name (Official)</Label>
             <Input
               id="venue-name"
               value={editForm.name || ''}
@@ -213,6 +253,55 @@ export default function VenueEditModal({
               }}
               placeholder="Enter venue name"
             />
+          </div>
+
+          {/* Also Known As / Other Names */}
+          <div>
+            <Label htmlFor="other-names">Also Known As (Alternative Names)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Add local or unofficial names that people use to refer to this venue (e.g., "Dog and Rot" for "Leek Working Mens Club")
+            </p>
+
+            {/* Display existing name variants as tags */}
+            {editForm.nameVariants && editForm.nameVariants.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {editForm.nameVariants.map((name, index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm"
+                  >
+                    <span>{name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOtherName(name)}
+                      className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Input to add new name */}
+            <div className="flex gap-2">
+              <Input
+                id="other-names"
+                value={newOtherName}
+                onChange={(e) => setNewOtherName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter alternative name and press Enter"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAddOtherName}
+                disabled={!newOtherName.trim()}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Current Address (Read-only) */}

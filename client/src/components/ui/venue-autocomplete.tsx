@@ -1,18 +1,22 @@
-// VenueAutocomplete - Google Places autocomplete for specific venues/businesses
+// VenueAutocomplete - Searches BNDY venues first, then Google Places autocomplete
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, Database, Globe, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
+import { getAllVenues, type Venue } from '@/lib/services/godmode-service';
 
-interface VenueResult {
-  placeId: string;
+interface CombinedResult {
+  id: string;
+  type: 'bndy' | 'google';
   name: string;
   address: string;
+  placeId?: string;
+  venue?: Venue;
 }
 
 interface VenueAutocompleteProps {
   value: string;
-  onChange: (placeId: string, name: string, address: string) => void;
+  onChange: (placeId: string, name: string, address: string, location?: { lat: number; lng: number }, existingVenue?: Venue) => void;
   placeholder?: string;
   className?: string;
   required?: boolean;
@@ -29,29 +33,43 @@ export default function VenueAutocomplete({
 }: VenueAutocompleteProps) {
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState(value);
-  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [bndyResults, setBndyResults] = useState<CombinedResult[]>([]);
+  const [googleResults, setGoogleResults] = useState<CombinedResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
   const justSelectedRef = useRef(false);
+  const bndyVenuesRef = useRef<Venue[]>([]);
 
   // Sync external value changes
   useEffect(() => {
     setSearchTerm(value);
   }, [value]);
 
+  // Load BNDY venues on mount
+  useEffect(() => {
+    const loadBndyVenues = async () => {
+      try {
+        const venues = await getAllVenues();
+        bndyVenuesRef.current = venues;
+      } catch (error) {
+        console.error('[VenueAutocomplete] Failed to load BNDY venues:', error);
+      }
+    };
+    loadBndyVenues();
+  }, []);
+
   // Initialize Google Places services
   useEffect(() => {
-    if (googleMapsLoaded && window.google?.maps?.places) {
+    if (googleMapsLoaded && (window as any).google?.maps?.places) {
       if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+        autocompleteServiceRef.current = new (window as any).google.maps.places.AutocompleteService();
       }
       if (!placesServiceRef.current) {
-        // Create a dummy div for PlacesService (required by Google API)
         const div = document.createElement('div');
-        placesServiceRef.current = new google.maps.places.PlacesService(div);
+        placesServiceRef.current = new (window as any).google.maps.places.PlacesService(div);
       }
     }
   }, [googleMapsLoaded]);
@@ -64,7 +82,8 @@ export default function VenueAutocomplete({
     }
 
     if (!searchTerm || searchTerm.length < 2) {
-      setPredictions([]);
+      setBndyResults([]);
+      setGoogleResults([]);
       setShowDropdown(false);
       return;
     }
@@ -72,11 +91,39 @@ export default function VenueAutocomplete({
     const searchVenues = async () => {
       setLoading(true);
 
+      // Search BNDY venues
+      const searchLower = searchTerm.toLowerCase();
+      const matchingVenues = bndyVenuesRef.current
+        .filter(v => {
+          // Check official name, address, city, and postcode
+          const nameMatch = v.name?.toLowerCase().includes(searchLower);
+          const addressMatch = v.address?.toLowerCase().includes(searchLower);
+          const cityMatch = (v as any).city?.toLowerCase().includes(searchLower);
+          const postcodeMatch = v.postcode?.toLowerCase().includes(searchLower);
+
+          // Check name variants (also known as names)
+          const variantsMatch = v.nameVariants && Array.isArray(v.nameVariants) &&
+            v.nameVariants.some(variant => variant.toLowerCase().includes(searchLower));
+
+          return nameMatch || addressMatch || cityMatch || postcodeMatch || variantsMatch;
+        })
+        .slice(0, 5)
+        .map(v => ({
+          id: v.id,
+          type: 'bndy' as const,
+          name: v.name || '',
+          address: v.address || '',
+          venue: v,
+        }));
+
+      setBndyResults(matchingVenues);
+
       // Load Google Maps if not already loaded
       if (!googleMapsLoaded) {
         await loadGoogleMaps();
       }
 
+      // Search Google Places
       try {
         if (!autocompleteServiceRef.current) {
           console.error('[VenueAutocomplete] AutocompleteService not initialized');
@@ -84,28 +131,34 @@ export default function VenueAutocomplete({
           return;
         }
 
-        // Search for establishments (businesses, venues, etc.)
         autocompleteServiceRef.current.getPlacePredictions(
           {
             input: searchTerm,
             types: ['establishment'],
             componentRestrictions: { country: 'gb' },
           },
-          (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-              setPredictions(results);
-              setShowDropdown(results.length > 0);
+          (results: any, status: any) => {
+            if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && results) {
+              const googleMatches = results.slice(0, 5).map((p: any) => ({
+                id: p.place_id,
+                type: 'google' as const,
+                name: p.structured_formatting?.main_text || p.description,
+                address: p.structured_formatting?.secondary_text || p.description,
+                placeId: p.place_id,
+              }));
+              setGoogleResults(googleMatches);
+              setShowDropdown(matchingVenues.length > 0 || googleMatches.length > 0);
             } else {
-              setPredictions([]);
-              setShowDropdown(false);
+              setGoogleResults([]);
+              setShowDropdown(matchingVenues.length > 0);
             }
             setLoading(false);
           }
         );
       } catch (error) {
         console.error('[VenueAutocomplete] Search error:', error);
-        setPredictions([]);
-        setShowDropdown(false);
+        setGoogleResults([]);
+        setShowDropdown(matchingVenues.length > 0);
         setLoading(false);
       }
     };
@@ -130,54 +183,76 @@ export default function VenueAutocomplete({
     };
   }, []);
 
-  const handleSelect = async (prediction: google.maps.places.AutocompletePrediction) => {
+  const handleSelectBndy = (result: CombinedResult) => {
     justSelectedRef.current = true;
-
-    // Clear the search term immediately to prevent reopening
     setSearchTerm('');
     setShowDropdown(false);
-    setPredictions([]);
+    setBndyResults([]);
+    setGoogleResults([]);
 
-    // Get place details to retrieve formatted address
+    if (result.venue) {
+      const location = result.venue.location ||
+        (result.venue.latitude && result.venue.longitude ?
+          { lat: result.venue.latitude, lng: result.venue.longitude } :
+          undefined);
+
+      onChange(
+        result.venue.googlePlaceId || '',
+        result.name,
+        result.address,
+        location,
+        result.venue
+      );
+    }
+  };
+
+  const handleSelectGoogle = async (result: CombinedResult) => {
+    justSelectedRef.current = true;
+    setSearchTerm('');
+    setShowDropdown(false);
+    setBndyResults([]);
+    setGoogleResults([]);
+
+    if (!result.placeId) return;
+
+    // Get place details including location
     if (placesServiceRef.current) {
       placesServiceRef.current.getDetails(
         {
-          placeId: prediction.place_id,
-          fields: ['name', 'formatted_address'],
+          placeId: result.placeId,
+          fields: ['name', 'formatted_address', 'geometry'],
         },
-        (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+        (place: any, status: any) => {
+          if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && place) {
+            const location = place.geometry?.location ? {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            } : undefined;
+
             onChange(
-              prediction.place_id,
-              place.name || prediction.structured_formatting.main_text,
-              place.formatted_address || prediction.description
+              result.placeId!,
+              place.name || result.name,
+              place.formatted_address || result.address,
+              location
             );
           } else {
-            // Fallback to prediction data if details fetch fails
-            onChange(
-              prediction.place_id,
-              prediction.structured_formatting.main_text,
-              prediction.description
-            );
+            onChange(result.placeId!, result.name, result.address);
           }
         }
       );
     } else {
-      // Fallback if PlacesService not available
-      onChange(
-        prediction.place_id,
-        prediction.structured_formatting.main_text,
-        prediction.description
-      );
+      onChange(result.placeId, result.name, result.address);
     }
   };
 
   const handleInputChange = (newValue: string) => {
     setSearchTerm(newValue);
     if (newValue !== value) {
-      onChange('', newValue, ''); // Clear place ID when manually typing
+      onChange('', newValue, '', undefined, undefined);
     }
   };
+
+  const allResults = [...bndyResults, ...googleResults];
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -199,31 +274,74 @@ export default function VenueAutocomplete({
       </div>
 
       {/* Dropdown */}
-      {showDropdown && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 overflow-hidden rounded-md border bg-popover p-1 shadow-md max-h-64 overflow-y-auto">
-          {predictions.map((prediction) => (
-            <div
-              key={prediction.place_id}
-              onClick={() => handleSelect(prediction)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleSelect(prediction);
-              }}
-              className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
-            >
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-foreground truncate">
-                  {prediction.structured_formatting?.main_text || prediction.description}
-                </div>
-                {prediction.structured_formatting?.secondary_text && (
-                  <div className="text-xs text-muted-foreground truncate">
-                    {prediction.structured_formatting.secondary_text}
+      {showDropdown && allResults.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 overflow-hidden rounded-md border bg-popover shadow-md max-h-96 overflow-y-auto">
+          {/* BNDY Results */}
+          {bndyResults.length > 0 && (
+            <div>
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-muted/50 flex items-center gap-2">
+                <Database className="h-3 w-3" />
+                BNDY Venues (Already in database)
+              </div>
+              <div className="p-1">
+                {bndyResults.map((result) => (
+                  <div
+                    key={result.id}
+                    onClick={() => handleSelectBndy(result)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleSelectBndy(result);
+                    }}
+                    className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 mb-1"
+                  >
+                    <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-foreground truncate flex items-center gap-2">
+                        {result.name}
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">EXISTS</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {result.address}
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Google Results */}
+          {googleResults.length > 0 && (
+            <div>
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground bg-muted/50 flex items-center gap-2">
+                <Globe className="h-3 w-3" />
+                Google Places (Add new venue)
+              </div>
+              <div className="p-1">
+                {googleResults.map((result) => (
+                  <div
+                    key={result.id}
+                    onClick={() => handleSelectGoogle(result)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleSelectGoogle(result);
+                    }}
+                    className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent"
+                  >
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-foreground truncate">
+                        {result.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {result.address}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
