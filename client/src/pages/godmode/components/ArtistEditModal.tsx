@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
 import LocationAutocomplete from '@/components/ui/location-autocomplete';
 import { useToast } from '@/hooks/use-toast';
-import type { Artist } from '@/types/api';
+import type { Artist } from '@/lib/services/godmode-service';
 import { Badge } from '@/components/ui/badge';
 
 // Genre list (matching CreateArtistWizard)
@@ -94,14 +94,12 @@ export default function ArtistEditModal({
     onNavigate(newIndex);
   };
 
-  const handleLocationChange = (location: string, lat?: number, lng?: number) => {
+  const handleLocationChange = (location: string) => {
     if (!editForm) return;
 
     setEditForm({
       ...editForm,
       location,
-      locationLat: lat,
-      locationLng: lng,
     });
     setHasChanges(true);
   };
@@ -180,11 +178,6 @@ export default function ArtistEditModal({
               onChange={handleLocationChange}
               placeholder="e.g., Stoke-on-Trent, Manchester, London"
             />
-            {editForm.locationLat && editForm.locationLng && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Coordinates: {editForm.locationLat.toFixed(4)}, {editForm.locationLng.toFixed(4)}
-              </p>
-            )}
           </div>
 
           {/* Genres */}
@@ -258,7 +251,7 @@ export default function ArtistEditModal({
                 type="url"
                 value={editForm.facebookUrl || ''}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, facebookUrl: e.target.value || undefined });
+                  setEditForm({ ...editForm, facebookUrl: e.target.value });
                   setHasChanges(true);
                 }}
                 placeholder="https://facebook.com/..."
@@ -274,7 +267,7 @@ export default function ArtistEditModal({
                 type="url"
                 value={editForm.instagramUrl || ''}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, instagramUrl: e.target.value || undefined });
+                  setEditForm({ ...editForm, instagramUrl: e.target.value });
                   setHasChanges(true);
                 }}
                 placeholder="https://instagram.com/..."
@@ -290,7 +283,7 @@ export default function ArtistEditModal({
                 type="url"
                 value={editForm.websiteUrl || ''}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, websiteUrl: e.target.value || undefined });
+                  setEditForm({ ...editForm, websiteUrl: e.target.value });
                   setHasChanges(true);
                 }}
                 placeholder="https://example.com"

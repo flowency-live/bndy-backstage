@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, RefreshCw, Edit, Trash2, Save, X, Globe, Facebook, List, CheckCircle } from 'lucide-react';
+import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,8 +25,6 @@ export default function ArtistsPage() {
   const [artistsError, setArtistsError] = useState<string | null>(null);
   const [artistFilter, setArtistFilter] = useState<'all' | 'no-genres' | 'no-socials' | 'no-location'>('all');
   const [artistSearch, setArtistSearch] = useState('');
-  const [editingArtist, setEditingArtist] = useState<string | null>(null);
-  const [artistEditForm, setArtistEditForm] = useState<Artist | null>(null);
   const [deletingArtist, setDeletingArtist] = useState<string | null>(null);
   const [artistPage, setArtistPage] = useState(1);
   const artistsPerPage = 25;
@@ -92,19 +90,11 @@ export default function ArtistsPage() {
 
   // Artist Handlers
   const handleArtistEditStart = (artist: Artist) => {
-    setEditingArtist(artist.id);
-    setArtistEditForm({ ...artist });
-  };
-
-  const handleArtistEditSave = async () => {
-    if (!artistEditForm) return;
-    try {
-      const updated = await updateArtist(artistEditForm.id, artistEditForm);
-      setArtists(artists.map(a => a.id === updated.id ? updated : a));
-      setEditingArtist(null);
-      setArtistEditForm(null);
-    } catch (err) {
-      setArtistsError(err instanceof Error ? err.message : 'Failed to save');
+    // Find the index of this artist in the artists array
+    const artistIndex = artists.findIndex(a => a.id === artist.id);
+    if (artistIndex >= 0) {
+      setArtistEditIndex(artistIndex);
+      setArtistEditModalOpen(true);
     }
   };
 
@@ -150,7 +140,7 @@ export default function ArtistsPage() {
       const hasSocials = a.facebookUrl || a.instagramUrl;
       return !hasSocials;
     }
-    if (artistFilter === 'no-location') return !a.location || !a.googlePlaceId;
+    if (artistFilter === 'no-location') return !a.location;
     return true;
   });
 
@@ -164,7 +154,7 @@ export default function ArtistsPage() {
     total: artists.length,
     noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
     noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
-    noLocation: artists.filter(a => !a.location || !a.googlePlaceId).length,
+    noLocation: artists.filter(a => !a.location).length,
   };
 
   return (
@@ -258,40 +248,34 @@ export default function ArtistsPage() {
                 {paginatedArtists.map(artist => (
                   <tr key={artist.id} className="hover:bg-muted/50">
                     <td className="px-4 py-3">
-                      {editingArtist === artist.id ? (
-                        <Input
-                          value={artistEditForm?.name || ''}
-                          onChange={(e) => setArtistEditForm(prev => prev ? {...prev, name: e.target.value} : null)}
-                          className="h-8"
-                        />
-                      ) : (
-                        <div className="font-medium">{artist.name}</div>
-                      )}
+                      <div className="font-medium">{artist.name}</div>
                     </td>
                     <td className="px-4 py-3 text-sm">{artist.location}</td>
                     <td className="px-4 py-3 text-sm">{Array.isArray(artist.genres) ? artist.genres.slice(0, 2).join(', ') : (artist.genres || '-')}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        {artist.website && (
+                        {artist.websiteUrl && (
                           <a
-                            href={artist.website}
+                            href={artist.websiteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"
-                            title={artist.website}
+                            title={artist.websiteUrl}
                           >
                             <Globe className="h-4 w-4" />
                           </a>
                         )}
-                        {artist.socialMediaUrls && Array.isArray(artist.socialMediaUrls) && artist.socialMediaUrls.some((url: string) => url && typeof url === 'string' && url.includes('facebook.com')) && (
+                        {artist.facebookUrl && (
                           <a
-                            href={artist.socialMediaUrls.find((url: string) => url && typeof url === 'string' && url.includes('facebook.com'))}
+                            href={artist.facebookUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"
                             title="Facebook"
                           >
-                            <Facebook className="h-4 w-4" />
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
                           </a>
                         )}
                       </div>
@@ -327,30 +311,23 @@ export default function ArtistsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        {editingArtist === artist.id ? (
-                          <>
-                            <Button size="sm" variant="default" onClick={handleArtistEditSave}>
-                              <Save className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingArtist(null)}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => handleArtistEditStart(artist)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleArtistDelete(artist.id)}
-                              disabled={deletingArtist === artist.id}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleArtistEditStart(artist)}
+                          title="Edit artist details"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleArtistDelete(artist.id)}
+                          disabled={deletingArtist === artist.id}
+                          title="Delete artist"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -394,12 +371,12 @@ export default function ArtistsPage() {
       {/* Confirmation Dialog */}
       <ConfirmDialog />
 
-      {/* Batch Edit Modal */}
-      {artistEditModalOpen && filteredArtists.length > 0 && (
+      {/* Edit Modal */}
+      {artistEditModalOpen && artists.length > 0 && (
         <ArtistEditModal
           open={artistEditModalOpen}
           onClose={() => setArtistEditModalOpen(false)}
-          artists={filteredArtists}
+          artists={artists}
           currentIndex={artistEditIndex}
           onSave={handleArtistBatchSave}
           onNavigate={setArtistEditIndex}
