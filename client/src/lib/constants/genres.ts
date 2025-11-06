@@ -66,6 +66,63 @@ export const GENRES = [
 
 export type Genre = typeof GENRES[number];
 
+// Genre categories for organized display
+export interface GenreCategory {
+  name: string;
+  genres: readonly Genre[];
+}
+
+export const GENRE_CATEGORIES: readonly GenreCategory[] = [
+  {
+    name: 'Rock',
+    genres: ['Rock', 'Rock n Roll', 'Hard Rock', 'Soft Rock', 'Classic Rock', 'Grunge', 'Psychedelic Rock']
+  },
+  {
+    name: 'Metal',
+    genres: ['Metal', 'Heavy Metal']
+  },
+  {
+    name: 'Pop & Indie',
+    genres: ['Pop', 'Indie', 'Britpop', 'Alternative', 'Pop Punk']
+  },
+  {
+    name: 'Punk',
+    genres: ['Punk']
+  },
+  {
+    name: 'Blues & Country',
+    genres: ['Blues', 'Country', 'Americana']
+  },
+  {
+    name: 'Folk & Acoustic',
+    genres: ['Folk', 'Acoustic']
+  },
+  {
+    name: 'Soul, R&B & Funk',
+    genres: ['Soul', 'R&B', 'Motown', 'Funk']
+  },
+  {
+    name: 'Electronic & Dance',
+    genres: ['Electronic', 'Dance', '90s Dance']
+  },
+  {
+    name: 'Hip Hop',
+    genres: ['Hip Hop']
+  },
+  {
+    name: 'Jazz & Classical',
+    genres: ['Jazz', 'Classical']
+  },
+  {
+    name: 'World & Latin',
+    genres: ['Reggae', 'Latin']
+  },
+  {
+    name: 'Other',
+    genres: ['Covers', 'Tribute', 'Disco', 'Other']
+  }
+] as const;
+
 // Helper function to validate genre
 export function isValidGenre(genre: string): genre is Genre {
   return GENRES.includes(genre as Genre);

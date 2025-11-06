@@ -3,12 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import LocationAutocomplete from '@/components/ui/location-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
-import { Badge } from '@/components/ui/badge';
-import { GENRES } from '@/lib/constants/genres';
+import { GenreSelector } from '@/components/ui/genre-selector';
 
 interface ArtistEditModalProps {
   open: boolean;
@@ -31,7 +30,6 @@ export default function ArtistEditModal({
   const [editForm, setEditForm] = useState<Artist | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [showGenreDropdown, setShowGenreDropdown] = useState(false);
 
   const currentArtist = artists[currentIndex];
 
@@ -98,17 +96,11 @@ export default function ArtistEditModal({
     setHasChanges(true);
   };
 
-  const toggleGenre = (genre: string) => {
+  const handleGenresChange = (genres: string[]) => {
     if (!editForm) return;
-
-    const currentGenres = Array.isArray(editForm.genres) ? editForm.genres : [];
-    const newGenres = currentGenres.includes(genre)
-      ? currentGenres.filter(g => g !== genre)
-      : [...currentGenres, genre];
-
     setEditForm({
       ...editForm,
-      genres: newGenres,
+      genres,
     });
     setHasChanges(true);
   };
@@ -177,59 +169,10 @@ export default function ArtistEditModal({
           {/* Genres */}
           <div>
             <Label>Genres</Label>
-            <div className="space-y-2">
-              {/* Selected Genres */}
-              {selectedGenres.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedGenres.map((genre) => (
-                    <Badge
-                      key={genre}
-                      variant="default"
-                      className="cursor-pointer hover:bg-destructive"
-                      onClick={() => toggleGenre(genre)}
-                    >
-                      {genre}
-                      <X className="h-3 w-3 ml-1" />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Genre Selector */}
-              <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setShowGenreDropdown(!showGenreDropdown)}
-                >
-                  {selectedGenres.length === 0 ? 'Select genres...' : 'Add more genres...'}
-                </Button>
-
-                {showGenreDropdown && (
-                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
-                    {GENRES.map((genre) => (
-                      <div
-                        key={genre}
-                        onClick={() => {
-                          toggleGenre(genre);
-                        }}
-                        className={`px-3 py-2 cursor-pointer hover:bg-accent ${
-                          selectedGenres.includes(genre) ? 'bg-accent' : ''
-                        }`}
-                      >
-                        <span className={selectedGenres.includes(genre) ? 'font-semibold' : ''}>
-                          {genre}
-                        </span>
-                        {selectedGenres.includes(genre) && (
-                          <span className="ml-2 text-primary">✓</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <GenreSelector
+              selectedGenres={selectedGenres}
+              onChange={handleGenresChange}
+            />
           </div>
 
           {/* Social Media URLs */}

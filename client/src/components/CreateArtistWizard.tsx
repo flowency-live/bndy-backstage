@@ -8,7 +8,7 @@ import ImageUpload from "@/components/ui/image-upload";
 import LocationAutocomplete from "@/components/ui/location-autocomplete";
 import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
-import { GENRES } from "@/lib/constants/genres";
+import { GenreSelector } from "@/components/ui/genre-selector";
 
 // Hardcoded artist types for initial implementation
 // Will be fetched from backend configuration later
@@ -198,13 +198,11 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
     setTimeout(() => setCurrentStep(2), 300);
   };
 
-  // Toggle genre selection
-  const toggleGenre = (genre: string) => {
+  // Handle genre selection
+  const handleGenresChange = (genres: string[]) => {
     setWizardData(prev => ({
       ...prev,
-      genres: prev.genres.includes(genre)
-        ? prev.genres.filter(g => g !== genre)
-        : [...prev.genres, genre]
+      genres
     }));
   };
 
@@ -402,23 +400,10 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
               <div>
                 <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
                 <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
-                <div className="flex flex-wrap gap-2">
-                  {GENRES.map((genre) => (
-                    <button
-                      key={genre}
-                      type="button"
-                      onClick={() => toggleGenre(genre)}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                        wizardData.genres.includes(genre)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      }`}
-                      data-testid={`badge-genre-${genre.toLowerCase()}`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
-                </div>
+                <GenreSelector
+                  selectedGenres={wizardData.genres}
+                  onChange={handleGenresChange}
+                />
               </div>
             </div>
           )}
@@ -544,23 +529,10 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
               <div>
                 <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
                 <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
-                <div className="flex flex-wrap gap-2">
-                  {GENRES.map((genre) => (
-                    <button
-                      key={genre}
-                      type="button"
-                      onClick={() => toggleGenre(genre)}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                        wizardData.genres.includes(genre)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      }`}
-                      data-testid={`badge-genre-${genre.toLowerCase()}`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
-                </div>
+                <GenreSelector
+                  selectedGenres={wizardData.genres}
+                  onChange={handleGenresChange}
+                />
               </div>
             </div>
           )}

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/ui/image-upload";
 import LocationAutocomplete from "@/components/ui/location-autocomplete";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter, FaGlobe } from "react-icons/fa6";
+import { GenreSelector } from "@/components/ui/genre-selector";
 
 interface AdminProps {
   artistId: string;
@@ -62,6 +63,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
     locationLng: artistData?.locationLng || membership.artist?.locationLng || undefined,
     avatar: artistData?.profileImageUrl || membership.artist?.profileImageUrl || null,
     displayColour: artistData?.displayColour || membership.artist?.displayColour || '#f97316', // Orange 500
+    genres: artistData?.genres || [],
     facebookUrl: artistData?.facebookUrl || '',
     instagramUrl: artistData?.instagramUrl || '',
     websiteUrl: artistData?.websiteUrl || '',
@@ -81,6 +83,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLng: artistData.locationLng || undefined,
         avatar: artistData.profileImageUrl || null,
         displayColour: artistData.displayColour || '#f97316', // Orange 500
+        genres: artistData.genres || [],
         facebookUrl: artistData.facebookUrl || '',
         instagramUrl: artistData.instagramUrl || '',
         websiteUrl: artistData.websiteUrl || '',
@@ -223,6 +226,7 @@ export default function Admin({ artistId, membership }: AdminProps) {
         locationLng: settings.locationLng,
         profileImageUrl: settings.avatar,
         displayColour: settings.displayColour,
+        genres: settings.genres,
         facebookUrl: settings.facebookUrl || null,
         instagramUrl: settings.instagramUrl || null,
         websiteUrl: settings.websiteUrl || null,
@@ -563,6 +567,15 @@ export default function Admin({ artistId, membership }: AdminProps) {
                         />
                       ))}
                     </div>
+                  </div>
+
+                  {/* Genres */}
+                  <div>
+                    <Label className="text-card-foreground font-semibold mb-3 block">Genres</Label>
+                    <GenreSelector
+                      selectedGenres={artistSettings.genres}
+                      onChange={(genres) => setArtistSettings(prev => ({ ...prev, genres }))}
+                    />
                   </div>
 
                   {/* Social Media Links */}
