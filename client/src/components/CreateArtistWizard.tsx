@@ -8,6 +8,7 @@ import ImageUpload from "@/components/ui/image-upload";
 import LocationAutocomplete from "@/components/ui/location-autocomplete";
 import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
+import { GENRES } from "@/lib/constants/genres";
 
 // Hardcoded artist types for initial implementation
 // Will be fetched from backend configuration later
@@ -18,14 +19,6 @@ const ARTIST_TYPES = [
   { value: 'solo', label: 'Solo Act', enabled: true },
   { value: 'dj', label: 'DJ', enabled: false }, // Disabled initially
 ] as const;
-
-// Hardcoded genres for initial implementation
-// Will be fetched from backend configuration later
-const GENRES = [
-  'Rock', 'Pop', 'Jazz', 'Blues', 'Country', 'Folk', 'Metal',
-  'Punk', 'Indie', 'Alternative', 'Electronic', 'Dance', 'Hip Hop',
-  'R&B', 'Soul', 'Funk', 'Reggae', 'Latin', 'Classical', 'Other'
-];
 
 type ArtistType = typeof ARTIST_TYPES[number]['value'];
 

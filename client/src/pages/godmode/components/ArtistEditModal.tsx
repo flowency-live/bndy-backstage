@@ -8,13 +8,7 @@ import LocationAutocomplete from '@/components/ui/location-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
 import { Badge } from '@/components/ui/badge';
-
-// Genre list (matching CreateArtistWizard)
-const GENRES = [
-  'Rock', 'Pop', 'Jazz', 'Blues', 'Country', 'Folk', 'Metal',
-  'Punk', 'Indie', 'Alternative', 'Electronic', 'Dance', 'Hip Hop',
-  'R&B', 'Soul', 'Funk', 'Reggae', 'Latin', 'Classical', 'Other'
-];
+import { GENRES } from '@/lib/constants/genres';
 
 interface ArtistEditModalProps {
   open: boolean;
