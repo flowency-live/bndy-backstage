@@ -167,7 +167,9 @@ export function LocationSelector({ value, onChange, onCitySearch, className, req
             onChange={(e) => {
               const selected = UK_REGIONS.find(r => r.value === e.target.value);
               if (selected) {
-                handleRegionSelect(selected.value, selected.type);
+                // Map 'country' to 'region' for the callback
+                const mappedType = selected.type === 'country' ? 'region' : selected.type;
+                handleRegionSelect(selected.value, mappedType);
               }
             }}
             style={{
