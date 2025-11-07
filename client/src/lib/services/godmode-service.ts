@@ -17,6 +17,9 @@ export interface Artist {
   isVerified: boolean;
   followerCount: number;
   claimedByUserId: string | null;
+  owner_user_id?: string | null;
+  source?: 'frontstage' | 'community' | 'backstage' | null;
+  needs_review?: boolean | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -174,6 +177,26 @@ export async function deleteArtist(artistId: string): Promise<void> {
     if (!response.ok) {
       throw new Error(`Failed to delete artist: ${response.status}`);
     }
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function markArtistAsReviewed(artistId: string): Promise<Artist> {
+  try {
+    const response = await fetch(`/api/artists/${artistId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ needs_review: false }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to mark artist as reviewed: ${response.status}`);
+    }
+
+    return await response.json();
   } catch (error) {
     throw error;
   }
