@@ -8,6 +8,7 @@ export interface Artist {
   name: string;
   bio: string;
   location: string;
+  locationType?: 'national' | 'region' | 'city';
   genres: string[];
   facebookUrl: string;
   instagramUrl: string;

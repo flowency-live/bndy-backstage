@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
-import LocationAutocomplete from '@/components/ui/location-autocomplete';
+import { LocationSelector } from '@/components/ui/location-selector';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
 import { GenreSelector } from '@/components/ui/genre-selector';
+import { searchLocationAutocomplete } from '@/lib/services/places-service';
 
 interface ArtistEditModalProps {
   open: boolean;
@@ -86,14 +87,25 @@ export default function ArtistEditModal({
     onNavigate(newIndex);
   };
 
-  const handleLocationChange = (location: string) => {
+  const handleLocationChange = (location: string, locationType: 'national' | 'region' | 'city') => {
     if (!editForm) return;
 
     setEditForm({
       ...editForm,
       location,
+      locationType,
     });
     setHasChanges(true);
+  };
+
+  const handleCitySearch = async (query: string) => {
+    const predictions = await searchLocationAutocomplete(query);
+    return predictions.map(p => ({
+      place_id: p.place_id,
+      description: p.description,
+      main_text: p.structured_formatting?.main_text || '',
+      secondary_text: p.structured_formatting?.secondary_text || '',
+    }));
   };
 
   const handleGenresChange = (genres: string[]) => {
@@ -158,11 +170,12 @@ export default function ArtistEditModal({
 
           {/* Location */}
           <div>
-            <Label htmlFor="artist-location">Location (City/Town)</Label>
-            <LocationAutocomplete
+            <Label htmlFor="artist-location">Location</Label>
+            <LocationSelector
               value={editForm.location || ''}
               onChange={handleLocationChange}
-              placeholder="e.g., Stoke-on-Trent, Manchester, London"
+              onCitySearch={handleCitySearch}
+              required
             />
           </div>
 
