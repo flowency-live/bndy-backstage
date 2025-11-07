@@ -356,6 +356,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           spotifyUrl: item.globalSong?.spotifyUrl || '',
           imageUrl: item.globalSong?.albumImageUrl || null,
           duration: item.globalSong?.duration || 0,
+          key: item.globalSong?.metadata?.key || null,
           tuning: tuning,
         };
       });
@@ -475,7 +476,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }
 
     if (!targetSetId) {
-      console.warn('[DND] Could not determine target set');
       return;
     }
 
@@ -508,6 +508,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       artist: playbookSong.artist,
       duration: playbookSong.duration || 0,
       position: targetIndex,
+      key: playbookSong.key,
       tuning: playbookSong.tuning || 'standard',
       segueInto: false,
       imageUrl: playbookSong.imageUrl,
@@ -548,7 +549,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     }
 
     if (!songToMove || !sourceSetId) {
-      console.warn('[DND] Could not find source song:', songId);
       return;
     }
 
@@ -726,6 +726,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       artist: playbookSong.artist,
       duration: playbookSong.duration || 0,
       position: activeSet.songs?.length || 0,
+      key: playbookSong.key,
       tuning: playbookSong.tuning || 'standard',
       segueInto: false,
       imageUrl: playbookSong.imageUrl,
@@ -1088,12 +1089,8 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                         >
                           <DroppableSetContainer setId={set.id}>
                             {(() => {
-                              console.log(`[SETLIST EDIT RENDER] ========== RENDERING SET: "${set.name}" ==========`);
-                              console.log(`[SETLIST EDIT RENDER] Set has ${set.songs.length} songs`);
                               return set.songs?.map((song, idx) => {
-                                console.log(`[SETLIST EDIT RENDER] Rendering song ${idx + 1}: "${song.title}" | tuning: ${song.tuning || 'UNDEFINED'} | duration: ${song.duration || 'NONE'}s`);
                                 if (song.tuning && song.tuning !== 'standard') {
-                                  console.log(`[SETLIST EDIT RENDER] *** SHOULD SHOW BADGE for "${song.title}" ***`);
                                 }
                                 const prevSongHasSegue = idx > 0 && set.songs[idx - 1]?.segueInto;
                                 return (
@@ -1229,7 +1226,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             <div className="font-bold text-sm">
               {(() => {
                 // Find the active song being dragged
-                console.log('[DRAG OVERLAY] Rendering for activeId:', activeId);
                 if (activeId.startsWith('playbook-')) {
                   const songId = activeId.replace('playbook-', '');
                   const song = playbookSongs.find(s => s.id === songId);

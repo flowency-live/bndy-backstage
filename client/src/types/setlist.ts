@@ -75,6 +75,8 @@ export interface PlaybookSong {
   duration: number;
   /** Custom duration override in seconds */
   custom_duration?: number;
+  /** Song key */
+  key?: string;
   /** Guitar tuning */
   tuning?: string;
 }
