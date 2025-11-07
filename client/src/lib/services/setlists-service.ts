@@ -130,7 +130,7 @@ class SetlistsService {
    * Duplicate a setlist
    */
   async duplicateSetlist(artistId: string, setlistId: string, newName: string): Promise<Setlist> {
-    return this.apiRequest<Setlist>(`/api/artists/${artistId}/setlists/${setlistId}/duplicate`, {
+    return this.apiRequest<Setlist>(`/api/artists/${artistId}/setlists/${setlistId}/copy`, {
       method: 'POST',
       body: JSON.stringify({ name: newName }),
     });
