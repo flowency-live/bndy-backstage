@@ -18,6 +18,8 @@ export interface SetlistSong {
   custom_duration?: number;
   /** Position in the set (0-indexed) */
   position: number;
+  /** Song key */
+  key?: string;
   /** Guitar tuning */
   tuning?: string;
   /** Whether this song segues into the next */

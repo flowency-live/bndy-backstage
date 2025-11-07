@@ -136,8 +136,13 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
                         {song.title}
                       </div>
 
-                      {/* Tuning badge */}
-                      <div className="shrink-0">
+                      {/* Key and Tuning badges */}
+                      <div className="shrink-0 flex items-center gap-2">
+                        {song.key && (
+                          <span className="text-lg font-semibold text-black">
+                            {song.key}
+                          </span>
+                        )}
                         {song.tuning && song.tuning !== 'standard' && (
                           <span className={`px-3 py-1 text-base font-bold rounded ${
                             song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :

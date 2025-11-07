@@ -596,7 +596,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
                       <p className="text-xs text-muted-foreground truncate" data-testid={`song-artist-${song.id}`}>{song.artist}</p>
                     </div>
 
-                    {/* Duration, BPM, and Tuning - visible on all screen sizes */}
+                    {/* Duration, BPM, Key, and Tuning - visible on all screen sizes */}
                     <div className="flex flex-col items-end text-xs text-muted-foreground pr-1 min-w-[55px]">
                       <div className="flex items-center gap-1">
                         {song.guitarChordsUrl && (
@@ -610,6 +610,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
                           >
                             <i className="fas fa-guitar text-orange-500 text-sm"></i>
                           </a>
+                        )}
+                        {song.key && (
+                          <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+                            {song.key}
+                          </span>
                         )}
                         {song.tuning && song.tuning !== 'standard' && (
                           <span className={`py-0.5 text-[9px] font-bold rounded shrink-0 whitespace-nowrap ${

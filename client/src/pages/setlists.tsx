@@ -609,6 +609,11 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                             </span>
                                           )}
                                           <span className="flex items-center gap-1 text-xs">
+                                            {song.key && (
+                                              <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+                                                {song.key}
+                                              </span>
+                                            )}
                                             {song.tuning && song.tuning !== 'standard' && (
                                               <span className={`py-0.5 text-[10px] font-bold rounded shrink-0 whitespace-nowrap ${
                                                 song.tuning === 'drop-d' ? 'bg-yellow-400 text-black px-1.5' :
