@@ -87,7 +87,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
   const otherArtists = userProfile?.artists.filter(artist => artist.artist_id !== currentArtistId) || [];
 
-
   return (
     <>
       {/* Overlay */}
@@ -229,7 +228,6 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                       )}
                     </div>
                   </DropdownMenuItem>
-
 
                   {/* Artist Quick Switch Options */}
                   {userProfile?.artists && userProfile.artists.length > 0 && otherArtists.length > 0 && (

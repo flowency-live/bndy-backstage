@@ -53,7 +53,6 @@ export default function AddSuggestionModal({
       return;
     }
 
-    console.log('Starting combined search for:', query);
     setIsSearching(true);
 
     try {
@@ -81,7 +80,7 @@ export default function AddSuggestionModal({
           duration: song.duration,
           genre: song.genre,
         }));
-        console.log('Found', bndySongs.length, 'songs in bndy-songs');
+
       }
 
       // Process Spotify results and deduplicate
@@ -120,7 +119,7 @@ export default function AddSuggestionModal({
       // Combine results: bndy-songs first, then Spotify
       const combinedResults = [...bndySongs, ...spotifySongs];
       setSearchResults(combinedResults);
-      console.log('Total results:', combinedResults.length);
+
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);

@@ -49,9 +49,7 @@ export default function TimePickerModal({
 
   const handleMinuteChange = (newMinute: number) => {
     setMinute(newMinute);
-    // Auto-close after minute selection for mobile optimization
-    onSelectTime(formatTime24(hour, newMinute));
-    onClose();
+    // Don't auto-close - let user confirm time selection
   };
 
   return (
@@ -85,8 +83,26 @@ export default function TimePickerModal({
               onModeChange={setClockMode}
             />
           </div>
-          
-          {/* Auto-closes on time selection - no buttons needed for mobile optimization */}
+
+          {/* Confirm button */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                onSelectTime(formatTime24(hour, minute));
+                onClose();
+              }}
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+            >
+              Confirm
+            </Button>
+          </div>
         </div>
       </div>
     </div>

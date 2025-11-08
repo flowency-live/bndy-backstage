@@ -184,7 +184,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
     window.scrollTo(0, 0);
   }, []);
 
-
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {
       if (!session) {
@@ -399,7 +398,6 @@ export default function Admin({ artistId, membership }: AdminProps) {
       });
     }
   };
-
 
   if (isLoading) {
     return (

@@ -74,7 +74,7 @@ export default function Profile() {
       const pendingInvite = localStorage.getItem('pendingInvite');
 
       if (pendingInvite) {
-        console.log('🔧 PROFILE: Found pending invite, redirecting to /invite/' + pendingInvite);
+
         setLocation(`/invite/${pendingInvite}`);
         return;
       }

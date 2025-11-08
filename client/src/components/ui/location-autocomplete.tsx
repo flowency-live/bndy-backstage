@@ -114,11 +114,9 @@ export default function LocationAutocomplete({
     setPredictions([]);
 
     // Geocode the selected location using Google Maps JavaScript SDK
-    console.log('[LocationAutocomplete] Geocoding selected location:', location);
     try {
       // Ensure Google Maps is loaded
       if (!window.google?.maps?.Geocoder) {
-        console.warn('[LocationAutocomplete] Google Maps not loaded, returning without coordinates');
         onChange(location);
         return;
       }
@@ -133,10 +131,8 @@ export default function LocationAutocomplete({
         (results, status) => {
           if (status === 'OK' && results && results.length > 0) {
             const { lat, lng } = results[0].geometry.location;
-            console.log('[LocationAutocomplete] Geocoded to:', lat(), lng());
             onChange(location, lat(), lng());
           } else {
-            console.warn('[LocationAutocomplete] Geocoding failed:', status);
             onChange(location);
           }
         }

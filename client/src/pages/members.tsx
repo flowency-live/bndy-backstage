@@ -28,6 +28,7 @@ interface Member {
   avatarUrl?: string;
   instrument?: string;
   status: string;
+  joinedAt?: string;
   user?: {
     email?: string;
     firstName?: string;
@@ -124,22 +125,15 @@ export default function Members({ artistId, membership }: MembersProps) {
   const { data: invitesData, isLoading: invitesLoading, error: invitesError } = useQuery<Invite[]>({
     queryKey: ["/api/artists", artistId, "invites"],
     queryFn: async () => {
-      console.log('[INVITES DEBUG] Starting query', { session: !!session, artistId });
-
       if (!session) {
         throw new Error("Not authenticated");
       }
 
-      // Query DynamoDB for invites for this artist
-      console.log('[INVITES DEBUG] Making request to:', `/api/artists/${artistId}/invites`);
+      // Fetch invites via API
       const response = await apiRequest("GET", `/api/artists/${artistId}/invites`);
-
-      console.log('[INVITES DEBUG] Response status:', response.status, 'ok:', response.ok);
-
       if (!response.ok) {
         // 403 means not admin/owner - that's fine, just return empty array
         if (response.status === 403) {
-          console.log('[INVITES DEBUG] 403 response - returning empty array');
           return [];
         }
         const errorText = await response.text();
@@ -148,7 +142,6 @@ export default function Members({ artistId, membership }: MembersProps) {
       }
 
       const data = await response.json();
-      console.log('[INVITES DEBUG] Received data:', data);
       console.log('[INVITES DEBUG] Data type:', Array.isArray(data) ? 'array' : typeof data);
       console.log('[INVITES DEBUG] Data length:', Array.isArray(data) ? data.length : 'N/A');
 
@@ -159,19 +152,9 @@ export default function Members({ artistId, membership }: MembersProps) {
 
   // Ensure artistMembers is always an array
   const artistMembers: Member[] = Array.isArray(membersResponse) ? membersResponse : (membersResponse?.members || []);
-
-  console.log('[INVITES DEBUG] invitesData:', invitesData);
-  console.log('[INVITES DEBUG] invitesLoading:', invitesLoading);
-  console.log('[INVITES DEBUG] invitesError:', invitesError);
-
   const activeInvites = invitesData?.filter(invite => {
-    console.log('[INVITES DEBUG] Filtering invite:', invite.token, 'status:', invite.status);
     return invite.status === 'pending';
   }) || [];
-
-  console.log('[INVITES DEBUG] activeInvites count:', activeInvites.length);
-  console.log('[INVITES DEBUG] activeInvites:', activeInvites);
-
   // Remove member mutation
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {

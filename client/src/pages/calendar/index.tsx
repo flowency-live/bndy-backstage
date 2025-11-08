@@ -382,7 +382,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         />
       )}
 
-      {effectiveArtistId && (
+      {effectiveArtistId && effectiveMembership && (
         <PublicGigWizard
           isOpen={showPublicGigWizard}
           onClose={() => {
@@ -390,8 +390,30 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             setSelectedEvent(null);
           }}
           artistId={effectiveArtistId}
-          membership={effectiveMembership}
-          editEvent={selectedEvent}
+          currentUser={effectiveMembership}
+          editingEventId={selectedEvent ? selectedEvent.id : undefined}
+          initialData={
+            selectedEvent
+              ? {
+                  venueId: selectedEvent.venueId || undefined,
+                  venueName: selectedEvent.venue || undefined,
+                  venueAddress: selectedEvent.venueAddress || undefined,
+                  venueLocation:
+                    selectedEvent.venueLatitude && selectedEvent.venueLongitude
+                      ? { lat: selectedEvent.venueLatitude, lng: selectedEvent.venueLongitude }
+                      : undefined,
+                  googlePlaceId: selectedEvent.venueGooglePlaceId || undefined,
+                  date: selectedEvent.date,
+                  startTime: selectedEvent.startTime || undefined,
+                  endTime: selectedEvent.endTime || undefined,
+                  title: selectedEvent.title,
+                  description: selectedEvent.description || undefined,
+                  isPublic: selectedEvent.isPublic !== undefined ? selectedEvent.isPublic : true,
+                }
+              : selectedDate
+                ? { date: selectedDate }
+                : undefined
+          }
         />
       )}
 

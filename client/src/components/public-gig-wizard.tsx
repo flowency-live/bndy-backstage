@@ -168,8 +168,6 @@ export default function PublicGigWizard({
 
       // If venue is from Google Places (no venueId yet), save it first via find-or-create
       if (!venueId && formData.venueName && formData.venueLocation) {
-        console.log('[PublicGigWizard] Saving Google Places venue before creating event');
-
         const venueResponse = await fetch('https://api.bndy.co.uk/api/venues/find-or-create', {
           method: 'POST',
           credentials: 'include',
@@ -199,8 +197,6 @@ export default function PublicGigWizard({
             description: `Using "${savedVenue.name}" from database`,
           });
         }
-
-        console.log('[PublicGigWizard] Venue saved with ID:', venueId);
       }
 
       // Determine if we're creating or updating

@@ -150,7 +150,6 @@ export default function EventDetails({
             </div>
           )}
 
-
           {/* Notes */}
           {event.notes && (
             <div>

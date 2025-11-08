@@ -89,16 +89,12 @@ export default function IssueForm({ open, onOpenChange, onSuccess }: IssueFormPr
     try {
       setIsSubmitting(true);
 
-      console.log('🐛 Submitting issue:', data);
-
       const submitData = {
         ...data,
         screenshotUrl: data.screenshotUrl || undefined
       };
 
       const result = await issuesService.createIssue(submitData);
-
-      console.log('🐛 Issue created:', result);
 
       toast({
         title: "Issue Reported",
@@ -119,7 +115,7 @@ export default function IssueForm({ open, onOpenChange, onSuccess }: IssueFormPr
       onSuccess?.();
 
     } catch (error) {
-      console.error('🐛 Error creating issue:', error);
+      console.error(' Error creating issue:', error);
 
       toast({
         title: "Failed to Report Issue",

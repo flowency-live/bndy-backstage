@@ -64,7 +64,7 @@ export function SpotifyPlayer({ accessToken, onPlayerReady }: SpotifyPlayerProps
 
       // Ready
       player.addListener('ready', ({ device_id }: any) => {
-        console.log('Spotify Player Ready with Device ID:', device_id);
+
         deviceIdRef.current = device_id;
         setPlayerState(prev => ({ ...prev, isReady: true }));
         onPlayerReady?.(device_id);
@@ -72,7 +72,7 @@ export function SpotifyPlayer({ accessToken, onPlayerReady }: SpotifyPlayerProps
 
       // Not Ready
       player.addListener('not_ready', ({ device_id }: any) => {
-        console.log('Spotify Player Device has gone offline:', device_id);
+
         setPlayerState(prev => ({ ...prev, isReady: false }));
       });
 
