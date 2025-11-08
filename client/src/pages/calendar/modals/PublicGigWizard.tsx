@@ -380,6 +380,7 @@ export default function PublicGigWizard({
               artistId={artistId}
               artistName={artistName}
               onUpdate={updateFormData}
+              editingEventId={editingEventId}
             />
           )}
         </div>

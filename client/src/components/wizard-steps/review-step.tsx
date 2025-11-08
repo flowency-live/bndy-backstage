@@ -20,9 +20,10 @@ interface ReviewStepProps {
   artistId: string;
   artistName: string;
   onUpdate: (data: Partial<PublicGigFormData>) => void;
+  editingEventId?: string;
 }
 
-export default function ReviewStep({ formData, artistId, artistName, onUpdate }: ReviewStepProps) {
+export default function ReviewStep({ formData, artistId, artistName, onUpdate, editingEventId }: ReviewStepProps) {
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [checkingConflicts, setCheckingConflicts] = useState(true);
 
@@ -46,6 +47,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
               type: 'gig',
               startTime: formData.startTime,
               endTime: formData.endTime,
+              excludeEventId: editingEventId, // Exclude current event when editing
             }),
           }
         );
@@ -64,7 +66,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
     };
 
     checkConflicts();
-  }, [formData.date, formData.startTime, formData.endTime, artistId]);
+  }, [formData.date, formData.startTime, formData.endTime, artistId, editingEventId]);
 
   const formatTime = (time?: string) => {
     if (!time) return null;
