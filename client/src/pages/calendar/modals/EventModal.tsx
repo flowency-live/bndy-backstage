@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import DatePickerModal from '@/components/date-picker-modal';
-import { apiRequest } from '@/services/api';
+import { apiRequest } from '@/lib/queryClient';
 import type { Event } from '@/types/api';
 
 interface EventModalProps {

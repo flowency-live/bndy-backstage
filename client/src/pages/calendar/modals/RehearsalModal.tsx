@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import DatePickerModal from '@/components/date-picker-modal';
 import { RecurringControls, type RecurringValue } from './RecurringControls';
-import { apiRequest } from '@/services/api';
+import { apiRequest } from '@/lib/queryClient';
 import type { Event } from '@/types/api';
 
 interface RehearsalModalProps {
