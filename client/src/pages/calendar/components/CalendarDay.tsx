@@ -196,13 +196,13 @@ export function CalendarDay({
 
       {/* Add event button (only for current month) - COPIED from calendar.tsx.old lines 1005-1017 */}
       {isCurrentMonth && onAddEvent && (
-        <div className="absolute inset-0 bg-transparent hover:bg-brand-primary/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 bg-transparent hover:bg-brand-primary/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAddEvent(dateStr);
             }}
-            className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg"
+            className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg pointer-events-auto"
             title="Add event"
             data-testid={`button-add-event-${dateStr}`}
           >
