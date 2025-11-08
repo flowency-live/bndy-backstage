@@ -24,7 +24,6 @@ import {
 import FloatingActionButton from '@/components/floating-action-button';
 import { MonthNavigation, SwipeableCalendarWrapper } from './components/MonthNavigation';
 import { UpcomingEventBanner } from './components/UpcomingEventBanner';
-import { CalendarControls } from './components/CalendarControls';
 
 // Views
 import { CalendarGridView } from './views/CalendarGridView';
@@ -457,37 +456,87 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         />
       )}
 
-      {/* Month Navigation (Calendar view only) */}
+      {/* Month Navigation with Filter Buttons (Calendar view only) */}
       {viewMode === 'calendar' && (
-        <MonthNavigation currentDate={currentDate} onDateChange={setCurrentDate}>
-          <CalendarControls
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showArtistEvents={showArtistEvents}
-            onToggleArtistEvents={() => setShowArtistEvents(!showArtistEvents)}
-            showMyEvents={showMyEvents}
-            onToggleMyEvents={() => setShowMyEvents(!showMyEvents)}
-            showAllArtists={showAllArtists}
-            onToggleAllArtists={() => setShowAllArtists(!showAllArtists)}
-            hasArtistContext={!!effectiveArtistId}
-          />
-        </MonthNavigation>
+        <MonthNavigation
+          currentDate={currentDate}
+          onDateChange={setCurrentDate}
+          showArtistEvents={showArtistEvents}
+          onToggleArtistEvents={() => setShowArtistEvents(!showArtistEvents)}
+          showMyEvents={showMyEvents}
+          onToggleMyEvents={() => setShowMyEvents(!showMyEvents)}
+          showAllArtists={showAllArtists}
+          onToggleAllArtists={() => setShowAllArtists(!showAllArtists)}
+          hasArtistContext={!!effectiveArtistId}
+          hasMultipleArtists={userProfile?.artists && userProfile.artists.length > 1}
+        />
       )}
 
-      {/* Agenda View Controls */}
+      {/* Agenda View Filter Buttons - COPIED from calendar.tsx.old lines 737-801 */}
       {viewMode === 'agenda' && (
         <div className="bg-brand-primary-light border-t px-4 py-3">
-          <CalendarControls
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            showArtistEvents={showArtistEvents}
-            onToggleArtistEvents={() => setShowArtistEvents(!showArtistEvents)}
-            showMyEvents={showMyEvents}
-            onToggleMyEvents={() => setShowMyEvents(!showMyEvents)}
-            showAllArtists={showAllArtists}
-            onToggleAllArtists={() => setShowAllArtists(!showAllArtists)}
-            hasArtistContext={!!effectiveArtistId}
-          />
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Artist Events Toggle */}
+            {effectiveArtistId && (
+              <button
+                onClick={() => setShowArtistEvents(!showArtistEvents)}
+                className={`
+                  px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+                  ${showArtistEvents
+                    ? 'bg-brand-accent text-white border-brand-accent shadow-md'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+                  }
+                `}
+                data-testid="toggle-artist-events"
+              >
+                <i className="fas fa-users mr-2 text-xs"></i>
+                Artist Events
+                {showArtistEvents && (
+                  <i className="fas fa-check ml-2 text-xs"></i>
+                )}
+              </button>
+            )}
+
+            {/* My Events Toggle */}
+            <button
+              onClick={() => setShowMyEvents(!showMyEvents)}
+              className={`
+                px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+                ${showMyEvents
+                  ? 'bg-cyan-500 text-white border-cyan-500 shadow-md'
+                  : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+                }
+              `}
+              data-testid="toggle-my-events"
+            >
+              <i className="fas fa-user mr-2 text-xs"></i>
+              My Events
+              {showMyEvents && (
+                <i className="fas fa-check ml-2 text-xs"></i>
+              )}
+            </button>
+
+            {/* All Artists Toggle - only show when in artist context, user has multiple artists, AND artist events is enabled */}
+            {effectiveArtistId && userProfile?.artists && userProfile.artists.length > 1 && showArtistEvents && (
+              <button
+                onClick={() => setShowAllArtists(!showAllArtists)}
+                className={`
+                  px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shadow-sm
+                  ${showAllArtists
+                    ? 'bg-purple-500 text-white border-purple-500 shadow-md'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 hover:shadow'
+                  }
+                `}
+                data-testid="toggle-all-artists"
+              >
+                <i className="fas fa-layer-group mr-2 text-xs"></i>
+                All Artists
+                {showAllArtists && (
+                  <i className="fas fa-check ml-2 text-xs"></i>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
