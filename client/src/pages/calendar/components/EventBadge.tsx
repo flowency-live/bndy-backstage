@@ -68,9 +68,8 @@ export function EventBadge({
 
   const colorClasses = getColorClasses();
 
-  // Calculate width for multi-day events
-  const widthPercent = isMultiDay ? (spanDays / 7) * 100 : 100;
-  const widthStyle = isMultiDay ? `calc(${widthPercent}% - 8px)` : '100%';
+  // Calculate width for multi-day events - COPIED from calendar.tsx.old line 920
+  const widthStyle = isMultiDay ? `calc(${spanDays * 100}% - 8px)` : '100%';
 
   return (
     <div
@@ -79,7 +78,16 @@ export function EventBadge({
         position: isMultiDay ? 'absolute' : 'relative',
         left: isMultiDay ? '4px' : 'auto',
         width: widthStyle,
+        // Gig events: allow wrapping with artist color. Other events: single line with type-based color
+        // COPIED from calendar.tsx.old lines 922-932
+        whiteSpace: isGig ? 'normal' : 'nowrap',
+        wordWrap: isGig ? 'break-word' : 'normal',
+        overflow: 'hidden',
+        textOverflow: isGig ? 'clip' : 'ellipsis',
         ...(isGig && {
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical' as any,
           background: `linear-gradient(135deg, ${baseColor} 0%, ${baseColor}dd 100%)`,
           borderColor: baseColor,
         }),
@@ -88,16 +96,14 @@ export function EventBadge({
       onClick={onClick}
       data-testid={`event-${event.id}`}
     >
-      <div className="flex items-center gap-1 truncate">
-        <span className="flex-1 truncate">{displayName}</span>
-        {isRecurring && (
-          <RecurringIndicator
-            recurring={(event as RecurringEvent).recurring}
-            size="sm"
-            showTooltip={false}
-          />
-        )}
-      </div>
+      {displayName}
+      {isRecurring && (
+        <RecurringIndicator
+          recurring={(event as RecurringEvent).recurring}
+          size="sm"
+          showTooltip={false}
+        />
+      )}
     </div>
   );
 }
