@@ -36,19 +36,23 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate, e
       }
 
       try {
+        const requestBody = {
+          date: formData.date,
+          type: 'gig',
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          excludeEventId: editingEventId, // Exclude current event when editing
+        };
+
+        console.log('Conflict check request:', { requestBody, editingEventId });
+
         const response = await fetch(
           `https://api.bndy.co.uk/api/artists/${artistId}/events/check-conflicts`,
           {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              date: formData.date,
-              type: 'gig',
-              startTime: formData.startTime,
-              endTime: formData.endTime,
-              excludeEventId: editingEventId, // Exclude current event when editing
-            }),
+            body: JSON.stringify(requestBody),
           }
         );
 
