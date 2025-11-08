@@ -12,7 +12,6 @@ import type { Event, ArtistMembership } from '@/types/api';
 import { CalendarProvider, useCalendarContext } from './CalendarContext';
 
 // Components
-import { PageHeader } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -362,11 +361,6 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader
-        title={artistData?.name ? `${artistData.name} Calendar` : 'Calendar'}
-        subtitle={viewMode === 'calendar' ? format(currentDate, 'MMMM yyyy') : 'Upcoming Events'}
-      />
-
       {/* Calendar Controls - Compact on mobile */}
       <div className="bg-card/80 backdrop-blur-sm border-b border-border p-2 md:p-4">
         <div className="flex items-center justify-between">
