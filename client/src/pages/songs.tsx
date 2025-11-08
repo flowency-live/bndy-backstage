@@ -111,7 +111,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
           addedByMembershipId: item.added_by_membership_id,
           createdAt: item.created_at,
           duration: item.globalSong?.duration || null,
-          key: item.globalSong?.metadata?.key || null,
+          key: item.custom_key || item.globalSong?.metadata?.key || null,
           tuning: tuning,
           notes: item.notes || '',
           additionalUrl: item.additional_url || '',
@@ -794,10 +794,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
                             <input
                               type="text"
                               placeholder="Am"
-                              value={editedSongs[song.id]?.key ?? song.key ?? ''}
+                              value={editedSongs[song.id]?.custom_key ?? song.key ?? ''}
                               onChange={(e) => setEditedSongs(prev => ({
                                 ...prev,
-                                [song.id]: { ...prev[song.id], key: e.target.value }
+                                [song.id]: { ...prev[song.id], custom_key: e.target.value }
                               }))}
                               className="w-full px-2 py-1 text-sm border rounded"
                             />
