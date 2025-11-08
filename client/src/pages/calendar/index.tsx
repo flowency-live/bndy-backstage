@@ -552,6 +552,10 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             effectiveArtistId={effectiveArtistId}
             onEventClick={handleEventClick}
             onDayClick={handleDayClick}
+            onAddEvent={(date) => {
+              setSelectedDate(date);
+              setShowEventTypeSelector(true);
+            }}
           />
         </SwipeableCalendarWrapper>
       ) : (
