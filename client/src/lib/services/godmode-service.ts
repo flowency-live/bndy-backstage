@@ -10,6 +10,9 @@ export interface Artist {
   location: string;
   locationType?: 'national' | 'region' | 'city';
   genres: string[];
+  artistType?: string;
+  actType?: string[];
+  acoustic?: boolean;
   facebookUrl: string;
   instagramUrl: string;
   websiteUrl: string;
