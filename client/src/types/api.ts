@@ -27,9 +27,11 @@ export interface Artist {
   locationLat?: number;
   locationLng?: number;
   displayColour?: string; // Hex color for gig events on calendar (default: #f97316 Orange 500)
-  genres?: string[];
+  genres?: string[];  // Flat list of genres (simplified 2025-11-07)
   artistType?: string; // camelCase version
   artist_type?: string; // Legacy snake_case version
+  acoustic?: boolean;  // NEW: Indicates acoustic performance capability
+  actType?: string[];  // NEW: Type of act (multiselect: originals, covers, tribute)
   profileImageUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
@@ -48,6 +50,12 @@ export interface Artist {
 }
 
 export interface ArtistMembership {
+  // Frontend-expected format (camelCase, returned by API)
+  id: string;
+  joinedAt?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  // Backend fields (snake_case)
   membership_id: string;
   user_id: string;
   artist_id: string;

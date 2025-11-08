@@ -9,18 +9,8 @@ import LocationAutocomplete from "@/components/ui/location-autocomplete";
 import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
 import { GenreSelector } from "@/components/ui/genre-selector";
-
-// Hardcoded artist types for initial implementation
-// Will be fetched from backend configuration later
-const ARTIST_TYPES = [
-  { value: 'band', label: 'Band', enabled: true },
-  { value: 'duo', label: 'Duo', enabled: true },
-  { value: 'group', label: 'Group', enabled: true },
-  { value: 'solo', label: 'Solo Act', enabled: true },
-  { value: 'dj', label: 'DJ', enabled: false }, // Disabled initially
-] as const;
-
-type ArtistType = typeof ARTIST_TYPES[number]['value'];
+import { ActTypeSelector } from "@/components/ui/act-type-selector";
+import { ARTIST_TYPES, ACT_TYPES, type ArtistType, type ActType } from "@/lib/constants/artist";
 
 interface WizardData {
   artistType: ArtistType | null;
@@ -28,6 +18,8 @@ interface WizardData {
   location: string;
   description: string;
   genres: string[];
+  acoustic: boolean;
+  actType: ActType[];
   facebookUrl: string;
   instagramUrl: string;
   youtubeUrl: string;
@@ -59,6 +51,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
     location: "",
     description: "",
     genres: [],
+    acoustic: false,
+    actType: [],
     facebookUrl: "",
     instagramUrl: "",
     youtubeUrl: "",
@@ -72,8 +66,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const [existingArtists, setExistingArtists] = useState<ExistingArtist[]>([]);
   const [checkingName, setCheckingName] = useState(false);
 
-  // Get enabled artist types
-  const enabledTypes = ARTIST_TYPES.filter(t => t.enabled);
+  // All artist types are now enabled
+  const enabledTypes = ARTIST_TYPES;
 
   // Get context-aware labels
   const getTypeLabel = (type: ArtistType | null): string => {
@@ -145,6 +139,8 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
           bio: data.description || null,
           genres: data.genres,
           artistType: data.artistType,
+          acoustic: data.acoustic,
+          actType: data.actType.length > 0 ? data.actType : null,
           facebookUrl: data.facebookUrl || null,
           instagramUrl: data.instagramUrl || null,
           websiteUrl: data.websiteUrl || null,
@@ -229,7 +225,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const canGoNext = () => {
     if (currentStep === 2) return wizardData.name.trim(); // Allow even if duplicate
     if (currentStep === 3) return true; // Description and location optional
-    if (currentStep === 4) return true; // Genres optional
+    if (currentStep === 4) return wizardData.actType.length > 0; // actType required (minimum 1)
     if (currentStep === 5) return true; // All social media fields optional
     return false;
   };
@@ -394,9 +390,9 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
             </div>
           )}
 
-          {/* Step 4: Genres */}
+          {/* Step 4: Genres, Acoustic, Act Type */}
           {currentStep === 4 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">Genres (Optional)</label>
                 <p className="text-xs text-muted-foreground mb-3">Select all that apply</p>
@@ -404,6 +400,30 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                   selectedGenres={wizardData.genres}
                   onChange={handleGenresChange}
                 />
+              </div>
+
+              <div>
+                <ActTypeSelector
+                  selectedTypes={wizardData.actType}
+                  onChange={(types) => setWizardData(prev => ({ ...prev, actType: types }))}
+                  required
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="acoustic"
+                  checked={wizardData.acoustic}
+                  onChange={(e) => setWizardData(prev => ({ ...prev, acoustic: e.target.checked }))}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                />
+                <label
+                  htmlFor="acoustic"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Acoustic performances
+                </label>
               </div>
             </div>
           )}

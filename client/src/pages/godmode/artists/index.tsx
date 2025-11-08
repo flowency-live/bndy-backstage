@@ -9,6 +9,7 @@ import {
   getAllMemberships,
   updateArtist,
   deleteArtist,
+  markArtistAsReviewed,
   type Artist,
   type User as UserType,
   type Membership
@@ -23,9 +24,13 @@ export default function ArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(false);
   const [artistsError, setArtistsError] = useState<string | null>(null);
-  const [artistFilter, setArtistFilter] = useState<'all' | 'no-genres' | 'no-socials' | 'no-location'>('all');
+  const [artistFilter, setArtistFilter] = useState<'all' | 'no-genres' | 'no-socials' | 'no-location' | 'needs-review' | 'frontstage' | 'backstage'>('all');
   const [artistSearch, setArtistSearch] = useState('');
+  const [artistTypeFilter, setArtistTypeFilter] = useState<string>('');
+  const [acousticFilter, setAcousticFilter] = useState<string>('all');
+  const [actTypeFilter, setActTypeFilter] = useState<string>('');
   const [deletingArtist, setDeletingArtist] = useState<string | null>(null);
+  const [reviewingArtist, setReviewingArtist] = useState<string | null>(null);
   const [artistPage, setArtistPage] = useState(1);
   const artistsPerPage = 25;
 
@@ -83,10 +88,10 @@ export default function ArtistsPage() {
     fetchMemberships();
   }, []);
 
-  // Reset page when search changes
+  // Reset page when search or filters change
   useEffect(() => {
     setArtistPage(1);
-  }, [artistSearch, artistFilter]);
+  }, [artistSearch, artistFilter, artistTypeFilter, acousticFilter, actTypeFilter]);
 
   // Artist Handlers
   const handleArtistEditStart = (artist: Artist) => {
@@ -118,6 +123,18 @@ export default function ArtistsPage() {
     }
   };
 
+  const handleMarkAsReviewed = async (artistId: string) => {
+    setReviewingArtist(artistId);
+    try {
+      const updated = await markArtistAsReviewed(artistId);
+      setArtists(artists.map(a => a.id === updated.id ? updated : a));
+    } catch (err) {
+      setArtistsError(err instanceof Error ? err.message : 'Failed to mark as reviewed');
+    } finally {
+      setReviewingArtist(null);
+    }
+  };
+
   // Batch Edit Modal Handlers
   const handleOpenArtistBatchEdit = () => {
     if (filteredArtists.length === 0) return;
@@ -135,12 +152,38 @@ export default function ArtistsPage() {
     const matchesSearch = (a.name && String(a.name).toLowerCase().includes(artistSearch.toLowerCase())) ||
                          (a.location && String(a.location).toLowerCase().includes(artistSearch.toLowerCase()));
     if (!matchesSearch) return false;
-    if (artistFilter === 'no-genres') return !a.genres || (Array.isArray(a.genres) && a.genres.length === 0);
+
+    // Apply category filter
+    if (artistFilter === 'no-genres') {
+      if (a.genres && Array.isArray(a.genres) && a.genres.length > 0) return false;
+    }
     if (artistFilter === 'no-socials') {
       const hasSocials = a.facebookUrl || a.instagramUrl;
-      return !hasSocials;
+      if (hasSocials) return false;
     }
-    if (artistFilter === 'no-location') return !a.location;
+    if (artistFilter === 'no-location') {
+      if (a.location) return false;
+    }
+    if (artistFilter === 'needs-review') {
+      if (a.needs_review !== true) return false;
+    }
+    if (artistFilter === 'frontstage') {
+      if (a.source !== 'frontstage') return false;
+    }
+    if (artistFilter === 'backstage') {
+      if (a.source !== 'backstage') return false;
+    }
+
+    // Apply artist type filter
+    if (artistTypeFilter && a.artistType !== artistTypeFilter) return false;
+
+    // Apply acoustic filter
+    if (acousticFilter === 'acoustic' && a.acoustic !== true) return false;
+    if (acousticFilter === 'non-acoustic' && a.acoustic === true) return false;
+
+    // Apply act type filter
+    if (actTypeFilter && (!a.actType || !a.actType.includes(actTypeFilter))) return false;
+
     return true;
   });
 
@@ -155,6 +198,9 @@ export default function ArtistsPage() {
     noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
     noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
     noLocation: artists.filter(a => !a.location).length,
+    needsReview: artists.filter(a => a.needs_review === true).length,
+    frontstage: artists.filter(a => a.source === 'frontstage').length,
+    backstage: artists.filter(a => a.source === 'backstage').length,
   };
 
   return (
@@ -170,7 +216,7 @@ export default function ArtistsPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
           <Input
             placeholder="Search artists by name or location..."
             value={artistSearch}
@@ -181,6 +227,58 @@ export default function ArtistsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+        </div>
+
+        {/* New Filters Row */}
+        <div className="flex gap-2 flex-wrap">
+          <select
+            value={artistTypeFilter}
+            onChange={(e) => setArtistTypeFilter(e.target.value)}
+            className="px-3 py-2 text-sm border rounded-md bg-background"
+          >
+            <option value="">All Artist Types</option>
+            <option value="band">Band</option>
+            <option value="solo">Solo Act</option>
+            <option value="duo">Duo</option>
+            <option value="group">Group</option>
+            <option value="dj">DJ</option>
+            <option value="collective">Collective</option>
+          </select>
+
+          <select
+            value={acousticFilter}
+            onChange={(e) => setAcousticFilter(e.target.value)}
+            className="px-3 py-2 text-sm border rounded-md bg-background"
+          >
+            <option value="all">All Acts</option>
+            <option value="acoustic">Acoustic Only</option>
+            <option value="non-acoustic">Non-Acoustic</option>
+          </select>
+
+          <select
+            value={actTypeFilter}
+            onChange={(e) => setActTypeFilter(e.target.value)}
+            className="px-3 py-2 text-sm border rounded-md bg-background"
+          >
+            <option value="">All Act Types</option>
+            <option value="originals">Originals</option>
+            <option value="covers">Covers</option>
+            <option value="tribute">Tribute</option>
+          </select>
+
+          {(artistTypeFilter || acousticFilter !== 'all' || actTypeFilter) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setArtistTypeFilter('');
+                setAcousticFilter('all');
+                setActTypeFilter('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex gap-2 flex-wrap">
@@ -211,6 +309,27 @@ export default function ArtistsPage() {
               size="sm"
             >
               No Location / Place ID ({artistStats.noLocation})
+            </Button>
+            <Button
+              variant={artistFilter === 'needs-review' ? 'default' : 'outline'}
+              onClick={() => setArtistFilter('needs-review')}
+              size="sm"
+            >
+              Needs Review ({artistStats.needsReview})
+            </Button>
+            <Button
+              variant={artistFilter === 'frontstage' ? 'default' : 'outline'}
+              onClick={() => setArtistFilter('frontstage')}
+              size="sm"
+            >
+              Frontstage ({artistStats.frontstage})
+            </Button>
+            <Button
+              variant={artistFilter === 'backstage' ? 'default' : 'outline'}
+              onClick={() => setArtistFilter('backstage')}
+              size="sm"
+            >
+              Backstage ({artistStats.backstage})
             </Button>
           </div>
           {filteredArtists.length > 0 && (
@@ -311,6 +430,17 @@ export default function ArtistsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
+                        {artist.needs_review && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleMarkAsReviewed(artist.id)}
+                            disabled={reviewingArtist === artist.id}
+                            title="Mark as reviewed"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"

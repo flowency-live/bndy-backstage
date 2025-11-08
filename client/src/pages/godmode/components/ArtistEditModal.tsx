@@ -3,12 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ChevronLeft, ChevronRight, Save, RefreshCw } from 'lucide-react';
 import { LocationSelector } from '@/components/ui/location-selector';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
 import { GenreSelector } from '@/components/ui/genre-selector';
+import { ArtistTypeSelector } from '@/components/ui/artist-type-selector';
+import { ActTypeSelector } from '@/components/ui/act-type-selector';
 import { searchLocationAutocomplete } from '@/lib/services/places-service';
+import type { ArtistType, ActType } from '@/lib/constants/artist';
 
 interface ArtistEditModalProps {
   open: boolean;
@@ -31,6 +35,7 @@ export default function ArtistEditModal({
   const [editForm, setEditForm] = useState<Artist | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [refreshingImage, setRefreshingImage] = useState(false);
 
   const currentArtist = artists[currentIndex];
 
@@ -117,6 +122,51 @@ export default function ArtistEditModal({
     setHasChanges(true);
   };
 
+  const handleRefreshFacebookImage = async () => {
+    if (!editForm?.id || !editForm.facebookUrl) {
+      toast({
+        title: 'No Facebook URL',
+        description: 'Please add a Facebook URL first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setRefreshingImage(true);
+    try {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${editForm.id}/refresh-facebook-image`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh image');
+      }
+
+      const data = await response.json();
+
+      // Update form with new image
+      setEditForm({
+        ...editForm,
+        profileImageUrl: data.profileImageUrl,
+      });
+      setHasChanges(true);
+
+      toast({
+        title: 'Image refreshed',
+        description: 'Facebook profile image updated successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error refreshing image',
+        description: error.message || 'Could not fetch Facebook image',
+        variant: 'destructive',
+      });
+    } finally {
+      setRefreshingImage(false);
+    }
+  };
+
   if (!editForm) return null;
 
   const isFirst = currentIndex === 0;
@@ -188,6 +238,44 @@ export default function ArtistEditModal({
             />
           </div>
 
+          {/* Artist Type */}
+          <div>
+            <ArtistTypeSelector
+              selectedType={editForm.artistType as ArtistType}
+              onChange={(type) => {
+                setEditForm({ ...editForm, artistType: type });
+                setHasChanges(true);
+              }}
+              required
+            />
+          </div>
+
+          {/* Act Type */}
+          <div>
+            <ActTypeSelector
+              selectedTypes={(editForm.actType || []) as ActType[]}
+              onChange={(types) => {
+                setEditForm({ ...editForm, actType: types });
+                setHasChanges(true);
+              }}
+            />
+          </div>
+
+          {/* Acoustic */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="acoustic"
+              checked={editForm.acoustic || false}
+              onCheckedChange={(checked) => {
+                setEditForm({ ...editForm, acoustic: checked as boolean });
+                setHasChanges(true);
+              }}
+            />
+            <Label htmlFor="acoustic" className="text-sm font-medium cursor-pointer">
+              Acoustic performances
+            </Label>
+          </div>
+
           {/* Social Media URLs */}
           <div className="space-y-3">
             <Label>Social Media Links</Label>
@@ -196,16 +284,32 @@ export default function ArtistEditModal({
               <Label htmlFor="artist-facebook" className="text-sm text-muted-foreground">
                 Facebook
               </Label>
-              <Input
-                id="artist-facebook"
-                type="url"
-                value={editForm.facebookUrl || ''}
-                onChange={(e) => {
-                  setEditForm({ ...editForm, facebookUrl: e.target.value });
-                  setHasChanges(true);
-                }}
-                placeholder="https://facebook.com/..."
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="artist-facebook"
+                  type="url"
+                  value={editForm.facebookUrl || ''}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, facebookUrl: e.target.value });
+                    setHasChanges(true);
+                  }}
+                  placeholder="https://facebook.com/..."
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshFacebookImage}
+                  disabled={!editForm.facebookUrl || refreshingImage}
+                  title="Refresh profile image from Facebook"
+                >
+                  {refreshingImage ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             <div>
