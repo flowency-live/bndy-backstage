@@ -5,6 +5,10 @@ interface CalendarContextType {
   // Modal states
   showEventModal: boolean;
   setShowEventModal: (show: boolean) => void;
+  showRehearsalModal: boolean;
+  setShowRehearsalModal: (show: boolean) => void;
+  showEventTypeSelector: boolean;
+  setShowEventTypeSelector: (show: boolean) => void;
   showPublicGigWizard: boolean;
   setShowPublicGigWizard: (show: boolean) => void;
   showUnavailabilityModal: boolean;
@@ -46,6 +50,8 @@ const CalendarContext = createContext<CalendarContextType | undefined>(undefined
 export function CalendarProvider({ children }: { children: ReactNode }) {
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showRehearsalModal, setShowRehearsalModal] = useState(false);
+  const [showEventTypeSelector, setShowEventTypeSelector] = useState(false);
   const [showPublicGigWizard, setShowPublicGigWizard] = useState(false);
   const [showUnavailabilityModal, setShowUnavailabilityModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
@@ -72,6 +78,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const value: CalendarContextType = {
     showEventModal,
     setShowEventModal,
+    showRehearsalModal,
+    setShowRehearsalModal,
+    showEventTypeSelector,
+    setShowEventTypeSelector,
     showPublicGigWizard,
     setShowPublicGigWizard,
     showUnavailabilityModal,
