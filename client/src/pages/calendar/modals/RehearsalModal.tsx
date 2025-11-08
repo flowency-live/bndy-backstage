@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { X, Music } from 'lucide-react';
+import { X, Music, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import DatePickerModal from '@/components/date-picker-modal';
+import TimePickerModal from '@/components/time-picker-modal';
 import { RecurringControls, type RecurringValue } from './RecurringControls';
 import { apiRequest } from '@/lib/queryClient';
 import type { Event } from '@/types/api';
@@ -43,6 +44,8 @@ export function RehearsalModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [timePickerType, setTimePickerType] = useState<'start' | 'end'>('start');
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!event;
@@ -94,6 +97,17 @@ export function RehearsalModal({
       setError(null);
     }
   }, [isOpen]);
+
+  // Format time for display - COPIED from date-time-step.tsx
+  const formatTime = (time?: string) => {
+    if (!time) return null;
+    if (time === '00:00') return 'Midnight';
+    const [hours, minutes] = time.split(':');
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${period}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,29 +234,43 @@ export function RehearsalModal({
               </button>
             </div>
 
-            {/* Time */}
+            {/* Time - COPIED from date-time-step.tsx */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Start Time
                 </label>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimePickerType('start');
+                    setShowTimePicker(true);
+                  }}
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background hover:border-orange-500 transition-colors text-left flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {startTime ? formatTime(startTime) : 'Select time'}
+                  </span>
+                </button>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   End Time
                 </label>
-                <Input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimePickerType('end');
+                    setShowTimePicker(true);
+                  }}
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background hover:border-orange-500 transition-colors text-left flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {endTime ? formatTime(endTime) : 'Select time'}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -314,6 +342,22 @@ export function RehearsalModal({
         }}
         selectedDate={date}
         title="Select rehearsal date"
+      />
+
+      {/* Time Picker Modal - COPIED from date-time-step.tsx */}
+      <TimePickerModal
+        isOpen={showTimePicker}
+        onClose={() => setShowTimePicker(false)}
+        selectedTime={timePickerType === 'start' ? startTime : endTime}
+        onSelectTime={(time) => {
+          if (timePickerType === 'start') {
+            setStartTime(time);
+          } else {
+            setEndTime(time);
+          }
+          setShowTimePicker(false);
+        }}
+        title={timePickerType === 'start' ? 'Select start time' : 'Select end time'}
       />
     </>
   );
