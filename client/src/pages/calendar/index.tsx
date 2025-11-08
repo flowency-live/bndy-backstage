@@ -13,6 +13,14 @@ import { CalendarProvider, useCalendarContext } from './CalendarContext';
 
 // Components
 import { PageHeader } from '@/components/layout';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import FloatingActionButton from '@/components/floating-action-button';
 import { MonthNavigation, SwipeableCalendarWrapper } from './components/MonthNavigation';
 import { UpcomingEventBanner } from './components/UpcomingEventBanner';
@@ -252,12 +260,192 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     return event.membershipId === effectiveMembership?.membership_id;
   };
 
+  // Calendar export functions
+  const handleExportCalendar = async (includePrivate: boolean = false, memberOnly: boolean = false) => {
+    try {
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to export calendar",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (includePrivate) params.append('includePrivate', 'true');
+      if (memberOnly) params.append('memberOnly', 'true');
+
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/export/ical?${params.toString()}`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export calendar");
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Calendar exported",
+        description: `Downloaded ${filename}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export calendar. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGetCalendarUrls = async () => {
+    try {
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to get calendar URLs",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/url`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get calendar URLs");
+      }
+
+      const data = await response.json();
+
+      // Copy the full calendar URL to clipboard
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(data.urls.full);
+        toast({
+          title: "Calendar URL copied",
+          description: "Paste this URL in your calendar app to subscribe to live updates",
+        });
+      } else {
+        toast({
+          title: "Calendar URLs",
+          description: "Calendar subscription URL copied to clipboard",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to get URLs",
+        description: "Failed to get calendar URLs. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
         title={artistData?.name ? `${artistData.name} Calendar` : 'Calendar'}
         subtitle={viewMode === 'calendar' ? format(currentDate, 'MMMM yyyy') : 'Upcoming Events'}
       />
+
+      {/* Calendar Controls - Compact on mobile */}
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border p-2 md:p-4">
+        <div className="flex items-center justify-between">
+          {/* Export Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 md:gap-2 h-8 px-2 md:px-3"
+                data-testid="button-calendar-export"
+              >
+                <i className="fas fa-download text-xs md:text-sm"></i>
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="start">
+              <DropdownMenuItem
+                onClick={() => handleExportCalendar(false, false)}
+                data-testid="menu-export-all-public"
+              >
+                <i className="fas fa-calendar mr-2 w-4 h-4"></i>
+                Export All Public Events
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleExportCalendar(true, true)}
+                data-testid="menu-export-personal-all"
+              >
+                <i className="fas fa-user mr-2 w-4 h-4"></i>
+                Export My Events (All)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleExportCalendar(false, true)}
+                data-testid="menu-export-personal-public"
+              >
+                <i className="fas fa-user mr-2 w-4 h-4"></i>
+                Export My Public Events
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleGetCalendarUrls}
+                data-testid="menu-get-calendar-urls"
+              >
+                <i className="fas fa-link mr-2 w-4 h-4"></i>
+                Get Subscription URL
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* View Mode Toggle */}
+          <div className="flex bg-muted rounded-lg p-0.5 md:p-1">
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded transition-colors ${
+                viewMode === "calendar"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid="button-calendar-view"
+            >
+              <i className="fas fa-calendar mr-1 md:mr-2"></i>
+              <span className="hidden sm:inline">Calendar</span>
+            </button>
+            <button
+              onClick={() => setViewMode("agenda")}
+              className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded transition-colors ${
+                viewMode === "agenda"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid="button-agenda-view"
+            >
+              <i className="fas fa-list mr-1 md:mr-2"></i>
+              <span className="hidden sm:inline">Agenda</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Upcoming Event Banner */}
       {!dismissedHighlight && nextEvent && viewMode === 'calendar' && (
