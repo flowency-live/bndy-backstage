@@ -1,2 +1,4 @@
 // Barrel export for setlist-editor utilities
-// Utilities will be exported here as they are created
+export * from './durationCalculations';
+export * from './setlistCalculations';
+export * from './songGrouping';
