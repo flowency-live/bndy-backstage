@@ -22,22 +22,29 @@ export default function MapContainer({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = L.map(containerRef.current, {
-      center,
-      zoom,
-      minZoom: 5,
-      maxZoom: 18,
-      zoomControl: true,
-    });
+    setTimeout(() => {
+      if (!containerRef.current) return;
 
-    L.tileLayer(CARTO_VOYAGER_TILES.url, {
-      attribution: CARTO_VOYAGER_TILES.attribution,
-      maxZoom: CARTO_VOYAGER_TILES.maxZoom,
-      subdomains: CARTO_VOYAGER_TILES.subdomains,
-    }).addTo(map);
+      const map = L.map(containerRef.current, {
+        center,
+        zoom,
+        minZoom: 5,
+        maxZoom: 18,
+        zoomControl: true,
+      });
 
-    mapRef.current = map;
-    onMapReady(map);
+      L.tileLayer(CARTO_VOYAGER_TILES.url, {
+        attribution: CARTO_VOYAGER_TILES.attribution,
+        maxZoom: CARTO_VOYAGER_TILES.maxZoom,
+        subdomains: CARTO_VOYAGER_TILES.subdomains,
+      }).addTo(map);
+
+      setTimeout(() => {
+        map.invalidateSize();
+        mapRef.current = map;
+        onMapReady(map);
+      }, 100);
+    }, 0);
 
     return () => {
       if (mapRef.current) {
