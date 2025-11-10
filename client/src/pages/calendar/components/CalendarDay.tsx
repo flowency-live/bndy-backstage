@@ -23,6 +23,7 @@ interface CalendarDayProps {
   effectiveArtistId?: string | null;
   onEventClick: (event: Event) => void;
   onDayClick?: (date: string) => void;
+  onAddEvent?: (date: string) => void;
   totalDays: number;
 }
 
@@ -42,18 +43,23 @@ export function CalendarDay({
   effectiveArtistId,
   onEventClick,
   onDayClick,
+  onAddEvent,
   totalDays,
 }: CalendarDayProps) {
   const dateStr = format(date, 'yyyy-MM-dd');
   const dayEvents = getEventsForDate(events, dateStr);
-  const startingEvents = getEventsStartingOnDate(events, dateStr);
-  const extendingEvents = getEventsExtendingToDate(events, dateStr);
+
+  // Separate unavailability events from other events
+  // Unavailability events should be full-width per day, not multi-day bars
+  const unavailabilityEvents = dayEvents.filter((e) => e.type === 'unavailable');
+  const startingEvents = getEventsStartingOnDate(events, dateStr).filter((e) => e.type !== 'unavailable');
+  const extendingEvents = getEventsExtendingToDate(events, dateStr).filter((e) => e.type !== 'unavailable');
 
   const isCurrentMonth = isSameMonth(date, currentDate);
   const isToday_ = isToday(date);
 
   const MAX_VISIBLE_EVENTS = 3;
-  const overflowCount = startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
+  const overflowCount = unavailabilityEvents.length + startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
   const hasOverflow = overflowCount > 0;
 
   return (
@@ -83,8 +89,26 @@ export function CalendarDay({
 
       {/* Events */}
       <div className="space-y-1 px-1">
-        {/* Starting events */}
-        {startingEvents.slice(0, MAX_VISIBLE_EVENTS).map((event, eventIndex) => {
+        {/* Unavailability events - full width per day, first row */}
+        {unavailabilityEvents.slice(0, MAX_VISIBLE_EVENTS).map((event, eventIndex) => (
+          <EventBadge
+            key={`unavail-${event.id}-${eventIndex}`}
+            event={event}
+            artistDisplayColour={artistDisplayColour}
+            artistMembers={artistMembers}
+            currentUserDisplayName={currentUserDisplayName}
+            effectiveArtistId={effectiveArtistId}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEventClick(event);
+            }}
+            isMultiDay={false}
+            spanDays={1}
+          />
+        ))}
+
+        {/* Starting events (gigs, rehearsals, other) */}
+        {startingEvents.slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityEvents.length)).map((event, eventIndex) => {
           const spanDays = Math.min(
             getEventSpanDays(event),
             getRemainingDaysInWeek(dayIndex)
@@ -107,8 +131,8 @@ export function CalendarDay({
               spanDays={spanDays}
               className={isMultiDay ? '' : ''}
               style={{
-                zIndex: 10 + eventIndex,
-                top: isMultiDay ? `${36 + eventIndex * 26}px` : 'auto',
+                zIndex: 10 + unavailabilityEvents.length + eventIndex,
+                top: isMultiDay ? `${36 + (unavailabilityEvents.length + eventIndex) * 26}px` : 'auto',
                 width: isMultiDay
                   ? spanDays < getRemainingDaysInWeek(dayIndex)
                     ? `calc(${(spanDays / 7) * 100}% - 8px)`
@@ -121,7 +145,7 @@ export function CalendarDay({
 
         {/* Extending events (multi-day continuations) */}
         {extendingEvents
-          .slice(0, Math.max(0, MAX_VISIBLE_EVENTS - startingEvents.length))
+          .slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityEvents.length - startingEvents.length))
           .map((event, eventIndex) => {
             const remainingDays = getRemainingDaysInWeek(dayIndex);
             const eventEndDate = new Date(event.endDate! + 'T00:00:00');
@@ -148,8 +172,8 @@ export function CalendarDay({
                 isMultiDay={true}
                 spanDays={spanDays}
                 style={{
-                  zIndex: 10 + startingEvents.length + eventIndex,
-                  top: `${36 + (startingEvents.length + eventIndex) * 26}px`,
+                  zIndex: 10 + unavailabilityEvents.length + startingEvents.length + eventIndex,
+                  top: `${36 + (unavailabilityEvents.length + startingEvents.length + eventIndex) * 26}px`,
                   width: spanDays < remainingDays ? 'auto' : 'calc(100% - 8px)',
                 }}
               />
@@ -169,6 +193,23 @@ export function CalendarDay({
           </div>
         )}
       </div>
+
+      {/* Add event button (only for current month) - COPIED from calendar.tsx.old lines 1005-1017 */}
+      {isCurrentMonth && onAddEvent && (
+        <div className="absolute inset-0 bg-transparent hover:bg-brand-primary/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddEvent(dateStr);
+            }}
+            className="w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg pointer-events-auto"
+            title="Add event"
+            data-testid={`button-add-event-${dateStr}`}
+          >
+            <i className="fas fa-plus"></i>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

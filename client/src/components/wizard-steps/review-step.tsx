@@ -20,9 +20,10 @@ interface ReviewStepProps {
   artistId: string;
   artistName: string;
   onUpdate: (data: Partial<PublicGigFormData>) => void;
+  editingEventId?: string;
 }
 
-export default function ReviewStep({ formData, artistId, artistName, onUpdate }: ReviewStepProps) {
+export default function ReviewStep({ formData, artistId, artistName, onUpdate, editingEventId }: ReviewStepProps) {
   const [conflicts, setConflicts] = useState<any[]>([]);
   const [checkingConflicts, setCheckingConflicts] = useState(true);
 
@@ -35,18 +36,23 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
       }
 
       try {
+        const requestBody = {
+          date: formData.date,
+          type: 'gig',
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          excludeEventId: editingEventId, // Exclude current event when editing
+        };
+
+        console.log('Conflict check request:', { requestBody, editingEventId });
+
         const response = await fetch(
           `https://api.bndy.co.uk/api/artists/${artistId}/events/check-conflicts`,
           {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              date: formData.date,
-              type: 'gig',
-              startTime: formData.startTime,
-              endTime: formData.endTime,
-            }),
+            body: JSON.stringify(requestBody),
           }
         );
 
@@ -64,7 +70,7 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate }:
     };
 
     checkConflicts();
-  }, [formData.date, formData.startTime, formData.endTime, artistId]);
+  }, [formData.date, formData.startTime, formData.endTime, artistId, editingEventId]);
 
   const formatTime = (time?: string) => {
     if (!time) return null;

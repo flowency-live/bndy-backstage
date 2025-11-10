@@ -7,10 +7,19 @@ interface EventTypeSelectorProps {
   selectedDate?: string;
 }
 
+// Event type configuration - COPIED from event-modal.tsx
+const EVENT_TYPE_CONFIG = {
+  gig: { label: 'Gig', icon: '🎤', color: '#f97316' },
+  rehearsal: { label: 'Rehearsal', icon: '🎵', color: '#f97316' },
+  unavailable: { label: 'Unavailable', icon: '🚫', color: 'hsl(0, 84%, 60%)' },
+  other: { label: 'Other', icon: '📅', color: '#64748b' },
+};
+
 /**
  * Event type selector modal
  * Provides 4-button grid for selecting event type to create
  * Routes to appropriate modal based on selection
+ * COPIED styling from event-modal.tsx lines 335-366
  */
 export function EventTypeSelector({
   isOpen,
@@ -27,7 +36,7 @@ export function EventTypeSelector({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-background rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in">
+      <div className="bg-card rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in">
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-sans font-bold text-foreground">
@@ -44,51 +53,24 @@ export function EventTypeSelector({
           )}
         </div>
 
-        {/* 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Gig */}
-          <button
-            onClick={() => handleSelect('gig')}
-            className="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-brand-accent to-brand-accent-dark hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <div className="flex flex-col items-center text-white">
-              <Calendar className="w-10 h-10 mb-3" />
-              <span className="font-sans font-semibold text-lg">Gig</span>
-            </div>
-          </button>
+        {/* Event Type Selection - COPIED from event-modal.tsx lines 335-366 */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {(['gig', 'rehearsal', 'unavailable', 'other'] as const).map((type) => {
+            const config = EVENT_TYPE_CONFIG[type];
 
-          {/* Rehearsal */}
-          <button
-            onClick={() => handleSelect('rehearsal')}
-            className="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-orange-500 to-orange-600 hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <div className="flex flex-col items-center text-white">
-              <Music className="w-10 h-10 mb-3" />
-              <span className="font-sans font-semibold text-lg">Rehearsal</span>
-            </div>
-          </button>
-
-          {/* Unavailable */}
-          <button
-            onClick={() => handleSelect('unavailable')}
-            className="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-red-500 to-red-600 hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <div className="flex flex-col items-center text-white">
-              <Ban className="w-10 h-10 mb-3" />
-              <span className="font-sans font-semibold text-lg">Unavailable</span>
-            </div>
-          </button>
-
-          {/* Other */}
-          <button
-            onClick={() => handleSelect('other')}
-            className="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-slate-500 to-slate-600 hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <div className="flex flex-col items-center text-white">
-              <MoreHorizontal className="w-10 h-10 mb-3" />
-              <span className="font-sans font-semibold text-lg">Other</span>
-            </div>
-          </button>
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => handleSelect(type)}
+                className="p-3 rounded-lg border-2 border-border hover:border-border/80 hover:shadow-sm text-center transition-all duration-200"
+                data-testid={`button-event-type-${type}`}
+              >
+                <div className="text-xl mb-1">{config.icon}</div>
+                <div className="text-xs font-sans font-semibold text-muted-foreground">{config.label}</div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Cancel Button */}

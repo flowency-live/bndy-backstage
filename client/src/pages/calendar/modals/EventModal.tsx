@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import DatePickerModal from '@/components/date-picker-modal';
-import { apiRequest } from '@/services/api';
+import TimePickerModal from '@/components/time-picker-modal';
+import { apiRequest } from '@/lib/queryClient';
 import type { Event } from '@/types/api';
 
 interface EventModalProps {
@@ -37,6 +38,8 @@ export function EventModal({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [timePickerType, setTimePickerType] = useState<'start' | 'end'>('start');
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!event;
@@ -69,6 +72,17 @@ export function EventModal({
       setError(null);
     }
   }, [isOpen]);
+
+  // Format time for display - COPIED from date-time-step.tsx
+  const formatTime = (time?: string) => {
+    if (!time) return null;
+    if (time === '00:00') return 'Midnight';
+    const [hours, minutes] = time.split(':');
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${period}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,29 +195,43 @@ export function EventModal({
               </button>
             </div>
 
-            {/* Time */}
+            {/* Time - COPIED from date-time-step.tsx */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Start Time
                 </label>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimePickerType('start');
+                    setShowTimePicker(true);
+                  }}
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background hover:border-orange-500 transition-colors text-left flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {startTime ? formatTime(startTime) : 'Select time'}
+                  </span>
+                </button>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   End Time
                 </label>
-                <Input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full"
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimePickerType('end');
+                    setShowTimePicker(true);
+                  }}
+                  className="w-full px-4 py-2 border border-input rounded-lg bg-background hover:border-orange-500 transition-colors text-left flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {endTime ? formatTime(endTime) : 'Select time'}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -247,7 +275,7 @@ export function EventModal({
               </button>
               <button
                 type="submit"
-                className="flex-1 py-3 px-4 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
@@ -267,6 +295,22 @@ export function EventModal({
         }}
         selectedDate={date}
         title="Select date"
+      />
+
+      {/* Time Picker Modal - COPIED from date-time-step.tsx */}
+      <TimePickerModal
+        isOpen={showTimePicker}
+        onClose={() => setShowTimePicker(false)}
+        selectedTime={timePickerType === 'start' ? startTime : endTime}
+        onSelectTime={(time) => {
+          if (timePickerType === 'start') {
+            setStartTime(time);
+          } else {
+            setEndTime(time);
+          }
+          setShowTimePicker(false);
+        }}
+        title={timePickerType === 'start' ? 'Select start time' : 'Select end time'}
       />
     </>
   );

@@ -80,6 +80,14 @@ export default function PublicGigWizard({
   // LocalStorage key for auto-save
   const STORAGE_KEY = `public-gig-draft-${artistId}`;
 
+  // Reset form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setFormData(initialData);
+      setCurrentStep(1); // Reset to first step when editing
+    }
+  }, [initialData, isOpen]);
+
   // Load draft from localStorage on mount
   useEffect(() => {
     if (!initialData) {
@@ -88,10 +96,6 @@ export default function PublicGigWizard({
         try {
           const draft = JSON.parse(savedDraft);
           setFormData(draft);
-          toast({
-            title: 'Draft restored',
-            description: 'Your previous work has been restored',
-          });
         } catch (error) {
           console.error('Failed to parse saved draft:', error);
         }
@@ -372,6 +376,7 @@ export default function PublicGigWizard({
               artistId={artistId}
               artistName={artistName}
               onUpdate={updateFormData}
+              editingEventId={editingEventId}
             />
           )}
         </div>
