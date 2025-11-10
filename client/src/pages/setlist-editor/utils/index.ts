@@ -2,3 +2,5 @@
 export * from './durationCalculations';
 export * from './setlistCalculations';
 export * from './songGrouping';
+export * from './dragDropHelpers';
+export * from './segueLogic';
