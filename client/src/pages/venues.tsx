@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { MapPin, Plus, Phone, Mail, Building } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
 import type { ArtistVenue } from "@/lib/services/venue-crm-service";
+import AddVenueModal from "./components/AddVenueModal";
 
 interface VenuesProps {
   artistId: string;
@@ -16,6 +18,8 @@ interface VenuesProps {
 
 export default function Venues({ artistId, membership }: VenuesProps) {
   const { session } = useServerAuth();
+  const [, setLocation] = useLocation();
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch venues for this artist
   const { data: venues = [], isLoading } = useQuery<ArtistVenue[]>({
@@ -47,12 +51,20 @@ export default function Venues({ artistId, membership }: VenuesProps) {
             </div>
             <Button
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => setShowAddModal(true)}
               data-testid="button-add-venue"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Venue
             </Button>
           </div>
+
+          {/* Add Venue Modal */}
+          <AddVenueModal
+            open={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            artistId={artistId}
+          />
 
           {/* Venues List */}
           {venues.length === 0 ? (
@@ -63,7 +75,10 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 <p className="text-muted-foreground mb-6">
                   Start building your venue network by adding your first venue
                 </p>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => setShowAddModal(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Your First Venue
                 </Button>
@@ -75,6 +90,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 <Card
                   key={venue.id}
                   className="cursor-pointer hover:shadow-lg transition-all duration-200"
+                  onClick={() => setLocation(`/venues/${venue.venue_id}`)}
                   data-testid={`venue-card-${venue.id}`}
                 >
                   <CardHeader>

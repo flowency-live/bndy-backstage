@@ -47,6 +47,19 @@ export interface VenueContact {
   updated_at: string;
 }
 
+export interface VenueGig {
+  id: string;
+  artistId: string;
+  venueId: string;
+  date: string;
+  name: string;
+  type: 'gig' | 'public_gig';
+  notes?: string;
+  setlistId?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CreateArtistVenueRequest {
   venueId: string;
   notes?: string;
@@ -222,6 +235,15 @@ class VenueCRMService {
       {
         method: 'DELETE',
       }
+    );
+  }
+
+  /**
+   * Get gig history for a venue
+   */
+  async getVenueGigs(artistId: string, venueId: string): Promise<VenueGig[]> {
+    return this.apiRequest<VenueGig[]>(
+      `/api/artists/${artistId}/crm/venues/${venueId}/gigs`
     );
   }
 }

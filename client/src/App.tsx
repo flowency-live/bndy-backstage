@@ -30,6 +30,7 @@ import Members from "@/pages/members";
 import Issues from "@/pages/issues";
 import AgentEvents from "@/pages/agentevents";
 import Venues from "@/pages/venues";
+import VenueDetail from "@/pages/venues/venue-detail";
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
 import AuthSuccess from "@/pages/auth-success";
@@ -122,6 +123,22 @@ function Router() {
             );
           }}
         </MemberGate>
+      </Route>
+      <Route path="/venues/:venueId">
+        {(params) => (
+          <MemberGate>
+            {({ contextId, membership, userProfile }) => {
+              if (!contextId || !membership) return null;
+              return (
+                <ProfileGate userProfile={userProfile}>
+                  <AppLayout artistId={contextId} membership={membership}>
+                    <VenueDetail artistId={contextId} venueId={params.venueId} membership={membership} />
+                  </AppLayout>
+                </ProfileGate>
+              );
+            }}
+          </MemberGate>
+        )}
       </Route>
       <Route path="/songs">
         <MemberGate>
