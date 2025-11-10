@@ -65,6 +65,7 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
     artistId,
     setlistId,
     setlist,
+    onNavigateBack: () => setLocation('/setlists2'),
   });
 
   // Playbook filtering
@@ -100,7 +101,7 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
       });
       if (!confirmed) return;
     }
-    setLocation('/setlists');
+    setLocation('/setlists2');
   };
 
   // Handle edit name
@@ -126,7 +127,7 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
         <div className="text-center">
           <p className="text-red-500 text-xl mb-2">Failed to load setlist</p>
           <button
-            onClick={() => setLocation('/setlists')}
+            onClick={() => setLocation('/setlists2')}
             className="text-orange-500 hover:text-orange-600"
           >
             <i className="fas fa-arrow-left mr-2"></i>
