@@ -214,20 +214,6 @@ function Router() {
           </MemberGate>
         )}
       </Route>
-      <Route path="/setlists2">
-        <MemberGate>
-          {({ contextId, membership, userProfile }) => {
-            if (!contextId || !membership) return null;
-            return (
-              <ProfileGate userProfile={userProfile}>
-                <AppLayout artistId={contextId} membership={membership}>
-                  <Setlists2 artistId={contextId} membership={membership} />
-                </AppLayout>
-              </ProfileGate>
-            );
-          }}
-        </MemberGate>
-      </Route>
       <Route path="/setlists2/:setlistId">
         {(params) => (
           <MemberGate>
@@ -245,6 +231,20 @@ function Router() {
             }}
           </MemberGate>
         )}
+      </Route>
+      <Route path="/setlists2">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Setlists2 artistId={contextId} membership={membership} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
       </Route>
       <Route path="/admin">
         <MemberGate>
