@@ -110,40 +110,44 @@ export default function Venues({ artistId, membership }: VenuesProps) {
 
   return (
     <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
+      <div className="px-2 sm:px-4 lg:px-6 pt-2 sm:pt-6 pb-2 sm:pb-6">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-3 sm:mb-6">
+            <div className="hidden sm:block">
               <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Venues</h1>
               <p className="text-muted-foreground">
                 Manage your venue relationships and contacts
               </p>
             </div>
+            <h1 className="sm:hidden text-xl font-serif font-bold text-foreground">Venues</h1>
             <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'outline'}
                 onClick={() => setViewMode('list')}
+                size="sm"
                 className="flex-1 sm:flex-none"
               >
-                <List className="h-4 w-4 mr-2" />
-                List
+                <List className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">List</span>
               </Button>
               <Button
                 variant={viewMode === 'map' ? 'default' : 'outline'}
                 onClick={() => setViewMode('map')}
+                size="sm"
                 className="flex-1 sm:flex-none"
               >
-                <Map className="h-4 w-4 mr-2" />
-                Map
+                <Map className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Map</span>
               </Button>
               <Button
                 className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none"
                 onClick={() => setShowAddModal(true)}
+                size="sm"
                 data-testid="button-add-venue"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Venue
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Venue</span>
               </Button>
             </div>
           </div>
@@ -306,7 +310,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-2 sm:gap-4">
               {filteredAndSortedVenues.map((venue) => (
                 <Card
                   key={venue.id}
@@ -314,29 +318,29 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                   onClick={() => setLocation(`/venues/${venue.venue_id}`)}
                   data-testid={`venue-card-${venue.id}`}
                 >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white">
-                          <Building className="h-6 w-6" />
+                  <CardHeader className="pb-2 sm:pb-6">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
+                          <Building className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
-                        <div>
-                          <CardTitle className="text-xl mb-1">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base sm:text-xl mb-1 truncate">
                             {venue.custom_venue_name || venue.venue.name}
                           </CardTitle>
                           {venue.custom_venue_name && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
                               Official: {venue.venue.name}
                             </p>
                           )}
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>{venue.venue.address}</span>
-                            {venue.venue.city && <span>• {venue.venue.city}</span>}
-                            {venue.venue.postcode && <span>• {venue.venue.postcode}</span>}
+                          <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">{venue.venue.address}</span>
+                            {venue.venue.city && <span className="hidden sm:inline">• {venue.venue.city}</span>}
+                            {venue.venue.postcode && <span className="hidden lg:inline">• {venue.venue.postcode}</span>}
                           </div>
                           {venue.venue.phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mt-1">
                               <Phone className="h-4 w-4" />
                               <span>{venue.venue.phone}</span>
                             </div>
@@ -344,14 +348,14 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                         </div>
                       </div>
                       {venue.managed_on_bndy && (
-                        <div className="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium">
+                        <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium whitespace-nowrap flex-shrink-0">
                           On BNDY
                         </div>
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <CardContent className="pt-0 sm:pt-6">
+                    <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
                       <div>
                         <span className="font-semibold text-foreground">{venue.contactCount}</span> contacts
                       </div>
@@ -359,7 +363,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                         <span className="font-semibold text-foreground">{venue.gigCount}</span> gigs
                       </div>
                       {venue.notes && (
-                        <div className="flex-1 truncate">
+                        <div className="hidden sm:block flex-1 truncate">
                           <span className="italic">{venue.notes}</span>
                         </div>
                       )}
