@@ -1,2 +1,5 @@
 // Barrel export for setlist-editor components
-// Components will be exported here as they are created
+export * from './SetlistHeader';
+export * from './SortableSongCard';
+export * from './DraggablePlaybookSong';
+export * from './DroppableSetContainer';
