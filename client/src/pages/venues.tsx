@@ -1,3 +1,4 @@
+// Venue CRM - Manage venue relationships and contacts
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
