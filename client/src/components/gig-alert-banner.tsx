@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { Event } from "@/types/api";
+import type { Event } from "@/lib/services/events-service";
 import { EVENT_TYPE_CONFIG } from "@/types/api";
 
 interface GigAlertBannerProps {

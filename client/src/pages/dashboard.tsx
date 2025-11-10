@@ -11,8 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon } from "lucide-react";
-import type { Event, Song, ArtistMembership, Artist, User } from "@/types/api";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin } from "lucide-react";
+import type { Song, ArtistMembership, Artist, User } from "@/types/api";
+import type { Event } from "@/lib/services/events-service";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import ImageUpload from "@/components/ui/image-upload";
@@ -614,7 +615,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       // Use events-service instead of direct fetch
       const { eventsService } = await import("@/lib/services/events-service");
       const data = await eventsService.getArtistCalendar(
-        artistId,
+        artistId!,
         format(today, "yyyy-MM-dd"),
         format(nextMonth, "yyyy-MM-dd")
       );
@@ -623,9 +624,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       const artistEvents = data.artistEvents || [];
 
       // Filter and sort upcoming events (practices and gigs only)
+      // Note: artistEvents from events-service only contains artist events, not user unavailability
       return artistEvents
         .filter((event: Event) => {
-          if (event.type === "unavailable") return false;
           const eventDate = new Date(event.date + 'T00:00:00');
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -748,6 +749,17 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       ]);
 
       return votingSongs.length + reviewSongs.length + practiceSongs.length;
+    },
+    enabled: !!session && !!artistId,
+  });
+
+  // Get venue count for CRM
+  const { data: venueCount = 0 } = useQuery({
+    queryKey: ['venue-count', artistId],
+    queryFn: async () => {
+      const { venueCRMService } = await import("@/lib/services/venue-crm-service");
+      const venues = await venueCRMService.getArtistVenues(artistId!);
+      return venues.length;
     },
     enabled: !!session && !!artistId,
   });
@@ -906,6 +918,22 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               onClick={() => setLocation("/pipeline")}
               className="animate-stagger-3"
               data-testid="tile-pipeline"
+            />
+          </div>
+        </div>
+
+        {/* Venues & Contacts Section */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Venues & Contacts</h2>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
+            <DashboardTile
+              title="Venues"
+              icon={<MapPin />}
+              color="hsl(142, 76%, 36%)"
+              count={venueCount}
+              onClick={() => setLocation("/venues")}
+              className="animate-stagger-1"
+              data-testid="tile-venues"
             />
           </div>
         </div>
