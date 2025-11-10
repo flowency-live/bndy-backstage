@@ -26,6 +26,24 @@ export default function VenueMarkerLayer({
   useEffect(() => {
     if (!map) return;
 
+    // Clean up existing layer first
+    if (clusterRef.current) {
+      try {
+        map.removeLayer(clusterRef.current);
+      } catch (e) {
+        // Layer might already be removed
+      }
+      clusterRef.current = null;
+    }
+
+    const filteredVenues = venues.filter(v => {
+      if (filter === 'managed') return v.managed_on_bndy;
+      if (filter === 'unmanaged') return !v.managed_on_bndy;
+      return true;
+    });
+
+    if (filteredVenues.length === 0) return;
+
     const clusterGroup = L.markerClusterGroup({
       maxClusterRadius: 30,
       iconCreateFunction: (cluster) => {
@@ -35,12 +53,6 @@ export default function VenueMarkerLayer({
       disableClusteringAtZoom: 12,
       spiderfyOnMaxZoom: false,
       showCoverageOnHover: false,
-    });
-
-    const filteredVenues = venues.filter(v => {
-      if (filter === 'managed') return v.managed_on_bndy;
-      if (filter === 'unmanaged') return !v.managed_on_bndy;
-      return true;
     });
 
     filteredVenues.forEach(venue => {
@@ -62,27 +74,30 @@ export default function VenueMarkerLayer({
       clusterGroup.addLayer(marker);
     });
 
-    setTimeout(() => {
+    // Add to map and fit bounds
+    try {
       map.addLayer(clusterGroup);
       clusterRef.current = clusterGroup;
 
-      if (filteredVenues.length > 0) {
-        const bounds = clusterGroup.getBounds();
-        if (bounds.isValid()) {
-          setTimeout(() => {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-          }, 100);
-        }
+      const bounds = clusterGroup.getBounds();
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
       }
-    }, 200);
+    } catch (e) {
+      console.error('Error adding markers to map:', e);
+    }
 
     return () => {
-      if (clusterRef.current && map) {
-        map.removeLayer(clusterRef.current);
+      if (clusterRef.current) {
+        try {
+          map.removeLayer(clusterRef.current);
+        } catch (e) {
+          // Layer might already be removed
+        }
         clusterRef.current = null;
       }
     };
-  }, [map, venues, filter, onVenueClick]);
+  }, [map, venues, filter]);
 
   return null;
 }
