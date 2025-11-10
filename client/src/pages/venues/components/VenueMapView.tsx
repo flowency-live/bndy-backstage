@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { venueCRMService } from '@/lib/services/venue-crm-service';
@@ -61,20 +61,23 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
 
   const handleMapReady = useCallback((mapInstance: L.Map) => {
     setMap(mapInstance);
+  }, []);
 
-    // Fit bounds once after map is ready and we have venues
-    setTimeout(() => {
-      if (venues.length > 0) {
-        const bounds = venues
-          .filter(v => v.venue.latitude && v.venue.longitude)
-          .map(v => [v.venue.latitude, v.venue.longitude] as [number, number]);
+  // Fit bounds once when map and venues are ready
+  const [hasFitBounds, setHasFitBounds] = useState(false);
 
-        if (bounds.length > 0) {
-          mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-        }
-      }
-    }, 500);
-  }, [venues]);
+  useEffect(() => {
+    if (!map || !venues.length || hasFitBounds) return;
+
+    const bounds = venues
+      .filter(v => v.venue.latitude && v.venue.longitude)
+      .map(v => [v.venue.latitude, v.venue.longitude] as [number, number]);
+
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+      setHasFitBounds(true);
+    }
+  }, [map, venues, hasFitBounds]);
 
   const handleVenueClick = useCallback((venue: ArtistVenue) => {
     setSelectedVenue(venue);
