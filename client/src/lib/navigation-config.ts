@@ -1,4 +1,4 @@
-import { Home, Calendar, Music, Settings, User, ListChecks } from "lucide-react";
+import { Home, Calendar, Music, Settings, User, ListChecks, MapPin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
@@ -36,6 +36,13 @@ export const navigationItems: NavigationItem[] = [
     label: "Song Pipeline",
     href: "/pipeline",
     color: "hsl(25, 95%, 53%)",
+    description: ""
+  },
+  {
+    icon: MapPin,
+    label: "Venues",
+    href: "/venues",
+    color: "hsl(142, 76%, 36%)",
     description: ""
   },
   {
