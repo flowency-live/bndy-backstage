@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2, UserPlus, Copy, Send, Trash2, Link as LinkIcon } from 'lucide-react';
-// TODO: ActiveInvitesList component needs to be created in MembersTab/components/
-// import ActiveInvitesList from '@/components/ActiveInvitesList';
+import ActiveInvitesList from './components/ActiveInvitesList';
 
 interface Member {
   id: string;
@@ -265,8 +264,10 @@ export default function MembersTab() {
             </CardContent>
           </Card>
 
-          {/* TODO: Implement ActiveInvitesList component */}
-          {/* <ActiveInvitesList artistId={artistId} /> */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">Active Invites</h3>
+            <ActiveInvitesList artistId={artistId} />
+          </div>
         </>
       )}
 
