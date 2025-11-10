@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import type { ArtistVenue } from '@/lib/services/venue-crm-service';
@@ -9,30 +10,24 @@ import {
 } from './config/markerIcons';
 
 interface VenueMarkerLayerProps {
-  map: L.Map | null;
   venues: ArtistVenue[];
   onVenueClick: (venue: ArtistVenue) => void;
   filter: 'all' | 'managed' | 'unmanaged';
 }
 
 export default function VenueMarkerLayer({
-  map,
   venues,
   onVenueClick,
   filter
 }: VenueMarkerLayerProps) {
+  const map = useMap();
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const initialFitDoneRef = useRef(false);
 
   useEffect(() => {
-    if (!map) return;
-
-    // Clean up existing layer first
+    // Clean up existing layer
     if (clusterRef.current) {
-      try {
-        map.removeLayer(clusterRef.current);
-      } catch (e) {
-        // Layer might already be removed
-      }
+      map.removeLayer(clusterRef.current);
       clusterRef.current = null;
     }
 
@@ -42,7 +37,10 @@ export default function VenueMarkerLayer({
       return true;
     });
 
-    if (filteredVenues.length === 0) return;
+    if (filteredVenues.length === 0) {
+      initialFitDoneRef.current = false;
+      return;
+    }
 
     const clusterGroup = L.markerClusterGroup({
       maxClusterRadius: 30,
@@ -74,25 +72,25 @@ export default function VenueMarkerLayer({
       clusterGroup.addLayer(marker);
     });
 
-    // Add to map
-    try {
-      map.addLayer(clusterGroup);
-      clusterRef.current = clusterGroup;
-    } catch (e) {
-      console.error('Error adding markers to map:', e);
+    map.addLayer(clusterGroup);
+    clusterRef.current = clusterGroup;
+
+    // Fit bounds on initial load
+    if (!initialFitDoneRef.current) {
+      const bounds = clusterGroup.getBounds();
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        initialFitDoneRef.current = true;
+      }
     }
 
     return () => {
       if (clusterRef.current) {
-        try {
-          map.removeLayer(clusterRef.current);
-        } catch (e) {
-          // Layer might already be removed
-        }
+        map.removeLayer(clusterRef.current);
         clusterRef.current = null;
       }
     };
-  }, [map, venues, filter]);
+  }, [map, venues, filter, onVenueClick]);
 
   return null;
 }
