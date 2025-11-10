@@ -96,10 +96,6 @@ export default function PublicGigWizard({
         try {
           const draft = JSON.parse(savedDraft);
           setFormData(draft);
-          toast({
-            title: 'Draft restored',
-            description: 'Your previous work has been restored',
-          });
         } catch (error) {
           console.error('Failed to parse saved draft:', error);
         }
