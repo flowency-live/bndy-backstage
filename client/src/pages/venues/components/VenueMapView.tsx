@@ -61,7 +61,20 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
 
   const handleMapReady = useCallback((mapInstance: L.Map) => {
     setMap(mapInstance);
-  }, []);
+
+    // Fit bounds once after map is ready and we have venues
+    setTimeout(() => {
+      if (venues.length > 0) {
+        const bounds = venues
+          .filter(v => v.venue.latitude && v.venue.longitude)
+          .map(v => [v.venue.latitude, v.venue.longitude] as [number, number]);
+
+        if (bounds.length > 0) {
+          mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        }
+      }
+    }, 500);
+  }, [venues]);
 
   const handleVenueClick = useCallback((venue: ArtistVenue) => {
     setSelectedVenue(venue);

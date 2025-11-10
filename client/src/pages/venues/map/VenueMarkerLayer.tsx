@@ -74,15 +74,10 @@ export default function VenueMarkerLayer({
       clusterGroup.addLayer(marker);
     });
 
-    // Add to map and fit bounds
+    // Add to map
     try {
       map.addLayer(clusterGroup);
       clusterRef.current = clusterGroup;
-
-      const bounds = clusterGroup.getBounds();
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-      }
     } catch (e) {
       console.error('Error adding markers to map:', e);
     }
