@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin } from "lucide-react";
-import type { Event, Song, ArtistMembership, Artist, User } from "@/types/api";
+import type { Song, ArtistMembership, Artist, User } from "@/types/api";
+import type { Event } from "@/lib/services/events-service";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import ImageUpload from "@/components/ui/image-upload";
@@ -614,7 +615,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       // Use events-service instead of direct fetch
       const { eventsService } = await import("@/lib/services/events-service");
       const data = await eventsService.getArtistCalendar(
-        artistId,
+        artistId!,
         format(today, "yyyy-MM-dd"),
         format(nextMonth, "yyyy-MM-dd")
       );
@@ -623,9 +624,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       const artistEvents = data.artistEvents || [];
 
       // Filter and sort upcoming events (practices and gigs only)
+      // Note: artistEvents from events-service only contains artist events, not user unavailability
       return artistEvents
         .filter((event: Event) => {
-          if (event.type === "unavailable") return false;
           const eventDate = new Date(event.date + 'T00:00:00');
           const today = new Date();
           today.setHours(0, 0, 0, 0);
