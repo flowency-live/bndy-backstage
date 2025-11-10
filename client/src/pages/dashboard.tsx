@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon } from "lucide-react";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin } from "lucide-react";
 import type { Event, Song, ArtistMembership, Artist, User } from "@/types/api";
 import GigAlertBanner from "@/components/gig-alert-banner";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
@@ -752,6 +752,17 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     enabled: !!session && !!artistId,
   });
 
+  // Get venue count for CRM
+  const { data: venueCount = 0 } = useQuery({
+    queryKey: ['venue-count', artistId],
+    queryFn: async () => {
+      const { venueCRMService } = await import("@/lib/services/venue-crm-service");
+      const venues = await venueCRMService.getArtistVenues(artistId!);
+      return venues.length;
+    },
+    enabled: !!session && !!artistId,
+  });
+
   // Calculate some stats
   const upcomingGigs = upcomingEvents.filter(e => e.type === 'gig').length;
   const totalSongs = songs.length;
@@ -906,6 +917,22 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               onClick={() => setLocation("/pipeline")}
               className="animate-stagger-3"
               data-testid="tile-pipeline"
+            />
+          </div>
+        </div>
+
+        {/* Venues & Contacts Section */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Venues & Contacts</h2>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
+            <DashboardTile
+              title="Venues"
+              icon={<MapPin />}
+              color="hsl(142, 76%, 36%)"
+              count={venueCount}
+              onClick={() => setLocation("/venues")}
+              className="animate-stagger-1"
+              data-testid="tile-venues"
             />
           </div>
         </div>
