@@ -1,0 +1,97 @@
+/* Leaflet cluster styling */
+.venue-cluster-icon {
+  border-radius: 50%;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.leaflet-cluster-icon-container {
+  background: transparent;
+  border: none;
+}
+
+/* Venue markers */
+.venue-marker-managed,
+.venue-marker-unmanaged {
+  background: transparent;
+  border: none;
+}
+
+/* User location marker */
+.user-location-marker-container {
+  position: relative;
+}
+
+.user-location-marker {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.user-location-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #3B82F6;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+
+.user-location-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: #3B82F6;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* Map controls z-index fix */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 999;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .venue-edit-panel {
+    width: 100%;
+    max-height: 50vh;
+    bottom: 0;
+    top: auto;
+    border-radius: 16px 16px 0 0;
+  }
+}

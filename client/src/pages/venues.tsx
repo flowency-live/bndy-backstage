@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
-import { MapPin, Plus, Phone, Building, Search, Map } from "lucide-react";
+import { MapPin, Plus, Phone, Building, Search, Map, List } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
 import type { ArtistVenue } from "@/lib/services/venue-crm-service";
 import AddVenueModal from "./venues/components/AddVenueModal";
+import VenueMapView from "./venues/components/VenueMapView";
+import "./venues/map/map-styles.css";
 
 interface VenuesProps {
   artistId: string;
@@ -25,6 +27,7 @@ type StatusFilter = 'all' | 'managed' | 'unmanaged';
 export default function Venues({ artistId, membership }: VenuesProps) {
   const { session } = useServerAuth();
   const [, setLocation] = useLocation();
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
@@ -119,13 +122,20 @@ export default function Venues({ artistId, membership }: VenuesProps) {
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               <Button
-                variant="outline"
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                onClick={() => setViewMode('list')}
                 className="flex-1 sm:flex-none"
-                onClick={() => {/* TODO: Implement map view */}}
-                disabled
+              >
+                <List className="h-4 w-4 mr-2" />
+                List
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'outline'}
+                onClick={() => setViewMode('map')}
+                className="flex-1 sm:flex-none"
               >
                 <Map className="h-4 w-4 mr-2" />
-                Map View
+                Map
               </Button>
               <Button
                 className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none"
@@ -138,8 +148,13 @@ export default function Venues({ artistId, membership }: VenuesProps) {
             </div>
           </div>
 
-          {/* Search and Filters */}
-          {venues.length > 0 && (
+          {/* Map View */}
+          {viewMode === 'map' ? (
+            <VenueMapView artistId={artistId} />
+          ) : (
+            <>
+              {/* Search and Filters */}
+              {venues.length > 0 && (
             <div className="space-y-4 mb-6">
               {/* Search Bar */}
               <div className="relative">
@@ -353,6 +368,8 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 </Card>
               ))}
             </div>
+          )}
+            </>
           )}
         </div>
       </div>
