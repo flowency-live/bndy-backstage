@@ -125,7 +125,7 @@ export function SetCard({
                   idx={idx}
                   onToggleSegue={onToggleSegue}
                   onRemove={onRemoveSong}
-                  showSegue={song.segueInto && idx < set.songs.length - 1}
+                  showSegue={!!(song.segueInto && idx < set.songs.length - 1)}
                   isOver={overId === song.id}
                   drawerOpen={drawerOpen}
                   isEditing={editingSongTitle === song.id}

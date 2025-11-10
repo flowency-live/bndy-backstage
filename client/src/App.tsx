@@ -20,6 +20,8 @@ import Songs from "@/pages/songs";
 import Pipeline from "@/pages/pipeline";
 import Setlists from "@/pages/setlists";
 import SetlistEditor from "@/pages/setlist-editor";
+import Setlists2 from "@/pages/setlists2";
+import SetlistEditor2 from "@/pages/setlist-editor";
 import SetlistPrint from "@/pages/setlist-print";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Gigs from "@/pages/gigs";
@@ -27,6 +29,7 @@ import Admin from "@/pages/admin";
 import Members from "@/pages/members";
 import Issues from "@/pages/issues";
 import AgentEvents from "@/pages/agentevents";
+import Venues from "@/pages/venues";
 import Login from "@/pages/auth/login";
 import OAuthCallback from "@/pages/auth/callback";
 import AuthSuccess from "@/pages/auth-success";
@@ -106,6 +109,20 @@ function Router() {
           }}
         </MemberGate>
       </Route>
+      <Route path="/venues">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Venues artistId={contextId} membership={membership} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
+      </Route>
       <Route path="/songs">
         <MemberGate>
           {({ contextId, membership, userProfile }) => {
@@ -172,6 +189,38 @@ function Router() {
                   <AppLayout artistId={contextId} membership={membership}>
                     <ErrorBoundary>
                       <SetlistEditor artistId={contextId} setlistId={params.setlistId} membership={membership} />
+                    </ErrorBoundary>
+                  </AppLayout>
+                </ProfileGate>
+              );
+            }}
+          </MemberGate>
+        )}
+      </Route>
+      <Route path="/setlists2">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Setlists2 artistId={contextId} membership={membership} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/setlists2/:setlistId">
+        {(params) => (
+          <MemberGate>
+            {({ contextId, membership, userProfile }) => {
+              if (!contextId || !membership) return null;
+              return (
+                <ProfileGate userProfile={userProfile}>
+                  <AppLayout artistId={contextId} membership={membership}>
+                    <ErrorBoundary>
+                      <SetlistEditor2 artistId={contextId} setlistId={params.setlistId} membership={membership} />
                     </ErrorBoundary>
                   </AppLayout>
                 </ProfileGate>
