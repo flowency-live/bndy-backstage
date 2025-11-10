@@ -1,3 +1,4 @@
+// Venue CRM - Manage venue relationships and contacts
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -9,7 +10,7 @@ import { MapPin, Plus, Phone, Mail, Building } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
 import type { ArtistVenue } from "@/lib/services/venue-crm-service";
-import AddVenueModal from "./components/AddVenueModal";
+import AddVenueModal from "./venues/components/AddVenueModal";
 
 interface VenuesProps {
   artistId: string;

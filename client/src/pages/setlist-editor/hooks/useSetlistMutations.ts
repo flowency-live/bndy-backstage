@@ -12,6 +12,7 @@ interface UseSetlistMutationsProps {
   artistId: string;
   setlistId: string;
   setlist: Setlist | undefined;
+  onNavigateBack?: () => void;
 }
 
 interface UseSetlistMutationsReturn {
@@ -26,6 +27,7 @@ export function useSetlistMutations({
   artistId,
   setlistId,
   setlist,
+  onNavigateBack,
 }: UseSetlistMutationsProps): UseSetlistMutationsReturn {
   const { toast } = useToast();
   const { confirm } = useConfirm();
@@ -94,7 +96,7 @@ export function useSetlistMutations({
     );
   };
 
-  // Discard all changes and reset to last saved state
+  // Discard all changes and navigate back to setlists view
   const handleCancel = async () => {
     if (!setlist) return;
 
@@ -111,11 +113,11 @@ export function useSetlistMutations({
     // Reset working copy to saved version
     setWorkingSetlist(setlist);
     setHasUnsavedChanges(false);
-    toast({
-      title: 'Changes discarded',
-      description: 'Setlist reset to last saved version',
-      duration: 2000,
-    });
+
+    // Navigate back to setlists view
+    if (onNavigateBack) {
+      onNavigateBack();
+    }
   };
 
   // Update setlist name

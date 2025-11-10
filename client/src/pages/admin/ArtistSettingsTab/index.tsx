@@ -2,33 +2,18 @@ import { useAdminContext } from '../AdminContext';
 import { useArtistSettings } from './hooks/useArtistSettings';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import ImageUpload from '@/components/ui/image-upload';
-import LocationAutocomplete from '@/components/ui/location-autocomplete';
-import { GenreSelector } from '@/components/ui/genre-selector';
 import { ArtistTypeSelector } from '@/components/ui/artist-type-selector';
 import { ActTypeSelector } from '@/components/ui/act-type-selector';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
-import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter, FaGlobe } from 'react-icons/fa6';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
-
-const COLOR_PRESETS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e',
-  '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1',
-  '#8b5cf6', '#ec4899', '#f43f5e', '#64748b'
-];
-
-const SOCIAL_PLATFORMS = [
-  { key: 'facebookUrl', label: 'Facebook', icon: FaFacebook, color: '#1877F2', placeholder: 'facebook.com/yourband' },
-  { key: 'instagramUrl', label: 'Instagram', icon: FaInstagram, color: '#E4405F', placeholder: 'instagram.com/yourband' },
-  { key: 'youtubeUrl', label: 'YouTube', icon: FaYoutube, color: '#FF0000', placeholder: 'youtube.com/@yourband' },
-  { key: 'spotifyUrl', label: 'Spotify', icon: FaSpotify, color: '#1DB954', placeholder: 'open.spotify.com/artist/...' },
-  { key: 'twitterUrl', label: 'Twitter/X', icon: FaXTwitter, color: '#000000', placeholder: 'x.com/yourband' },
-  { key: 'websiteUrl', label: 'Website', icon: FaGlobe, color: '#6B7280', placeholder: 'yourband.com' }
-];
+import AvatarUploadSection from './components/AvatarUploadSection';
+import BasicInfoSection from './components/BasicInfoSection';
+import LocationSection from './components/LocationSection';
+import ColorPickerSection from './components/ColorPickerSection';
+import GenresSection from './components/GenresSection';
+import SocialLinksSection from './components/SocialLinksSection';
 
 export default function ArtistSettingsTab() {
   const { artistData, isLoading: contextLoading } = useAdminContext();
@@ -75,99 +60,41 @@ export default function ArtistSettingsTab() {
 
       <Card>
         <CardContent className="pt-6 space-y-6">
-          {/* Avatar */}
-          <div>
-            <Label className="text-card-foreground font-semibold mb-3 block">Profile Image</Label>
-            <ImageUpload
-              value={settings.avatar || undefined}
-              onChange={(url) => updateField('avatar', url)}
-              size="lg"
-            />
-          </div>
+          {/* Avatar Upload */}
+          <AvatarUploadSection
+            avatar={settings.avatar || null}
+            onAvatarChange={(url) => updateField('avatar', url)}
+          />
 
-          {/* Name */}
-          <div>
-            <Label htmlFor="name" className="text-card-foreground font-semibold">Artist Name *</Label>
-            <Input
-              id="name"
-              value={settings.name}
-              onChange={(e) => updateField('name', e.target.value)}
-              placeholder="Your artist or band name"
-              required
-              className="mt-2"
-            />
-          </div>
-
-          {/* Bio */}
-          <div>
-            <Label htmlFor="bio" className="text-card-foreground font-semibold">Bio / Description</Label>
-            <Textarea
-              id="bio"
-              value={settings.bio}
-              onChange={(e) => updateField('bio', e.target.value)}
-              placeholder="Tell people about your music and story..."
-              rows={4}
-              className="mt-2"
-            />
-          </div>
+          {/* Basic Info (Name + Bio) */}
+          <BasicInfoSection
+            name={settings.name}
+            bio={settings.bio}
+            onNameChange={(name) => updateField('name', name)}
+            onBioChange={(bio) => updateField('bio', bio)}
+          />
 
           {/* Location */}
-          <div>
-            <Label className="text-card-foreground font-semibold mb-3 block">Location</Label>
-            <LocationAutocomplete
-              value={settings.location}
-              onChange={(location, lat, lng) => {
-                updateMultiple({ location, locationLat: lat, locationLng: lng });
-              }}
-              placeholder="e.g., Stoke-on-Trent, Manchester, London"
-            />
-            {settings.locationLat && settings.locationLng && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Coordinates: {settings.locationLat.toFixed(4)}, {settings.locationLng.toFixed(4)}
-              </p>
-            )}
-          </div>
+          <LocationSection
+            location={settings.location}
+            locationLat={settings.locationLat}
+            locationLng={settings.locationLng}
+            onChange={(location, lat, lng) => {
+              updateMultiple({ location, locationLat: lat, locationLng: lng });
+            }}
+          />
 
           {/* Display Color */}
-          <div>
-            <Label className="text-card-foreground font-semibold mb-3 block">Display Colour</Label>
-            <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
-              {COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => updateField('displayColour', color)}
-                  className={`
-                    w-10 h-10 rounded-lg transition-all
-                    ${settings.displayColour === color
-                      ? 'ring-2 ring-offset-2 ring-primary scale-110'
-                      : 'hover:scale-105'
-                    }
-                  `}
-                  style={{ backgroundColor: color }}
-                  aria-label={`Select color ${color}`}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2 mt-3">
-              <div
-                className="w-8 h-8 rounded border"
-                style={{ backgroundColor: settings.displayColour }}
-              />
-              <span className="text-sm text-muted-foreground">
-                Current: {settings.displayColour}
-              </span>
-            </div>
-          </div>
+          <ColorPickerSection
+            color={settings.displayColour}
+            onColorChange={(color) => updateField('displayColour', color)}
+          />
 
           {/* Genres */}
-          <div>
-            <Label className="text-card-foreground font-semibold mb-3 block">Genres</Label>
-            <GenreSelector
-              selectedGenres={settings.genres}
-              onChange={(genres) => updateField('genres', genres)}
-            />
-          </div>
+          <GenresSection
+            genres={settings.genres}
+            onGenresChange={(genres) => updateField('genres', genres)}
+          />
 
           {/* Artist Type */}
           <div>
@@ -199,36 +126,17 @@ export default function ArtistSettingsTab() {
           </div>
 
           {/* Social Media Links */}
-          <div>
-            <Label className="text-card-foreground font-semibold mb-3 block">Social Media Links</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {SOCIAL_PLATFORMS.map((platform) => {
-                const Icon = platform.icon;
-                return (
-                  <div key={platform.key}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div
-                        className="w-8 h-8 rounded flex items-center justify-center text-white"
-                        style={{ backgroundColor: platform.color }}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <Label htmlFor={platform.key} className="text-sm font-medium">
-                        {platform.label}
-                      </Label>
-                    </div>
-                    <Input
-                      id={platform.key}
-                      value={settings[platform.key as keyof typeof settings] as string}
-                      onChange={(e) => updateField(platform.key as keyof typeof settings, e.target.value)}
-                      placeholder={platform.placeholder}
-                      type="url"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <SocialLinksSection
+            values={{
+              facebookUrl: settings.facebookUrl,
+              instagramUrl: settings.instagramUrl,
+              youtubeUrl: settings.youtubeUrl,
+              spotifyUrl: settings.spotifyUrl,
+              twitterUrl: settings.twitterUrl,
+              websiteUrl: settings.websiteUrl
+            }}
+            onChange={(field, value) => updateField(field as keyof typeof settings, value)}
+          />
         </CardContent>
       </Card>
 
