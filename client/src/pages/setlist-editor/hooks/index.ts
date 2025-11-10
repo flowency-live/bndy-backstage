@@ -2,3 +2,4 @@
 export * from './useSetlistData';
 export * from './useSetlistMutations';
 export * from './usePlaybookFilter';
+export * from './useDragAndDrop';
