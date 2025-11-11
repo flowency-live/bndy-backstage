@@ -7,7 +7,6 @@ import { BndySpinnerOverlay } from '@/components/ui/bndy-spinner';
 import { useToast } from '@/hooks/use-toast';
 import MapContainer from '../map/MapContainer';
 import VenueMarkerLayer from '../map/VenueMarkerLayer';
-import MapControls from '../map/MapControls';
 import VenueEditPanel from '../map/VenueEditPanel';
 
 interface VenueMapViewProps {
@@ -60,22 +59,6 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
     setSelectedVenue(venue);
   }, []);
 
-  const handleLocateMe = useCallback(() => {
-    // This would need access to map instance - we'll implement via a custom hook if needed
-    toast({
-      title: "Feature coming soon",
-      description: "Locate me functionality will be added",
-    });
-  }, [toast]);
-
-  const handleFitBounds = useCallback(() => {
-    // This would need access to map instance - fitBounds is handled automatically on load
-    toast({
-      title: "Map centered",
-      description: "Showing all venues",
-    });
-  }, [toast]);
-
   const handleSaveVenue = useCallback(
     async (updates: { customVenueName?: string; notes?: string }) => {
       await updateVenueMutation.mutateAsync(updates);
@@ -96,12 +79,6 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
           filter="all"
         />
       </MapContainer>
-
-      <MapControls
-        onLocateMe={handleLocateMe}
-        onFitBounds={handleFitBounds}
-        venueCount={venues.length}
-      />
 
       <VenueEditPanel
         venue={selectedVenue}
