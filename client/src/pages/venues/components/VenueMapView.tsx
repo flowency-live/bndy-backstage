@@ -20,7 +20,6 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
   const queryClient = useQueryClient();
 
   const [selectedVenue, setSelectedVenue] = useState<ArtistVenue | null>(null);
-  const [filter, setFilter] = useState<'all' | 'managed' | 'unmanaged'>('all');
 
   const { data: venues = [], isLoading } = useQuery<ArtistVenue[]>({
     queryKey: ['artist-venues', artistId],
@@ -94,15 +93,13 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
         <VenueMarkerLayer
           venues={venues}
           onVenueClick={handleVenueClick}
-          filter={filter}
+          filter="all"
         />
       </MapContainer>
 
       <MapControls
         onLocateMe={handleLocateMe}
         onFitBounds={handleFitBounds}
-        filter={filter}
-        onFilterChange={setFilter}
         venueCount={venues.length}
       />
 

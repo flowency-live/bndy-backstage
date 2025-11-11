@@ -4,47 +4,16 @@ import { Locate, Maximize2 } from 'lucide-react';
 interface MapControlsProps {
   onLocateMe: () => void;
   onFitBounds: () => void;
-  filter: 'all' | 'managed' | 'unmanaged';
-  onFilterChange: (filter: 'all' | 'managed' | 'unmanaged') => void;
   venueCount: number;
 }
 
 export default function MapControls({
   onLocateMe,
   onFitBounds,
-  filter,
-  onFilterChange,
   venueCount
 }: MapControlsProps) {
   return (
-    <div className="absolute top-4 left-4 z-[1000] space-y-2">
-      <div className="bg-card rounded-lg shadow-lg p-2 space-y-1">
-        <Button
-          variant={filter === 'all' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => onFilterChange('all')}
-          className="w-full justify-start text-sm"
-        >
-          All Venues
-        </Button>
-        <Button
-          variant={filter === 'managed' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => onFilterChange('managed')}
-          className="w-full justify-start text-sm"
-        >
-          My Venues
-        </Button>
-        <Button
-          variant={filter === 'unmanaged' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => onFilterChange('unmanaged')}
-          className="w-full justify-start text-sm"
-        >
-          Unmanaged
-        </Button>
-      </div>
-
+    <div className="absolute top-4 right-4 z-[1000] space-y-2">
       <div className="bg-card rounded-lg shadow-lg p-2 space-y-1">
         <Button
           variant="ghost"

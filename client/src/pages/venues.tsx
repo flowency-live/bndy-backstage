@@ -173,7 +173,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               </div>
 
               {/* Filters and Sort */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
                 {/* Gig Filter Pills */}
                 <div className="flex gap-2 flex-wrap">
                   <Button
@@ -199,40 +199,13 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                   </Button>
                 </div>
 
-                <div className="hidden sm:block h-6 w-px bg-border" />
-
-                {/* Status Filter Pills */}
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant={statusFilter === 'all' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatusFilter('all')}
-                  >
-                    All Status
-                  </Button>
-                  <Button
-                    variant={statusFilter === 'managed' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatusFilter('managed')}
-                  >
-                    On BNDY
-                  </Button>
-                  <Button
-                    variant={statusFilter === 'unmanaged' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatusFilter('unmanaged')}
-                  >
-                    Not on BNDY
-                  </Button>
-                </div>
-
                 <div className="hidden sm:block sm:ml-auto" />
 
                 {/* Sort Dropdown */}
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
+                  className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm w-full sm:w-auto"
                 >
                   <option value="name-asc">Name (A-Z)</option>
                   <option value="name-desc">Name (Z-A)</option>
@@ -243,7 +216,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               </div>
 
               {/* Active Filter Count */}
-              {(searchQuery || gigFilter !== 'all' || statusFilter !== 'all') && (
+              {(searchQuery || gigFilter !== 'all') && (
                 <div className="flex items-center justify-between text-sm">
                   <p className="text-muted-foreground">
                     Showing {filteredAndSortedVenues.length} of {venues.length} venues
@@ -254,7 +227,6 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                     onClick={() => {
                       setSearchQuery('');
                       setGigFilter('all');
-                      setStatusFilter('all');
                     }}
                   >
                     Clear Filters
@@ -319,39 +291,32 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                   data-testid={`venue-card-${venue.id}`}
                 >
                   <CardHeader className="pb-2 sm:pb-6">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
-                          <Building className="h-5 w-5 sm:h-6 sm:w-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base sm:text-xl mb-1 truncate">
-                            {venue.custom_venue_name || venue.venue.name}
-                          </CardTitle>
-                          {venue.custom_venue_name && (
-                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                              Official: {venue.venue.name}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="truncate">{venue.venue.address}</span>
-                            {venue.venue.city && <span className="hidden sm:inline">• {venue.venue.city}</span>}
-                            {venue.venue.postcode && <span className="hidden lg:inline">• {venue.venue.postcode}</span>}
-                          </div>
-                          {venue.venue.phone && (
-                            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                              <Phone className="h-4 w-4" />
-                              <span>{venue.venue.phone}</span>
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start gap-2 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
+                        <Building className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
-                      {venue.managed_on_bndy && (
-                        <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium whitespace-nowrap flex-shrink-0">
-                          On BNDY
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base sm:text-xl mb-1 truncate">
+                          {venue.custom_venue_name || venue.venue.name}
+                        </CardTitle>
+                        {venue.custom_venue_name && (
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                            Official: {venue.venue.name}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">{venue.venue.address}</span>
+                          {venue.venue.city && <span className="hidden sm:inline">• {venue.venue.city}</span>}
+                          {venue.venue.postcode && <span className="hidden lg:inline">• {venue.venue.postcode}</span>}
                         </div>
-                      )}
+                        {venue.venue.phone && (
+                          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Phone className="h-4 w-4" />
+                            <span>{venue.venue.phone}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 sm:pt-6">
