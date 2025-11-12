@@ -82,9 +82,13 @@ export default function AddVenueModal({
       toast({
         title: 'Venue added',
         description: `${selectedVenue?.name} has been added to your CRM`,
+        duration: 3000,
       });
 
-      handleClose();
+      // Close modal after brief delay to show toast
+      setTimeout(() => {
+        handleClose();
+      }, 100);
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to add venue';
@@ -94,12 +98,14 @@ export default function AddVenueModal({
           title: 'Venue already in CRM',
           description: 'This venue is already in your venue list',
           variant: 'destructive',
+          duration: 4000,
         });
       } else {
         toast({
           title: 'Error adding venue',
           description: errorMessage,
           variant: 'destructive',
+          duration: 5000,
         });
       }
     },
@@ -141,6 +147,7 @@ export default function AddVenueModal({
         title: 'No venue selected',
         description: 'Please search and select a venue from the list',
         variant: 'destructive',
+        duration: 4000,
       });
       return;
     }
