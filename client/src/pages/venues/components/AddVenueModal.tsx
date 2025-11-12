@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Building, MapPin, AlertCircle } from 'lucide-react';
+import { Plus, Building, MapPin } from 'lucide-react';
 import VenueAutocomplete from '@/components/ui/venue-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -36,11 +37,24 @@ export default function AddVenueModal({
   const queryClient = useQueryClient();
   const [selectedVenue, setSelectedVenue] = useState<SelectedVenue | null>(null);
   const [notes, setNotes] = useState('');
+  const [socialMedia, setSocialMedia] = useState({
+    website: '',
+    facebook: '',
+    instagram: '',
+  });
 
   const addVenueMutation = useMutation({
     mutationFn: async () => {
       if (!selectedVenue) {
         throw new Error('No venue selected');
+      }
+
+      // Build social media URLs array (Godmode pattern)
+      const socialMediaUrls: string[] = [];
+      if (selectedVenue.isNew) {
+        if (socialMedia.website.trim()) socialMediaUrls.push(socialMedia.website.trim());
+        if (socialMedia.facebook.trim()) socialMediaUrls.push(socialMedia.facebook.trim());
+        if (socialMedia.instagram.trim()) socialMediaUrls.push(socialMedia.instagram.trim());
       }
 
       return venueCRMService.createArtistVenue(artistId, {
@@ -56,6 +70,7 @@ export default function AddVenueModal({
             googlePlaceId: selectedVenue.googlePlaceId,
             latitude: selectedVenue.latitude || 0,
             longitude: selectedVenue.longitude || 0,
+            socialMediaUrls: socialMediaUrls.length > 0 ? socialMediaUrls : undefined,
           }
         }),
       });
@@ -137,6 +152,7 @@ export default function AddVenueModal({
     if (!addVenueMutation.isPending) {
       setSelectedVenue(null);
       setNotes('');
+      setSocialMedia({ website: '', facebook: '', instagram: '' });
       onClose();
     }
   };
@@ -165,11 +181,6 @@ export default function AddVenueModal({
               onChange={handleVenueSelect}
               placeholder="Search for venue by name or location..."
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              {selectedVenue?.isNew
-                ? "New venue - will be created in BNDY database"
-                : "Search existing venues or enter a new venue"}
-            </p>
           </div>
 
           {/* Selected Venue Display */}
@@ -203,6 +214,60 @@ export default function AddVenueModal({
             </div>
           )}
 
+          {/* Social Media URLs - Only for new venues */}
+          {selectedVenue?.isNew && (
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">
+                Social Media (Optional)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Add social media links to help others find this venue
+              </p>
+
+              <div>
+                <Label htmlFor="website" className="text-sm">
+                  Website
+                </Label>
+                <Input
+                  id="website"
+                  type="url"
+                  value={socialMedia.website}
+                  onChange={(e) => setSocialMedia({ ...socialMedia, website: e.target.value })}
+                  placeholder="https://www.venuename.com"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="facebook" className="text-sm">
+                  Facebook
+                </Label>
+                <Input
+                  id="facebook"
+                  type="url"
+                  value={socialMedia.facebook}
+                  onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
+                  placeholder="https://www.facebook.com/venuename"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="instagram" className="text-sm">
+                  Instagram
+                </Label>
+                <Input
+                  id="instagram"
+                  type="url"
+                  value={socialMedia.instagram}
+                  onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
+                  placeholder="https://www.instagram.com/venuename"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Notes (Optional) */}
           <div>
             <Label htmlFor="notes">
@@ -220,23 +285,6 @@ export default function AddVenueModal({
               disabled={!selectedVenue}
             />
           </div>
-
-          {/* Info Message */}
-          {!selectedVenue && (
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
-                    Search for a venue above
-                  </h4>
-                  <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                    Start typing to search. If the venue doesn't exist yet, it will be created automatically.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
