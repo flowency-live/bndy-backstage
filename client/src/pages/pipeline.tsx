@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
@@ -20,6 +20,19 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   const { session } = useServerAuth();
   const [activeTab, setActiveTab] = useState<TabType>('voting');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Check for vote reminders when viewing voting tab
+  useEffect(() => {
+    if (activeTab === 'voting' && session?.user?.cognitoId) {
+      // Trigger vote reminder check
+      fetch(`/api/artists/${artistId}/check-vote-reminders`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(err => {
+        console.error('Failed to check vote reminders:', err);
+      });
+    }
+  }, [activeTab, artistId, session?.user?.cognitoId]);
 
   // Query vote counts for badge display (voting + review)
   const { data: votingCount = 0 } = useQuery({
