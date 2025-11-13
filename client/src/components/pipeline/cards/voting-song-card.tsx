@@ -252,6 +252,14 @@ export default function VotingSongCard({
                 voteCount >= memberCount ? (
                   // All votes received - show RAG progress bar
                   <ScoreProgressBar scorePercentage={scorePercentage} />
+                ) : userVote === 0 ? (
+                  // User voted 0 (pass) - show poop emoji
+                  <div
+                    className="cursor-pointer hover:scale-110 transition-transform text-xl"
+                    title="Change your vote"
+                  >
+                    💩
+                  </div>
                 ) : (
                   // Still collecting votes - show user's star rating
                   <div
