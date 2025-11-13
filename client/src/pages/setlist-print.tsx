@@ -106,7 +106,7 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
             </div>
 
             {/* Song list */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {set.songs.map((song, idx) => {
                 const prevSong = idx > 0 ? set.songs[idx - 1] : null;
                 const showSegueIcon = prevSong?.segueInto;
@@ -122,8 +122,8 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
                       </div>
                     )}
 
-                    <div className={!song.segueInto ? 'border-b border-black pb-2' : 'pb-2'}>
-                      <div className="flex items-center gap-4 text-xl">
+                    <div className={!song.segueInto ? 'border-b border-black pb-1.5' : 'pb-1.5'}>
+                      <div className="flex items-center gap-4 text-lg">
                         {/* Track number */}
                         <div className="w-12 text-right font-bold text-black shrink-0">
                           {idx + 1}.
@@ -137,7 +137,7 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
                         {/* Key and Tuning badges */}
                         <div className="shrink-0 flex items-center gap-2">
                           {song.key && (
-                            <span className="text-lg font-semibold text-black">
+                            <span className="text-base font-semibold text-black">
                               {song.key}
                             </span>
                           )}
@@ -157,7 +157,7 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
 
                       {/* Performance notes */}
                       {song.notes && (
-                        <div className="ml-16 mt-0.5 text-xs italic text-gray-600 leading-tight">
+                        <div className="ml-16 text-[11px] text-black leading-none">
                           {song.notes}
                         </div>
                       )}
