@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
 import VoteProgressBadge from "../features/vote-progress-badge";
+import ScoreProgressBar from "../features/score-progress-bar";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import {
   AlertDialog,
@@ -248,20 +249,26 @@ export default function VotingSongCard({
                 scorePercentage={scorePercentage}
               />
               {userHasVoted ? (
-                <div
-                  className="flex gap-0.5 cursor-pointer hover:scale-110 transition-transform"
-                  title="Change your vote"
-                >
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <i
-                      key={star}
-                      className={`fas fa-star ${
-                        star <= userVote ? 'text-yellow-500' : 'text-gray-300'
-                      }`}
-                      style={{ fontSize: '14px' }}
-                    ></i>
-                  ))}
-                </div>
+                voteCount >= memberCount ? (
+                  // All votes received - show RAG progress bar
+                  <ScoreProgressBar scorePercentage={scorePercentage} />
+                ) : (
+                  // Still collecting votes - show user's star rating
+                  <div
+                    className="flex gap-0.5 cursor-pointer hover:scale-110 transition-transform"
+                    title="Change your vote"
+                  >
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <i
+                        key={star}
+                        className={`fas fa-star ${
+                          star <= userVote ? 'text-yellow-500' : 'text-gray-300'
+                        }`}
+                        style={{ fontSize: '14px' }}
+                      ></i>
+                    ))}
+                  </div>
+                )
               ) : (
                 <button
                   className="px-3 py-1.5 rounded-lg font-medium text-xs bg-orange-500 text-white hover:bg-orange-600 animate-pulse transition-all"
