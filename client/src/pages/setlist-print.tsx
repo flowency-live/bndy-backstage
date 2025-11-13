@@ -103,7 +103,6 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
             {/* Set header */}
             <div className="mb-8 text-center">
               <h1 className="text-5xl font-bold text-black mb-2">{set.name}</h1>
-              <p className="text-2xl font-bold text-black">{setlist.name}</p>
             </div>
 
             {/* Song list */}
@@ -158,7 +157,7 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
 
                       {/* Performance notes */}
                       {song.notes && (
-                        <div className="ml-16 mt-1 text-sm italic text-gray-700">
+                        <div className="ml-16 mt-0.5 text-xs italic text-gray-600 leading-tight">
                           {song.notes}
                         </div>
                       )}
