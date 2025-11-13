@@ -19,8 +19,8 @@ export function NotificationPopover({ onClose }: NotificationPopoverProps) {
     markAsRead(notification.id);
 
     const routes: Record<string, string> = {
-      song_added: '/playbook',
-      song_ready: '/playbook',
+      song_added: '/pipeline',
+      song_ready: '/pipeline',
       gig_added: '/calendar',
       gig_removed: '/calendar',
       rehearsal_added: '/calendar',
