@@ -58,6 +58,9 @@ export default function VotingSongCard({
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
 
+  // Check if anyone voted 0 (poop/pass)
+  const hasZeroVote = Object.values(song.votes || {}).some((vote: any) => vote.value === 0);
+
   // Calculate score percentage
   const totalScore = Object.values(song.votes || {}).reduce(
     (sum, vote: any) => sum + (vote.value || 0),
@@ -250,8 +253,18 @@ export default function VotingSongCard({
               />
               {userHasVoted ? (
                 voteCount >= memberCount ? (
-                  // All votes received - show RAG progress bar
-                  <ScoreProgressBar scorePercentage={scorePercentage} />
+                  hasZeroVote ? (
+                    // Anyone voted 0 - show poop emoji (veto)
+                    <div
+                      className="text-xl"
+                      title="Someone voted pass"
+                    >
+                      💩
+                    </div>
+                  ) : (
+                    // All votes received - show RAG progress bar
+                    <ScoreProgressBar scorePercentage={scorePercentage} />
+                  )
                 ) : userVote === 0 ? (
                   // User voted 0 (pass) - show poop emoji
                   <div
