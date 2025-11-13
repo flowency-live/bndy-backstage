@@ -22,6 +22,8 @@ export interface SetlistSong {
   key?: string;
   /** Guitar tuning */
   tuning?: string;
+  /** Performance notes from playbook */
+  notes?: string;
   /** Whether this song segues into the next */
   segueInto?: boolean;
   /** Album artwork URL */

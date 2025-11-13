@@ -106,18 +106,26 @@ export function SortableSongCard({
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div className="flex items-center gap-1">
-              <div className="font-medium truncate text-xs">{song.title}</div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStartEdit(song.id, song.title);
-                }}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-orange-500 shrink-0"
-                title="Edit title"
-              >
-                <i className="fas fa-edit text-[10px]"></i>
-              </button>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1">
+                <div className="font-medium truncate text-xs">{song.title}</div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartEdit(song.id, song.title);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-orange-500 shrink-0"
+                  title="Edit title"
+                >
+                  <i className="fas fa-edit text-[10px]"></i>
+                </button>
+              </div>
+              {(song.key || song.notes) && (
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                  {song.key && <span className="font-semibold text-orange-500">{song.key}</span>}
+                  {song.notes && <span className="italic truncate">{song.notes}</span>}
+                </div>
+              )}
             </div>
           )}
         </div>

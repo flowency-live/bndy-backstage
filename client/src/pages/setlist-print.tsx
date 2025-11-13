@@ -123,38 +123,45 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
                       </div>
                     )}
 
-                    <div className={`flex items-center gap-4 text-xl pb-2 ${
-                      !song.segueInto ? 'border-b border-black' : ''
-                    }`}>
-                      {/* Track number */}
-                      <div className="w-12 text-right font-bold text-black shrink-0">
-                        {idx + 1}.
+                    <div className={!song.segueInto ? 'border-b border-black pb-2' : 'pb-2'}>
+                      <div className="flex items-center gap-4 text-xl">
+                        {/* Track number */}
+                        <div className="w-12 text-right font-bold text-black shrink-0">
+                          {idx + 1}.
+                        </div>
+
+                        {/* Track name */}
+                        <div className="flex-1 font-bold text-black">
+                          {song.title}
+                        </div>
+
+                        {/* Key and Tuning badges */}
+                        <div className="shrink-0 flex items-center gap-2">
+                          {song.key && (
+                            <span className="text-lg font-semibold text-black">
+                              {song.key}
+                            </span>
+                          )}
+                          {song.tuning && song.tuning !== 'standard' && (
+                            <span className={`px-3 py-1 text-base font-bold rounded ${
+                              song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                              song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                              'bg-gray-400 text-black'
+                            }`}>
+                              {song.tuning === 'drop-d' ? 'Drop D' :
+                               song.tuning === 'eb' ? 'Eb' :
+                               song.tuning.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Track name */}
-                      <div className="flex-1 font-bold text-black">
-                        {song.title}
-                      </div>
-
-                      {/* Key and Tuning badges */}
-                      <div className="shrink-0 flex items-center gap-2">
-                        {song.key && (
-                          <span className="text-lg font-semibold text-black">
-                            {song.key}
-                          </span>
-                        )}
-                        {song.tuning && song.tuning !== 'standard' && (
-                          <span className={`px-3 py-1 text-base font-bold rounded ${
-                            song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-                            song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-                            'bg-gray-400 text-black'
-                          }`}>
-                            {song.tuning === 'drop-d' ? 'Drop D' :
-                             song.tuning === 'eb' ? 'Eb' :
-                             song.tuning.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      {/* Performance notes */}
+                      {song.notes && (
+                        <div className="ml-16 mt-1 text-sm italic text-gray-700">
+                          {song.notes}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
