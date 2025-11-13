@@ -730,8 +730,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     enabled: !!session && !!artistId,
   });
 
-  // Get pipeline count (voting + review + practice)
-  const { data: pipelineCount = 0 } = useQuery({
+  // Get pipeline breakdown (voting, review, practice)
+  const { data: pipelineData = { voting: 0, review: 0, practice: 0, total: 0 } } = useQuery({
     queryKey: ['pipeline-count', artistId],
     queryFn: async () => {
       const [votingResponse, reviewResponse, practiceResponse] = await Promise.all([
@@ -740,7 +740,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         fetch(`/api/artists/${artistId}/pipeline?status=practice`, { credentials: 'include' })
       ]);
 
-      if (!votingResponse.ok || !reviewResponse.ok || !practiceResponse.ok) return 0;
+      if (!votingResponse.ok || !reviewResponse.ok || !practiceResponse.ok) {
+        return { voting: 0, review: 0, practice: 0, total: 0 };
+      }
 
       const [votingSongs, reviewSongs, practiceSongs] = await Promise.all([
         votingResponse.json(),
@@ -748,7 +750,12 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         practiceResponse.json()
       ]);
 
-      return votingSongs.length + reviewSongs.length + practiceSongs.length;
+      return {
+        voting: votingSongs.length,
+        review: reviewSongs.length,
+        practice: practiceSongs.length,
+        total: votingSongs.length + reviewSongs.length + practiceSongs.length
+      };
     },
     enabled: !!session && !!artistId,
   });
@@ -922,15 +929,59 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               data-testid="tile-setlists"
             />
 
-            <DashboardTile
-              title="Pipeline"
-              icon={<GitBranch />}
-              color="hsl(45, 93%, 47%)"
-              count={pipelineCount}
+            <Card
+              className="aspect-square w-full cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up animate-stagger-3"
               onClick={() => setLocation("/pipeline")}
-              className="animate-stagger-3"
               data-testid="tile-pipeline"
-            />
+            >
+              <CardContent className="p-0 h-full">
+                <div
+                  className="h-full rounded-lg relative overflow-hidden transition-all duration-300 group-hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, hsl(45, 93%, 47%) 0%, color-mix(in hsl, hsl(45, 93%, 47%) 80%, transparent 20%) 50%, color-mix(in hsl, hsl(45, 93%, 47%) 90%, transparent 10%) 100%)',
+                    backgroundSize: '200% 200%',
+                    backgroundPosition: '0% 0%'
+                  }}
+                >
+                  {/* Animated background on hover */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, color-mix(in hsl, hsl(45, 93%, 47%) 90%, transparent 10%) 0%, hsl(45, 93%, 47%) 50%, color-mix(in hsl, hsl(45, 93%, 47%) 80%, transparent 20%) 100%)',
+                      backgroundSize: '200% 200%',
+                      backgroundPosition: '100% 100%'
+                    }}
+                  />
+
+                  {/* Background Icon */}
+                  <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[48rem] sm:text-[56rem] lg:text-[64rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+                    <GitBranch />
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative p-2 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
+                    <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
+                      <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-0.5 sm:mb-1 text-white drop-shadow-lg leading-tight">Pipeline</h3>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                        <span className="text-white/90">New</span>
+                        <span className="font-bold text-white">{pipelineData.voting}</span>
+                      </div>
+                      <div className={`flex items-center justify-between text-[10px] sm:text-xs ${pipelineData.review > 0 ? 'animate-pulse' : ''}`}>
+                        <span className={pipelineData.review > 0 ? 'text-white font-semibold' : 'text-white/90'}>Review</span>
+                        <span className={`font-bold ${pipelineData.review > 0 ? 'text-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-white'}`}>{pipelineData.review}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                        <span className="text-white/90">Practice</span>
+                        <span className="font-bold text-white">{pipelineData.practice}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

@@ -39,7 +39,14 @@ export function HighPriorityModal({
     if (targetRoute) {
       setLocation(targetRoute);
     }
-    onViewNow();
+
+    // For vote_reminder, just dismiss without marking as read
+    // The notification will update/delete automatically when vote status changes
+    if (notification.type === 'vote_reminder') {
+      onDismiss();
+    } else {
+      onViewNow();
+    }
   };
 
   return (
