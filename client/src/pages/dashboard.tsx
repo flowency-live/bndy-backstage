@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
@@ -763,6 +763,18 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     },
     enabled: !!session && !!artistId,
   });
+
+  // Check for vote reminders on dashboard load
+  useEffect(() => {
+    if (session?.user?.cognitoId && artistId) {
+      fetch(`/api/artists/${artistId}/check-vote-reminders`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(err => {
+        console.error('Failed to check vote reminders:', err);
+      });
+    }
+  }, [artistId, session?.user?.cognitoId]);
 
   // Calculate some stats
   const upcomingGigs = upcomingEvents.filter(e => e.type === 'gig').length;
