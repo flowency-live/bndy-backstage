@@ -73,7 +73,7 @@ export function HighPriorityModal({
             onClick={handleViewNow}
             className="flex-1 bg-cyan-500 hover:bg-cyan-600"
           >
-            View Now
+            {notification.type === 'vote_reminder' ? 'Vote Now!' : 'View Now'}
           </Button>
         </DialogFooter>
       </DialogContent>

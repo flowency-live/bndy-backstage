@@ -1,5 +1,4 @@
 // src/lib/services/notifications-service.ts
-import { API_BASE_URL } from '../../config/api';
 
 export type NotificationType =
   | 'song_added'
@@ -38,12 +37,6 @@ export interface MarkAllAsReadResponse {
 }
 
 class NotificationsService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = API_BASE_URL;
-  }
-
   /**
    * Make authenticated API request with credentials
    */
@@ -51,7 +44,7 @@ class NotificationsService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const url = endpoint;
 
     const defaultOptions: RequestInit = {
       credentials: 'include',

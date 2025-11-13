@@ -28,19 +28,21 @@ export function HighPriorityNotificationHandler() {
     }
   }, [highPriorityNotifications]);
 
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
     if (currentNotification) {
-      dismissNotification(currentNotification.id);
       setCurrentNotification(null);
+      await dismissNotification(currentNotification.id);
       queryClient.invalidateQueries({ queryKey: ['high-priority-notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
   };
 
-  const handleViewNow = () => {
+  const handleViewNow = async () => {
     if (currentNotification) {
-      markAsRead(currentNotification.id);
       setCurrentNotification(null);
+      await markAsRead(currentNotification.id);
       queryClient.invalidateQueries({ queryKey: ['high-priority-notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
   };
 
