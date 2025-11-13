@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { useToast } from "@/hooks/use-toast";
 import IssueForm from "@/components/ui/issue-form";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import type { User, ArtistMembership } from "@/types/api";
 
 interface UserProfile {
@@ -337,8 +338,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-3">
-            {/* Issue Report & Theme Toggle */}
+            {/* Notifications, Issue Report & Theme Toggle */}
             <div className="flex justify-center gap-2">
+              <NotificationBell />
               <Button
                 variant="ghost"
                 size="sm"

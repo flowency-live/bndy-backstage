@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
 import IssueForm from "@/components/ui/issue-form";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
@@ -338,8 +339,9 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             )}
           </div>
 
-          {/* Right: Theme Toggle only on mobile */}
+          {/* Right: Notification Bell + Theme Toggle on mobile */}
           <div className="flex items-center gap-2 pr-4">
+            <NotificationBell />
             <ThemeToggle size="sm" />
           </div>
         </div>
