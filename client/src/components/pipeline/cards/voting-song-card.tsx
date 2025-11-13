@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
 import VoteProgressBadge from "../features/vote-progress-badge";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PipelineSong {
   id: string;
@@ -40,6 +51,7 @@ export default function VotingSongCard({
 }: VotingSongCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const userVote = song.votes?.[userId]?.value ?? null;
   const voteCount = Object.keys(song.votes || {}).length;
@@ -166,9 +178,12 @@ export default function VotingSongCard({
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to remove this suggestion?')) {
-      deleteMutation.mutate();
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    deleteMutation.mutate();
+    setShowDeleteConfirm(false);
   };
 
   const needsUserVote = !userHasVoted;
@@ -361,6 +376,23 @@ export default function VotingSongCard({
           )}
         </div>
       )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove suggestion?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this suggestion? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

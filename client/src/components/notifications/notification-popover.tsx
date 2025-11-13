@@ -25,6 +25,7 @@ export function NotificationPopover({ onClose }: NotificationPopoverProps) {
       gig_removed: '/calendar',
       rehearsal_added: '/calendar',
       rehearsal_removed: '/calendar',
+      vote_reminder: '/pipeline?status=voting',
     };
 
     const targetRoute = routes[notification.type];

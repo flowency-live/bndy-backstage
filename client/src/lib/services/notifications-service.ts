@@ -7,13 +7,17 @@ export type NotificationType =
   | 'gig_added'
   | 'gig_removed'
   | 'rehearsal_added'
-  | 'rehearsal_removed';
+  | 'rehearsal_removed'
+  | 'vote_reminder';
+
+export type NotificationPriority = 'normal' | 'high';
 
 export interface Notification {
   id: string;
   user_id: string;
   artist_id: string;
   type: NotificationType;
+  priority?: NotificationPriority;
   message: string;
   metadata: string;
   read: boolean;
@@ -139,6 +143,29 @@ class NotificationsService {
       {
         method: 'POST',
       }
+    );
+  }
+
+  /**
+   * Dismiss a notification (mark as dismissed without marking as read)
+   * @param notificationId The notification ID to dismiss
+   */
+  async dismissNotification(notificationId: string): Promise<Notification> {
+    return this.apiRequest<Notification>(
+      `/api/notifications/${notificationId}/dismiss`,
+      {
+        method: 'PUT',
+      }
+    );
+  }
+
+  /**
+   * Get high-priority unread notifications
+   */
+  async getHighPriorityNotifications(): Promise<Notification[]> {
+    const response = await this.getNotifications(undefined, 50);
+    return response.notifications.filter(
+      (n) => n.priority === 'high' && !n.read && !n.dismissed
     );
   }
 }

@@ -37,6 +37,7 @@ import AuthSuccess from "@/pages/auth-success";
 import OAuthResult from "@/pages/oauth-result";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
+import { HighPriorityNotificationHandler } from "@/components/notifications/high-priority-notification-handler";
 
 // Godmode pages
 import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
@@ -344,6 +345,7 @@ function App() {
                     </div>
                   </div>
                   <Toaster />
+                  <HighPriorityNotificationHandler />
                 </Layout>
               </GoogleMapsProvider>
             </UserProvider>

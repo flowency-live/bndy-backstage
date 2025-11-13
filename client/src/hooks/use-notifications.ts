@@ -46,6 +46,14 @@ export function useNotifications(artistId?: string) {
     },
   });
 
+  const dismissMutation = useMutation({
+    mutationFn: (notificationId: string) =>
+      notificationsService.dismissNotification(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
   return {
     notifications,
     unreadCount,
@@ -54,8 +62,10 @@ export function useNotifications(artistId?: string) {
     markAsRead: markAsReadMutation.mutate,
     deleteNotification: deleteMutation.mutate,
     markAllAsRead: markAllAsReadMutation.mutate,
+    dismissNotification: dismissMutation.mutate,
     isMarkingRead: markAsReadMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isMarkingAllRead: markAllAsReadMutation.isPending,
+    isDismissing: dismissMutation.isPending,
   };
 }
