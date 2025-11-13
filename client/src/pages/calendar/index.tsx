@@ -624,6 +624,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             setShowPublicGigWizard(false);
             setSelectedEvent(null);
           }}
+          onSuccess={handleSuccess}
           artistId={effectiveArtistId}
           currentUser={effectiveMembership}
           editingEventId={selectedEvent ? selectedEvent.id : undefined}

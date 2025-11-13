@@ -51,6 +51,7 @@ export interface PublicGigFormData {
 interface PublicGigWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   artistId: string;
   currentUser: ArtistMembership;
   initialData?: PublicGigFormData;
@@ -60,6 +61,7 @@ interface PublicGigWizardProps {
 export default function PublicGigWizard({
   isOpen,
   onClose,
+  onSuccess,
   artistId,
   currentUser,
   initialData,
@@ -246,6 +248,7 @@ export default function PublicGigWizard({
         description: `Public gig ${isEditing ? 'updated' : 'created'} successfully`,
       });
 
+      onSuccess?.();
       onClose();
     } catch (error: any) {
       toast({
