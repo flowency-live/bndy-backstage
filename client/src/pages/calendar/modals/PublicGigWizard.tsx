@@ -276,6 +276,37 @@ export default function PublicGigWizard({
     onClose();
   };
 
+  // Quick Add - submit with minimal data (venue + defaults)
+  const handleQuickAdd = useCallback(async () => {
+    // Ensure we have minimum data
+    if (!formData.venueName || !formData.venueLocation) {
+      toast({
+        title: 'Venue Required',
+        description: 'Please select a venue first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Set defaults for quick add
+    const quickAddData: PublicGigFormData = {
+      ...formData,
+      date: formData.date || initialData?.date || new Date().toISOString().split('T')[0],
+      startTime: '21:00', // 9pm default
+      endTime: '00:00', // midnight default
+      title: formData.title || `${artistName} @ ${formData.venueName}`,
+      isPublic: true,
+    };
+
+    // Update form data with defaults
+    updateFormData(quickAddData);
+
+    // Small delay to ensure state is updated before submit
+    setTimeout(() => {
+      handleSubmit();
+    }, 100);
+  }, [formData, initialData, artistName, updateFormData, handleSubmit, toast]);
+
   if (!isOpen) return null;
 
   // Progress percentage
@@ -355,6 +386,8 @@ export default function PublicGigWizard({
               artistLocation={artistLocation}
               artistLocationLat={artistLocationLat}
               artistLocationLng={artistLocationLng}
+              onQuickAdd={handleQuickAdd}
+              initialDate={initialData?.date}
             />
           )}
 

@@ -26,9 +26,11 @@ interface VenueSearchStepProps {
   artistLocation: string | null;
   artistLocationLat?: number;
   artistLocationLng?: number;
+  onQuickAdd?: () => void;
+  initialDate?: string;
 }
 
-export default function VenueSearchStep({ formData, onUpdate, artistName, artistLocation, artistLocationLat, artistLocationLng }: VenueSearchStepProps) {
+export default function VenueSearchStep({ formData, onUpdate, artistName, artistLocation, artistLocationLat, artistLocationLng, onQuickAdd, initialDate }: VenueSearchStepProps) {
   const { toast } = useToast();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [searchTerm, setSearchTerm] = useState('');
@@ -222,6 +224,30 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
             </Button>
           </div>
         </div>
+
+        {/* Quick Add Button - appears when venue is selected */}
+        {onQuickAdd && (
+          <div className="mt-4 bg-green-50 dark:bg-green-950/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-3">
+                Create gig immediately with default settings:
+              </p>
+              <ul className="text-xs text-muted-foreground mb-4 space-y-1">
+                <li>• Date: {initialDate ? new Date(initialDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Today'}</li>
+                <li>• Time: 9:00 PM - Midnight</li>
+                <li>• Title: {artistName} @ {selectedVenue.name}</li>
+                <li>• Visibility: Public</li>
+              </ul>
+              <Button
+                onClick={onQuickAdd}
+                className="w-full min-h-[56px] md:min-h-[44px] bg-green-600 hover:bg-green-700 text-white"
+              >
+                <i className="fas fa-bolt mr-2"></i>
+                Quick Add Gig
+              </Button>
+            </div>
+          </div>
+        )}
       )}
 
       {/* Search Results - Fixed height container to prevent modal jumping */}

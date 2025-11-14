@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { apiRequest } from '@/lib/queryClient';
 import type { PublicGigFormData } from '@/components/public-gig-wizard';
 
 interface ReviewStepProps {
@@ -46,21 +47,15 @@ export default function ReviewStep({ formData, artistId, artistName, onUpdate, e
 
         console.log('Conflict check request:', { requestBody, editingEventId });
 
-        const response = await fetch(
-          `https://api.bndy.co.uk/api/artists/${artistId}/events/check-conflicts`,
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-          }
+        const response = await apiRequest(
+          'POST',
+          `/api/artists/${artistId}/events/check-conflicts`,
+          requestBody
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.hasConflicts) {
-            setConflicts(data.conflicts || []);
-          }
+        const data = await response.json();
+        if (data.hasConflicts) {
+          setConflicts(data.conflicts || []);
         }
       } catch (error) {
         console.error('Conflict check error:', error);

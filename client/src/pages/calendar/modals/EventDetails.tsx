@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -149,6 +149,9 @@ export default function EventDetails({
               )}
             </div>
           </DialogTitle>
+          <DialogDescription>
+            View event details and manage this calendar entry
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

@@ -185,8 +185,8 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   const deleteMutation = useMutation({
     mutationFn: async ({ event, deleteAll }: { event: Event; deleteAll?: boolean }) => {
       const url = deleteAll
-        ? `/api/events/${event.id}?deleteAll=true`
-        : `/api/events/${event.id}`;
+        ? `/api/artists/${effectiveArtistId}/events/${event.id}?deleteAll=true`
+        : `/api/artists/${effectiveArtistId}/events/${event.id}`;
       return apiRequest('DELETE', url);
     },
     onSuccess: () => {
