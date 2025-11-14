@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useToast } from "@/hooks/use-toast";
 import { spotifyService, type SpotifyTrack } from "@/lib/services/spotify-service";
@@ -37,8 +37,21 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
   const queryClient = useQueryClient();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get existing songs from cache to check for duplicates
-  const existingSongs = queryClient.getQueryData<any[]>(["/api/artists", artistId, "songs"]) || [];
+  // Fetch existing songs to check for duplicates (always fresh data)
+  const { data: existingSongs = [] } = useQuery<any[]>({
+    queryKey: ["/api/artists", artistId, "songs"],
+    queryFn: async () => {
+      const { songsService } = await import("@/lib/services/songs-service");
+      const data = await songsService.getArtistSongs(artistId);
+      // Transform to match the interface we need for duplicate checking
+      return data.map((item: any) => ({
+        title: item.globalSong?.title || '',
+        artist: item.globalSong?.artistName || '',
+      }));
+    },
+    enabled: !!artistId && isOpen, // Only fetch when modal is open
+    staleTime: 0, // Always fetch fresh data when modal opens
+  });
 
   // Create a Set of existing song identifiers (title + artist) for quick lookup
   const existingSongKeys = new Set(

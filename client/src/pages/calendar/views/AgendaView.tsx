@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, isSameMonth, startOfDay } from 'date-fns';
 import type { Event } from '@/types/api';
 import { EVENT_TYPE_CONFIG } from '@/types/api';
 import { getEventDisplayName, formatEventTime, getEventColor, getEventIcon } from '../utils/eventDisplay';
@@ -29,8 +29,8 @@ export function AgendaView({
   effectiveArtistId,
   onEventClick,
 }: AgendaViewProps) {
-  const today = new Date();
-  const threeMonthsFromNow = endOfMonth(addMonths(today, 2));
+  const todayStart = startOfDay(new Date());
+  const threeMonthsFromNow = endOfMonth(addMonths(todayStart, 2));
 
   // Filter events for agenda view (next 3 months, no unavailability)
   const agendaEvents = events
@@ -40,8 +40,8 @@ export function AgendaView({
 
       const eventDate = new Date(event.date + 'T00:00:00');
 
-      // Only show events from today onwards for the next 3 months
-      return eventDate >= today && eventDate <= threeMonthsFromNow;
+      // Only show events from start of today onwards for the next 3 months
+      return eventDate >= todayStart && eventDate <= threeMonthsFromNow;
     })
     .sort((a, b) => {
       // Sort chronologically
