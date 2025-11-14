@@ -108,7 +108,7 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         twitterUrl: settings.twitterUrl || null
       };
 
-      const response = await apiRequest('PUT', `/artists/${artistId}`, payload);
+      const response = await apiRequest('PUT', `/api/artists/${artistId}`, payload);
       return response.json();
     },
     onSuccess: (data) => {

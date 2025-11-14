@@ -19,7 +19,7 @@ export function useMembers(artistId: string) {
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ['/api/artists', artistId, 'members'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/artists/${artistId}/members`);
+      const response = await apiRequest('GET', `/api/artists/${artistId}/members`);
       return response.json();
     },
     enabled: !!artistId,
@@ -28,7 +28,7 @@ export function useMembers(artistId: string) {
   // Remove member mutation
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {
-      const response = await apiRequest('DELETE', `/memberships/${membershipId}`, null);
+      const response = await apiRequest('DELETE', `/api/memberships/${membershipId}`, null);
       return response.json();
     },
     onSuccess: () => {
