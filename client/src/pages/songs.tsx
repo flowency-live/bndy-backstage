@@ -132,13 +132,12 @@ export default function Songs({ artistId, membership }: SongsProps) {
     placeholderData: undefined,
   });
 
-  // Get band members using new band-scoped API
+  // Get artist members using artists-service
   const { data: artistMembers = [] } = useQuery<(ArtistMembership & { user: any })[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
-      // Use bands-service instead of direct fetch
-      const { bandsService } = await import("@/lib/services/bands-service");
-      return bandsService.getArtistMembers(artistId);
+      const { artistsService } = await import("@/lib/services/artists-service");
+      return artistsService.getArtistMembers(artistId);
     },
     enabled: !!session?.access_token && !!artistId,
   });

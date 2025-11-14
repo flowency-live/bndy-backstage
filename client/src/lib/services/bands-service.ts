@@ -1,4 +1,9 @@
 // src/lib/services/bands-service.ts
+// @deprecated - This service contains legacy "band" naming from old architecture.
+// "Band" is just one artist type (band, solo, duo, group, dj, collective).
+// For new code, use artists-service.ts instead.
+// This file is kept for backward compatibility with legacy methods.
+
 import { API_BASE_URL } from '../../config/api';
 
 export interface BandMember {
