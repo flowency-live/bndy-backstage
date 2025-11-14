@@ -104,6 +104,29 @@ export default function Venues({ artistId, membership }: VenuesProps) {
     return result;
   }, [venues, searchQuery, sortBy, gigFilter, statusFilter]);
 
+  // Group venues alphabetically
+  const groupedVenues = useMemo(() => {
+    const groups = new Map<string, ArtistVenue[]>();
+
+    filteredAndSortedVenues.forEach(venue => {
+      const name = venue.custom_venue_name || venue.venue.name;
+      const firstChar = name.charAt(0).toUpperCase();
+      const groupKey = /[A-Z]/.test(firstChar) ? firstChar : '#';
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey)!.push(venue);
+    });
+
+    // Convert to sorted array
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      if (a === '#') return 1;
+      if (b === '#') return -1;
+      return a.localeCompare(b);
+    });
+  }, [filteredAndSortedVenues]);
+
   if (isLoading) {
     return <BndySpinnerOverlay />;
   }
@@ -205,7 +228,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm w-full sm:w-auto"
+                  className="px-3 py-2 border border-border rounded-md bg-card text-card-foreground text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors cursor-pointer hover:bg-accent hover:text-accent-foreground"
                 >
                   <option value="name-asc">Name (A-Z)</option>
                   <option value="name-desc">Name (Z-A)</option>
@@ -282,59 +305,69 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-2 sm:gap-4">
-              {filteredAndSortedVenues.map((venue) => (
-                <Card
-                  key={venue.id}
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200"
-                  onClick={() => setLocation(`/venues/${venue.venue_id}`)}
-                  data-testid={`venue-card-${venue.id}`}
-                >
-                  <CardHeader className="pb-2 sm:pb-6">
-                    <div className="flex items-start gap-2 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
-                        <Building className="h-5 w-5 sm:h-6 sm:w-6" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base sm:text-xl mb-1 truncate">
-                          {venue.custom_venue_name || venue.venue.name}
-                        </CardTitle>
-                        {venue.custom_venue_name && (
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                            Official: {venue.venue.name}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
-                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">{venue.venue.address}</span>
-                          {venue.venue.city && <span className="hidden sm:inline">• {venue.venue.city}</span>}
-                          {venue.venue.postcode && <span className="hidden lg:inline">• {venue.venue.postcode}</span>}
-                        </div>
-                        {venue.venue.phone && (
-                          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                            <Phone className="h-4 w-4" />
-                            <span>{venue.venue.phone}</span>
+            <div className="space-y-6">
+              {groupedVenues.map(([letter, venues]) => (
+                <div key={letter} className="space-y-2">
+                  {/* Letter Header */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg font-bold text-primary">{letter}</span>
+                    </div>
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground">{venues.length} {venues.length === 1 ? 'venue' : 'venues'}</span>
+                  </div>
+
+                  {/* Compact Venue Cards */}
+                  <div className="grid gap-2">
+                    {venues.map((venue) => (
+                      <Card
+                        key={venue.id}
+                        className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200 group"
+                        onClick={() => setLocation(`/venues/${venue.venue_id}`)}
+                        data-testid={`venue-card-${venue.id}`}
+                      >
+                        <div className="px-3 py-2 flex items-center gap-3">
+                          {/* Icon */}
+                          <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors flex-shrink-0">
+                            <Building className="h-4 w-4" />
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 sm:pt-6">
-                    <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-                      <div>
-                        <span className="font-semibold text-foreground">{venue.contactCount}</span> contacts
-                      </div>
-                      <div>
-                        <span className="font-semibold text-foreground">{venue.gigCount}</span> gigs
-                      </div>
-                      {venue.notes && (
-                        <div className="hidden sm:block flex-1 truncate">
-                          <span className="italic">{venue.notes}</span>
+
+                          {/* Venue Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2">
+                              <h3 className="font-semibold text-sm text-foreground truncate">
+                                {venue.custom_venue_name || venue.venue.name}
+                              </h3>
+                              {venue.managed_on_bndy && (
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-700 dark:text-green-400 flex-shrink-0">
+                                  Managed
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {venue.venue.city ? `${venue.venue.city}` : venue.venue.address}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
+                            <div className="text-right">
+                              <div className="font-semibold text-foreground">{venue.gigCount}</div>
+                              <div className="text-[10px]">gigs</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-foreground">{venue.contactCount}</div>
+                              <div className="text-[10px]">contacts</div>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}
