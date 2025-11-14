@@ -230,9 +230,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   };
 
   const handleEditEvent = (event: Event) => {
-    console.log('[Calendar] handleEditEvent called:', { eventId: event.id, eventType: event.type });
     setSelectedEvent(event);
-    console.log('[Calendar] After setSelectedEvent, opening wizard for event:', event.id);
 
     // Close EventDetails modal when opening edit modal
     setShowEventDetails(false);
@@ -627,18 +625,13 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         <PublicGigWizard
           isOpen={showPublicGigWizard}
           onClose={() => {
-            console.log('[Calendar] Closing PublicGigWizard, clearing selectedEvent');
             setShowPublicGigWizard(false);
             setSelectedEvent(null);
           }}
           onSuccess={handleSuccess}
           artistId={effectiveArtistId}
           currentUser={effectiveMembership}
-          editingEventId={(() => {
-            const id = selectedEvent ? selectedEvent.id : undefined;
-            console.log('[Calendar] Passing editingEventId to wizard:', id, 'selectedEvent:', selectedEvent);
-            return id;
-          })()}
+          editingEventId={selectedEvent ? selectedEvent.id : undefined}
           initialData={
             selectedEvent
               ? {

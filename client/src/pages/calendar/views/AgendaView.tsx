@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, isSameMonth } from 'date-fns';
 import type { Event } from '@/types/api';
 import { EVENT_TYPE_CONFIG } from '@/types/api';
 import { getEventDisplayName, formatEventTime, getEventColor, getEventIcon } from '../utils/eventDisplay';
@@ -17,8 +17,8 @@ interface AgendaViewProps {
 
 /**
  * Agenda (list) view component
- * Displays events as a chronological list grouped by date
- * Excludes unavailability events
+ * Displays events as a chronological list grouped by month
+ * Shows next 3 months of events, excludes unavailability
  */
 export function AgendaView({
   currentDate,
@@ -29,24 +29,19 @@ export function AgendaView({
   effectiveArtistId,
   onEventClick,
 }: AgendaViewProps) {
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
+  const today = new Date();
+  const threeMonthsFromNow = endOfMonth(addMonths(today, 2));
 
-  // Filter events for agenda view
+  // Filter events for agenda view (next 3 months, no unavailability)
   const agendaEvents = events
     .filter((event) => {
       // Filter out unavailability events in agenda view
       if (event.type === 'unavailable') return false;
 
       const eventDate = new Date(event.date + 'T00:00:00');
-      const eventEndDate = event.endDate ? new Date(event.endDate + 'T00:00:00') : eventDate;
 
-      // Include events that start, end, or span within the current month
-      return (
-        (eventDate >= monthStart && eventDate <= monthEnd) ||
-        (eventEndDate >= monthStart && eventEndDate <= monthEnd) ||
-        (eventDate <= monthStart && eventEndDate >= monthEnd)
-      );
+      // Only show events from today onwards for the next 3 months
+      return eventDate >= today && eventDate <= threeMonthsFromNow;
     })
     .sort((a, b) => {
       // Sort chronologically
@@ -54,6 +49,19 @@ export function AgendaView({
       const dateB = new Date(b.date + 'T00:00:00');
       return dateA.getTime() - dateB.getTime();
     });
+
+  // Group events by month
+  const eventsByMonth = agendaEvents.reduce((acc, event) => {
+    const eventDate = new Date(event.date + 'T00:00:00');
+    const monthKey = format(eventDate, 'yyyy-MM');
+    if (!acc[monthKey]) {
+      acc[monthKey] = [];
+    }
+    acc[monthKey].push(event);
+    return acc;
+  }, {} as Record<string, Event[]>);
+
+  const monthKeys = Object.keys(eventsByMonth).sort();
 
   if (agendaEvents.length === 0) {
     return (
@@ -63,7 +71,7 @@ export function AgendaView({
             <i className="fas fa-calendar-times text-4xl"></i>
           </div>
           <h3 className="text-lg font-sans font-semibold text-muted-foreground mb-2">
-            No events this month
+            No upcoming events
           </h3>
           <p className="text-muted-foreground">Add some practices or gigs to get started</p>
         </div>
@@ -72,8 +80,25 @@ export function AgendaView({
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {agendaEvents.map((event) => {
+    <div className="p-4 space-y-6">
+      {monthKeys.map((monthKey) => {
+        const monthEvents = eventsByMonth[monthKey];
+        const monthDate = new Date(monthKey + '-01');
+
+        return (
+          <div key={monthKey} className="space-y-3">
+            {/* Month Header */}
+            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-2 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-lg font-sans font-bold text-foreground">
+                {format(monthDate, 'MMMM yyyy')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {monthEvents.length} {monthEvents.length === 1 ? 'event' : 'events'}
+              </p>
+            </div>
+
+            {/* Events for this month */}
+            {monthEvents.map((event) => {
         const isGig = event.type === 'gig' || event.type === 'public_gig';
         const isRecurring = !!(event as RecurringEvent).recurring;
         const displayColour = artistDisplayColour || '#f97316';
@@ -81,53 +106,57 @@ export function AgendaView({
           ? (event as any).artistDisplayColour || displayColour
           : getEventColor(event, displayColour, effectiveArtistId);
 
-        const displayName = getEventDisplayName(event as any, {
-          effectiveArtistId,
-          artistMembers,
-          currentUserDisplayName,
-        });
+              const displayName = getEventDisplayName(event as any, {
+                effectiveArtistId,
+                artistMembers,
+                currentUserDisplayName,
+              });
 
-        const eventDate = format(new Date(event.date + 'T00:00:00'), 'EEE d MMM');
-        const eventTime = event.startTime ? ` • ${formatEventTime(event)}` : '';
+              const eventDate = format(new Date(event.date + 'T00:00:00'), 'EEE d');
+              const eventTime = event.startTime ? ` • ${formatEventTime(event)}` : '';
 
-        return (
-          <div
-            key={event.id}
-            className="bg-card rounded-lg p-3 shadow-sm border-l-4 border-brand-accent cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => onEventClick(event)}
-            data-testid={`agenda-event-${event.id}`}
-          >
-            <div className="flex items-center space-x-3">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-primary-foreground"
-                style={{ backgroundColor: eventColor }}
-              >
-                <span className="text-lg">{getEventIcon(event.type)}</span>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-sans font-semibold text-sm text-card-foreground">
-                    {displayName}
-                  </h4>
-                  {isRecurring && (
-                    <RecurringIndicator
-                      recurring={(event as RecurringEvent).recurring}
-                      size="sm"
-                      showTooltip={true}
-                    />
-                  )}
+              return (
+                <div
+                  key={event.id}
+                  className="bg-card rounded-lg p-3 shadow-sm border-l-4 cursor-pointer hover:shadow-md transition-shadow"
+                  style={{ borderLeftColor: eventColor }}
+                  onClick={() => onEventClick(event)}
+                  data-testid={`agenda-event-${event.id}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground flex-shrink-0"
+                      style={{ backgroundColor: eventColor }}
+                    >
+                      <span className="text-lg">{getEventIcon(event.type)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-sans font-semibold text-base text-card-foreground truncate">
+                          {displayName}
+                        </h4>
+                        {isRecurring && (
+                          <RecurringIndicator
+                            recurring={(event as RecurringEvent).recurring}
+                            size="sm"
+                            showTooltip={true}
+                          />
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-sm font-medium">
+                        {eventDate}
+                        {eventTime}
+                      </p>
+                      {(event.venue || event.location) && (
+                        <p className="text-muted-foreground text-sm truncate">
+                          {event.isPublic ? `📍 ${event.venue}` : `🏠 ${event.location}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-muted-foreground text-sm">
-                  {eventDate}
-                  {eventTime}
-                </p>
-                {(event.venue || event.location) && (
-                  <p className="text-muted-foreground text-sm">
-                    {event.isPublic ? `📍 ${event.venue}` : `🏠 ${event.location}`}
-                  </p>
-                )}
-              </div>
-            </div>
+              );
+            })}
           </div>
         );
       })}

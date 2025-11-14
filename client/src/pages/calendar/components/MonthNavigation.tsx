@@ -1,6 +1,7 @@
-import { format, addMonths, subMonths } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, addMonths, subMonths, setMonth, setYear } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSwipe } from '@/hooks/use-swipe';
+import { useState, useRef, useEffect } from 'react';
 
 interface MonthNavigationProps {
   currentDate: Date;
@@ -36,6 +37,9 @@ export function MonthNavigation({
   hasArtistContext,
   hasMultipleArtists,
 }: MonthNavigationProps) {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
   const navigateToPreviousMonth = () => {
     onDateChange(subMonths(currentDate, 1));
   };
@@ -43,6 +47,27 @@ export function MonthNavigation({
   const navigateToNextMonth = () => {
     onDateChange(addMonths(currentDate, 1));
   };
+
+  const handleMonthYearSelect = (month: number, year: number) => {
+    let newDate = setMonth(currentDate, month);
+    newDate = setYear(newDate, year);
+    onDateChange(newDate);
+    setShowDatePicker(false);
+  };
+
+  // Close date picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDatePicker]);
 
   // Setup swipe gestures for mobile navigation
   const swipeRef = useSwipe(
@@ -56,6 +81,14 @@ export function MonthNavigation({
     }
   );
 
+  // Generate years (current year +/- 5)
+  const currentYear = currentDate.getFullYear();
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
   return (
     <div className="bg-brand-primary-light border-t">
       {/* Mobile: Single compact row - COPIED from calendar.tsx.old lines 659-733 */}
@@ -68,9 +101,63 @@ export function MonthNavigation({
           <i className="fas fa-chevron-left text-base"></i>
         </button>
 
-        <h1 className="text-slate-800 dark:text-white font-sans text-base font-semibold flex-shrink-0 mx-2">
-          {format(currentDate, "MMM yyyy")}
-        </h1>
+        <div className="relative flex-shrink-0 mx-2">
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className="text-slate-800 dark:text-white font-sans text-base font-semibold flex items-center gap-1 hover:text-brand-accent"
+          >
+            {format(currentDate, "MMM yyyy")}
+            <Calendar className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Mobile Date Picker Dropdown */}
+          {showDatePicker && (
+            <div
+              ref={datePickerRef}
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-4 z-50 w-[280px]"
+            >
+              {/* Year selector */}
+              <div className="mb-3">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Year</label>
+                <div className="grid grid-cols-4 gap-1">
+                  {years.map((year) => (
+                    <button
+                      key={year}
+                      onClick={() => handleMonthYearSelect(currentDate.getMonth(), year)}
+                      className={`px-2 py-1.5 text-sm rounded transition-colors ${
+                        year === currentDate.getFullYear()
+                          ? 'bg-brand-accent text-white font-semibold'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-accent/20'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Month selector */}
+              <div>
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Month</label>
+                <div className="grid grid-cols-3 gap-1">
+                  {months.map((month, idx) => (
+                    <button
+                      key={month}
+                      onClick={() => handleMonthYearSelect(idx, currentDate.getFullYear())}
+                      className={`px-2 py-1.5 text-sm rounded transition-colors ${
+                        idx === currentDate.getMonth()
+                          ? 'bg-brand-accent text-white font-semibold'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-accent/20'
+                      }`}
+                    >
+                      {month}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={navigateToNextMonth}
@@ -213,12 +300,62 @@ export function MonthNavigation({
             >
               <i className="fas fa-chevron-left text-xl"></i>
             </button>
-            <div className="flex items-center space-x-2">
-              <div className="flex flex-col items-center">
-                <h1 className="text-slate-800 dark:text-white font-sans text-xl font-semibold">
-                  {format(currentDate, "MMMM yyyy")}
-                </h1>
-              </div>
+            <div className="flex items-center space-x-2 relative">
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="text-slate-800 dark:text-white font-sans text-xl font-semibold flex items-center gap-2 hover:text-brand-accent transition-colors"
+              >
+                {format(currentDate, "MMMM yyyy")}
+                <Calendar className="w-5 h-5" />
+              </button>
+
+              {/* Desktop Date Picker Dropdown */}
+              {showDatePicker && (
+                <div
+                  ref={datePickerRef}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-6 z-50 w-[360px]"
+                >
+                  {/* Year selector */}
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">Year</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {years.map((year) => (
+                        <button
+                          key={year}
+                          onClick={() => handleMonthYearSelect(currentDate.getMonth(), year)}
+                          className={`px-3 py-2 text-sm rounded-md transition-all ${
+                            year === currentDate.getFullYear()
+                              ? 'bg-brand-accent text-white font-semibold shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-accent/20 hover:scale-105'
+                          }`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Month selector */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 block">Month</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {months.map((month, idx) => (
+                        <button
+                          key={month}
+                          onClick={() => handleMonthYearSelect(idx, currentDate.getFullYear())}
+                          className={`px-3 py-2 text-sm rounded-md transition-all ${
+                            idx === currentDate.getMonth()
+                              ? 'bg-brand-accent text-white font-semibold shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-accent/20 hover:scale-105'
+                          }`}
+                        >
+                          {month}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               onClick={navigateToNextMonth}

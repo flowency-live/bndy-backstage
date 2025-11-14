@@ -37,8 +37,28 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
   const queryClient = useQueryClient();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Get existing songs from cache to check for duplicates
+  const existingSongs = queryClient.getQueryData<any[]>(["/api/artists", artistId, "songs"]) || [];
+
+  // Create a Set of existing song identifiers (title + artist) for quick lookup
+  const existingSongKeys = new Set(
+    existingSongs.map(song =>
+      `${song.title?.toLowerCase().trim() || ''}|${song.artist?.toLowerCase().trim() || ''}`
+    )
+  );
+
+  const checkIfSongExists = (title: string, artistName: string): boolean => {
+    const key = `${title.toLowerCase().trim()}|${artistName.toLowerCase().trim()}`;
+    return existingSongKeys.has(key);
+  };
+
   const addSongMutation = useMutation({
     mutationFn: async (songData: SongSearchResult) => {
+      // Check for duplicate before adding
+      if (checkIfSongExists(songData.title, songData.artistName)) {
+        throw new Error(`"${songData.title}" by ${songData.artistName} is already in your collection`);
+      }
+
       // Use songs-service instead of direct fetch
       const { songsService } = await import("@/lib/services/songs-service");
 
@@ -262,12 +282,19 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
                 </div>
               )}
 
-              {searchResults.map((song) => (
+              {searchResults.map((song) => {
+                const alreadyExists = checkIfSongExists(song.title, song.artistName);
+
+                return (
                 <button
                   key={`${song.source}-${song.id}`}
                   onClick={() => handleAddSong(song)}
-                  disabled={addSongMutation.isPending}
-                  className="w-full p-3 sm:p-4 border-b hover:bg-muted/50 flex items-center space-x-3 sm:space-x-4 text-left disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={addSongMutation.isPending || alreadyExists}
+                  className={`w-full p-3 sm:p-4 border-b flex items-center space-x-3 sm:space-x-4 text-left transition-colors ${
+                    alreadyExists
+                      ? 'opacity-60 cursor-not-allowed bg-muted/30'
+                      : 'hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
                 >
                   {/* Album artwork with orange corner marker for bndy-songs */}
                   <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-muted rounded flex-shrink-0 overflow-hidden">
@@ -299,13 +326,21 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
                     )}
                   </div>
 
-                  {/* Add icon */}
-                  <div className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
-                    <i className="fas fa-plus"></i>
-                    <span className="hidden sm:inline">Add</span>
-                  </div>
+                  {/* Add icon or Already Added indicator */}
+                  {alreadyExists ? (
+                    <div className="px-3 sm:px-4 py-2 bg-slate-400 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
+                      <i className="fas fa-check"></i>
+                      <span className="hidden sm:inline">Added</span>
+                    </div>
+                  ) : (
+                    <div className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
+                      <i className="fas fa-plus"></i>
+                      <span className="hidden sm:inline">Add</span>
+                    </div>
+                  )}
                 </button>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>

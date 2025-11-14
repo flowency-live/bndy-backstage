@@ -73,14 +73,6 @@ export default function PublicGigWizard({
   const [formData, setFormData] = useState<PublicGigFormData>(initialData || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Debug logging for edit mode
-  console.log('[PublicGigWizard] Rendered with:', {
-    editingEventId,
-    hasInitialData: !!initialData,
-    initialDataKeys: initialData ? Object.keys(initialData) : [],
-    isOpen
-  });
-
   // Extract artist name and location from membership
   const artistName = currentUser.artist?.name || 'Artist';
   const artistLocation = currentUser.artist?.location || null;
