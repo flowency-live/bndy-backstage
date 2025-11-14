@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Plus, Phone, Building, Search, Map, List } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
@@ -222,22 +221,6 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                     No Gigs Yet
                   </Button>
                 </div>
-
-                <div className="hidden sm:block sm:ml-auto" />
-
-                {/* Sort Dropdown */}
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Sort by..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-                    <SelectItem value="gigs-desc">Most Gigs</SelectItem>
-                    <SelectItem value="contacts-desc">Most Contacts</SelectItem>
-                    <SelectItem value="recent">Recently Added</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Active Filter Count */}
