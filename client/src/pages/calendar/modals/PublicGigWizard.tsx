@@ -90,9 +90,9 @@ export default function PublicGigWizard({
     }
   }, [initialData, isOpen]);
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage on mount (only if not editing)
   useEffect(() => {
-    if (!initialData) {
+    if (!initialData && !editingEventId) {
       const savedDraft = localStorage.getItem(STORAGE_KEY);
       if (savedDraft) {
         try {
@@ -103,18 +103,18 @@ export default function PublicGigWizard({
         }
       }
     }
-  }, [initialData, STORAGE_KEY]);
+  }, [initialData, editingEventId, STORAGE_KEY]);
 
-  // Auto-save to localStorage whenever formData changes
+  // Auto-save to localStorage whenever formData changes (only if not editing)
   useEffect(() => {
-    if (Object.keys(formData).length > 0) {
+    if (!editingEventId && Object.keys(formData).length > 0) {
       const dataToSave = {
         ...formData,
         lastSavedAt: new Date().toISOString(),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     }
-  }, [formData, STORAGE_KEY]);
+  }, [formData, editingEventId, STORAGE_KEY]);
 
   // Update form data helper
   const updateFormData = useCallback((updates: Partial<PublicGigFormData>) => {
@@ -386,7 +386,7 @@ export default function PublicGigWizard({
               artistLocation={artistLocation}
               artistLocationLat={artistLocationLat}
               artistLocationLng={artistLocationLng}
-              onQuickAdd={handleQuickAdd}
+              onQuickAdd={!editingEventId ? handleQuickAdd : undefined}
               initialDate={initialData?.date}
             />
           )}
