@@ -608,18 +608,27 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         throw new Error("Not authenticated");
       }
 
-      // Use events-service to get ALL events (no date range limit)
+      const today = new Date();
+      const futureDate = new Date();
+      futureDate.setFullYear(today.getFullYear() + 5);
+
+      // Use events-service with extended date range to get all future events
       const { eventsService } = await import("@/lib/services/events-service");
-      const allEvents = await eventsService.getAllArtistEvents(artistId!);
+      const data = await eventsService.getArtistCalendar(
+        artistId!,
+        format(today, "yyyy-MM-dd"),
+        format(futureDate, "yyyy-MM-dd")
+      );
+
+      // Dashboard shows only THIS artist's events (not user unavailability or other artists)
+      const artistEvents = data.artistEvents || [];
 
       // Filter and sort upcoming events (practices and gigs only)
-      // Filter for events today or in the future
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return allEvents
+      return artistEvents
         .filter((event: Event) => {
           const eventDate = new Date(event.date + 'T00:00:00');
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
           return eventDate >= today;
         })
         .sort((a: Event, b: Event) => {
