@@ -106,21 +106,21 @@ export default function Venues({ artistId, membership }: VenuesProps) {
 
   // Group venues alphabetically
   const groupedVenues = useMemo(() => {
-    const groups = new Map<string, ArtistVenue[]>();
+    const groups: Record<string, ArtistVenue[]> = {};
 
     filteredAndSortedVenues.forEach(venue => {
       const name = venue.custom_venue_name || venue.venue.name;
       const firstChar = name.charAt(0).toUpperCase();
       const groupKey = /[A-Z]/.test(firstChar) ? firstChar : '#';
 
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, []);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
       }
-      groups.get(groupKey)!.push(venue);
+      groups[groupKey].push(venue);
     });
 
     // Convert to sorted array
-    return Array.from(groups.entries()).sort(([a], [b]) => {
+    return Object.entries(groups).sort(([a], [b]) => {
       if (a === '#') return 1;
       if (b === '#') return -1;
       return a.localeCompare(b);
