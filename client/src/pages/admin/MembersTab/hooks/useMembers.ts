@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { artistsService } from '@/lib/services/artists-service';
 
 interface Member {
   id: string;
@@ -15,21 +15,19 @@ export function useMembers(artistId: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch members
+  // Fetch members using service layer
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ['/api/artists', artistId, 'members'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/artists/${artistId}/members`);
-      return response.json();
+      return await artistsService.getArtistMembers(artistId);
     },
     enabled: !!artistId,
   });
 
-  // Remove member mutation
+  // Remove member mutation using service layer
   const removeMemberMutation = useMutation({
     mutationFn: async (membershipId: string) => {
-      const response = await apiRequest('DELETE', `/api/memberships/${membershipId}`, null);
-      return response.json();
+      return await artistsService.removeMembership(membershipId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/artists', artistId, 'members'] });

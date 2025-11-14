@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { artistsService } from '@/lib/services/artists-service';
 import type { Artist } from '@/types/api';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
 
@@ -108,8 +108,7 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         twitterUrl: settings.twitterUrl || null
       };
 
-      const response = await apiRequest('PUT', `/api/artists/${artistId}`, payload);
-      return response.json();
+      return await artistsService.updateArtist(artistId, payload);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/artists', artistId] });

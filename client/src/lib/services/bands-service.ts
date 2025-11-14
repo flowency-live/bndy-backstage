@@ -224,6 +224,25 @@ class BandsService {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Remove membership by ID (new artist architecture)
+   */
+  async removeMembership(membershipId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/memberships/${membershipId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Update artist details (new architecture)
+   */
+  async updateArtist(artistId: string, updates: any): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
 }
 
 // Export singleton instance
