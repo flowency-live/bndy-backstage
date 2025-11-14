@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Plus, Phone, Building, Search, Map, List } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
@@ -225,17 +226,18 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 <div className="hidden sm:block sm:ml-auto" />
 
                 {/* Sort Dropdown */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="px-3 py-2 border border-border rounded-md bg-card text-card-foreground text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                >
-                  <option value="name-asc">Name (A-Z)</option>
-                  <option value="name-desc">Name (Z-A)</option>
-                  <option value="gigs-desc">Most Gigs</option>
-                  <option value="contacts-desc">Most Contacts</option>
-                  <option value="recent">Recently Added</option>
-                </select>
+                <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="gigs-desc">Most Gigs</SelectItem>
+                    <SelectItem value="contacts-desc">Most Contacts</SelectItem>
+                    <SelectItem value="recent">Recently Added</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Active Filter Count */}
