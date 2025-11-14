@@ -305,47 +305,49 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {groupedVenues.map(([letter, venues]) => (
-                <div key={letter} className="space-y-2">
+                <div key={letter} className="space-y-1.5 sm:space-y-2">
                   {/* Letter Header */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <span className="text-lg font-bold text-primary">{letter}</span>
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-base sm:text-lg font-bold text-primary">{letter}</span>
                     </div>
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">{venues.length} {venues.length === 1 ? 'venue' : 'venues'}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                      {venues.length} {venues.length === 1 ? 'venue' : 'venues'}
+                    </span>
                   </div>
 
                   {/* Compact Venue Cards */}
-                  <div className="grid gap-2">
+                  <div className="space-y-1.5">
                     {venues.map((venue) => (
-                      <Card
+                      <div
                         key={venue.id}
-                        className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200 group"
+                        className="bg-card border border-border rounded-lg cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all duration-200 group overflow-hidden"
                         onClick={() => setLocation(`/venues/${venue.venue_id}`)}
                         data-testid={`venue-card-${venue.id}`}
                       >
-                        <div className="px-3 py-2 flex items-center gap-3">
+                        <div className="px-2.5 sm:px-3 py-2 flex items-center gap-2 sm:gap-3">
                           {/* Icon */}
-                          <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors flex-shrink-0">
-                            <Building className="h-4 w-4" />
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors flex-shrink-0">
+                            <Building className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </div>
 
                           {/* Venue Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-2">
-                              <h3 className="font-semibold text-sm text-foreground truncate">
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
+                              <h3 className="font-semibold text-xs sm:text-sm text-foreground truncate">
                                 {venue.custom_venue_name || venue.venue.name}
                               </h3>
                               {venue.managed_on_bndy && (
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-700 dark:text-green-400 flex-shrink-0">
+                                <span className="text-[10px] px-1 py-0.5 rounded bg-green-500/10 text-green-700 dark:text-green-400 flex-shrink-0 whitespace-nowrap">
                                   Managed
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
+                              <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                               <span className="truncate">
                                 {venue.venue.city ? `${venue.venue.city}` : venue.venue.address}
                               </span>
@@ -353,18 +355,18 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                           </div>
 
                           {/* Stats */}
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
-                            <div className="text-right">
-                              <div className="font-semibold text-foreground">{venue.gigCount}</div>
-                              <div className="text-[10px]">gigs</div>
+                          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                            <div className="text-center min-w-[28px] sm:min-w-[32px]">
+                              <div className="font-bold text-xs sm:text-sm text-foreground leading-none">{venue.gigCount}</div>
+                              <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight mt-0.5">gigs</div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-foreground">{venue.contactCount}</div>
-                              <div className="text-[10px]">contacts</div>
+                            <div className="text-center min-w-[28px] sm:min-w-[32px]">
+                              <div className="font-bold text-xs sm:text-sm text-foreground leading-none">{venue.contactCount}</div>
+                              <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight mt-0.5">contacts</div>
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     ))}
                   </div>
                 </div>
