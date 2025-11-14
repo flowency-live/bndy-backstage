@@ -230,7 +230,9 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   };
 
   const handleEditEvent = (event: Event) => {
+    console.log('[Calendar] handleEditEvent called:', { eventId: event.id, eventType: event.type });
     setSelectedEvent(event);
+    console.log('[Calendar] After setSelectedEvent, opening wizard for event:', event.id);
     if (event.type === 'gig' || event.type === 'public_gig') {
       setShowPublicGigWizard(true);
     } else if (event.type === 'rehearsal') {
@@ -621,13 +623,18 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         <PublicGigWizard
           isOpen={showPublicGigWizard}
           onClose={() => {
+            console.log('[Calendar] Closing PublicGigWizard, clearing selectedEvent');
             setShowPublicGigWizard(false);
             setSelectedEvent(null);
           }}
           onSuccess={handleSuccess}
           artistId={effectiveArtistId}
           currentUser={effectiveMembership}
-          editingEventId={selectedEvent ? selectedEvent.id : undefined}
+          editingEventId={(() => {
+            const id = selectedEvent ? selectedEvent.id : undefined;
+            console.log('[Calendar] Passing editingEventId to wizard:', id, 'selectedEvent:', selectedEvent);
+            return id;
+          })()}
           initialData={
             selectedEvent
               ? {
