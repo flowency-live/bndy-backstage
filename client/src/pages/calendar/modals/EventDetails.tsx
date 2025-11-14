@@ -105,7 +105,8 @@ export default function EventDetails({
 
   const handleEdit = () => {
     onEdit(event);
-    onClose();
+    // Don't call onClose() here - it clears selectedEvent before the wizard can use it
+    // The wizard will close EventDetails via its own onClose handler
   };
 
   return (

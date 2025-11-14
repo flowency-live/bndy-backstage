@@ -233,6 +233,10 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     console.log('[Calendar] handleEditEvent called:', { eventId: event.id, eventType: event.type });
     setSelectedEvent(event);
     console.log('[Calendar] After setSelectedEvent, opening wizard for event:', event.id);
+
+    // Close EventDetails modal when opening edit modal
+    setShowEventDetails(false);
+
     if (event.type === 'gig' || event.type === 'public_gig') {
       setShowPublicGigWizard(true);
     } else if (event.type === 'rehearsal') {
