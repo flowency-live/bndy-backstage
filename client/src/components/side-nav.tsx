@@ -6,7 +6,7 @@ import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
-import { ChevronDown, Plus, Menu, X, User, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -153,7 +153,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     ) : (
                       <>
                         <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-muted-foreground" />
+                          <UserIcon className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="text-left min-w-0 flex-1">
                           <div className="font-medium text-sm truncate text-foreground">No Artist Selected</div>
@@ -219,7 +219,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                       ) : (
                         <>
                           <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center flex-shrink-0">
-                            <User className="h-4 w-4 text-muted-foreground" />
+                            <UserIcon className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="text-left min-w-0 flex-1">
                             <div className="font-medium text-sm truncate">No Artist Selected</div>
@@ -367,7 +367,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     data-testid="button-user-menu"
                   >
                     <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                      <User className="h-4 w-4 text-primary-foreground" />
+                      <UserIcon className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <div className="text-sm font-medium truncate">
@@ -387,7 +387,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                     className="cursor-pointer"
                     data-testid="button-view-profile"
                   >
-                    <User className="h-4 w-4 mr-2" />
+                    <UserIcon className="h-4 w-4 mr-2" />
                     View Profile
                   </DropdownMenuItem>
 
