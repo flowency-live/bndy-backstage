@@ -5,6 +5,17 @@ import { getEventDisplayName, formatEventTime, getEventColor, getEventIcon } fro
 import { RecurringIndicator } from '../components/RecurringIndicator';
 import type { RecurringEvent } from '../utils/recurringCalculations';
 
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+const getOrdinalSuffix = (day: number): string => {
+  if (day > 3 && day < 21) return 'th';
+  switch (day % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+};
+
 interface AgendaViewProps {
   currentDate: Date;
   events: Event[];
@@ -12,6 +23,7 @@ interface AgendaViewProps {
   artistMembers?: any[];
   currentUserDisplayName?: string;
   effectiveArtistId?: string | null;
+  showAllArtists?: boolean;
   onEventClick: (event: Event) => void;
 }
 
@@ -27,6 +39,7 @@ export function AgendaView({
   artistMembers = [],
   currentUserDisplayName,
   effectiveArtistId,
+  showAllArtists = false,
   onEventClick,
 }: AgendaViewProps) {
   const todayStart = startOfDay(new Date());
@@ -99,21 +112,40 @@ export function AgendaView({
 
             {/* Events for this month */}
             {monthEvents.map((event) => {
-        const isGig = event.type === 'gig' || event.type === 'public_gig';
-        const isRecurring = !!(event as RecurringEvent).recurring;
-        const displayColour = artistDisplayColour || '#f97316';
-        const eventColor = isGig
-          ? (event as any).artistDisplayColour || displayColour
-          : getEventColor(event, displayColour, effectiveArtistId);
+              const isGig = event.type === 'gig' || event.type === 'public_gig';
+              const isRecurring = !!(event as RecurringEvent).recurring;
+              const displayColour = artistDisplayColour || '#f97316';
+              const eventColor = isGig
+                ? (event as any).artistDisplayColour || displayColour
+                : getEventColor(event, displayColour, effectiveArtistId);
 
-              const displayName = getEventDisplayName(event as any, {
-                effectiveArtistId,
-                artistMembers,
-                currentUserDisplayName,
-              });
+              // Determine what to display based on event type and flags
+              const isPublicGig = isGig && event.isPublic;
+              const hasCustomTitle = (event as any).hasCustomTitle;
+              const shouldShowCustomTitle = isPublicGig && hasCustomTitle && event.title;
+              const shouldShowArtistName = showAllArtists && (event as any).artistName;
 
-              const eventDate = format(new Date(event.date + 'T00:00:00'), 'EEE d');
+              // Format date with full day name and ordinal (e.g., "Saturday 15th November")
+              const eventDateObj = new Date(event.date + 'T00:00:00');
+              const dayName = format(eventDateObj, 'EEEE');
+              const day = eventDateObj.getDate();
+              const monthName = format(eventDateObj, 'MMMM');
+              const eventDate = `${dayName} ${day}${getOrdinalSuffix(day)} ${monthName}`;
               const eventTime = event.startTime ? ` • ${formatEventTime(event)}` : '';
+
+              // Get the display name based on conditions
+              let displayName = '';
+              if (shouldShowCustomTitle) {
+                // Show custom title for public gigs that have one
+                displayName = event.title || '';
+              } else {
+                // Use standard event display name logic
+                displayName = getEventDisplayName(event as any, {
+                  effectiveArtistId,
+                  artistMembers,
+                  currentUserDisplayName,
+                });
+              }
 
               return (
                 <div
@@ -131,6 +163,14 @@ export function AgendaView({
                       <span className="text-lg">{getEventIcon(event.type)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
+                      {/* Artist name (if showing multiple artists) */}
+                      {shouldShowArtistName && (
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                          {(event as any).artistName}
+                        </p>
+                      )}
+
+                      {/* Event title/name */}
                       <div className="flex items-center gap-2">
                         <h4 className="font-sans font-semibold text-base text-card-foreground truncate">
                           {displayName}
@@ -143,15 +183,19 @@ export function AgendaView({
                           />
                         )}
                       </div>
-                      <p className="text-muted-foreground text-sm font-medium">
-                        {eventDate}
-                        {eventTime}
-                      </p>
+
+                      {/* Venue name with location pin */}
                       {(event.venue || event.location) && (
                         <p className="text-muted-foreground text-sm truncate">
                           {event.isPublic ? `📍 ${event.venue}` : `🏠 ${event.location}`}
                         </p>
                       )}
+
+                      {/* Date and time */}
+                      <p className="text-muted-foreground text-sm font-medium">
+                        {eventDate}
+                        {eventTime}
+                      </p>
                     </div>
                   </div>
                 </div>

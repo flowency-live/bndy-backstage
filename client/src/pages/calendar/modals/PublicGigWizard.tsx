@@ -225,6 +225,7 @@ export default function PublicGigWizard({
           startTime: formData.startTime,
           endTime: formData.endTime || '00:00', // Default to midnight if not set
           title: formData.title,
+          hasCustomTitle: formData.title !== `${artistName} @ ${formData.venueName}`,
           description: formData.description,
           ticketUrl: formData.ticketUrl,
           ticketPrice: formData.ticketPrice,

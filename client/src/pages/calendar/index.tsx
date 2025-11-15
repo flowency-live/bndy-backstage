@@ -597,6 +597,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
           artistMembers={artistMembers}
           currentUserDisplayName={userProfile?.user?.displayName}
           effectiveArtistId={effectiveArtistId}
+          showAllArtists={showAllArtists}
           onEventClick={handleEventClick}
         />
       )}
