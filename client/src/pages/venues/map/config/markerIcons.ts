@@ -2,6 +2,7 @@ import L from 'leaflet';
 
 const createMapPinSVG = (fillColor: string, faded = false) => {
   const opacity = faded ? 0.6 : 1.0;
+  const dotColor = faded ? '#FFFFFF' : '#06B6D4';
 
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="29" viewBox="0 0 24 36">
@@ -10,7 +11,7 @@ const createMapPinSVG = (fillColor: string, faded = false) => {
         fill-opacity="${opacity}"
         stroke="#FFFFFF"
         stroke-width="1.5" />
-      <circle cx="12" cy="12" r="3.5" fill="#FFFFFF" fill-opacity="${opacity}" />
+      <circle cx="12" cy="12" r="3.5" fill="${dotColor}" fill-opacity="${opacity}" />
     </svg>
   `;
 };
