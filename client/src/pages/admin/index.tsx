@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Settings, Users, Music2 } from 'lucide-react';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { AdminProvider } from './AdminContext';
 import ArtistSettingsTab from './ArtistSettingsTab';
 import MembersTab from './MembersTab';
@@ -51,33 +53,36 @@ export default function AdminPage({ artistId, membership }: AdminPageProps) {
       isLoading={isLoading}
       refetch={refetch}
     >
-      <div className="space-y-6">
-        {/* Tab Navigation */}
-        <div className="border-b border-border">
-          <nav className="flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+      <PageContainer>
+        <PageHeader
+          tabs={
+            <div className="border-b border-border">
+              <nav className="flex space-x-8" aria-label="Tabs">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                    ${isActive
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                    }
-                  `}
-                >
-                  <Icon className="w-5 h-5" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`
+                        flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                        ${isActive
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                        }
+                      `}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          }
+        />
 
         {/* Tab Content */}
         <div className="pb-8">
@@ -85,7 +90,7 @@ export default function AdminPage({ artistId, membership }: AdminPageProps) {
           {activeTab === 'members' && <MembersTab />}
           {activeTab === 'spotify' && <SpotifyTab />}
         </div>
-      </div>
+      </PageContainer>
     </AdminProvider>
   );
 }
