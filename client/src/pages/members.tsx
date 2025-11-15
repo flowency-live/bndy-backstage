@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface MembersProps {
   artistId: string;
@@ -276,25 +278,21 @@ export default function Members({ artistId, membership }: MembersProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Responsive Container */}
-      <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-4 sm:mb-6">
-            <button
-              onClick={() => setLocation("/dashboard")}
-              className="text-muted-foreground hover:text-foreground transition-colors mb-3 flex items-center gap-2 text-sm"
-              data-testid="button-back"
-            >
-              <i className="fas fa-arrow-left text-xs"></i>
-              Back
-            </button>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-brand-primary mb-1">
-              {membership?.artist?.name || membership?.name} Members
-            </h1>
-            <p className="text-sm text-muted-foreground">Manage your team and invite new members</p>
-          </div>
+    <PageContainer variant="wide">
+      <div className="mb-4">
+        <button
+          onClick={() => setLocation("/dashboard")}
+          className="text-muted-foreground hover:text-foreground transition-colors mb-3 flex items-center gap-2 text-sm"
+          data-testid="button-back"
+        >
+          <i className="fas fa-arrow-left text-xs"></i>
+          Back
+        </button>
+      </div>
+      <PageHeader
+        title={`${membership?.artist?.name || membership?.name} Members`}
+        subtitle="Manage your team and invite new members"
+      />
 
           {/* Current Members Section */}
           <Card className="mb-4 sm:mb-6">
@@ -613,8 +611,6 @@ export default function Members({ artistId, membership }: MembersProps) {
               </Card>
             </>
           )}
-        </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

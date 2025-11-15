@@ -9,6 +9,7 @@ import ProfileForm from "@/components/ui/profile-form";
 import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageContainer } from "@/components/layout/PageContainer";
 import type { User, InsertUserProfile, UpdateUserProfile } from "@/types/api";
 
 interface UserProfileResponse {
@@ -162,42 +163,39 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Main Content - no separate back arrow row */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {/* Profile Form Card with integrated back button */}
-          <Card className="shadow-xl">
-            <CardContent className="p-6">
-              {/* Only show back button if profile is complete (edit mode) */}
-              {mode === "edit" && (
-                <button
-                  onClick={handleCancel}
-                  className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
-                  data-testid="button-back"
-                >
-                  <i className="fas fa-arrow-left text-xs"></i>
-                  Back
-                </button>
-              )}
-              <ProfileForm
-                initialData={userProfile?.user ? {
-                  firstName: userProfile.user.firstName || "",
-                  lastName: userProfile.user.lastName || "",
-                  displayName: userProfile.user.displayName || "",
-                  hometown: userProfile.user.hometown || "",
-                  instrument: userProfile.user.instrument as any || undefined,
-                  avatarUrl: userProfile.user.avatarUrl || null,
-                  oauthProfilePicture: userProfile.user.oauthProfilePicture || null,
-                } : undefined}
-                onSubmit={handleProfileSubmit}
-                isLoading={updateProfileMutation.isPending}
-                mode={mode}
-              />
-            </CardContent>
-          </Card>
-        </div>
+    <PageContainer variant="narrow">
+      <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+        {/* Profile Form Card with integrated back button */}
+        <Card className="shadow-xl w-full">
+          <CardContent className="p-6">
+            {/* Only show back button if profile is complete (edit mode) */}
+            {mode === "edit" && (
+              <button
+                onClick={handleCancel}
+                className="text-muted-foreground hover:text-foreground transition-colors mb-4 flex items-center gap-2 text-sm"
+                data-testid="button-back"
+              >
+                <i className="fas fa-arrow-left text-xs"></i>
+                Back
+              </button>
+            )}
+            <ProfileForm
+              initialData={userProfile?.user ? {
+                firstName: userProfile.user.firstName || "",
+                lastName: userProfile.user.lastName || "",
+                displayName: userProfile.user.displayName || "",
+                hometown: userProfile.user.hometown || "",
+                instrument: userProfile.user.instrument as any || undefined,
+                avatarUrl: userProfile.user.avatarUrl || null,
+                oauthProfilePicture: userProfile.user.oauthProfilePicture || null,
+              } : undefined}
+              onSubmit={handleProfileSubmit}
+              isLoading={updateProfileMutation.isPending}
+              mode={mode}
+            />
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }
