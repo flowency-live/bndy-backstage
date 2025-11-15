@@ -98,7 +98,11 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
 
-  // Fetch calendar data
+  // For agenda view, calculate 3-month range
+  const todayStart = startOfDay(new Date());
+  const agendaEnd = endOfMonth(addMonths(todayStart, 2));
+
+  // Fetch calendar data (month view)
   const { data: calendarData } = useQuery<{
     artistEvents: Event[];
     userEvents: Event[];
@@ -122,17 +126,47 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
       const response = await apiRequest('GET', url);
       return response.json();
     },
-    enabled: !!session,
+    enabled: !!session && viewMode === 'calendar',
   });
 
+  // Fetch agenda data (3-month view) - only when in agenda mode
+  const { data: agendaData } = useQuery<{
+    artistEvents: Event[];
+    userEvents: Event[];
+    otherArtistEvents: (Event & { artistName: string })[];
+  } | Event[]>({
+    queryKey: effectiveArtistId
+      ? ['/api/artists', effectiveArtistId, 'agenda', format(todayStart, 'yyyy-MM-dd'), format(agendaEnd, 'yyyy-MM-dd')]
+      : ['/api/me/events-agenda', format(todayStart, 'yyyy-MM-dd'), format(agendaEnd, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      let url: string;
+      if (effectiveArtistId) {
+        url = `/api/artists/${effectiveArtistId}/calendar?startDate=${format(todayStart, 'yyyy-MM-dd')}&endDate=${format(agendaEnd, 'yyyy-MM-dd')}`;
+      } else {
+        url = `/api/me/events?startDate=${format(todayStart, 'yyyy-MM-dd')}&endDate=${format(agendaEnd, 'yyyy-MM-dd')}`;
+      }
+
+      const response = await apiRequest('GET', url);
+      return response.json();
+    },
+    enabled: !!session && viewMode === 'agenda',
+  });
+
+  // Use the appropriate data source based on view mode
+  const activeData = viewMode === 'agenda' ? agendaData : calendarData;
+
   // Extract and filter events
-  const allEvents: Event[] = calendarData
-    ? Array.isArray(calendarData)
-      ? calendarData
+  const allEvents: Event[] = activeData
+    ? Array.isArray(activeData)
+      ? activeData
       : [
-          ...calendarData.artistEvents,
-          ...calendarData.userEvents,
-          ...calendarData.otherArtistEvents,
+          ...activeData.artistEvents,
+          ...activeData.userEvents,
+          ...activeData.otherArtistEvents,
         ]
     : [];
 
