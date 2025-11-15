@@ -9,10 +9,12 @@ import {
 } from '@/components/ui/popover';
 import { NotificationPopover } from './notification-popover';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useServerAuth } from '@/hooks/useServerAuth';
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount } = useNotifications();
+  const { isAuthenticated } = useServerAuth();
+  const { unreadCount } = useNotifications(undefined, isAuthenticated);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>

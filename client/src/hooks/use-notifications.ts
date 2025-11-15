@@ -4,7 +4,7 @@ import {
   type Notification,
 } from '@/lib/services/notifications-service';
 
-export function useNotifications(artistId?: string) {
+export function useNotifications(artistId?: string, enabled = true) {
   const queryClient = useQueryClient();
 
   const {
@@ -14,6 +14,7 @@ export function useNotifications(artistId?: string) {
   } = useQuery({
     queryKey: ['notifications', artistId],
     queryFn: () => notificationsService.getNotifications(artistId),
+    enabled,
     refetchInterval: 60000, // 60 seconds
     refetchIntervalInBackground: false,
     staleTime: 30000, // 30 seconds
