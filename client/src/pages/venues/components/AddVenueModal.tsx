@@ -85,10 +85,8 @@ export default function AddVenueModal({
         duration: 3000,
       });
 
-      // Close modal after brief delay to show toast
-      setTimeout(() => {
-        handleClose();
-      }, 100);
+      // Close modal immediately
+      handleClose();
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to add venue';

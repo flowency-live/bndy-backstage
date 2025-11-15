@@ -146,8 +146,24 @@ export default function VenueAutocomplete({
                 address: p.structured_formatting?.secondary_text || p.description,
                 placeId: p.place_id,
               }));
-              setGoogleResults(googleMatches);
-              setShowDropdown(matchingVenues.length > 0 || googleMatches.length > 0);
+
+              // CRITICAL: Filter out Google results that match ANY existing BNDY venue
+              // (not just search results, but ALL venues in the database)
+              // This prevents duplicates when user types non-matching suffix (e.g., "Torr Vale Tap house")
+              const normalizeVenueName = (name: string) =>
+                name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+              const allBndyVenueNames = new Set(
+                bndyVenuesRef.current.map(v => normalizeVenueName(v.name || ''))
+              );
+
+              const filteredGoogleMatches = googleMatches.filter(g => {
+                const normalizedGoogleName = normalizeVenueName(g.name);
+                return !allBndyVenueNames.has(normalizedGoogleName);
+              });
+
+              setGoogleResults(filteredGoogleMatches);
+              setShowDropdown(matchingVenues.length > 0 || filteredGoogleMatches.length > 0);
             } else {
               setGoogleResults([]);
               setShowDropdown(matchingVenues.length > 0);

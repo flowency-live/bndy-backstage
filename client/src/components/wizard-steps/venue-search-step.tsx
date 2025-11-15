@@ -123,7 +123,25 @@ export default function VenueSearchStep({ formData, onUpdate, artistName, artist
             source: 'google_places' as const,
           };
         });
-        setGoogleResults(googleVenues);
+
+        // CRITICAL: Filter Google Places results against ALL BNDY venues
+        // to prevent duplicates when user types a non-matching suffix (e.g., "Torr Vale Tap house")
+        const allVenuesResponse = await fetch('https://api.bndy.co.uk/api/venues', { credentials: 'include' });
+        if (allVenuesResponse.ok) {
+          const allVenues = await allVenuesResponse.json();
+          const normalizeVenueName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const allBndyVenueNames = new Set(allVenues.map((v: any) => normalizeVenueName(v.name)));
+
+          const filteredGoogleVenues = googleVenues.filter(gv => {
+            const normalizedGoogleName = normalizeVenueName(gv.name);
+            return !allBndyVenueNames.has(normalizedGoogleName);
+          });
+
+          setGoogleResults(filteredGoogleVenues);
+        } else {
+          // If we can't fetch all venues for deduplication, show Google results anyway
+          setGoogleResults(googleVenues);
+        }
       } else {
         // Clear Google results if we have DB results
         setGoogleResults([]);
