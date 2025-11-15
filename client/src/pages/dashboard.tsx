@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin } from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
 import type { Song, ArtistMembership, Artist, User } from "@/types/api";
 import type { Event } from "@/lib/services/events-service";
 import GigAlertBanner from "@/components/gig-alert-banner";
@@ -799,24 +800,20 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               onSuccess={() => setShowingCreateForm(false)}
             />
           )}
-          <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-            <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-              <div className="max-w-4xl mx-auto">
-                {/* Create New Artist Tile - Only shown when no artists exist */}
-                <div className="max-w-2xl mx-auto">
-                  <DashboardTile
-                    title="Create New"
-                    subtitle="Start your artist profile"
-                    icon={<Plus />}
-                    color="hsl(24, 95%, 53%)"
-                    actionLabel="Get Started"
-                    onClick={() => setShowingCreateForm(true)}
-                    className="animate-fade-in-up"
-                  />
-                </div>
-              </div>
+          <PageContainer>
+            {/* Create New Artist Tile - Only shown when no artists exist */}
+            <div className="max-w-2xl mx-auto">
+              <DashboardTile
+                title="Create New"
+                subtitle="Start your artist profile"
+                icon={<Plus />}
+                color="hsl(24, 95%, 53%)"
+                actionLabel="Get Started"
+                onClick={() => setShowingCreateForm(true)}
+                className="animate-fade-in-up"
+              />
             </div>
-          </div>
+          </PageContainer>
         </>
       );
     }
@@ -824,23 +821,19 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     // Has artists but none selected - show artist selection tiles IN dashboard
     if (userProfile?.artists && userProfile.artists.length > 0) {
       return (
-        <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-          <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">Select Your Artist</h2>
-              <div className="space-y-3">
-                {userProfile.artists.map((membership) => (
-                  <ArtistTile
-                    key={membership.artist_id}
-                    artist={membership.artist!}
-                    membership={membership}
-                    onClick={() => selectArtist(membership.artist_id)}
-                  />
-                ))}
-              </div>
-            </div>
+        <PageContainer>
+          <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">Select Your Artist</h2>
+          <div className="space-y-3">
+            {userProfile.artists.map((membership) => (
+              <ArtistTile
+                key={membership.artist_id}
+                artist={membership.artist!}
+                membership={membership}
+                onClick={() => selectArtist(membership.artist_id)}
+              />
+            ))}
           </div>
-        </div>
+        </PageContainer>
       );
     }
 
@@ -856,24 +849,22 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   }
 
   return (
-    <div className="bg-gradient-subtle animate-fade-in-up">
+    <PageContainer variant="wide">
       {/* Onboarding Tour - Shows once for new users */}
       <OnboardingTour />
 
-      {/* Main Content Container - Edge to Edge on Mobile */}
-      <div className="px-2 sm:px-4 lg:px-6 pt-3 sm:pt-4 pb-6">
-        {/* Gig Alert Banner - receives events from dashboard to avoid duplicate API call */}
-        <GigAlertBanner
-          artistId={artistId}
-          events={upcomingEvents}
-          isLoading={eventsLoading}
-          className="mb-3 sm:mb-4"
-        />
+      {/* Gig Alert Banner - receives events from dashboard to avoid duplicate API call */}
+      <GigAlertBanner
+        artistId={artistId}
+        events={upcomingEvents}
+        isLoading={eventsLoading}
+        className="mb-3 sm:mb-4"
+      />
 
-        {/* Calendar & Gigs Section */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
+      {/* Calendar & Gigs Section */}
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Calendar"
               icon={<Calendar />}
@@ -901,11 +892,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               className="animate-stagger-3"
               data-testid="tile-admin"
             />
-          </div>
         </div>
+      </div>
 
-        {/* Song Lists Section */}
-        <div className="mb-6 sm:mb-8">
+      {/* Song Lists Section */}
+      <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Song Lists</h2>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
@@ -981,11 +972,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
                 </div>
               </CardContent>
             </Card>
-          </div>
         </div>
+      </div>
 
-        {/* Venues & Contacts Section */}
-        <div className="mb-6 sm:mb-8">
+      {/* Venues & Contacts Section */}
+      <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Venues & Contacts</h2>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
@@ -997,11 +988,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               className="animate-stagger-1"
               data-testid="tile-venues"
             />
-          </div>
         </div>
+      </div>
 
-        {/* Mobile Floating Action Button with Menu */}
-        <div className="fixed bottom-6 right-4 sm:right-6 md:hidden">
+      {/* Mobile Floating Action Button with Menu */}
+      <div className="fixed bottom-6 right-4 sm:right-6 md:hidden">
           {/* Menu Options */}
           {fabMenuOpen && (
             <>
@@ -1062,9 +1053,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
           >
             <Plus className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 ${fabMenuOpen ? 'rotate-45' : 'group-hover:rotate-90'}`} />
           </Button>
-        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 
 }
