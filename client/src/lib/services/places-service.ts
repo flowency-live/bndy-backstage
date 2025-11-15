@@ -52,7 +52,7 @@ export async function searchGooglePlaces(
         request.locationBias = {
           circle: {
             center: { latitude: artistLocationLat, longitude: artistLocationLng },
-            radius: 80000.0, // 80km radius for UK coverage
+            radius: 50000.0, // 50km radius (Google API maximum)
           }
         };
       }

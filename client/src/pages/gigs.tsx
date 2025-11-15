@@ -7,6 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import type { Event } from "@/types/api";
 import { apiRequest } from "@/lib/queryClient";
 
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+const getOrdinalSuffix = (day: number): string => {
+  if (day > 3 && day < 21) return 'th';
+  switch (day % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+};
+
 interface GigsProps {
   artistId: string;
 }
@@ -130,59 +141,61 @@ interface GigCardProps {
 }
 
 function GigCard({ gig, highlighted, past }: GigCardProps) {
+  // Format date with full day name and ordinal (e.g., "Saturday 15th November")
+  const gigDateObj = new Date(gig.date);
+  const dayName = format(gigDateObj, 'EEEE');
+  const day = gigDateObj.getDate();
+  const monthName = format(gigDateObj, 'MMMM');
+  const gigDate = `${dayName} ${day}${getOrdinalSuffix(day)} ${monthName}`;
+  const gigTime = gig.startTime ? ` • ${gig.startTime}${gig.endTime && gig.endTime !== "00:00" ? ` - ${gig.endTime}` : ''}` : '';
+
+  // Color for the border - orange for today, muted for past, brand accent for future
+  const borderColor = highlighted ? '#f97316' : past ? '#94a3b8' : '#f97316';
+
   return (
     <Card
-      className={`transition-all hover:shadow-md cursor-pointer ${
-        highlighted ? "border-orange-500 border-2 shadow-lg" : ""
+      className={`transition-all hover:shadow-md cursor-pointer border-l-4 ${
+        highlighted ? "shadow-lg" : ""
       } ${past ? "opacity-70" : ""}`}
+      style={{ borderLeftColor: borderColor }}
     >
       <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-sans font-semibold text-card-foreground">
+        <div className="flex items-center space-x-3">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground flex-shrink-0"
+            style={{ backgroundColor: borderColor }}
+          >
+            <span className="text-lg">🎵</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-base font-sans font-semibold text-card-foreground">
                 {gig.title}
               </h3>
               {highlighted && (
                 <Badge className="bg-orange-500 text-white">Today</Badge>
               )}
               {gig.isPublic && !highlighted && (
-                <Badge variant="secondary">
-                  Public
-                </Badge>
+                <Badge variant="secondary">Public</Badge>
               )}
             </div>
 
             {gig.venue && (
-              <p className="text-muted-foreground flex items-center gap-2 mb-1">
-                <i className="fas fa-map-marker-alt"></i>
-                {gig.venue}
+              <p className="text-muted-foreground text-sm truncate mb-1">
+                📍 {gig.venue}
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <i className="fas fa-calendar"></i>
-                {format(new Date(gig.date), "EEE, MMM do yyyy")}
-              </span>
-              {gig.startTime && (
-                <span className="flex items-center gap-1">
-                  <i className="fas fa-clock"></i>
-                  {gig.startTime}
-                  {gig.endTime && gig.endTime !== "00:00" && ` - ${gig.endTime}`}
-                </span>
-              )}
-            </div>
+            <p className="text-muted-foreground text-sm font-medium">
+              {gigDate}
+              {gigTime}
+            </p>
 
             {gig.description && (
               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                 {gig.description}
               </p>
             )}
-          </div>
-
-          <div className="text-right">
-            <span className="text-2xl">🎵</span>
           </div>
         </div>
       </CardContent>
