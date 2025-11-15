@@ -120,6 +120,7 @@ export default function VenueEditModal({
         title: 'Venue updated',
         description: 'Changes saved successfully',
       });
+      onClose(); // Close modal after successful save
     } catch (error: any) {
       toast({
         title: 'Error saving venue',

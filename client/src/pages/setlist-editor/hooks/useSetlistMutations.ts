@@ -66,7 +66,6 @@ export function useSetlistMutations({
         toast({
           title: 'Saved',
           description: 'Changes saved successfully',
-          duration: 2000,
         });
       }
     },
@@ -89,7 +88,6 @@ export function useSetlistMutations({
           toast({
             title: 'Saved',
             description: 'Setlist saved successfully',
-            duration: 2000,
           });
         },
       }

@@ -58,6 +58,7 @@ export default function ArtistEditModal({
         title: 'Artist updated',
         description: 'Changes saved successfully',
       });
+      onClose(); // Close modal after successful save
     } catch (error: any) {
       toast({
         title: 'Error saving artist',

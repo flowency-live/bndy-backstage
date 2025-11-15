@@ -416,7 +416,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
         toast({
           title: "Saved",
           description: "Changes saved successfully",
-          duration: 2000,
         });
       }
     },
@@ -763,7 +762,6 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
           toast({
             title: "Saved",
             description: "Setlist saved successfully",
-            duration: 2000,
           });
         },
       }
@@ -790,7 +788,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     toast({
       title: "Changes discarded",
       description: "Setlist reset to last saved version",
-      duration: 2000,
+      
     });
   };
 
