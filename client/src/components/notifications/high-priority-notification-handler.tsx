@@ -3,15 +3,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationsService } from '@/lib/services/notifications-service';
 import { HighPriorityModal } from './high-priority-modal';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useServerAuth } from '@/hooks/useServerAuth';
 
 export function HighPriorityNotificationHandler() {
   const queryClient = useQueryClient();
-  const { dismissNotification, markAsRead } = useNotifications();
+  const { isAuthenticated } = useServerAuth();
+  const { dismissNotification, markAsRead } = useNotifications(undefined, isAuthenticated);
   const [currentNotification, setCurrentNotification] = useState<any>(null);
 
   const { data: highPriorityNotifications } = useQuery({
     queryKey: ['high-priority-notifications'],
     queryFn: () => notificationsService.getHighPriorityNotifications(),
+    enabled: isAuthenticated,
     refetchInterval: 60000, // Check every 60 seconds
     refetchIntervalInBackground: false,
   });
