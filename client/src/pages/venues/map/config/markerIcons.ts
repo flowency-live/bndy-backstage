@@ -26,7 +26,7 @@ export const createManagedVenueIcon = () => L.divIcon({
 
 export const createUnmanagedVenueIcon = () => L.divIcon({
   className: 'venue-marker-unmanaged',
-  html: createMapPinSVG('#6B7280', true),
+  html: createMapPinSVG('#FF1493', false),
   iconSize: [22, 29],
   iconAnchor: [11, 29],
   popupAnchor: [0, -27]
