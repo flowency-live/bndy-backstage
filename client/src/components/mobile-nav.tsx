@@ -71,7 +71,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   return (
     <>
       {/* Mobile Header - Always visible on mobile */}
-      <header className="sticky top-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-b border-border h-16">
+      <header className="w-full z-50 bg-card border-b border-border h-16">
         <div className="flex items-center justify-between h-full">
           {/* Left: Artist Avatar or Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

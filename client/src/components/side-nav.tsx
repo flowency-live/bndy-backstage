@@ -101,9 +101,9 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
       {/* Side Navigation */}
       <div className={`
-        fixed top-0 left-0 h-screen w-64 bg-card shadow-2xl z-50 transform transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-screen w-64 bg-card shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:shadow-none overflow-y-auto
+        lg:translate-x-0 lg:shadow-lg lg:border-r lg:border-border
       `}>
         <div className="flex flex-col min-h-full">
           {/* Header */}
