@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
-import { format, isToday, isPast, isFuture } from "date-fns";
+import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Event } from "@/types/api";
@@ -22,15 +22,14 @@ export default function Gigs({ artistId }: GigsProps) {
   }>({
     queryKey: ["/api/artists", artistId, "calendar", "all-gigs"],
     queryFn: async () => {
-      // Get gigs from the past year and next year
-      const pastYear = new Date();
-      pastYear.setFullYear(pastYear.getFullYear() - 1);
-      const nextYear = new Date();
-      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      // Get gigs from start of current year to end of next year
+      const today = new Date();
+      const startDate = startOfYear(today);
+      const endDate = endOfYear(addYears(today, 1));
 
       const response = await apiRequest(
         "GET",
-        `/api/artists/${artistId}/calendar?startDate=${format(pastYear, "yyyy-MM-dd")}&endDate=${format(nextYear, "yyyy-MM-dd")}`
+        `/api/artists/${artistId}/calendar?startDate=${format(startDate, "yyyy-MM-dd")}&endDate=${format(endDate, "yyyy-MM-dd")}`
       );
       return response.json();
     },

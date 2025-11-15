@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfDay, addMonths } from 'date-fns';
 import { useUser } from '@/lib/user-context';
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { useToast } from '@/hooks/use-toast';
