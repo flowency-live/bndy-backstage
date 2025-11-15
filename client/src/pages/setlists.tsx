@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
-import { PageHeader } from "@/components/layout";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import type { ArtistMembership, Artist } from "@/types/api";
 import type { Setlist, SetlistSet, SetlistSong } from "@/types/setlist";
 
@@ -202,35 +203,37 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+    <PageContainer>
       <ConfirmDialog />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Tabs Navigation */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2 border-b border-border">
+      <PageHeader
+        tabs={
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2 border-b border-border">
+              <button
+                onClick={() => setLocation("/songs")}
+                className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
+              >
+                Playbook
+              </button>
+              <button
+                onClick={() => setLocation("/setlists")}
+                className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
+              >
+                Setlists
+              </button>
+            </div>
+
             <button
-              onClick={() => setLocation("/songs")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => setShowCreateModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
             >
-              Playbook
-            </button>
-            <button
-              onClick={() => setLocation("/setlists")}
-              className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
-            >
-              Setlists
+              <i className="fas fa-plus"></i>
+              <span className="hidden sm:inline">New Setlist</span>
             </button>
           </div>
-
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-          >
-            <i className="fas fa-plus"></i>
-            <span className="hidden sm:inline">New Setlist</span>
-          </button>
-        </div>
+        }
+      />
 
         {/* Loading state */}
         {isLoading && (
@@ -755,6 +758,6 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

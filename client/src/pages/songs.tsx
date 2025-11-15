@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import AddSongModal from "@/components/add-song-modal";
 import { spotifySync } from "@/lib/spotify-sync";
-import { PageHeader } from "@/components/layout";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import type { ArtistMembership, Artist } from "@/types/api";
 
@@ -316,34 +317,36 @@ export default function Songs({ artistId, membership }: SongsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Tabs Navigation - navigate to actual routes */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2 border-b border-border">
+    <PageContainer>
+      <PageHeader
+        tabs={
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2 border-b border-border">
+              <button
+                onClick={() => setLocation("/songs")}
+                className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
+              >
+                Playbook
+              </button>
+              <button
+                onClick={() => setLocation("/setlists")}
+                className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
+              >
+                Setlists
+              </button>
+            </div>
+
             <button
-              onClick={() => setLocation("/songs")}
-              className="px-4 py-2 font-medium text-orange-500 border-b-2 border-orange-500"
+              onClick={() => setShowAddModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+              data-testid="button-add-song"
             >
-              Playbook
-            </button>
-            <button
-              onClick={() => setLocation("/setlists")}
-              className="px-4 py-2 font-medium text-muted-foreground hover:text-foreground"
-            >
-              Setlists
+              <i className="fas fa-plus"></i>
+              <span className="hidden sm:inline">Add Song</span>
             </button>
           </div>
-
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-            data-testid="button-add-song"
-          >
-            <i className="fas fa-plus"></i>
-            <span className="hidden sm:inline">Add Song</span>
-          </button>
-        </div>
+        }
+      />
 
         {/* Filter Controls - Mobile Optimized */}
         <div className="mb-4 space-y-3">
@@ -1031,6 +1034,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
           onClose={() => setCurrentlyPlayingSong(null)}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
