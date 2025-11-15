@@ -47,15 +47,17 @@ export async function searchGooglePlaces(
         maxResultCount: 50, // Get diverse results
       };
 
-      // Add location bias if stored lat/lng available
-      if (artistLocationLat && artistLocationLng) {
-        request.locationBias = {
-          circle: {
-            center: { latitude: artistLocationLat, longitude: artistLocationLng },
-            radius: 50000.0, // 50km radius (Google API maximum)
-          }
-        };
-      }
+      // Location bias removed - searching UK-wide for better results
+      // Previous implementation with 50km radius was too restrictive and filtered out valid venues
+      // Matches frontstage behavior which has no location bias
+      // if (artistLocationLat && artistLocationLng) {
+      //   request.locationBias = {
+      //     circle: {
+      //       center: { latitude: artistLocationLat, longitude: artistLocationLng },
+      //       radius: 50000.0, // 50km radius (Google API maximum)
+      //     }
+      //   };
+      // }
 
       const { places } = await (google.maps.places.Place as any).searchByText(request);
 
