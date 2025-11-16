@@ -91,7 +91,7 @@ export function PageHeader({
 
       {/* STICKY CONTROL SECTION - All devices */}
       {(tabs || filters || search) && (
-        <div className="sticky top-[4rem] lg:top-0 z-20 bg-background pb-4 mb-6 space-y-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-20 bg-background pb-4 mb-6 space-y-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           {/* Row 1: Tabs/Navigation */}
           {tabs && (
             <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
