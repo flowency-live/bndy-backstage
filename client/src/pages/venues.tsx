@@ -149,24 +149,26 @@ export default function Venues({ artistId, membership }: VenuesProps) {
       <PageHeader
         title="Venues"
         subtitle="Manage your venue relationships and contacts"
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              onClick={() => setViewMode('list')}
-              size="sm"
-            >
-              <List className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">List</span>
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
-              onClick={() => setViewMode('map')}
-              size="sm"
-            >
-              <Map className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Map</span>
-            </Button>
+        tabs={
+          <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                onClick={() => setViewMode('list')}
+                size="sm"
+              >
+                <List className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">List</span>
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'outline'}
+                onClick={() => setViewMode('map')}
+                size="sm"
+              >
+                <Map className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Map</span>
+              </Button>
+            </div>
             <Button
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => setShowAddModal(true)}
@@ -179,7 +181,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
           </div>
         }
         filters={
-          viewMode === 'list' && venues.length > 0 ? (
+          venues.length > 0 ? (
             <div className="flex gap-2 flex-wrap">
               <Button
                 variant={gigFilter === 'all' ? 'default' : 'outline'}
@@ -206,7 +208,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
           ) : undefined
         }
         search={
-          viewMode === 'list' && venues.length > 0 ? (
+          venues.length > 0 ? (
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
