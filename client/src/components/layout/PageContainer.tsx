@@ -39,7 +39,7 @@ export function PageContainer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
+    <div className="bg-gradient-subtle animate-fade-in-up">
       <div className="px-4 sm:px-6 lg:px-8 pt-6 pb-8">
         <div className={cn(widthClasses[variant], 'mx-auto', className)}>
           {children}
