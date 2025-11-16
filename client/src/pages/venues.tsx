@@ -27,6 +27,15 @@ type SortOption = 'name-asc' | 'name-desc' | 'gigs-desc' | 'contacts-desc' | 're
 type GigFilter = 'all' | 'with-gigs' | 'without-gigs';
 type StatusFilter = 'all' | 'managed' | 'unmanaged';
 
+// Helper function to get sortable name by removing "The" prefix
+const getSortableName = (name: string): string => {
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase().startsWith('the ')) {
+    return trimmed.substring(4);
+  }
+  return trimmed;
+};
+
 export default function Venues({ artistId, membership }: VenuesProps) {
   const { session } = useServerAuth();
   const [, setLocation] = useLocation();
@@ -86,12 +95,12 @@ export default function Venues({ artistId, membership }: VenuesProps) {
     result.sort((a, b) => {
       switch (sortBy) {
         case 'name-asc':
-          return (a.custom_venue_name || a.venue.name).localeCompare(
-            b.custom_venue_name || b.venue.name
+          return getSortableName(a.custom_venue_name || a.venue.name).localeCompare(
+            getSortableName(b.custom_venue_name || b.venue.name)
           );
         case 'name-desc':
-          return (b.custom_venue_name || b.venue.name).localeCompare(
-            a.custom_venue_name || a.venue.name
+          return getSortableName(b.custom_venue_name || b.venue.name).localeCompare(
+            getSortableName(a.custom_venue_name || a.venue.name)
           );
         case 'gigs-desc':
           return b.gigCount - a.gigCount;
@@ -113,7 +122,8 @@ export default function Venues({ artistId, membership }: VenuesProps) {
 
     filteredAndSortedVenues.forEach(venue => {
       const name = venue.custom_venue_name || venue.venue.name;
-      const firstChar = name.charAt(0).toUpperCase();
+      const sortableName = getSortableName(name);
+      const firstChar = sortableName.charAt(0).toUpperCase();
       const groupKey = /[A-Z]/.test(firstChar) ? firstChar : '#';
 
       if (!groups[groupKey]) {
