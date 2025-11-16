@@ -4,46 +4,59 @@ import { cn } from '@/lib/utils';
 interface PageHeaderProps {
   title?: string;
   subtitle?: string;
-  actions?: ReactNode;
-  tabs?: ReactNode;
+  actions?: ReactNode;      // Primary action buttons (Add Venue, Add Song, etc.)
+  tabs?: ReactNode;         // Tab navigation (Playbook/Setlists, Voting/Practice, etc.)
+  filters?: ReactNode;      // Filter controls (pills, dropdowns, group-by)
+  search?: ReactNode;       // Search bar
   className?: string;
   showTitleOnMobile?: boolean;
 }
 
 /**
- * PageHeader - Standardized page header component
+ * PageHeader - Standardized page header with consistent sticky layout
  *
- * Provides consistent page titles, subtitles, actions, and tab navigation.
+ * **CONSISTENT LAYOUT PATTERN (ALL PAGES):**
  *
- * **Mobile-First Behavior:**
- * - By default, hides title on mobile (context from tabs/content)
- * - Always shows tabs if provided
- * - Can override with `showTitleOnMobile={true}` for special cases
+ * Desktop Title Section (hidden on mobile):
+ * - Title + Subtitle
  *
- * @param title - Page title (hidden on mobile by default)
- * @param subtitle - Optional descriptive text below title
- * @param actions - Action buttons (e.g., "Add New" button)
- * @param tabs - Tab navigation component
- * @param showTitleOnMobile - Override to show title on mobile (default: false)
+ * STICKY SECTION (always visible, stays on scroll):
+ * - Row 1: Tabs/Navigation + Primary Action Buttons
+ * - Row 2: Filter Controls (if provided)
+ * - Row 3: Search Bar (if provided)
  *
  * @example
  * ```tsx
- * // Title hidden on mobile, tabs visible
+ * // Venues pattern
  * <PageHeader
  *   title="Venues"
  *   subtitle="Manage your venue relationships"
- *   actions={<Button>Add Venue</Button>}
+ *   actions={<>
+ *     <Button>List</Button>
+ *     <Button>Map</Button>
+ *     <Button>Add Venue</Button>
+ *   </>}
+ *   filters={<>
+ *     <Button>All Venues</Button>
+ *     <Button>With Gigs</Button>
+ *     <Button>No Gigs Yet</Button>
+ *   </>}
+ *   search={<Input placeholder="Search venues..." />}
  * />
  *
- * // Tabs only (no title)
+ * // Playbook pattern
  * <PageHeader
- *   tabs={<TabNavigation />}
- * />
- *
- * // Force title on mobile
- * <PageHeader
- *   title="Profile"
- *   showTitleOnMobile={true}
+ *   tabs={<>
+ *     <TabButton>Playbook</TabButton>
+ *     <TabButton>Setlists</TabButton>
+ *     <Button>Add Song</Button>
+ *   </>}
+ *   filters={<>
+ *     <Select>All Genres</Select>
+ *     <Select>All Decades</Select>
+ *     <Select>Group: A-Z</Select>
+ *   </>}
+ *   search={<Input placeholder="Search songs..." />}
  * />
  * ```
  */
@@ -52,30 +65,58 @@ export function PageHeader({
   subtitle,
   actions,
   tabs,
+  filters,
+  search,
   className,
   showTitleOnMobile = false
 }: PageHeaderProps) {
   return (
-    <div className={cn('mb-6', className)}>
+    <div className={cn(className)}>
+      {/* Title Section - Desktop only (hidden on mobile by default) */}
       {title && (
         <div className={cn(
-          'flex items-center justify-between mb-4',
-          !showTitleOnMobile && 'hidden sm:flex'
+          'mb-6',
+          !showTitleOnMobile && 'hidden sm:block'
         )}>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-            )}
-          </div>
-          {actions && <div>{actions}</div>}
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
         </div>
       )}
-      {tabs && (
-        <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-          {tabs}
+
+      {/* STICKY CONTROL SECTION - All devices */}
+      {(tabs || actions || filters || search) && (
+        <div className="sticky top-[4rem] lg:top-0 z-20 bg-background pb-4 mb-6 space-y-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          {/* Row 1: Tabs/Navigation + Action Buttons */}
+          {(tabs || actions) && (
+            <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
+              <div className="flex-1">
+                {tabs}
+              </div>
+              {actions && !tabs && (
+                <div className="flex items-center gap-2">
+                  {actions}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Row 2: Filter Controls */}
+          {filters && (
+            <div className="flex flex-wrap items-center gap-2">
+              {filters}
+            </div>
+          )}
+
+          {/* Row 3: Search Bar */}
+          {search && (
+            <div>
+              {search}
+            </div>
+          )}
         </div>
       )}
     </div>
