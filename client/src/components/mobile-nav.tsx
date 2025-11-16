@@ -325,17 +325,12 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             </SheetContent>
           </Sheet>
 
-          {/* Center: Logo & Page Title */}
+          {/* Center: Logo only - context from page content/tabs */}
           <div className="flex items-center gap-3 flex-1 justify-center px-4">
             {isLoading ? (
               <BndySpinner size="sm" variant="grow" />
             ) : (
-              <>
-                <BndyLogo className="h-7 w-auto" color="hsl(var(--primary))" />
-                {currentPage && (
-                  <span className="font-semibold text-foreground">{currentPage.label}</span>
-                )}
-              </>
+              <BndyLogo className="h-7 w-auto" color="hsl(var(--primary))" />
             )}
           </div>
 
