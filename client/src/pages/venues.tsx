@@ -178,74 +178,70 @@ export default function Venues({ artistId, membership }: VenuesProps) {
             </Button>
           </div>
         }
+        filters={
+          viewMode === 'list' && venues.length > 0 ? (
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={gigFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setGigFilter('all')}
+              >
+                All Venues
+              </Button>
+              <Button
+                variant={gigFilter === 'with-gigs' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setGigFilter('with-gigs')}
+              >
+                With Gigs
+              </Button>
+              <Button
+                variant={gigFilter === 'without-gigs' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setGigFilter('without-gigs')}
+              >
+                No Gigs Yet
+              </Button>
+            </div>
+          ) : undefined
+        }
+        search={
+          viewMode === 'list' && venues.length > 0 ? (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search venues by name, city, or address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          ) : undefined
+        }
       />
 
-          {/* Map View */}
-          {viewMode === 'map' ? (
-            <VenueMapView artistId={artistId} />
-          ) : (
-            <>
-              {/* Search and Filters */}
-              {venues.length > 0 && (
-            <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 space-y-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search venues by name, city, or address..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Filters and Sort */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
-                {/* Gig Filter Pills */}
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant={gigFilter === 'all' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setGigFilter('all')}
-                  >
-                    All Venues
-                  </Button>
-                  <Button
-                    variant={gigFilter === 'with-gigs' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setGigFilter('with-gigs')}
-                  >
-                    With Gigs
-                  </Button>
-                  <Button
-                    variant={gigFilter === 'without-gigs' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setGigFilter('without-gigs')}
-                  >
-                    No Gigs Yet
-                  </Button>
-                </div>
-              </div>
-
-              {/* Active Filter Count */}
-              {(searchQuery || gigFilter !== 'all') && (
-                <div className="flex items-center justify-between text-sm">
-                  <p className="text-muted-foreground">
-                    Showing {filteredAndSortedVenues.length} of {venues.length} venues
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setGigFilter('all');
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
+      {/* Map View */}
+      {viewMode === 'map' ? (
+        <VenueMapView artistId={artistId} />
+      ) : (
+        <>
+          {/* Active Filter Count */}
+          {venues.length > 0 && (searchQuery || gigFilter !== 'all') && (
+            <div className="flex items-center justify-between text-sm mb-6">
+              <p className="text-muted-foreground">
+                Showing {filteredAndSortedVenues.length} of {venues.length} venues
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setGigFilter('all');
+                }}
+              >
+                Clear Filters
+              </Button>
             </div>
           )}
 
@@ -359,8 +355,8 @@ export default function Venues({ artistId, membership }: VenuesProps) {
               ))}
             </div>
           )}
-            </>
-          )}
+        </>
+      )}
     </PageContainer>
   );
 }
