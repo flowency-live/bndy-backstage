@@ -73,7 +73,11 @@ export function PageHeader({
           {actions && <div>{actions}</div>}
         </div>
       )}
-      {tabs && <div>{tabs}</div>}
+      {tabs && (
+        <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          {tabs}
+        </div>
+      )}
     </div>
   );
 }
