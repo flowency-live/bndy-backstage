@@ -692,7 +692,6 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
             })}
           </div>
         )}
-      </div>
 
       {/* Create Setlist Modal */}
       {showCreateModal && (

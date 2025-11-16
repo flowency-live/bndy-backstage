@@ -1013,7 +1013,6 @@ export default function Songs({ artistId, membership }: SongsProps) {
             ))}
           </div>
         )}
-        </div>
       </div>
 
       {/* Add Song Modal */}
