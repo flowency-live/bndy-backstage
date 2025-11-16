@@ -349,7 +349,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
       />
 
         {/* Filter Controls - Mobile Optimized */}
-        <div className="mb-4 space-y-3">
+        <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-4 space-y-3">
           {/* Filter Dropdowns Row */}
           <div className="flex flex-wrap gap-2">
             {/* Genre Filter */}

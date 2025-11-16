@@ -177,7 +177,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
             <>
               {/* Search and Filters */}
               {venues.length > 0 && (
-            <div className="space-y-4 mb-6">
+            <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 space-y-4">
               {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
