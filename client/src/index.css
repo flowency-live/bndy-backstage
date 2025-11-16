@@ -1035,3 +1035,56 @@
   }
 }
 
+/* =========================================
+   DESIGN SYSTEM UTILITIES
+   Based on design tokens in src/lib/design-tokens.ts
+   ========================================= */
+
+/* Page Container Utilities */
+@layer utilities {
+  .container-responsive {
+    @apply px-4 sm:px-6 lg:px-8 pt-6 pb-8;
+  }
+
+  .container-default {
+    @apply max-w-4xl mx-auto;
+  }
+
+  .container-narrow {
+    @apply max-w-2xl mx-auto;
+  }
+
+  .container-wide {
+    @apply max-w-6xl mx-auto;
+  }
+}
+
+/* Card Padding Utilities */
+@layer utilities {
+  .card-compact {
+    @apply p-4;
+  }
+
+  .card-standard {
+    @apply p-6;
+  }
+
+  .card-large {
+    @apply p-12;
+  }
+}
+
+/* Spacing Utilities */
+@layer utilities {
+  .section-spacing {
+    @apply space-y-6;
+  }
+
+  .field-spacing {
+    @apply space-y-4;
+  }
+
+  .tight-spacing {
+    @apply space-y-2;
+  }
+}

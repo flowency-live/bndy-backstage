@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
+import { PageContainer } from "@/components/layout/PageContainer";
 import BndyLogo from "@/components/ui/bndy-logo";
 
 export default function Welcome() {
@@ -13,17 +14,20 @@ export default function Welcome() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white font-sans">Loading artists...</p>
+      <PageContainer>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-foreground">Loading artists...</p>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle p-4 flex flex-col items-center justify-center">
+    <PageContainer>
+      <div className="flex flex-col items-center justify-center min-h-[70vh]">
       <div className="text-center animate-fade-in">
         {/* bndy logo */}
         <div className="mb-8" data-testid="logo-container">
@@ -69,6 +73,6 @@ export default function Welcome() {
           </button>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

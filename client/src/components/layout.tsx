@@ -59,24 +59,26 @@ export function AppLayout({ children, artistId, membership, isLoading = false }:
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row max-w-full overflow-x-hidden">
-      {/* Mobile Navigation Header */}
-      <MobileNavHeader
-        currentArtistId={artistId}
-        currentMembership={membership}
-        isLoading={isLoading}
-      />
+    <div className="h-screen flex flex-col lg:flex-row max-w-full overflow-hidden">
+      {/* Mobile Navigation Header - Fixed at top */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40">
+        <MobileNavHeader
+          currentArtistId={artistId}
+          currentMembership={membership}
+          isLoading={isLoading}
+        />
+      </div>
 
-      {/* Desktop Side Navigation - Hidden on mobile */}
-      <div className="hidden lg:block">
+      {/* Desktop Side Navigation - Fixed on left */}
+      <div className="hidden lg:block lg:fixed lg:left-0 lg:top-0 lg:bottom-0 lg:w-64 lg:z-40">
         <SideNav
           isOpen={isNavOpen}
           onClose={closeNav}
         />
       </div>
 
-      {/* Main Content - Mobile first with bottom padding for nav */}
-      <main className="flex-1 min-h-0 pb-20 lg:pb-0 max-w-full overflow-x-hidden">
+      {/* Main Content - Scrollable with offset for fixed header/sidebar */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[4rem] lg:pt-0 lg:ml-64 pb-20 lg:pb-0">
         {children}
       </main>
     </div>

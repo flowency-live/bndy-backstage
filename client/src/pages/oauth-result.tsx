@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 interface FlowStep {
   step: string;
@@ -87,9 +88,8 @@ export default function OAuthResult() {
   const totalTime = flowStart ? Date.now() - parseInt(flowStart) : 0;
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-foreground mb-8">🔍 OAUTH FLOW RESULT</h1>
+    <PageContainer variant="wide">
+      <h1 className="text-4xl font-bold text-foreground mb-8">🔍 OAUTH FLOW RESULT</h1>
 
         {/* Summary */}
         <div className="bg-green-500/10 border border-green-500 rounded-lg p-6 mb-6">
@@ -173,7 +173,6 @@ export default function OAuthResult() {
             Go to Dashboard
           </button>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

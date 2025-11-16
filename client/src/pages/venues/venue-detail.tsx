@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import { ArrowLeft, Building, MapPin, Phone, Globe, Users, Calendar, Trash2 } from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
@@ -104,21 +106,19 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={() => setLocation('/venues')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Venues
-          </Button>
+    <PageContainer variant="wide">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        onClick={() => setLocation('/venues')}
+        className="mb-4"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Venues
+      </Button>
 
-          {/* Venue Header */}
-          <div className="mb-6">
+      {/* Venue Header */}
+      <div className="mb-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white">
@@ -202,10 +202,11 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
                 </CardContent>
               </Card>
             )}
-          </div>
+      </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b border-border mb-6">
+      <PageHeader
+        tabs={
+          <div className="border-b border-border">
             <nav className="flex space-x-8" aria-label="Tabs">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -230,17 +231,17 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
               })}
             </nav>
           </div>
+        }
+      />
 
-          {/* Tab Content */}
-          <div className="pb-8">
-            {activeTab === 'contacts' && (
-              <ContactManager artistId={artistId} venueId={venueId} />
-            )}
-            {activeTab === 'gigs' && (
-              <GigHistory artistId={artistId} venueId={venueId} />
-            )}
-          </div>
-        </div>
+      {/* Tab Content */}
+      <div className="pb-8">
+        {activeTab === 'contacts' && (
+          <ContactManager artistId={artistId} venueId={venueId} />
+        )}
+        {activeTab === 'gigs' && (
+          <GigHistory artistId={artistId} venueId={venueId} />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -281,6 +282,6 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

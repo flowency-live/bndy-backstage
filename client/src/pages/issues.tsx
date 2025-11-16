@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { issuesService, type Issue, type IssuesResponse } from "@/lib/services/issues-service";
 import IssueForm from "@/components/ui/issue-form";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   Bug,
   AlertTriangle,
@@ -193,7 +195,7 @@ export default function Issues() {
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
+      <PageContainer>
         <Card>
           <CardContent className="flex items-center justify-center p-8">
             <div className="text-center">
@@ -209,28 +211,25 @@ export default function Issues() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Issues</h1>
-          <p className="text-muted-foreground">
-            Track bugs, features, and improvements
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsIssueFormOpen(true)}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Report Issue
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Issues"
+        subtitle="Track bugs, features, and improvements"
+        actions={
+          <Button
+            onClick={() => setIsIssueFormOpen(true)}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-0"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Report Issue
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <Card>
@@ -489,6 +488,6 @@ export default function Issues() {
           });
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

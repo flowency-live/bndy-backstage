@@ -4,6 +4,10 @@ import { useUser } from "@/lib/user-context";
 import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Music } from "lucide-react";
 import type { Event } from "@/types/api";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -68,23 +72,16 @@ export default function Gigs({ artistId }: GigsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-serif font-bold text-foreground mb-6">Gigs</h1>
+    <PageContainer>
+      <PageHeader title="Gigs" />
 
-        {allGigs.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="text-muted-foreground mb-4">
-                <i className="fas fa-guitar text-4xl"></i>
-              </div>
-              <h3 className="text-lg font-sans font-semibold text-muted-foreground mb-2">
-                No gigs yet
-              </h3>
-              <p className="text-muted-foreground">Add your first gig to get started</p>
-            </CardContent>
-          </Card>
-        ) : (
+      {allGigs.length === 0 ? (
+        <EmptyState
+          icon={<Music className="h-12 w-12" />}
+          title="No gigs yet"
+          description="Add your first gig to get started"
+        />
+      ) : (
           <div className="space-y-8">
             {/* Today's Gigs */}
             {todayGigs.length > 0 && (
@@ -129,8 +126,7 @@ export default function Gigs({ artistId }: GigsProps) {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </PageContainer>
   );
 }
 

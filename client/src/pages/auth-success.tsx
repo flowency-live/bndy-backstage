@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 interface SessionData {
   user?: any;
@@ -53,9 +54,8 @@ export default function AuthSuccess() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-foreground mb-8">🎉 Authentication Success</h1>
+    <PageContainer>
+      <h1 className="text-3xl font-bold text-foreground mb-8">🎉 Authentication Success</h1>
 
         <div className="space-y-6">
           {/* Cookies */}
@@ -98,7 +98,6 @@ export default function AuthSuccess() {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

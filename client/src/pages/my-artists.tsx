@@ -6,6 +6,8 @@ import { Plus } from "lucide-react";
 import type { Artist, ArtistMembership } from "@/types/api";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
 import CreateArtistWizard from "@/components/CreateArtistWizard";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface ArtistTileProps {
   artist: Artist;
@@ -78,18 +80,11 @@ export default function MyArtists() {
           }}
         />
       )}
-      <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-        <div className="px-2 sm:px-4 lg:px-6 pt-6 pb-6">
-          <div className="max-w-5xl mx-auto">
-            {/* Header */}
-            <div className="mb-6 sm:mb-8">
-              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-2">
-                My Artists
-              </h1>
-              <p className="text-muted-foreground text-base sm:text-lg">
-                Select an artist to manage
-              </p>
-            </div>
+      <PageContainer variant="wide">
+        <PageHeader
+          title="My Artists"
+          subtitle="Select an artist to manage"
+        />
 
             {/* Artist Tiles - Responsive grid: 2 on mobile, 3 on tablet, 4 on desktop */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -141,9 +136,7 @@ export default function MyArtists() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </div>
-      </div>
+      </PageContainer>
     </>
   );
 }

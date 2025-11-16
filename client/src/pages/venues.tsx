@@ -3,11 +3,14 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
-import { MapPin, Plus, Phone, Building, Search, Map, List } from "lucide-react";
+import { MapPin, Plus, Building, Search, Map, List } from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { ArtistMembership } from "@/types/api";
 import { venueCRMService } from "@/lib/services/venue-crm-service";
 import type { ArtistVenue } from "@/lib/services/venue-crm-service";
@@ -132,48 +135,40 @@ export default function Venues({ artistId, membership }: VenuesProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle animate-fade-in-up">
-      <div className="px-2 sm:px-4 lg:px-6 pt-2 sm:pt-6 pb-2 sm:pb-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-3 sm:mb-6">
-            <div className="hidden sm:block">
-              <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Venues</h1>
-              <p className="text-muted-foreground">
-                Manage your venue relationships and contacts
-              </p>
-            </div>
-            <h1 className="sm:hidden text-xl font-serif font-bold text-foreground">Venues</h1>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                onClick={() => setViewMode('list')}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <List className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">List</span>
-              </Button>
-              <Button
-                variant={viewMode === 'map' ? 'default' : 'outline'}
-                onClick={() => setViewMode('map')}
-                size="sm"
-                className="flex-1 sm:flex-none"
-              >
-                <Map className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Map</span>
-              </Button>
-              <Button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none"
-                onClick={() => setShowAddModal(true)}
-                size="sm"
-                data-testid="button-add-venue"
-              >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Venue</span>
-              </Button>
-            </div>
+    <PageContainer variant="default">
+      <PageHeader
+        title="Venues"
+        subtitle="Manage your venue relationships and contacts"
+        actions={
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              onClick={() => setViewMode('list')}
+              size="sm"
+            >
+              <List className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">List</span>
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'outline'}
+              onClick={() => setViewMode('map')}
+              size="sm"
+            >
+              <Map className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Map</span>
+            </Button>
+            <Button
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => setShowAddModal(true)}
+              size="sm"
+              data-testid="button-add-venue"
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Venue</span>
+            </Button>
           </div>
+        }
+      />
 
           {/* Map View */}
           {viewMode === 'map' ? (
@@ -253,13 +248,11 @@ export default function Venues({ artistId, membership }: VenuesProps) {
 
           {/* Venues List */}
           {venues.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="p-12 text-center">
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No venues yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Start building your venue network by adding your first venue
-                </p>
+            <EmptyState
+              icon={<MapPin className="h-12 w-12" />}
+              title="No venues yet"
+              description="Start building your venue network by adding your first venue"
+              action={
                 <Button
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => setShowAddModal(true)}
@@ -267,16 +260,14 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Your First Venue
                 </Button>
-              </CardContent>
-            </Card>
+              }
+            />
           ) : filteredAndSortedVenues.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="p-12 text-center">
-                <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No venues found</h3>
-                <p className="text-muted-foreground mb-6">
-                  Try adjusting your search or filters
-                </p>
+            <EmptyState
+              icon={<Search className="h-12 w-12" />}
+              title="No venues found"
+              description="Try adjusting your search or filters"
+              action={
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -287,8 +278,8 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                 >
                   Clear Filters
                 </Button>
-              </CardContent>
-            </Card>
+              }
+            />
           ) : (
             <div className="space-y-4 sm:space-y-6">
               {groupedVenues.map(([letter, venues]) => (
@@ -360,8 +351,6 @@ export default function Venues({ artistId, membership }: VenuesProps) {
           )}
             </>
           )}
-        </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }
