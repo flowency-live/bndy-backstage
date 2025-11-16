@@ -71,12 +71,13 @@ export function PageHeader({
   showTitleOnMobile = false
 }: PageHeaderProps) {
   return (
-    <div className={cn(className)}>
+    <>
       {/* Title + Actions Row - Shows on mobile if showTitleOnMobile=true */}
       {title && (
         <div className={cn(
           'flex items-center justify-between gap-4 mb-6',
-          !showTitleOnMobile && 'hidden sm:flex'
+          !showTitleOnMobile && 'hidden sm:flex',
+          className
         )}>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             {title}
@@ -116,6 +117,6 @@ export function PageHeader({
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
