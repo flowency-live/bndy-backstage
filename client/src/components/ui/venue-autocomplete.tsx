@@ -1,4 +1,4 @@
-// VenueAutocomplete - Searches BNDY venues first, then Google Places autocomplete
+// VenueAutocomplete - Searches BNDY venues first, then Google Places Text Search
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2, Database, Globe, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
