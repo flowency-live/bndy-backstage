@@ -7,7 +7,6 @@ import {
   User,
   Music,
   Users,
-  Bot,
   Sparkles,
   ArrowRight,
   RefreshCw
@@ -179,22 +178,6 @@ export default function GodmodeDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Bot className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold">Events Agent</h3>
-              <p className="text-sm text-muted-foreground">Review extracted events</p>
-            </div>
-            <Link to="/godmode/events">
-              <Button variant="outline" size="sm">
-                View <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </Card>
       </div>
 
       {/* Stats Cards */}

@@ -5,7 +5,6 @@ import {
   User,
   Music,
   Users,
-  Bot,
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,7 +16,6 @@ const navigation = [
   { name: 'Artists', href: '/godmode/artists', icon: User },
   { name: 'Songs', href: '/godmode/songs', icon: Music },
   { name: 'Users', href: '/godmode/users', icon: Users },
-  { name: 'Events Agent', href: '/godmode/events', icon: Bot },
 ];
 
 interface GodmodeLayoutProps {

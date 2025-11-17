@@ -28,7 +28,6 @@ import Gigs from "@/pages/gigs";
 import Admin from "@/pages/admin";
 import Members from "@/pages/members";
 import Issues from "@/pages/issues";
-import AgentEvents from "@/pages/agentevents";
 import Venues from "@/pages/venues";
 import VenueDetail from "@/pages/venues/venue-detail";
 import Login from "@/pages/auth/login";
@@ -310,18 +309,6 @@ function Router() {
       <Route path="/godmode/users">
         <GodmodeLayout>
           <UsersPage />
-        </GodmodeLayout>
-      </Route>
-      <Route path="/godmode/events">
-        <GodmodeLayout>
-          <AgentEvents />
-        </GodmodeLayout>
-      </Route>
-
-      {/* Legacy agentevents route - redirects to godmode */}
-      <Route path="/agentevents">
-        <GodmodeLayout>
-          <AgentEvents />
         </GodmodeLayout>
       </Route>
 
