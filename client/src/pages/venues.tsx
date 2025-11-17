@@ -303,10 +303,18 @@ export default function Venues({ artistId, membership }: VenuesProps) {
 
                   {/* Compact Venue Cards */}
                   <div className="space-y-1.5">
-                    {venues.map((venue) => (
+                    {venues.map((venue) => {
+                      // Determine border color based on venue status
+                      const getBorderColor = () => {
+                        if (venue.gigCount > 0) return 'border-orange-500/60 hover:border-orange-500';
+                        if (venue.noteCount > 0) return 'border-yellow-500/60 hover:border-yellow-500';
+                        return 'border-border hover:border-primary/50';
+                      };
+
+                      return (
                       <div
                         key={venue.id}
-                        className="bg-card border border-border rounded-lg cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all duration-200 group overflow-hidden"
+                        className={`bg-card border-2 rounded-lg cursor-pointer hover:shadow-sm transition-all duration-200 group overflow-hidden ${getBorderColor()}`}
                         onClick={() => setLocation(`/venues/${venue.venue_id}`)}
                         data-testid={`venue-card-${venue.id}`}
                       >
@@ -346,13 +354,11 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                               <div className="font-bold text-xs sm:text-sm text-foreground leading-none">{venue.contactCount}</div>
                               <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight mt-0.5">contacts</div>
                             </div>
-                            {venue.noteCount > 0 && (
-                              <FileText className="h-3.5 w-3.5 text-primary" />
-                            )}
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               ))}
