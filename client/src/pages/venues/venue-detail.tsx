@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
-import { ArrowLeft, Building, MapPin, Phone, Globe, Users, Calendar, Trash2 } from "lucide-react";
+import { ArrowLeft, Building, MapPin, Phone, Globe, Users, Calendar, Trash2, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { venueCRMService } from "@/lib/services/venue-crm-service";
 import type { ArtistVenue } from "@/lib/services/venue-crm-service";
 import ContactManager from "./components/ContactManager";
 import GigHistory from "./components/GigHistory";
+import VenueNotes from "./components/VenueNotes";
 
 interface VenueDetailProps {
   artistId: string;
@@ -22,7 +23,7 @@ interface VenueDetailProps {
   membership: ArtistMembership;
 }
 
-type TabId = 'contacts' | 'gigs';
+type TabId = 'contacts' | 'gigs' | 'notes';
 
 export default function VenueDetail({ artistId, venueId, membership }: VenueDetailProps) {
   const { session } = useServerAuth();
@@ -79,7 +80,8 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
 
   const tabs = [
     { id: 'contacts' as TabId, label: 'Contacts', icon: Users },
-    { id: 'gigs' as TabId, label: 'Our Gigs', icon: Calendar }
+    { id: 'gigs' as TabId, label: 'Our Gigs', icon: Calendar },
+    { id: 'notes' as TabId, label: 'Notes', icon: FileText }
   ];
 
   if (isLoading) {
@@ -241,6 +243,9 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
         )}
         {activeTab === 'gigs' && (
           <GigHistory artistId={artistId} venueId={venueId} />
+        )}
+        {activeTab === 'notes' && (
+          <VenueNotes artistId={artistId} venueId={venueId} />
         )}
       </div>
 

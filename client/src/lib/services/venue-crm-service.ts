@@ -246,7 +246,82 @@ class VenueCRMService {
       `/api/artists/${artistId}/crm/venues/${venueId}/gigs`
     );
   }
+
+  // ===== Venue Notes =====
+
+  async getVenueNotes(artistId: string, venueId: string): Promise<VenueNote[]> {
+    return this.apiRequest<VenueNote[]>(
+      `/api/artists/${artistId}/crm/venues/${venueId}/notes`
+    );
+  }
+
+  async createVenueNote(
+    artistId: string,
+    venueId: string,
+    request: CreateNoteRequest
+  ): Promise<VenueNote> {
+    return this.apiRequest<VenueNote>(
+      `/api/artists/${artistId}/crm/venues/${venueId}/notes`,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  async updateVenueNote(
+    artistId: string,
+    venueId: string,
+    noteId: string,
+    request: UpdateNoteRequest
+  ): Promise<VenueNote> {
+    return this.apiRequest<VenueNote>(
+      `/api/artists/${artistId}/crm/venues/${venueId}/notes/${noteId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  async deleteVenueNote(
+    artistId: string,
+    venueId: string,
+    noteId: string,
+    userId: string
+  ): Promise<void> {
+    return this.apiRequest<void>(
+      `/api/artists/${artistId}/crm/venues/${venueId}/notes/${noteId}?user_id=${userId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
 }
 
 export const venueCRMService = new VenueCRMService();
 export default venueCRMService;
+
+export interface VenueNote {
+  id: string;
+  artist_venue_id: string;
+  artist_id: string;
+  venue_id: string;
+  note_text: string;
+  created_by_user_id: string;
+  created_by_display_name: string;
+  is_edited: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateNoteRequest {
+  note_text: string;
+  created_by_user_id: string;
+  created_by_display_name: string;
+}
+
+export interface UpdateNoteRequest {
+  note_text: string;
+  user_id: string;
+}
