@@ -157,9 +157,14 @@ export default function VenueAutocomplete({
 
               const filteredGoogleMatches = googleMatches.filter(g => {
                 const normalizedGoogleName = normalizeVenueName(g.name);
-                return !allBndyVenueNames.has(normalizedGoogleName);
+                const isDuplicate = allBndyVenueNames.has(normalizedGoogleName);
+                if (isDuplicate) {
+                  console.log('[VenueAutocomplete] Filtering out duplicate:', g.name, 'normalized:', normalizedGoogleName);
+                }
+                return !isDuplicate;
               });
 
+              console.log('[VenueAutocomplete] After filtering:', filteredGoogleMatches.length, 'results');
               setGoogleResults(filteredGoogleMatches);
               setShowDropdown(matchingVenues.length > 0 || filteredGoogleMatches.length > 0);
             } else {
