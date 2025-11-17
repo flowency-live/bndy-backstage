@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import PracticeSongCard from "./cards/practice-song-card";
+import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface PracticeTabProps {
@@ -16,16 +17,7 @@ export default function PracticeTab({ artistId, membership }: PracticeTabProps) 
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['pipeline', artistId, 'practice'],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=practice`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch practice songs');
-      }
-
-      return response.json();
+      return await artistsService.getPipelineSongs(artistId, 'practice');
     },
     refetchInterval: 30000
   });

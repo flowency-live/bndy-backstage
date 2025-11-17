@@ -82,6 +82,13 @@ class MembershipsService {
   async getArtistMembers(artistId: string): Promise<ArtistMembership[]> {
     return this.apiRequest<ArtistMembership[]>(`/api/artists/${artistId}/members`);
   }
+
+  /**
+   * Get memberships for a specific artist (returns full membership objects)
+   */
+  async getArtistMemberships(artistId: string): Promise<{ memberships: ArtistMembership[] }> {
+    return this.apiRequest<{ memberships: ArtistMembership[] }>(`/api/memberships/artist/${artistId}`);
+  }
 }
 
 // Export singleton instance

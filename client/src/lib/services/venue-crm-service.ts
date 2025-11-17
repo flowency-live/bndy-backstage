@@ -30,6 +30,7 @@ export interface ArtistVenue {
   // Computed counts
   contactCount: number;
   gigCount: number;
+  noteCount: number;
 }
 
 export interface VenueContact {

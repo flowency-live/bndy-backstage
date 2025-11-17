@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface ArchivedTabProps {
@@ -11,43 +12,21 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: parkedSongs = [], isLoading: loadingParked } = useQuery({
-    queryKey: ['pipeline', artistId, 'parked'],
+  const { data: archivedSongs = [], isLoading: loadingArchived } = useQuery({
+    queryKey: ['pipeline', artistId, 'archived'],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=parked`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) throw new Error('Failed to fetch');
-      return response.json();
+      return await artistsService.getArchivedPipelineSongs(artistId);
     }
   });
 
-  const { data: discardedSongs = [], isLoading: loadingDiscarded } = useQuery({
-    queryKey: ['pipeline', artistId, 'discarded'],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=discarded`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) throw new Error('Failed to fetch');
-      return response.json();
-    }
-  });
+  const parkedSongs = archivedSongs.filter((song: any) => song.status === 'parked');
+  const discardedSongs = archivedSongs.filter((song: any) => song.status === 'discarded');
+  const loadingParked = loadingArchived;
+  const loadingDiscarded = loadingArchived;
 
   const statusMutation = useMutation({
     mutationFn: async ({ songId, newStatus }: { songId: string; newStatus: string }) => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline/${songId}/status`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
-      if (!response.ok) throw new Error('Failed to change status');
-      return response.json();
+      return await artistsService.updatePipelineStatus(artistId, songId, newStatus);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', artistId] });

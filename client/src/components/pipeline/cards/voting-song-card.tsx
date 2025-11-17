@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tantml:react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
 import VoteProgressBadge from "../features/vote-progress-badge";
 import ScoreProgressBar from "../features/score-progress-bar";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
+import { artistsService } from "@/lib/services/artists-service";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,21 +72,7 @@ export default function VotingSongCard({
 
   const voteMutation = useMutation({
     mutationFn: async (voteValue: number) => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}/vote`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ vote_value: voteValue })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to submit vote');
-      }
-
-      return response.json();
+      return await artistsService.votePipelineSong(song.artist_id, song.id, voteValue);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id, 'voting'] });
@@ -107,18 +94,7 @@ export default function VotingSongCard({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}`,
-        {
-          method: 'DELETE',
-          credentials: 'include'
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete suggestion');
-      }
+      return await artistsService.deletePipelineSong(song.artist_id, song.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id, 'voting'] });
@@ -139,21 +115,7 @@ export default function VotingSongCard({
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}/status`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to change status');
-      }
-
-      return response.json();
+      return await artistsService.updatePipelineStatus(song.artist_id, song.id, newStatus);
     },
     onSuccess: (_, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id] });

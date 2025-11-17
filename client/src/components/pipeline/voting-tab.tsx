@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import VotingSongCard from "./cards/voting-song-card";
+import { artistsService } from "@/lib/services/artists-service";
+import { membershipsService } from "@/lib/services/memberships-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface VotingTabProps {
@@ -16,23 +18,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['pipeline', artistId, 'voting'],
     queryFn: async () => {
-      // Fetch both 'voting' and 'review' status songs in parallel
-      const [votingResponse, reviewResponse] = await Promise.all([
-        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
-        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' })
-      ]);
-
-      if (!votingResponse.ok || !reviewResponse.ok) {
-        throw new Error('Failed to fetch voting songs');
-      }
-
-      const [votingSongs, reviewSongs] = await Promise.all([
-        votingResponse.json(),
-        reviewResponse.json()
-      ]);
-
-      // Merge both arrays
-      return [...votingSongs, ...reviewSongs];
+      return await artistsService.getVotingPipelineSongs(artistId);
     },
     refetchInterval: 30000
   });
@@ -41,16 +27,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   const { data: actualMemberCount = 0 } = useQuery({
     queryKey: ['artist-member-count', artistId],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/memberships/artist/${artistId}`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch member count');
-      }
-
-      const data = await response.json();
+      const data = await membershipsService.getArtistMemberships(artistId);
       return data.memberships?.filter((m: any) => m.status === 'active').length || 0;
     },
     refetchInterval: 60000 // Refresh every minute

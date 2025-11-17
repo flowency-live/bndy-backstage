@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import ReviewSongCard from "./cards/review-song-card";
+import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface ReviewTabProps {
@@ -11,16 +12,7 @@ export default function ReviewTab({ artistId, membership }: ReviewTabProps) {
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['pipeline', artistId, 'review'],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/artists/${artistId}/pipeline?status=review`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch review songs');
-      }
-
-      return response.json();
+      return await artistsService.getPipelineSongs(artistId, 'review');
     },
     refetchInterval: 30000
   });

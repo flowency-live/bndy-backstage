@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useToast } from "@/hooks/use-toast";
 import { spotifyService } from "@/lib/services/spotify-service";
+import { songsService } from "@/lib/services/songs-service";
+import { artistsService } from "@/lib/services/artists-service";
 import VotingControls from "../features/voting-controls";
 
 interface SongSearchResult {
@@ -57,18 +59,15 @@ export default function AddSuggestionModal({
 
     try {
       // Run both searches in parallel for better performance
-      const [bndySongsResponse, spotifyResult] = await Promise.allSettled([
-        fetch(
-          `https://api.bndy.co.uk/api/songs?q=${encodeURIComponent(query)}`,
-          { credentials: "include" }
-        ),
+      const [bndySongsResult, spotifyResult] = await Promise.allSettled([
+        songsService.searchSongs(query),
         spotifyService.searchTracks(query, 10)
       ]);
 
       // Process bndy-songs results
       let bndySongs: SongSearchResult[] = [];
-      if (bndySongsResponse.status === 'fulfilled' && bndySongsResponse.value.ok) {
-        const songs = await bndySongsResponse.value.json();
+      if (bndySongsResult.status === 'fulfilled') {
+        const songs = bndySongsResult.value;
         bndySongs = songs.map((song: any) => ({
           id: song.id,
           title: song.title,
@@ -164,77 +163,35 @@ export default function AddSuggestionModal({
 
       // If from Spotify, create global song first
       if (selectedSong.source === "spotify") {
-        const createResponse = await fetch(`https://api.bndy.co.uk/api/songs`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: selectedSong.title,
-            artistName: selectedSong.artistName,
-            album: selectedSong.album,
-            albumImageUrl: selectedSong.imageUrl,
-            spotifyUrl: selectedSong.spotifyUrl,
-            duration: selectedSong.duration,
-            genre: selectedSong.genre,
-            releaseDate: selectedSong.releaseDate,
-            previewUrl: selectedSong.previewUrl
-          })
+        const createdSong = await songsService.createGlobalSong({
+          title: selectedSong.title,
+          artistName: selectedSong.artistName,
+          album: selectedSong.album,
+          albumImageUrl: selectedSong.imageUrl,
+          spotifyUrl: selectedSong.spotifyUrl,
+          duration: selectedSong.duration,
+          genre: selectedSong.genre,
+          releaseDate: selectedSong.releaseDate,
+          previewUrl: selectedSong.previewUrl
         });
-
-        if (!createResponse.ok) {
-          const error = await createResponse.json();
-          throw new Error(error.error || "Failed to create song");
-        }
-
-        const createdSong = await createResponse.json();
         songId = createdSong.id;
       }
 
       // Add based on destination
       if (destination === "voting") {
-        const response = await fetch(
-          `/api/artists/${artistId}/pipeline/suggestions`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              song_id: songId,
-              suggested_comment: comment.trim(),
-              initial_vote: voteValue,
-              added_by_membership_id: membershipId
-            })
-          }
-        );
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to add suggestion");
-        }
-
-        return response.json();
+        return await artistsService.addPipelineSuggestion(artistId, {
+          song_id: songId,
+          suggested_comment: comment.trim(),
+          initial_vote: voteValue,
+          added_by_membership_id: membershipId
+        });
       } else {
         // Add directly to practice (status = "practice")
-        const response = await fetch(
-          `/api/artists/${artistId}/pipeline/suggestions`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              song_id: songId,
-              status: "practice",
-              added_by_membership_id: membershipId
-            })
-          }
-        );
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to add to practice list");
-        }
-
-        return response.json();
+        return await artistsService.addPipelineSuggestion(artistId, {
+          song_id: songId,
+          status: "practice",
+          added_by_membership_id: membershipId
+        });
       }
     },
     onSuccess: () => {

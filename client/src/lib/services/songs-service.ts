@@ -98,6 +98,33 @@ class SongsService {
   }
 
   /**
+   * Search for global songs
+   */
+  async searchSongs(query: string): Promise<any[]> {
+    return this.apiRequest<any[]>(`/api/songs?q=${encodeURIComponent(query)}`);
+  }
+
+  /**
+   * Create a global song (from Spotify data)
+   */
+  async createGlobalSong(songData: {
+    title: string;
+    artistName: string;
+    album: string;
+    albumImageUrl?: string;
+    spotifyUrl: string;
+    duration: number;
+    genre?: string;
+    releaseDate?: string;
+    previewUrl?: string;
+  }): Promise<{ id: string }> {
+    return this.apiRequest<{ id: string }>('/api/songs', {
+      method: 'POST',
+      body: JSON.stringify(songData),
+    });
+  }
+
+  /**
    * Get all songs for an artist (playbook)
    */
   async getArtistSongs(artistId: string): Promise<ArtistSong[]> {

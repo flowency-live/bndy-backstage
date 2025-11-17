@@ -172,6 +172,100 @@ class ArtistsService {
       method: 'POST',
     });
   }
+
+  /**
+   * Get pipeline songs by status
+   */
+  async getPipelineSongs(artistId: string, status: string): Promise<any[]> {
+    return this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=${status}`);
+  }
+
+  /**
+   * Get multiple pipeline statuses in parallel (for voting tab)
+   */
+  async getVotingPipelineSongs(artistId: string): Promise<any[]> {
+    const [votingSongs, reviewSongs] = await Promise.all([
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=voting`),
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=review`)
+    ]);
+    return [...votingSongs, ...reviewSongs];
+  }
+
+  /**
+   * Get archived pipeline songs (parked and discarded)
+   */
+  async getArchivedPipelineSongs(artistId: string): Promise<any[]> {
+    const [parkedSongs, discardedSongs] = await Promise.all([
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=parked`),
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=discarded`)
+    ]);
+    return [...parkedSongs, ...discardedSongs];
+  }
+
+  /**
+   * Vote on a pipeline song
+   */
+  async votePipelineSong(artistId: string, pipelineId: string, voteValue: number): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}/pipeline/${pipelineId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ vote_value: voteValue }),
+    });
+  }
+
+  /**
+   * Update pipeline song status
+   */
+  async updatePipelineStatus(artistId: string, pipelineId: string, status: string): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}/pipeline/${pipelineId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  /**
+   * Update pipeline song RAG status
+   */
+  async updatePipelineRAGStatus(artistId: string, pipelineId: string, ragStatus: string): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}/pipeline/${pipelineId}/rag-status`, {
+      method: 'PUT',
+      body: JSON.stringify({ rag_status: ragStatus }),
+    });
+  }
+
+  /**
+   * Delete pipeline song suggestion
+   */
+  async deletePipelineSong(artistId: string, pipelineId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/artists/${artistId}/pipeline/${pipelineId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Add song to pipeline
+   */
+  async addSongToPipeline(artistId: string, songId: string, comment?: string): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}/pipeline`, {
+      method: 'POST',
+      body: JSON.stringify({ song_id: songId, suggested_comment: comment }),
+    });
+  }
+
+  /**
+   * Add song suggestion to pipeline (with vote or direct status)
+   */
+  async addPipelineSuggestion(artistId: string, data: {
+    song_id: string;
+    suggested_comment?: string;
+    initial_vote?: number;
+    status?: string;
+    added_by_membership_id?: string;
+  }): Promise<any> {
+    return this.apiRequest<any>(`/api/artists/${artistId}/pipeline/suggestions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 // Export singleton instance

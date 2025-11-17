@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import RagStrip from "../features/rag-strip";
 import RagStatusControls from "../features/rag-status-controls";
+import { artistsService } from "@/lib/services/artists-service";
 
 interface PipelineSong {
   id: string;
@@ -44,21 +45,7 @@ export default function PracticeSongCard({
 
   const ragMutation = useMutation({
     mutationFn: async (status: 'RED' | 'AMBER' | 'GREEN') => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}/rag`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to update RAG status');
-      }
-
-      return response.json();
+      return await artistsService.updatePipelineRAGStatus(song.artist_id, song.id, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id, 'practice'] });
@@ -79,21 +66,7 @@ export default function PracticeSongCard({
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}/status`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to change status');
-      }
-
-      return response.json();
+      return await artistsService.updatePipelineStatus(song.artist_id, song.id, newStatus);
     },
     onSuccess: (_, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id] });

@@ -8,6 +8,7 @@ import ArchivedTab from "@/components/pipeline/archived-tab";
 import AddSuggestionModal from "@/components/pipeline/modals/add-suggestion-modal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface PipelineProps {
@@ -27,19 +28,8 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   const { data: votingCount = 0 } = useQuery({
     queryKey: ['pipeline-count', artistId, 'voting'],
     queryFn: async () => {
-      const [votingResponse, reviewResponse] = await Promise.all([
-        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
-        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' })
-      ]);
-
-      if (!votingResponse.ok || !reviewResponse.ok) return 0;
-
-      const [votingSongs, reviewSongs] = await Promise.all([
-        votingResponse.json(),
-        reviewResponse.json()
-      ]);
-
-      return votingSongs.length + reviewSongs.length;
+      const songs = await artistsService.getVotingPipelineSongs(artistId);
+      return songs.length;
     },
     refetchInterval: 30000
   });

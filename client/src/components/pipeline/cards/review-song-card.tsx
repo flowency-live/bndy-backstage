@@ -4,6 +4,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import ScoreDisplay from "../features/score-display";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import { useState } from "react";
+import { artistsService } from "@/lib/services/artists-service";
 
 interface PipelineSong {
   id: string;
@@ -40,21 +41,7 @@ export default function ReviewSongCard({ song, memberCount }: ReviewSongCardProp
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      const response = await fetch(
-        `/api/artists/${song.artist_id}/pipeline/${song.id}/status`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to change status');
-      }
-
-      return response.json();
+      return await artistsService.updatePipelineStatus(song.artist_id, song.id, newStatus);
     },
     onSuccess: (_, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', song.artist_id] });
