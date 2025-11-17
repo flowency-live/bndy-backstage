@@ -158,17 +158,22 @@ export default function UnavailabilityModal({
                 onClick={() => setShowDateRangePicker(true)}
                 className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 relative transition-colors"
               >
-                <span>
+                <div className="pr-8">
                   {startDate ? (
                     endDate && endDate !== startDate ? (
-                      `${format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')} - ${format(new Date(endDate + 'T00:00:00'), 'dd/MM/yyyy')}`
+                      <span className="text-foreground">
+                        {format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')} - {format(new Date(endDate + 'T00:00:00'), 'dd/MM/yyyy')}
+                      </span>
                     ) : (
-                      format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')
+                      <div>
+                        <span className="text-foreground">{format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+                        <span className="text-muted-foreground text-sm ml-2">- click to add end date</span>
+                      </div>
                     )
                   ) : (
-                    'Select dates'
+                    <span className="text-foreground">Select dates</span>
                   )}
-                </span>
+                </div>
                 <i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
               </button>
             </div>
