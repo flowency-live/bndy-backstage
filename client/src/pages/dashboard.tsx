@@ -22,6 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 import CreateArtistWizard from "@/components/CreateArtistWizard";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import "@/styles/driver-custom.css";
+import { artistsService } from "@/lib/services/artists-service";
+import { songsService } from "@/lib/services/songs-service";
+import { setlistsService } from "@/lib/services/setlists-service";
+import { membershipsService } from "@/lib/services/memberships-service";
 
 // All icons verified as valid lucide-react exports
 
@@ -308,30 +312,17 @@ function CreateArtistForm({ onCancel, onSuccess }: { onCancel: () => void, onSuc
 
   const createBandMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const artistResponse = await fetch("/api/artists", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.artistName,
-          bio: data.artistDescription,
-          artistType: "band",
-          profileImageUrl: data.bandAvatar,
-          memberDisplayName: data.displayName || null,
-          memberInstrument: null,
-          memberIcon: data.icon,
-          memberColor: data.color,
-        }),
+      const result = await artistsService.createArtist({
+        name: data.artistName,
+        bio: data.artistDescription,
+        artistType: "band",
+        profileImageUrl: data.bandAvatar,
+        memberDisplayName: data.displayName || null,
+        memberInstrument: null,
+        memberIcon: data.icon,
+        memberColor: data.color,
       });
 
-      if (!artistResponse.ok) {
-        const errorData = await artistResponse.json();
-        throw new Error(errorData.error || "Failed to create band");
-      }
-
-      const result = await artistResponse.json();
       return { artist: result.artist, membership: result.membership };
     },
     onSuccess: ({ artist }) => {
@@ -645,22 +636,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const { data: songs = [], isLoading: songsLoading } = useQuery<Song[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "songs"],
     queryFn: async () => {
-      if (!session) {
+      if (!session || !artistId) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/playbook`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch songs");
-      }
-
-      const data = await response.json();
+      const data = await songsService.getArtistSongs(artistId);
 
       // Transform the API response to match our interface (same as songs.tsx)
       return data.map((item: any) => ({
@@ -685,22 +665,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const { data: setlists = [] } = useQuery<any[]>({
     queryKey: ["https://api.bndy.co.uk/api/artists", artistId, "setlists"],
     queryFn: async () => {
-      if (!session) {
+      if (!session || !artistId) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/setlists`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch setlists");
-      }
-
-      return response.json();
+      return await setlistsService.getArtistSetlists(artistId);
     },
     enabled: !!session && !!artistId,
   });
@@ -709,23 +678,11 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const { data: artistMembers = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/artists", artistId, "members"],
     queryFn: async () => {
-      if (!session) {
+      if (!session || !artistId) {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${artistId}/members`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch band members");
-      }
-
-      const data = await response.json();
-      return data.members;
+      return await membershipsService.getArtistMembers(artistId);
     },
     enabled: !!session && !!artistId,
   });
@@ -734,27 +691,17 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const { data: pipelineData = { voting: 0, review: 0, practice: 0, total: 0 } } = useQuery({
     queryKey: ['pipeline-count', artistId],
     queryFn: async () => {
-      const [votingResponse, reviewResponse, practiceResponse] = await Promise.all([
-        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),
-        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' }),
-        fetch(`/api/artists/${artistId}/pipeline?status=practice`, { credentials: 'include' })
-      ]);
-
-      if (!votingResponse.ok || !reviewResponse.ok || !practiceResponse.ok) {
+      if (!artistId) {
         return { voting: 0, review: 0, practice: 0, total: 0 };
       }
 
-      const [votingSongs, reviewSongs, practiceSongs] = await Promise.all([
-        votingResponse.json(),
-        reviewResponse.json(),
-        practiceResponse.json()
-      ]);
+      const counts = await artistsService.getPipelineCounts(artistId);
 
       return {
-        voting: votingSongs.length,
-        review: reviewSongs.length,
-        practice: practiceSongs.length,
-        total: votingSongs.length + reviewSongs.length + practiceSongs.length
+        voting: counts.voting,
+        review: counts.review,
+        practice: counts.practice,
+        total: counts.voting + counts.review + counts.practice
       };
     },
     enabled: !!session && !!artistId,
@@ -774,10 +721,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   // Check for vote reminders on dashboard load
   useEffect(() => {
     if (session?.user?.cognitoId && artistId) {
-      fetch(`/api/artists/${artistId}/check-vote-reminders`, {
-        method: 'POST',
-        credentials: 'include'
-      }).catch(err => {
+      artistsService.checkVoteReminders(artistId).catch(err => {
         console.error('Failed to check vote reminders:', err);
       });
     }

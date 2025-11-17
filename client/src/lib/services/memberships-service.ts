@@ -80,7 +80,7 @@ class MembershipsService {
    * Get members of a specific artist
    */
   async getArtistMembers(artistId: string): Promise<ArtistMembership[]> {
-    return this.apiRequest<ArtistMembership[]>(`/api/memberships/artist/${artistId}`);
+    return this.apiRequest<ArtistMembership[]>(`/api/artists/${artistId}/members`);
   }
 }
 

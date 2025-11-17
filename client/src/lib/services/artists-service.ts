@@ -142,6 +142,36 @@ class ArtistsService {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Get pipeline song counts by status
+   */
+  async getPipelineCounts(artistId: string): Promise<{
+    voting: number;
+    review: number;
+    practice: number;
+  }> {
+    const [votingResponse, reviewResponse, practiceResponse] = await Promise.all([
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=voting`),
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=review`),
+      this.apiRequest<any[]>(`/api/artists/${artistId}/pipeline?status=practice`)
+    ]);
+
+    return {
+      voting: votingResponse?.length || 0,
+      review: reviewResponse?.length || 0,
+      practice: practiceResponse?.length || 0
+    };
+  }
+
+  /**
+   * Check and send vote reminders for an artist
+   */
+  async checkVoteReminders(artistId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/artists/${artistId}/check-vote-reminders`, {
+      method: 'POST',
+    });
+  }
 }
 
 // Export singleton instance
