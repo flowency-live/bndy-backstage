@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BndySpinnerOverlay } from "@/components/ui/bndy-spinner";
-import { MapPin, Plus, Building, Search, Map, List } from "lucide-react";
+import { MapPin, Plus, Building, Search, Map, List, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -346,6 +346,9 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                               <div className="font-bold text-xs sm:text-sm text-foreground leading-none">{venue.contactCount}</div>
                               <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight mt-0.5">contacts</div>
                             </div>
+                            {venue.noteCount > 0 && (
+                              <FileText className="h-3.5 w-3.5 text-primary" />
+                            )}
                           </div>
                         </div>
                       </div>
