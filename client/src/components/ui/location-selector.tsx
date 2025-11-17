@@ -236,7 +236,7 @@ export function LocationSelector({ value, onChange, onCitySearch, className, req
               overflow: 'hidden',
               borderRadius: '0.375rem',
               border: '1px solid var(--border)',
-              backgroundColor: 'var(--card-bg)',
+              backgroundColor: 'hsl(222.2 84% 4.9%)',
               padding: '0.25rem',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
             }}>
