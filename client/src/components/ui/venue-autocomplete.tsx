@@ -147,21 +147,20 @@ export default function VenueAutocomplete({
                 placeId: place.place_id,
               }));
 
-              // CRITICAL: Filter out Google results that match ANY existing BNDY venue
-              // (not just search results, but ALL venues in the database)
-              // This prevents duplicates when user types non-matching suffix (e.g., "Torr Vale Tap house")
-              const normalizeVenueName = (name: string) =>
-                name.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-              const allBndyVenueNames = new Set(
-                bndyVenuesRef.current.map(v => normalizeVenueName(v.name || ''))
-              );
-
+              // Filter out Google results that already exist in BNDY database
+              // Match frontstage logic: check BOTH name AND address (not just name)
               const filteredGoogleMatches = googleMatches.filter(g => {
-                const normalizedGoogleName = normalizeVenueName(g.name);
-                const isDuplicate = allBndyVenueNames.has(normalizedGoogleName);
+                const placeName = (g.name || '').trim().toLowerCase();
+                const placeAddr = (g.address || '').trim().toLowerCase();
+
+                const isDuplicate = bndyVenuesRef.current.some(v => {
+                  const vName = (v.name || '').trim().toLowerCase();
+                  const vAddr = (v.address || '').trim().toLowerCase();
+                  return vName === placeName && vAddr === placeAddr;
+                });
+
                 if (isDuplicate) {
-                  console.log('[VenueAutocomplete] Filtering out duplicate:', g.name, 'normalized:', normalizedGoogleName);
+                  console.log('[VenueAutocomplete] Filtering out duplicate:', g.name, g.address);
                 }
                 return !isDuplicate;
               });
