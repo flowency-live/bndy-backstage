@@ -89,6 +89,7 @@ export default function VenueAutocomplete({
 
       // Search BNDY venues
       const searchLower = searchTerm.toLowerCase();
+      console.log('[VenueAutocomplete] Searching BNDY venues for:', searchLower, 'Total venues loaded:', bndyVenuesRef.current.length);
       const matchingVenues = bndyVenuesRef.current
         .filter(v => {
           // Check official name, address, city, and postcode
@@ -112,6 +113,7 @@ export default function VenueAutocomplete({
           venue: v,
         }));
 
+      console.log('[VenueAutocomplete] BNDY search results:', matchingVenues.length);
       setBndyResults(matchingVenues);
 
       // Load Google Maps if not already loaded
