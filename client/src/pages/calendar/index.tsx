@@ -6,6 +6,7 @@ import { useUser } from '@/lib/user-context';
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
+import { eventsService } from '@/lib/services/events-service';
 import type { Event, ArtistMembership } from '@/types/api';
 
 // Context
@@ -308,27 +309,22 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         return;
       }
 
-      const params = new URLSearchParams();
-      if (includePrivate) params.append('includePrivate', 'true');
-      if (memberOnly) params.append('memberOnly', 'true');
-
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/export/ical?${params.toString()}`, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to export calendar");
+      if (!effectiveArtistId) {
+        toast({
+          title: "No artist context",
+          description: "Please select an artist to export calendar",
+          variant: "destructive"
+        });
+        return;
       }
 
-      // Get the filename from the response headers
-      const contentDisposition = response.headers.get('content-disposition');
-      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+      const { blob, filename } = await eventsService.exportCalendar(effectiveArtistId, {
+        includePrivate,
+        memberOnly,
+        accessToken: session.access_token,
+      });
 
       // Download the file
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -362,18 +358,16 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         return;
       }
 
-      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/url`, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get calendar URLs");
+      if (!effectiveArtistId) {
+        toast({
+          title: "No artist context",
+          description: "Please select an artist to get calendar URLs",
+          variant: "destructive"
+        });
+        return;
       }
 
-      const data = await response.json();
+      const data = await eventsService.getCalendarUrls(effectiveArtistId, session.access_token);
 
       // Copy the full calendar URL to clipboard
       if (navigator.clipboard) {

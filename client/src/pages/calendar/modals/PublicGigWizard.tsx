@@ -6,6 +6,8 @@ import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/hooks/use-confirm';
+import { venuesService } from '@/lib/services/venues-service';
+import { eventsService } from '@/lib/services/events-service';
 import type { ArtistMembership } from '@/types/api';
 import VenueSearchStep from '@/components/wizard-steps/venue-search-step';
 import DateTimeStep from '@/components/wizard-steps/date-time-step';
@@ -174,26 +176,16 @@ export default function PublicGigWizard({
 
       // If venue is from Google Places (no venueId yet), save it first via find-or-create
       if (!venueId && formData.venueName && formData.venueLocation) {
-        const venueResponse = await fetch('https://api.bndy.co.uk/api/venues/find-or-create', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.venueName,
-            address: formData.venueAddress,
-            latitude: formData.venueLocation.lat,
-            longitude: formData.venueLocation.lng,
-            googlePlaceId: formData.googlePlaceId,
-            website: formData.venueWebsite,
-            source: 'backstage_wizard',
-          }),
+        const savedVenue = await venuesService.findOrCreate({
+          name: formData.venueName,
+          address: formData.venueAddress,
+          latitude: formData.venueLocation.lat,
+          longitude: formData.venueLocation.lng,
+          googlePlaceId: formData.googlePlaceId,
+          website: formData.venueWebsite,
+          source: 'backstage_wizard',
         });
 
-        if (!venueResponse.ok) {
-          throw new Error('Failed to save venue');
-        }
-
-        const savedVenue = await venueResponse.json();
         venueId = savedVenue.id;
 
         // Show match confidence if venue was deduplicated
@@ -207,39 +199,25 @@ export default function PublicGigWizard({
 
       // Determine if we're creating or updating
       const isEditing = !!editingEventId;
-      const method = isEditing ? 'PUT' : 'POST';
-      const url = isEditing
-        ? `https://api.bndy.co.uk/api/artists/${artistId}/events/${editingEventId}`
-        : `https://api.bndy.co.uk/api/artists/${artistId}/public-gigs`;
 
-      const response = await fetch(url, {
-        method,
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          venueId: venueId,
-          type: 'gig',
-          date: formData.date,
-          startTime: formData.startTime,
-          endTime: formData.endTime || '00:00', // Default to midnight if not set
-          title: formData.title,
-          hasCustomTitle: formData.title !== `${artistName} @ ${formData.venueName}`,
-          description: formData.description,
-          ticketUrl: formData.ticketUrl,
-          ticketPrice: formData.ticketPrice,
-          isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
-          source: 'backstage_wizard',
-        }),
-      });
+      const gigData = {
+        venueId: venueId!,
+        type: 'gig',
+        date: formData.date!,
+        startTime: formData.startTime!,
+        endTime: formData.endTime || '00:00',
+        title: formData.title,
+        hasCustomTitle: formData.title !== `${artistName} @ ${formData.venueName}`,
+        description: formData.description,
+        ticketUrl: formData.ticketUrl,
+        ticketPrice: formData.ticketPrice,
+        isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
+        source: 'backstage_wizard',
+      };
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || `Failed to ${isEditing ? 'update' : 'create'} public gig`);
-      }
-
-      const savedEvent = await response.json();
+      const savedEvent = isEditing
+        ? await eventsService.updatePublicGig(artistId, editingEventId, gigData)
+        : await eventsService.createPublicGig(artistId, gigData);
 
       // Clear localStorage draft
       localStorage.removeItem(STORAGE_KEY);

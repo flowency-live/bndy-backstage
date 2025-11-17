@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { useToast } from '@/hooks/use-toast';
+import { eventsService } from '@/lib/services/events-service';
 
 interface UseCalendarExportOptions {
   artistId?: string | null;
@@ -50,30 +51,13 @@ export function useCalendarExport(options: UseCalendarExportOptions = {}) {
     setIsExporting(true);
 
     try {
-      const params = new URLSearchParams();
-      if (includePrivate) params.append('includePrivate', 'true');
-      if (memberOnly) params.append('memberOnly', 'true');
-
-      const response = await fetch(
-        `https://api.bndy.co.uk/api/artists/${artistId}/calendar/export/ical?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to export calendar');
-      }
-
-      // Get the filename from the response headers
-      const contentDisposition = response.headers.get('content-disposition');
-      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+      const { blob, filename } = await eventsService.exportCalendar(artistId, {
+        includePrivate,
+        memberOnly,
+        accessToken: session.access_token,
+      });
 
       // Download the file
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

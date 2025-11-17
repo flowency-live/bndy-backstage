@@ -143,6 +143,116 @@ class EventsService {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Export calendar as iCal file
+   * Returns a Blob for download
+   */
+  async exportCalendar(
+    artistId: string,
+    options: {
+      includePrivate?: boolean;
+      memberOnly?: boolean;
+      accessToken: string;
+    }
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { includePrivate = false, memberOnly = false, accessToken } = options;
+
+    const params = new URLSearchParams();
+    if (includePrivate) params.append('includePrivate', 'true');
+    if (memberOnly) params.append('memberOnly', 'true');
+
+    const url = `${this.baseUrl}/api/artists/${artistId}/calendar/export/ical?${params.toString()}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to export calendar');
+    }
+
+    // Get the filename from the response headers
+    const contentDisposition = response.headers.get('content-disposition');
+    const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+
+    // Get the blob
+    const blob = await response.blob();
+
+    return { blob, filename };
+  }
+
+  /**
+   * Get calendar subscription URLs
+   */
+  async getCalendarUrls(
+    artistId: string,
+    accessToken: string
+  ): Promise<{ urls: { full: string; public: string; personal: string } }> {
+    const url = `${this.baseUrl}/api/artists/${artistId}/calendar/url`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get calendar URLs');
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Create a public gig
+   */
+  async createPublicGig(artistId: string, gigData: {
+    venueId: string;
+    type: string;
+    date: string;
+    startTime: string;
+    endTime?: string;
+    title?: string;
+    hasCustomTitle?: boolean;
+    description?: string;
+    ticketUrl?: string;
+    ticketPrice?: string;
+    isPublic?: boolean;
+    source?: string;
+  }): Promise<Event> {
+    return this.apiRequest<Event>(`/api/artists/${artistId}/public-gigs`, {
+      method: 'POST',
+      body: JSON.stringify(gigData),
+    });
+  }
+
+  /**
+   * Update a public gig
+   */
+  async updatePublicGig(artistId: string, eventId: string, gigData: {
+    venueId?: string;
+    type?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    title?: string;
+    hasCustomTitle?: boolean;
+    description?: string;
+    ticketUrl?: string;
+    ticketPrice?: string;
+    isPublic?: boolean;
+    source?: string;
+  }): Promise<Event> {
+    return this.apiRequest<Event>(`/api/artists/${artistId}/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify(gigData),
+    });
+  }
 }
 
 // Export singleton instance
