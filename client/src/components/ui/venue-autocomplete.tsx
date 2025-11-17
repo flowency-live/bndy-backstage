@@ -127,13 +127,16 @@ export default function VenueAutocomplete({
           return;
         }
 
+        console.log('[VenueAutocomplete] Calling textSearch with query:', searchTerm);
         placesServiceRef.current.textSearch(
           {
             query: searchTerm,
             type: 'establishment'
           },
           (results: any, status: any) => {
+            console.log('[VenueAutocomplete] textSearch response - status:', status, 'results count:', results?.length || 0);
             if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && results) {
+              console.log('[VenueAutocomplete] First 3 results:', results.slice(0, 3).map((r: any) => ({ name: r.name, address: r.formatted_address })));
               const googleMatches = results.slice(0, 5).map((place: any) => ({
                 id: place.place_id,
                 type: 'google' as const,
