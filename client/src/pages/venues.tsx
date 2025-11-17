@@ -306,7 +306,7 @@ export default function Venues({ artistId, membership }: VenuesProps) {
                     {venues.map((venue) => {
                       // Determine border color based on venue status
                       const getBorderColor = () => {
-                        if (venue.gigCount > 0) return 'border-orange-500/60 hover:border-orange-500';
+                        if (venue.gigCount > 0) return 'border-cyan-500/60 hover:border-cyan-500';
                         if (venue.noteCount > 0) return 'border-yellow-500/60 hover:border-yellow-500';
                         return 'border-border hover:border-primary/50';
                       };
