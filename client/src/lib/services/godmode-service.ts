@@ -80,7 +80,7 @@ export interface Venue {
 
 export interface User {
   id: string;
-  cognitoId: string; // Added for matching with memberships
+  cognitoId: string;
   email: string | null;
   phone: string | null;
   username: string;
@@ -102,277 +102,221 @@ export interface Membership {
   status: string;
 }
 
-// Artist Operations
-export async function getAllArtists(): Promise<Artist[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/artists`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch artists: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    throw error;
+class GodmodeService {
+  private baseUrl: string;
+
+  constructor() {
+    this.baseUrl = API_BASE_URL;
   }
-}
 
-export async function getArtistById(artistId: string): Promise<Artist | null> {
-  if (!artistId) return null;
+  /**
+   * Make authenticated API request with credentials
+   */
+  private async apiRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/artists/${artistId}`);
-    if (!response.ok) {
-      if (response.status === 404) {
+    const defaultOptions: RequestInit = {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, defaultOptions);
+
+      if (!response.ok) {
+        throw new Error(`Failed request: ${response.status}`);
+      }
+
+      // Handle empty responses (DELETE, etc.)
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return {} as T;
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // ===== Artist Operations =====
+
+  async getAllArtists(): Promise<Artist[]> {
+    return this.apiRequest<Artist[]>('/api/artists');
+  }
+
+  async getArtistById(artistId: string): Promise<Artist | null> {
+    if (!artistId) return null;
+
+    try {
+      return await this.apiRequest<Artist>(`/api/artists/${artistId}`);
+    } catch (error: any) {
+      if (error.message.includes('404')) {
         return null;
       }
-      throw new Error(`Failed to fetch artist: ${response.status}`);
+      throw error;
     }
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function createArtist(artistData: Omit<Artist, 'id' | 'createdAt' | 'updatedAt'>): Promise<Artist> {
-  try {
-    const response = await fetch('/api/artists', {
+  async createArtist(artistData: Omit<Artist, 'id' | 'createdAt' | 'updatedAt'>): Promise<Artist> {
+    return this.apiRequest<Artist>('/api/artists', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(artistData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create artist: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function updateArtist(artistId: string, artistData: Partial<Artist>): Promise<Artist> {
-  try {
-    const response = await fetch(`/api/artists/${artistId}`, {
+  async updateArtist(artistId: string, artistData: Partial<Artist>): Promise<Artist> {
+    return this.apiRequest<Artist>(`/api/artists/${artistId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(artistData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update artist: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function deleteArtist(artistId: string): Promise<void> {
-  try {
-    const response = await fetch(`/api/artists/${artistId}`, {
+  async deleteArtist(artistId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/artists/${artistId}`, {
       method: 'DELETE',
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete artist: ${response.status}`);
-    }
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function markArtistAsReviewed(artistId: string): Promise<Artist> {
-  try {
-    const response = await fetch(`/api/artists/${artistId}`, {
+  async markArtistAsReviewed(artistId: string): Promise<Artist> {
+    return this.apiRequest<Artist>(`/api/artists/${artistId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ needs_review: false }),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to mark artist as reviewed: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-// Song Operations
-export async function getAllSongs(): Promise<Song[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/songs`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch songs: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    throw error;
+  // ===== Song Operations =====
+
+  async getAllSongs(): Promise<Song[]> {
+    return this.apiRequest<Song[]>('/api/songs');
   }
-}
 
-export async function getSongById(songId: string): Promise<Song | null> {
-  if (!songId) return null;
+  async getSongById(songId: string): Promise<Song | null> {
+    if (!songId) return null;
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/songs/${songId}`);
-    if (!response.ok) {
-      if (response.status === 404) {
+    try {
+      return await this.apiRequest<Song>(`/api/songs/${songId}`);
+    } catch (error: any) {
+      if (error.message.includes('404')) {
         return null;
       }
-      throw new Error(`Failed to fetch song: ${response.status}`);
+      throw error;
     }
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function createSong(songData: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>): Promise<Song> {
-  try {
-    const response = await fetch('/api/songs', {
+  async createSong(songData: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>): Promise<Song> {
+    return this.apiRequest<Song>('/api/songs', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(songData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create song: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function updateSong(songId: string, songData: Partial<Song>): Promise<Song> {
-  try {
-    const response = await fetch(`/api/songs/${songId}`, {
+  async updateSong(songId: string, songData: Partial<Song>): Promise<Song> {
+    return this.apiRequest<Song>(`/api/songs/${songId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(songData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update song: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function deleteSong(songId: string): Promise<void> {
-  try {
-    const response = await fetch(`/api/songs/${songId}`, {
+  async deleteSong(songId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/songs/${songId}`, {
       method: 'DELETE',
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete song: ${response.status}`);
-    }
-  } catch (error) {
-    throw error;
   }
-}
 
-// Venue Operations
-export async function getAllVenues(): Promise<Venue[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/venues`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch venues: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    throw error;
+  // ===== Venue Operations =====
+
+  async getAllVenues(): Promise<Venue[]> {
+    return this.apiRequest<Venue[]>('/api/venues');
   }
-}
 
-export async function getVenueById(venueId: string): Promise<Venue | null> {
-  if (!venueId) return null;
+  async getVenueById(venueId: string): Promise<Venue | null> {
+    if (!venueId) return null;
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/venues/${venueId}`);
-    if (!response.ok) {
-      if (response.status === 404) {
+    try {
+      return await this.apiRequest<Venue>(`/api/venues/${venueId}`);
+    } catch (error: any) {
+      if (error.message.includes('404')) {
         return null;
       }
-      throw new Error(`Failed to fetch venue: ${response.status}`);
+      throw error;
     }
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function createVenue(venueData: Omit<Venue, 'id' | 'createdAt' | 'updatedAt'>): Promise<Venue> {
-  try {
-    const response = await fetch('/api/venues', {
+  async createVenue(venueData: Omit<Venue, 'id' | 'createdAt' | 'updatedAt'>): Promise<Venue> {
+    return this.apiRequest<Venue>('/api/venues', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(venueData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create venue: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function updateVenue(venueId: string, venueData: Partial<Venue>): Promise<Venue> {
-  try {
-    const response = await fetch(`/api/venues/${venueId}`, {
+  async updateVenue(venueId: string, venueData: Partial<Venue>): Promise<Venue> {
+    return this.apiRequest<Venue>(`/api/venues/${venueId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(venueData),
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update venue: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
   }
-}
 
-export async function deleteVenue(venueId: string): Promise<void> {
-  try {
-    const response = await fetch(`/api/venues/${venueId}`, {
+  async deleteVenue(venueId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/venues/${venueId}`, {
       method: 'DELETE',
     });
+  }
 
-    if (!response.ok) {
-      throw new Error(`Failed to delete venue: ${response.status}`);
-    }
-  } catch (error) {
-    throw error;
+  // ===== User Operations =====
+
+  async getAllUsers(): Promise<User[]> {
+    const data = await this.apiRequest<{ users: User[] }>('/users');
+    return data.users || [];
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    return this.apiRequest<void>(`/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ===== Membership Operations =====
+
+  async getAllMemberships(): Promise<Membership[]> {
+    const data = await this.apiRequest<{ memberships: Membership[] }>('/api/memberships/all');
+    return data.memberships || [];
   }
 }
+
+// Export singleton instance
+export const godmodeService = new GodmodeService();
+
+// Export individual methods for backward compatibility
+export const getAllArtists = () => godmodeService.getAllArtists();
+export const getArtistById = (artistId: string) => godmodeService.getArtistById(artistId);
+export const createArtist = (artistData: Omit<Artist, 'id' | 'createdAt' | 'updatedAt'>) => godmodeService.createArtist(artistData);
+export const updateArtist = (artistId: string, artistData: Partial<Artist>) => godmodeService.updateArtist(artistId, artistData);
+export const deleteArtist = (artistId: string) => godmodeService.deleteArtist(artistId);
+export const markArtistAsReviewed = (artistId: string) => godmodeService.markArtistAsReviewed(artistId);
+
+export const getAllSongs = () => godmodeService.getAllSongs();
+export const getSongById = (songId: string) => godmodeService.getSongById(songId);
+export const createSong = (songData: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>) => godmodeService.createSong(songData);
+export const updateSong = (songId: string, songData: Partial<Song>) => godmodeService.updateSong(songId, songData);
+export const deleteSong = (songId: string) => godmodeService.deleteSong(songId);
+
+export const getAllVenues = () => godmodeService.getAllVenues();
+export const getVenueById = (venueId: string) => godmodeService.getVenueById(venueId);
+export const createVenue = (venueData: Omit<Venue, 'id' | 'createdAt' | 'updatedAt'>) => godmodeService.createVenue(venueData);
+export const updateVenue = (venueId: string, venueData: Partial<Venue>) => godmodeService.updateVenue(venueId, venueData);
+export const deleteVenue = (venueId: string) => godmodeService.deleteVenue(venueId);
+
+export const getAllUsers = () => godmodeService.getAllUsers();
+export const deleteUser = (userId: string) => godmodeService.deleteUser(userId);
+
+export const getAllMemberships = () => godmodeService.getAllMemberships();
 
 // Helper Functions
 export function formatGenres(genres: string[]): string {
@@ -398,49 +342,4 @@ export function getSocialMediaCount(artist: Artist): number {
   return count + artist.socialMediaUrls.length;
 }
 
-// User Operations
-export async function getAllUsers(): Promise<User[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      credentials: 'include' // Include cookies for authentication
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch users: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.users || [];
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function deleteUser(userId: string): Promise<void> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete user: ${response.status}`);
-    }
-  } catch (error) {
-    throw error;
-  }
-}
-
-// Membership Operations
-export async function getAllMemberships(): Promise<Membership[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/memberships/all`, {
-      credentials: 'include'
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch memberships: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.memberships || [];
-  } catch (error) {
-    throw error;
-  }
-}
+export default godmodeService;
