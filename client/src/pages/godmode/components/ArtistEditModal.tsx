@@ -13,6 +13,8 @@ import { ArtistTypeSelector } from '@/components/ui/artist-type-selector';
 import { ActTypeSelector } from '@/components/ui/act-type-selector';
 import { searchLocationAutocomplete } from '@/lib/services/places-service';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
+import { useGoogleMaps } from '@/components/providers/google-maps-provider';
+import ImageUpload from '@/components/ui/image-upload';
 
 interface ArtistEditModalProps {
   open: boolean;
@@ -32,6 +34,7 @@ export default function ArtistEditModal({
   onNavigate,
 }: ArtistEditModalProps) {
   const { toast } = useToast();
+  const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
   const [editForm, setEditForm] = useState<Artist | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -42,6 +45,12 @@ export default function ArtistEditModal({
   // Initialize form when artist changes
   useEffect(() => {
     if (currentArtist) {
+      console.log('[ArtistEditModal] Loading artist:', {
+        id: currentArtist.id,
+        name: currentArtist.name,
+        artistType: currentArtist.artistType,
+        actType: currentArtist.actType
+      });
       setEditForm({ ...currentArtist });
       setHasChanges(false);
     }
@@ -49,6 +58,15 @@ export default function ArtistEditModal({
 
   const handleSave = async () => {
     if (!editForm || !hasChanges) return;
+
+    console.log('[ArtistEditModal] Saving artist:', {
+      id: editForm.id,
+      name: editForm.name,
+      artistType: editForm.artistType,
+      actType: editForm.actType,
+      location: editForm.location,
+      locationType: editForm.locationType
+    });
 
     setSaving(true);
     try {
@@ -105,6 +123,11 @@ export default function ArtistEditModal({
   };
 
   const handleCitySearch = async (query: string) => {
+    // Load Google Maps if not already loaded
+    if (!googleMapsLoaded) {
+      await loadGoogleMaps();
+    }
+
     const predictions = await searchLocationAutocomplete(query);
     return predictions.map(p => ({
       place_id: p.place_id,
@@ -217,6 +240,22 @@ export default function ArtistEditModal({
               }}
               placeholder="Enter artist name"
             />
+          </div>
+
+          {/* Profile Image */}
+          <div>
+            <Label>Profile Image</Label>
+            <ImageUpload
+              value={editForm.profileImageUrl || undefined}
+              onChange={(url) => {
+                setEditForm({ ...editForm, profileImageUrl: url || '' });
+                setHasChanges(true);
+              }}
+              size="lg"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Upload a custom profile image or use the Facebook refresh button below
+            </p>
           </div>
 
           {/* Location */}
