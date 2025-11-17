@@ -121,18 +121,18 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
 
       {/* Venue Header */}
       <div className="mb-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white">
-                  <Building className="h-8 w-8" />
+            <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-4">
+              <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
+                  <Building className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-3xl font-serif font-bold text-foreground">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-foreground">
                       {venue.custom_venue_name || venue.venue.name}
                     </h1>
                     {venue.managed_on_bndy && (
-                      <div className="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium">
+                      <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium whitespace-nowrap">
                         On BNDY
                       </div>
                     )}
@@ -176,16 +176,17 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
               <Button
                 variant="destructive"
                 size="sm"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
                 onClick={handleDeleteClick}
               >
                 <Trash2 className="h-4 w-4" />
-                Remove Venue
+                <span className="hidden sm:inline">Remove Venue</span>
+                <span className="sm:hidden">Remove</span>
               </Button>
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div className="text-sm">
                 <span className="font-semibold text-foreground">{venue.contactCount}</span>
                 <span className="text-muted-foreground"> contacts</span>
@@ -206,35 +207,32 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
             )}
       </div>
 
-      <PageHeader
-        tabs={
-          <div className="border-b border-border">
-            <nav className="flex space-x-8" aria-label="Tabs">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
+      {/* Tabs */}
+      <div className="border-b border-border mb-6">
+        <nav className="flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
 
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                      flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                      ${isActive
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                      }
-                    `}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        }
-      />
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex items-center gap-1.5 sm:gap-2 py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap
+                  ${isActive
+                    ? 'border-primary text-primary -mb-px'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }
+                `}
+              >
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Tab Content */}
       <div className="pb-8">
