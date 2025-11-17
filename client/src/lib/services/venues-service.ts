@@ -5,6 +5,7 @@ export interface Venue {
   id: string;
   name: string;
   address?: string;
+  city?: string;
   latitude?: number;
   longitude?: number;
   googlePlaceId?: string;
@@ -17,6 +18,7 @@ export interface Venue {
 export interface FindOrCreateVenueRequest {
   name: string;
   address?: string;
+  city?: string;
   latitude?: number;
   longitude?: number;
   googlePlaceId?: string;
@@ -28,6 +30,7 @@ export interface FindOrCreateVenueResponse {
   id: string;
   name: string;
   address?: string;
+  city?: string;
   latitude?: number;
   longitude?: number;
   googlePlaceId?: string;

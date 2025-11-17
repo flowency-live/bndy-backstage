@@ -203,25 +203,25 @@ export default function ContactManager({ artistId, venueId }: ContactManagerProp
                     <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
                       <User className="h-5 w-5" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground">{contact.name}</h4>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground truncate">{contact.name}</h4>
                       <div className="space-y-1 mt-2">
                         {contact.mobile && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            <span>{contact.mobile}</span>
+                            <Phone className="h-3 w-3 flex-shrink-0" />
+                            <span className="break-all">{contact.mobile}</span>
                           </div>
                         )}
                         {contact.landline && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            <span>{contact.landline} (landline)</span>
+                            <Phone className="h-3 w-3 flex-shrink-0" />
+                            <span className="break-all">{contact.landline} (landline)</span>
                           </div>
                         )}
                         {contact.email && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="h-3 w-3" />
-                            <a href={`mailto:${contact.email}`} className="hover:text-primary underline">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                            <Mail className="h-3 w-3 flex-shrink-0" />
+                            <a href={`mailto:${contact.email}`} className="hover:text-primary underline truncate">
                               {contact.email}
                             </a>
                           </div>

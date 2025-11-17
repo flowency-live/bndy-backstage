@@ -160,12 +160,12 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
                   )}
                   {venue.venue.website && (
                     <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                      <Globe className="h-4 w-4" />
+                      <Globe className="h-4 w-4 flex-shrink-0" />
                       <a
                         href={venue.venue.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm hover:text-primary underline"
+                        className="text-sm hover:text-primary underline truncate"
                       >
                         {venue.venue.website}
                       </a>
@@ -174,14 +174,13 @@ export default function VenueDetail({ artistId, venueId, membership }: VenueDeta
                 </div>
               </div>
               <Button
-                variant="destructive"
-                size="sm"
-                className="flex items-center gap-2 w-full sm:w-auto"
+                variant="ghost"
+                size="icon"
                 onClick={handleDeleteClick}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                title="Remove Venue"
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Remove Venue</span>
-                <span className="sm:hidden">Remove</span>
               </Button>
             </div>
 

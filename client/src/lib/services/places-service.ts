@@ -90,7 +90,7 @@ export async function searchGooglePlaces(
 // Get place details from a place_id
 export async function getPlaceDetails(
   placeId: string,
-  fields: string[] = ['name', 'formatted_address', 'geometry', 'place_id', 'formatted_phone_number']
+  fields: string[] = ['name', 'formatted_address', 'address_components', 'geometry', 'place_id', 'formatted_phone_number']
 ): Promise<google.maps.places.PlaceResult | null> {
   // Check if Google Maps is available
   if (!googleMapsAvailable) {
@@ -129,11 +129,46 @@ export async function getPlaceDetails(
   }
 }
 
+// Extract city from Google Places address_components
+// Priority: postal_town (UK) > locality > administrative_area_level_2
+function extractCity(addressComponents?: google.maps.GeocoderAddressComponent[]): string | null {
+  if (!addressComponents || addressComponents.length === 0) {
+    return null;
+  }
+
+  // Priority 1: postal_town (primary UK city field)
+  const postalTown = addressComponents.find(component =>
+    component.types.includes('postal_town')
+  );
+  if (postalTown) {
+    return postalTown.long_name;
+  }
+
+  // Priority 2: locality (general city field)
+  const locality = addressComponents.find(component =>
+    component.types.includes('locality')
+  );
+  if (locality) {
+    return locality.long_name;
+  }
+
+  // Priority 3: administrative_area_level_2 (county/region fallback)
+  const adminArea2 = addressComponents.find(component =>
+    component.types.includes('administrative_area_level_2')
+  );
+  if (adminArea2) {
+    return adminArea2.long_name;
+  }
+
+  return null;
+}
+
 // Convert Google PlaceResult to venue data structure
 export function placeResultToVenueData(place: google.maps.places.PlaceResult) {
   return {
     name: place.name || '',
     address: place.formatted_address || '',
+    city: extractCity(place.address_components),
     googlePlaceId: place.place_id || '',
     latitude: place.geometry?.location?.lat() || 0,
     longitude: place.geometry?.location?.lng() || 0,
