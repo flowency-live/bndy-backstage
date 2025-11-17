@@ -346,11 +346,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
             </button>
           </div>
         }
-      />
-
-        {/* Filter Controls - Mobile Optimized */}
-        <div className="sticky top-0 lg:top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-4 space-y-3">
-          {/* Filter Dropdowns Row */}
+        filters={
           <div className="flex flex-wrap gap-2">
             {/* Genre Filter */}
             <div className="flex-1 min-w-[140px]">
@@ -408,10 +404,9 @@ export default function Songs({ artistId, membership }: SongsProps) {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Search and Multi-Select Controls */}
-        <div className="flex items-center gap-2 mb-4">
+        }
+        search={
+          <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <input
               type="text"
@@ -468,9 +463,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
               </button>
             </>
           )}
-        </div>
+          </div>
+        }
+      />
 
-        <div>
+      <div>
         {/* Spotify link row - only show if configured */}
         {spotifyPlaylistId && (
           <div className="flex justify-start mb-8">
