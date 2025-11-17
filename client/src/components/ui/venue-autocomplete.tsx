@@ -38,7 +38,6 @@ export default function VenueAutocomplete({
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const autocompleteServiceRef = useRef<any>(null);
   const placesServiceRef = useRef<any>(null);
   const justSelectedRef = useRef(false);
   const bndyVenuesRef = useRef<Venue[]>([]);
@@ -61,12 +60,9 @@ export default function VenueAutocomplete({
     loadBndyVenues();
   }, []);
 
-  // Initialize Google Places services
+  // Initialize Google Places service (PlacesService for Text Search API)
   useEffect(() => {
     if (googleMapsLoaded && (window as any).google?.maps?.places) {
-      if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new (window as any).google.maps.places.AutocompleteService();
-      }
       if (!placesServiceRef.current) {
         const div = document.createElement('div');
         placesServiceRef.current = new (window as any).google.maps.places.PlacesService(div);
@@ -123,28 +119,27 @@ export default function VenueAutocomplete({
         await loadGoogleMaps();
       }
 
-      // Search Google Places
+      // Search Google Places using Text Search API (matches frontstage behavior)
       try {
-        if (!autocompleteServiceRef.current) {
-          console.error('[VenueAutocomplete] AutocompleteService not initialized');
+        if (!placesServiceRef.current) {
+          console.error('[VenueAutocomplete] PlacesService not initialized');
           setLoading(false);
           return;
         }
 
-        autocompleteServiceRef.current.getPlacePredictions(
+        placesServiceRef.current.textSearch(
           {
-            input: searchTerm,
-            types: ['establishment'],
-            componentRestrictions: { country: 'gb' },
+            query: searchTerm,
+            type: 'establishment'
           },
           (results: any, status: any) => {
             if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && results) {
-              const googleMatches = results.slice(0, 5).map((p: any) => ({
-                id: p.place_id,
+              const googleMatches = results.slice(0, 5).map((place: any) => ({
+                id: place.place_id,
                 type: 'google' as const,
-                name: p.structured_formatting?.main_text || p.description,
-                address: p.structured_formatting?.secondary_text || p.description,
-                placeId: p.place_id,
+                name: place.name || '',
+                address: place.formatted_address || '',
+                placeId: place.place_id,
               }));
 
               // CRITICAL: Filter out Google results that match ANY existing BNDY venue
