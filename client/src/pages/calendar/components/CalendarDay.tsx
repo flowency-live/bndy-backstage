@@ -57,18 +57,28 @@ export function CalendarDay({
 
   const isCurrentMonth = isSameMonth(date, currentDate);
   const isToday_ = isToday(date);
+  const hasUnavailability = unavailabilityEvents.length > 0;
 
   const MAX_VISIBLE_EVENTS = 3;
   const overflowCount = unavailabilityEvents.length + startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
   const hasOverflow = overflowCount > 0;
 
+  // Determine background color based on unavailability
+  const getBackgroundClass = () => {
+    if (hasUnavailability) {
+      return 'bg-red-50 dark:bg-red-950/20';
+    }
+    if (isCurrentMonth) {
+      return 'bg-white dark:bg-slate-900';
+    }
+    return 'bg-slate-50 dark:bg-slate-800';
+  };
+
   return (
     <div
-      className={`min-h-24 relative ${
-        isCurrentMonth ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800'
-      } ${isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''} ${
-        dayIndex < totalDays - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''
-      }`}
+      className={`min-h-24 relative ${getBackgroundClass()} ${
+        isToday_ ? 'ring-2 ring-brand-accent ring-inset' : ''
+      } ${dayIndex < totalDays - 7 ? 'border-b border-slate-300 dark:border-slate-700' : ''}`}
       data-testid={`calendar-day-${dateStr}`}
       onClick={() => onDayClick?.(dateStr)}
     >
