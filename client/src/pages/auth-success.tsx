@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { usersService } from "@/lib/services/users-service";
 
 interface SessionData {
   user?: any;
@@ -31,19 +32,9 @@ export default function AuthSuccess() {
     setCookies(document.cookie);
 
     // Call /api/me to verify auth
-    fetch('/api/me', {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setSessionData(data);
-        } else {
-          setSessionData({ error: `${res.status}: ${res.statusText}` });
-        }
+    usersService.getProfile()
+      .then((data) => {
+        setSessionData(data);
       })
       .catch((err) => {
         setSessionData({ error: err.message });

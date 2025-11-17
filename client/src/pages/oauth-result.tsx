@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { usersService } from "@/lib/services/users-service";
 
 interface FlowStep {
   step: string;
@@ -43,18 +44,12 @@ export default function OAuthResult() {
     setCookies(document.cookie || "No cookies found");
 
     // Try to call /api/me
-    fetch('/api/me', {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(async (res) => {
-        const data = await res.json();
+    usersService.getProfile()
+      .then((data) => {
         setApiResponse({
-          status: res.status,
-          statusText: res.statusText,
-          headers: Object.fromEntries(res.headers.entries()),
+          status: 200,
+          statusText: 'OK',
+          headers: {},
           body: data
         });
 
@@ -62,7 +57,7 @@ export default function OAuthResult() {
           step: 'api_me_called',
           timestamp: Date.now(),
           location: window.location.href,
-          data: { status: res.status, response: data }
+          data: { status: 200, response: data }
         });
         setFlowSteps([...steps]);
         localStorage.setItem('oauth_flow_steps', JSON.stringify(steps));
