@@ -330,7 +330,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
             {isLoading ? (
               <BndySpinner size="sm" variant="grow" />
             ) : (
-              <BndyLogo className="h-7 w-auto" color="hsl(var(--primary))" />
+              <button
+                onClick={() => setLocation('/dashboard')}
+                className="hover:opacity-80 transition-opacity"
+                aria-label="Go to dashboard"
+              >
+                <BndyLogo className="h-7 w-auto" color="hsl(var(--primary))" />
+              </button>
             )}
           </div>
 

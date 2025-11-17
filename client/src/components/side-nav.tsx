@@ -109,8 +109,17 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
           {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
-              <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" holeColor="hsl(var(--background))" />
-              <button 
+              <button
+                onClick={() => {
+                  setLocation('/dashboard');
+                  onClose();
+                }}
+                className="hover:opacity-80 transition-opacity"
+                aria-label="Go to dashboard"
+              >
+                <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" holeColor="hsl(var(--background))" />
+              </button>
+              <button
                 onClick={onClose}
                 className="text-foreground hover:text-muted-foreground lg:hidden"
                 data-testid="button-close-sidenav"
