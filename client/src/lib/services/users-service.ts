@@ -85,10 +85,18 @@ class UsersService {
   }
 
   /**
-   * Get current user profile
+   * Get current user profile (via /api/me)
    */
   async getCurrentProfile(): Promise<UserProfileResponse> {
     return this.apiRequest<UserProfileResponse>('/api/me');
+  }
+
+  /**
+   * Get user profile (via /users/profile)
+   * Returns { user: User } structure
+   */
+  async getProfile(): Promise<{ user: User }> {
+    return this.apiRequest<{ user: User }>('/users/profile');
   }
 
   /**

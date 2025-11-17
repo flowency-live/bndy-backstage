@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import type { User, ArtistMembership } from "@/types/api";
 import { authService } from "@/lib/services/auth-service";
+import { usersService } from "@/lib/services/users-service";
+import { membershipsService } from "@/lib/services/memberships-service";
 
 interface UserProfile {
   user: User;
@@ -46,15 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { data: userProfileData, isLoading: profileLoading } = useQuery<User>({
     queryKey: ["users-profile"],
     queryFn: async () => {
-      const response = await fetch("https://api.bndy.co.uk/users/profile", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
-
-      const data = await response.json();
+      const data = await usersService.getProfile();
       return data.user; // Extract user from { user: {...} } response
     },
     enabled: isAuthenticated,
@@ -64,15 +58,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { data: membershipsData, isLoading: membershipsLoading } = useQuery<{ user: { id: string }, artists: ArtistMembership[] }>({
     queryKey: ["api-memberships-me"],
     queryFn: async () => {
-      const response = await fetch("https://api.bndy.co.uk/api/memberships/me", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch memberships");
-      }
-
-      return response.json();
+      return await membershipsService.getMyMemberships();
     },
     enabled: isAuthenticated,
   });
