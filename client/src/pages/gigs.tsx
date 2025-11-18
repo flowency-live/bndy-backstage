@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
-import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears } from "date-fns";
+import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears, startOfMonth } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Music, Plus, Map, List, Search } from "lucide-react";
+import { Music, Plus, Map, List, Search, ChevronDown, ChevronRight } from "lucide-react";
 import type { Event, ArtistMembership } from "@/types/api";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -18,6 +18,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { CalendarProvider, useCalendarContext } from './calendar/CalendarContext';
 import EventDetails from './calendar/modals/EventDetails';
 import PublicGigWizard from './calendar/modals/PublicGigWizard';
+
+// Import map view component
+import GigsMapView from './gigs/components/GigsMapView';
 
 // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
 const getOrdinalSuffix = (day: number): string => {
@@ -42,6 +45,7 @@ function GigsContent({ artistId, membership }: GigsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'upcoming' | 'past'>('upcoming');
   const [showAddGigWizard, setShowAddGigWizard] = useState(false);
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
   // Calendar context for modal handling
   const {
@@ -111,10 +115,50 @@ function GigsContent({ artistId, membership }: GigsProps) {
     return result;
   }, [allGigs, searchQuery, timeFilter]);
 
-  // Group filtered gigs
-  const todayGigs = filteredGigs.filter((gig) => isToday(new Date(gig.date)));
-  const futureGigs = filteredGigs.filter((gig) => isFuture(new Date(gig.date)) && !isToday(new Date(gig.date)));
-  const pastGigs = filteredGigs.filter((gig) => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+  // Group gigs by month
+  const groupedGigs = useMemo(() => {
+    const todayGigs = filteredGigs.filter((gig) => isToday(new Date(gig.date)));
+    const futureGigs = filteredGigs.filter((gig) => isFuture(new Date(gig.date)) && !isToday(new Date(gig.date)));
+    const pastGigs = filteredGigs.filter((gig) => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+
+    // Group future gigs by month
+    const futureByMonth: Record<string, Event[]> = {};
+    futureGigs.forEach(gig => {
+      const monthKey = format(new Date(gig.date), 'yyyy-MM');
+      if (!futureByMonth[monthKey]) {
+        futureByMonth[monthKey] = [];
+      }
+      futureByMonth[monthKey].push(gig);
+    });
+
+    // Group past gigs by month
+    const pastByMonth: Record<string, Event[]> = {};
+    pastGigs.forEach(gig => {
+      const monthKey = format(new Date(gig.date), 'yyyy-MM');
+      if (!pastByMonth[monthKey]) {
+        pastByMonth[monthKey] = [];
+      }
+      pastByMonth[monthKey].push(gig);
+    });
+
+    return {
+      today: todayGigs,
+      futureByMonth: Object.entries(futureByMonth).sort(([a], [b]) => a.localeCompare(b)),
+      pastByMonth: Object.entries(pastByMonth).sort(([a], [b]) => b.localeCompare(a)),
+    };
+  }, [filteredGigs]);
+
+  const toggleMonth = (monthKey: string) => {
+    setExpandedMonths(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(monthKey)) {
+        newSet.delete(monthKey);
+      } else {
+        newSet.add(monthKey);
+      }
+      return newSet;
+    });
+  };
 
   const handleGigClick = (gig: Event) => {
     setSelectedEvent(gig);
@@ -227,11 +271,9 @@ function GigsContent({ artistId, membership }: GigsProps) {
         }
       />
 
-      {/* Map View (TODO: Create GigsMapView component) */}
+      {/* Map View */}
       {viewMode === 'map' ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Map view coming soon...</p>
-        </div>
+        <GigsMapView artistId={artistId} gigs={filteredGigs} onGigClick={handleGigClick} />
       ) : (
         <>
           {/* Active Filter Count */}
@@ -287,46 +329,102 @@ function GigsContent({ artistId, membership }: GigsProps) {
               }
             />
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Today's Gigs */}
-              {todayGigs.length > 0 && (
+              {groupedGigs.today.length > 0 && (
                 <div>
                   <h2 className="text-xl font-serif font-bold text-foreground mb-4 flex items-center gap-2">
                     <span className="text-orange-500">🎸</span> Today
                   </h2>
                   <div className="space-y-3">
-                    {todayGigs.map((gig) => (
+                    {groupedGigs.today.map((gig) => (
                       <GigCard key={gig.id} gig={gig} highlighted onClick={() => handleGigClick(gig)} />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Future Gigs */}
-              {futureGigs.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+              {/* Future Gigs - Grouped by Month */}
+              {groupedGigs.futureByMonth.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-2">
                     Upcoming
                   </h2>
-                  <div className="space-y-3">
-                    {futureGigs.map((gig) => (
-                      <GigCard key={gig.id} gig={gig} onClick={() => handleGigClick(gig)} />
-                    ))}
-                  </div>
+                  {groupedGigs.futureByMonth.map(([monthKey, gigs]) => {
+                    const isExpanded = expandedMonths.has(monthKey);
+                    const monthDate = new Date(monthKey + '-01');
+                    const monthLabel = format(monthDate, 'MMMM yyyy');
+
+                    return (
+                      <div key={monthKey} className="border rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => toggleMonth(monthKey)}
+                          className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                            <span className="font-semibold text-foreground">{monthLabel}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {gigs.length} {gigs.length === 1 ? 'gig' : 'gigs'}
+                          </span>
+                        </button>
+                        {isExpanded && (
+                          <div className="p-4 space-y-3">
+                            {gigs.map((gig) => (
+                              <GigCard key={gig.id} gig={gig} onClick={() => handleGigClick(gig)} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Past Gigs */}
-              {pastGigs.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+              {/* Past Gigs - Grouped by Month */}
+              {groupedGigs.pastByMonth.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-2">
                     Past Gigs
                   </h2>
-                  <div className="space-y-3">
-                    {pastGigs.map((gig) => (
-                      <GigCard key={gig.id} gig={gig} past onClick={() => handleGigClick(gig)} />
-                    ))}
-                  </div>
+                  {groupedGigs.pastByMonth.map(([monthKey, gigs]) => {
+                    const isExpanded = expandedMonths.has(monthKey);
+                    const monthDate = new Date(monthKey + '-01');
+                    const monthLabel = format(monthDate, 'MMMM yyyy');
+
+                    return (
+                      <div key={monthKey} className="border rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => toggleMonth(monthKey)}
+                          className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                            <span className="font-semibold text-foreground">{monthLabel}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {gigs.length} {gigs.length === 1 ? 'gig' : 'gigs'}
+                          </span>
+                        </button>
+                        {isExpanded && (
+                          <div className="p-4 space-y-3">
+                            {gigs.map((gig) => (
+                              <GigCard key={gig.id} gig={gig} past onClick={() => handleGigClick(gig)} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
