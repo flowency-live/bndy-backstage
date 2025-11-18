@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +114,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
 
             {/* Mobile Navigation Sheet */}
             <SheetContent side="left" className="w-full sm:w-80 p-0 overflow-y-auto">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetDescription className="sr-only">
+                Access artist dashboard, switch between artists, and manage your profile
+              </SheetDescription>
               <div className="flex flex-col min-h-full">
                 {/* Header */}
                 <div className="p-6 border-b border-border">
