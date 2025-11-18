@@ -43,12 +43,12 @@ export default function MembersList({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Band Members ({members.length})</span>
+          <span>Band Members ({Array.isArray(members) ? members.length : 0})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {members.map((member) => (
+          {Array.isArray(members) && members.map((member) => (
             <div
               key={member.id}
               className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"

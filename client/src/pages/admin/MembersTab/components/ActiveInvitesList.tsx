@@ -79,7 +79,7 @@ export default function ActiveInvitesList({ artistId }: ActiveInvitesListProps) 
 
   return (
     <div className="space-y-3">
-      {invites.map((invite) => {
+      {Array.isArray(invites) && invites.map((invite) => {
         const isExpired = invite.status === 'expired' || Date.now() > invite.expiresAt;
         const isDisabled = invite.status === 'disabled';
 

@@ -19,7 +19,9 @@ export function useMembers(artistId: string) {
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ['/api/artists', artistId, 'members'],
     queryFn: async () => {
-      return await artistsService.getArtistMembers(artistId);
+      const response = await artistsService.getArtistMembers(artistId);
+      // artistsService already handles both array and {members: []} formats
+      return response;
     },
     enabled: !!artistId,
   });
