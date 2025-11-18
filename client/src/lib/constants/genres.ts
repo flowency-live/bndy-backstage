@@ -1,5 +1,5 @@
 // Shared genre constants for BNDY platform
-// Simplified flat list (23 genres) - Updated 2025-11-07
+// Simplified flat list (25 genres) - Updated 2025-11-18
 // Used across backstage and frontstage applications
 // DO NOT duplicate this list - import from here
 
@@ -11,6 +11,7 @@ export const GENRES = [
   'Metal',
   'Punk',
   'Alternative',
+  'New Wave',
 
   // Pop & Indie
   'Pop',
@@ -21,6 +22,7 @@ export const GENRES = [
   'Blues',
   'R&B',
   'Country',
+  'Americana',
 
   // Folk & Soul
   'Folk',
