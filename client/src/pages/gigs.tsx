@@ -433,12 +433,12 @@ function GigsContent({ artistId, membership }: GigsProps) {
       )}
 
       {/* Add Gig Wizard */}
-      {showAddGigWizard && (
+      {showAddGigWizard && currentMembership && (
         <PublicGigWizard
-          open={showAddGigWizard}
+          isOpen={showAddGigWizard}
           onClose={() => setShowAddGigWizard(false)}
           artistId={artistId}
-          artistName={membership.artist?.name || membership.name}
+          currentUser={currentMembership}
         />
       )}
 
@@ -488,6 +488,10 @@ function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
   const gigDate = `${dayName} ${day}${getOrdinalSuffix(day)} ${monthName}`;
   const gigTime = gig.startTime ? ` • ${gig.startTime}${gig.endTime && gig.endTime !== "00:00" ? ` - ${gig.endTime}` : ''}` : '';
 
+  // Check if title is custom or default format (ArtistName @ VenueName)
+  const isDefaultTitle = gig.venue && gig.title?.includes(' @ ') && gig.title?.includes(gig.venue);
+  const displayTitle = isDefaultTitle ? null : gig.title;
+
   // Color for the border - orange for today, muted for past, brand accent for future
   const borderColor = highlighted ? '#f97316' : past ? '#94a3b8' : '#f97316';
 
@@ -508,29 +512,36 @@ function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
             <span className="text-lg">🎵</span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-sans font-semibold text-card-foreground">
-                {gig.title}
-              </h3>
-              {highlighted && (
-                <Badge className="bg-orange-500 text-white">Today</Badge>
-              )}
-              {gig.isPublic && !highlighted && (
-                <Badge variant="secondary">Public</Badge>
-              )}
-            </div>
-
+            {/* Venue Name - Leading Element */}
             {gig.venue && (
-              <p className="text-muted-foreground text-sm truncate mb-1">
-                📍 {gig.venue}
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-base font-sans font-semibold text-card-foreground flex items-center gap-1.5">
+                  <span className="text-muted-foreground">📍</span>
+                  {gig.venue}
+                </h3>
+                {highlighted && (
+                  <Badge className="bg-orange-500 text-white">Today</Badge>
+                )}
+                {gig.isPublic && !highlighted && (
+                  <Badge variant="secondary">Public</Badge>
+                )}
+              </div>
+            )}
+
+            {/* Custom Title - Only show if not default */}
+            {displayTitle && (
+              <p className="text-sm text-card-foreground mb-1 font-medium">
+                {displayTitle}
               </p>
             )}
 
+            {/* Date and Time */}
             <p className="text-muted-foreground text-sm font-medium">
               {gigDate}
               {gigTime}
             </p>
 
+            {/* Description */}
             {gig.description && (
               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                 {gig.description}
