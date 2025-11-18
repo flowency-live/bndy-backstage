@@ -325,15 +325,17 @@ function App() {
           <ServerAuthProvider>
             <UserProvider>
               <GoogleMapsProvider>
-                <Layout>
-                  <div className="min-h-screen flex flex-col max-w-full overflow-x-hidden">
-                    <div className="flex-1">
-                      <Router />
+                <ErrorBoundary>
+                  <Layout>
+                    <div className="min-h-screen flex flex-col max-w-full overflow-x-hidden">
+                      <div className="flex-1">
+                        <Router />
+                      </div>
                     </div>
-                  </div>
-                  <Toaster />
-                  <HighPriorityNotificationHandler />
-                </Layout>
+                    <Toaster />
+                    <HighPriorityNotificationHandler />
+                  </Layout>
+                </ErrorBoundary>
               </GoogleMapsProvider>
             </UserProvider>
         </ServerAuthProvider>
