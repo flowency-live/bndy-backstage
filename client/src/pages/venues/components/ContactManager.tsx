@@ -198,8 +198,8 @@ export default function ContactManager({ artistId, venueId }: ContactManagerProp
           {contacts.map((contact) => (
             <Card key={contact.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
                       <User className="h-5 w-5" />
                     </div>
@@ -221,7 +221,7 @@ export default function ContactManager({ artistId, venueId }: ContactManagerProp
                         {contact.email && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
                             <Mail className="h-3 w-3 flex-shrink-0" />
-                            <a href={`mailto:${contact.email}`} className="hover:text-primary underline truncate">
+                            <a href={`mailto:${contact.email}`} className="hover:text-primary underline truncate block">
                               {contact.email}
                             </a>
                           </div>
@@ -229,19 +229,21 @@ export default function ContactManager({ artistId, venueId }: ContactManagerProp
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleOpenEditModal(contact)}
+                      title="Edit contact"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleDelete(contact.id)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="Delete contact"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
