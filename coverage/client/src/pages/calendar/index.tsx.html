@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/540</span>
+                <span class='fraction'>0/537</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/540</span>
+                <span class='fraction'>0/537</span>
             </div>
         
             
@@ -779,13 +779,7 @@
 <a name='L714'></a><a href='#L714'>714</a>
 <a name='L715'></a><a href='#L715'>715</a>
 <a name='L716'></a><a href='#L716'>716</a>
-<a name='L717'></a><a href='#L717'>717</a>
-<a name='L718'></a><a href='#L718'>718</a>
-<a name='L719'></a><a href='#L719'>719</a>
-<a name='L720'></a><a href='#L720'>720</a>
-<a name='L721'></a><a href='#L721'>721</a>
-<a name='L722'></a><a href='#L722'>722</a>
-<a name='L723'></a><a href='#L723'>723</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L717'></a><a href='#L717'>717</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -835,6 +829,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1095,10 +1090,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1109,13 +1102,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1154,8 +1144,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1515,6 +1503,7 @@ import { useUser } from '@/lib/user-context';
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
+import { eventsService } from '@/lib/services/events-service';
 import type { Event, ArtistMembership } from '@/types/api';
 &nbsp;
 // Context
@@ -1817,27 +1806,22 @@ interface CalendarProps {
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      const params = new URLSearchParams();</span>
-<span class="cstat-no" title="statement not covered" >      if (includePrivate) params.append('includePrivate', 'true');</span>
-<span class="cstat-no" title="statement not covered" >      if (memberOnly) params.append('memberOnly', 'true');</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/export/ical?${params.toString()}`, {</span>
-<span class="cstat-no" title="statement not covered" >        headers: {</span>
-<span class="cstat-no" title="statement not covered" >          "Authorization": `Bearer ${session.access_token}`,</span>
-<span class="cstat-no" title="statement not covered" >          "Content-Type": "application/json",</span>
-<span class="cstat-no" title="statement not covered" >        },</span>
-<span class="cstat-no" title="statement not covered" >      });</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error("Failed to export calendar");</span>
+<span class="cstat-no" title="statement not covered" >      if (!effectiveArtistId) {</span>
+<span class="cstat-no" title="statement not covered" >        toast({</span>
+<span class="cstat-no" title="statement not covered" >          title: "No artist context",</span>
+<span class="cstat-no" title="statement not covered" >          description: "Please select an artist to export calendar",</span>
+<span class="cstat-no" title="statement not covered" >          variant: "destructive"</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      // Get the filename from the response headers
-<span class="cstat-no" title="statement not covered" >      const contentDisposition = response.headers.get('content-disposition');</span>
-<span class="cstat-no" title="statement not covered" >      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';</span>
+<span class="cstat-no" title="statement not covered" >      const { blob, filename } = await eventsService.exportCalendar(effectiveArtistId, {</span>
+<span class="cstat-no" title="statement not covered" >        includePrivate,</span>
+<span class="cstat-no" title="statement not covered" >        memberOnly,</span>
+<span class="cstat-no" title="statement not covered" >        accessToken: session.access_token,</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
 &nbsp;
       // Download the file
-<span class="cstat-no" title="statement not covered" >      const blob = await response.blob();</span>
 <span class="cstat-no" title="statement not covered" >      const url = window.URL.createObjectURL(blob);</span>
 <span class="cstat-no" title="statement not covered" >      const a = document.createElement('a');</span>
 <span class="cstat-no" title="statement not covered" >      a.href = url;</span>
@@ -1871,18 +1855,16 @@ interface CalendarProps {
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      const response = await fetch(`https://api.bndy.co.uk/api/artists/${effectiveArtistId}/calendar/url`, {</span>
-<span class="cstat-no" title="statement not covered" >        headers: {</span>
-<span class="cstat-no" title="statement not covered" >          "Authorization": `Bearer ${session.access_token}`,</span>
-<span class="cstat-no" title="statement not covered" >          "Content-Type": "application/json",</span>
-<span class="cstat-no" title="statement not covered" >        },</span>
-<span class="cstat-no" title="statement not covered" >      });</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error("Failed to get calendar URLs");</span>
+<span class="cstat-no" title="statement not covered" >      if (!effectiveArtistId) {</span>
+<span class="cstat-no" title="statement not covered" >        toast({</span>
+<span class="cstat-no" title="statement not covered" >          title: "No artist context",</span>
+<span class="cstat-no" title="statement not covered" >          description: "Please select an artist to get calendar URLs",</span>
+<span class="cstat-no" title="statement not covered" >          variant: "destructive"</span>
+<span class="cstat-no" title="statement not covered" >        });</span>
+<span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      const data = await response.json();</span>
+<span class="cstat-no" title="statement not covered" >      const data = await eventsService.getCalendarUrls(effectiveArtistId, session.access_token);</span>
 &nbsp;
       // Copy the full calendar URL to clipboard
 <span class="cstat-no" title="statement not covered" >      if (navigator.clipboard) {</span>
@@ -2236,7 +2218,7 @@ interface CalendarProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/79</span>
+                <span class='fraction'>0/71</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/79</span>
+                <span class='fraction'>0/71</span>
             </div>
         
             
@@ -173,17 +173,8 @@
 <a name='L108'></a><a href='#L108'>108</a>
 <a name='L109'></a><a href='#L109'>109</a>
 <a name='L110'></a><a href='#L110'>110</a>
-<a name='L111'></a><a href='#L111'>111</a>
-<a name='L112'></a><a href='#L112'>112</a>
-<a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a>
-<a name='L116'></a><a href='#L116'>116</a>
-<a name='L117'></a><a href='#L117'>117</a>
-<a name='L118'></a><a href='#L118'>118</a>
-<a name='L119'></a><a href='#L119'>119</a>
-<a name='L120'></a><a href='#L120'>120</a>
-<a name='L121'></a><a href='#L121'>121</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L111'></a><a href='#L111'>111</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -213,17 +204,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -313,6 +293,7 @@ import ArchivedTab from "@/components/pipeline/archived-tab";
 import AddSuggestionModal from "@/components/pipeline/modals/add-suggestion-modal";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 &nbsp;
 interface PipelineProps {
@@ -332,19 +313,8 @@ type TabType = 'voting' | 'practice' | 'archived';
 <span class="cstat-no" title="statement not covered" >  const { data: votingCount = 0 } = useQuery({</span>
 <span class="cstat-no" title="statement not covered" >    queryKey: ['pipeline-count', artistId, 'voting'],</span>
 <span class="cstat-no" title="statement not covered" >    queryFn: async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      const [votingResponse, reviewResponse] = await Promise.all([</span>
-<span class="cstat-no" title="statement not covered" >        fetch(`/api/artists/${artistId}/pipeline?status=voting`, { credentials: 'include' }),</span>
-<span class="cstat-no" title="statement not covered" >        fetch(`/api/artists/${artistId}/pipeline?status=review`, { credentials: 'include' })</span>
-<span class="cstat-no" title="statement not covered" >      ]);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!votingResponse.ok || !reviewResponse.ok) return 0;</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      const [votingSongs, reviewSongs] = await Promise.all([</span>
-<span class="cstat-no" title="statement not covered" >        votingResponse.json(),</span>
-<span class="cstat-no" title="statement not covered" >        reviewResponse.json()</span>
-<span class="cstat-no" title="statement not covered" >      ]);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      return votingSongs.length + reviewSongs.length;</span>
+<span class="cstat-no" title="statement not covered" >      const songs = await artistsService.getVotingPipelineSongs(artistId);</span>
+<span class="cstat-no" title="statement not covered" >      return songs.length;</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    refetchInterval: 30000</span>
 <span class="cstat-no" title="statement not covered" >  });</span>
@@ -430,7 +400,7 @@ type TabType = 'voting' | 'practice' | 'archived';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

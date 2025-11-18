@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/94</span>
+                <span class='fraction'>0/81</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/94</span>
+                <span class='fraction'>0/81</span>
             </div>
         
             
@@ -195,23 +195,8 @@
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
 <a name='L132'></a><a href='#L132'>132</a>
-<a name='L133'></a><a href='#L133'>133</a>
-<a name='L134'></a><a href='#L134'>134</a>
-<a name='L135'></a><a href='#L135'>135</a>
-<a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a>
-<a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a>
-<a name='L141'></a><a href='#L141'>141</a>
-<a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a>
-<a name='L145'></a><a href='#L145'>145</a>
-<a name='L146'></a><a href='#L146'>146</a>
-<a name='L147'></a><a href='#L147'>147</a>
-<a name='L148'></a><a href='#L148'>148</a>
-<a name='L149'></a><a href='#L149'>149</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -266,27 +251,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -362,6 +330,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { useState } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
 import { useServerAuth } from '@/hooks/useServerAuth';
 import { useToast } from '@/hooks/use-toast';
+import { eventsService } from '@/lib/services/events-service';
 &nbsp;
 interface UseCalendarExportOptions {
   artistId?: string | null;
@@ -411,30 +380,13 @@ interface ExportOptions {
 <span class="cstat-no" title="statement not covered" >    setIsExporting(true);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const params = new URLSearchParams();</span>
-<span class="cstat-no" title="statement not covered" >      if (includePrivate) params.append('includePrivate', 'true');</span>
-<span class="cstat-no" title="statement not covered" >      if (memberOnly) params.append('memberOnly', 'true');</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      const response = await fetch(</span>
-<span class="cstat-no" title="statement not covered" >        `https://api.bndy.co.uk/api/artists/${artistId}/calendar/export/ical?${params.toString()}`,</span>
-<span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          headers: {</span>
-<span class="cstat-no" title="statement not covered" >            Authorization: `Bearer ${session.access_token}`,</span>
-<span class="cstat-no" title="statement not covered" >            'Content-Type': 'application/json',</span>
-<span class="cstat-no" title="statement not covered" >          },</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >      );</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error('Failed to export calendar');</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
-&nbsp;
-      // Get the filename from the response headers
-<span class="cstat-no" title="statement not covered" >      const contentDisposition = response.headers.get('content-disposition');</span>
-<span class="cstat-no" title="statement not covered" >      const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';</span>
+<span class="cstat-no" title="statement not covered" >      const { blob, filename } = await eventsService.exportCalendar(artistId, {</span>
+<span class="cstat-no" title="statement not covered" >        includePrivate,</span>
+<span class="cstat-no" title="statement not covered" >        memberOnly,</span>
+<span class="cstat-no" title="statement not covered" >        accessToken: session.access_token,</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
 &nbsp;
       // Download the file
-<span class="cstat-no" title="statement not covered" >      const blob = await response.blob();</span>
 <span class="cstat-no" title="statement not covered" >      const url = window.URL.createObjectURL(blob);</span>
 <span class="cstat-no" title="statement not covered" >      const a = document.createElement('a');</span>
 <span class="cstat-no" title="statement not covered" >      a.href = url;</span>
@@ -514,7 +466,7 @@ interface ExportOptions {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

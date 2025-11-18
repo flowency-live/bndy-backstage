@@ -80,8 +80,7 @@ function GigMarkerLayer({ gigs, onGigClick }: GigMarkerLayerProps) {
     // Filter gigs that have location data
     const gigsWithLocation = gigs.filter(gig => {
       // Check if gig has venue with coordinates (from venue lookup)
-      // Or if it has latitude/longitude directly
-      return (gig as any).latitude && (gig as any).longitude;
+      return gig.venueLatitude && gig.venueLongitude;
     });
 
     if (gigsWithLocation.length === 0) {
@@ -101,8 +100,8 @@ function GigMarkerLayer({ gigs, onGigClick }: GigMarkerLayerProps) {
     });
 
     gigsWithLocation.forEach(gig => {
-      const lat = (gig as any).latitude;
-      const lng = (gig as any).longitude;
+      const lat = gig.venueLatitude;
+      const lng = gig.venueLongitude;
       if (!lat || !lng) return;
 
       const isToday = new Date(gig.date).toDateString() === new Date().toDateString();
@@ -196,13 +195,16 @@ interface GigsMapViewProps {
 }
 
 export default function GigsMapView({ gigs, onGigClick }: GigsMapViewProps) {
+  // Filter to check if we have any gigs with location data
+  const gigsWithLocation = gigs.filter(gig => gig.venueLatitude && gig.venueLongitude);
+
   return (
-    <div className="relative w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-200px)] rounded-lg overflow-hidden">
+    <div className="fixed top-[64px] left-0 right-0 bottom-[60px] lg:bottom-0 lg:left-64 z-10">
       <MapContainer>
         <GigMarkerLayer gigs={gigs} onGigClick={onGigClick} />
       </MapContainer>
 
-      {gigs.length === 0 && (
+      {gigsWithLocation.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-[1000]">
           <p className="text-muted-foreground">No gigs with location data to display on map</p>
         </div>

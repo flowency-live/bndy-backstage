@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/209</span>
+                <span class='fraction'>0/208</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/209</span>
+                <span class='fraction'>0/208</span>
             </div>
         
             
@@ -352,8 +352,7 @@
 <a name='L287'></a><a href='#L287'>287</a>
 <a name='L288'></a><a href='#L288'>288</a>
 <a name='L289'></a><a href='#L289'>289</a>
-<a name='L290'></a><a href='#L290'>290</a>
-<a name='L291'></a><a href='#L291'>291</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L290'></a><a href='#L290'>290</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -533,9 +532,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -805,12 +803,12 @@ type TabId = 'contacts' | 'gigs' | 'notes';
                   )}
 <span class="cstat-no" title="statement not covered" >                  {venue.venue.website &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                    &lt;div className="flex items-center gap-2 mt-2 text-muted-foreground"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                      &lt;Globe className="h-4 w-4" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;Globe className="h-4 w-4 flex-shrink-0" /&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;a</span>
 <span class="cstat-no" title="statement not covered" >                        href={venue.venue.website}</span>
 <span class="cstat-no" title="statement not covered" >                        target="_blank"</span>
 <span class="cstat-no" title="statement not covered" >                        rel="noopener noreferrer"</span>
-<span class="cstat-no" title="statement not covered" >                        className="text-sm hover:text-primary underline"</span>
+<span class="cstat-no" title="statement not covered" >                        className="text-sm hover:text-primary underline truncate"</span>
                       &gt;
 <span class="cstat-no" title="statement not covered" >                        {venue.venue.website}</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;/a&gt;</span>
@@ -819,14 +817,13 @@ type TabId = 'contacts' | 'gigs' | 'notes';
 <span class="cstat-no" title="statement not covered" >                &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;Button</span>
-<span class="cstat-no" title="statement not covered" >                variant="destructive"</span>
-<span class="cstat-no" title="statement not covered" >                size="sm"</span>
-<span class="cstat-no" title="statement not covered" >                className="flex items-center gap-2 w-full sm:w-auto"</span>
+<span class="cstat-no" title="statement not covered" >                variant="ghost"</span>
+<span class="cstat-no" title="statement not covered" >                size="icon"</span>
 <span class="cstat-no" title="statement not covered" >                onClick={handleDeleteClick}</span>
+<span class="cstat-no" title="statement not covered" >                className="text-destructive hover:text-destructive hover:bg-destructive/10"</span>
+<span class="cstat-no" title="statement not covered" >                title="Remove Venue"</span>
               &gt;
 <span class="cstat-no" title="statement not covered" >                &lt;Trash2 className="h-4 w-4" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;span className="hidden sm:inline"&gt;Remove Venue&lt;/span&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;span className="sm:hidden"&gt;Remove&lt;/span&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/Button&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
 &nbsp;
@@ -940,7 +937,7 @@ type TabId = 'contacts' | 'gigs' | 'notes';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

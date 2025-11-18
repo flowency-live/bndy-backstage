@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/274</span>
+                <span class='fraction'>0/278</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/274</span>
+                <span class='fraction'>0/278</span>
             </div>
         
             
@@ -428,7 +428,13 @@
 <a name='L363'></a><a href='#L363'>363</a>
 <a name='L364'></a><a href='#L364'>364</a>
 <a name='L365'></a><a href='#L365'>365</a>
-<a name='L366'></a><a href='#L366'>366</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -734,11 +740,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -767,7 +781,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -778,10 +791,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1098,10 +1110,18 @@ type StatusFilter = 'all' | 'managed' | 'unmanaged';
 &nbsp;
                   {/* Compact Venue Cards */}
 <span class="cstat-no" title="statement not covered" >                  &lt;div className="space-y-1.5"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    {venues.map((venue) =&gt; (</span>
+<span class="cstat-no" title="statement not covered" >                    {venues.map((venue) =&gt; {</span>
+                      // Determine border color based on venue status
+<span class="cstat-no" title="statement not covered" >                      const getBorderColor = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >                        if (venue.gigCount &gt; 0) return 'border-cyan-500/60 hover:border-cyan-500';</span>
+<span class="cstat-no" title="statement not covered" >                        if (venue.noteCount &gt; 0) return 'border-yellow-500/60 hover:border-yellow-500';</span>
+<span class="cstat-no" title="statement not covered" >                        return 'border-border hover:border-primary/50';</span>
+<span class="cstat-no" title="statement not covered" >                      };</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >                      return (</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;div</span>
 <span class="cstat-no" title="statement not covered" >                        key={venue.id}</span>
-<span class="cstat-no" title="statement not covered" >                        className="bg-card border border-border rounded-lg cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all duration-200 group overflow-hidden"</span>
+<span class="cstat-no" title="statement not covered" >                        className={`bg-card border-2 rounded-lg cursor-pointer hover:shadow-sm transition-all duration-200 group overflow-hidden ${getBorderColor()}`}</span>
 <span class="cstat-no" title="statement not covered" >                        onClick={() =&gt; setLocation(`/venues/${venue.venue_id}`)}</span>
 <span class="cstat-no" title="statement not covered" >                        data-testid={`venue-card-${venue.id}`}</span>
                       &gt;
@@ -1141,13 +1161,11 @@ type StatusFilter = 'all' | 'managed' | 'unmanaged';
 <span class="cstat-no" title="statement not covered" >                              &lt;div className="font-bold text-xs sm:text-sm text-foreground leading-none"&gt;{venue.contactCount}&lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                              &lt;div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight mt-0.5"&gt;contacts&lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                            &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >                            {venue.noteCount &gt; 0 &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >                              &lt;FileText className="h-3.5 w-3.5 text-primary" /&gt;</span>
-                            )}
 <span class="cstat-no" title="statement not covered" >                          &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    ))}</span>
+                    );
+<span class="cstat-no" title="statement not covered" >                    })}</span>
 <span class="cstat-no" title="statement not covered" >                  &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >              ))}</span>
@@ -1165,7 +1183,7 @@ type StatusFilter = 'all' | 'managed' | 'unmanaged';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

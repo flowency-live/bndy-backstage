@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/137</span>
+                <span class='fraction'>0/131</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/137</span>
+                <span class='fraction'>0/131</span>
             </div>
         
             
@@ -235,12 +235,8 @@
 <a name='L170'></a><a href='#L170'>170</a>
 <a name='L171'></a><a href='#L171'>171</a>
 <a name='L172'></a><a href='#L172'>172</a>
-<a name='L173'></a><a href='#L173'>173</a>
-<a name='L174'></a><a href='#L174'>174</a>
-<a name='L175'></a><a href='#L175'>175</a>
-<a name='L176'></a><a href='#L176'>176</a>
-<a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L173'></a><a href='#L173'>173</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -285,12 +281,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -420,6 +410,7 @@
 <span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { useEffect, useState } from "react";</span></span></span>
 import { useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { usersService } from "@/lib/services/users-service";
 &nbsp;
 interface FlowStep {
   step: string;
@@ -462,18 +453,12 @@ interface FlowStep {
 <span class="cstat-no" title="statement not covered" >    setCookies(document.cookie || "No cookies found");</span>
 &nbsp;
     // Try to call /api/me
-<span class="cstat-no" title="statement not covered" >    fetch('/api/me', {</span>
-<span class="cstat-no" title="statement not covered" >      credentials: 'include',</span>
-<span class="cstat-no" title="statement not covered" >      headers: {</span>
-<span class="cstat-no" title="statement not covered" >        'Content-Type': 'application/json',</span>
-<span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >    })</span>
-<span class="cstat-no" title="statement not covered" >      .then(async (res) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        const data = await res.json();</span>
+<span class="cstat-no" title="statement not covered" >    usersService.getProfile()</span>
+<span class="cstat-no" title="statement not covered" >      .then((data) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        setApiResponse({</span>
-<span class="cstat-no" title="statement not covered" >          status: res.status,</span>
-<span class="cstat-no" title="statement not covered" >          statusText: res.statusText,</span>
-<span class="cstat-no" title="statement not covered" >          headers: Object.fromEntries(res.headers.entries()),</span>
+<span class="cstat-no" title="statement not covered" >          status: 200,</span>
+<span class="cstat-no" title="statement not covered" >          statusText: 'OK',</span>
+<span class="cstat-no" title="statement not covered" >          headers: {},</span>
 <span class="cstat-no" title="statement not covered" >          body: data</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 &nbsp;
@@ -481,7 +466,7 @@ interface FlowStep {
 <span class="cstat-no" title="statement not covered" >          step: 'api_me_called',</span>
 <span class="cstat-no" title="statement not covered" >          timestamp: Date.now(),</span>
 <span class="cstat-no" title="statement not covered" >          location: window.location.href,</span>
-<span class="cstat-no" title="statement not covered" >          data: { status: res.status, response: data }</span>
+<span class="cstat-no" title="statement not covered" >          data: { status: 200, response: data }</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >        setFlowSteps([...steps]);</span>
 <span class="cstat-no" title="statement not covered" >        localStorage.setItem('oauth_flow_steps', JSON.stringify(steps));</span>
@@ -601,7 +586,7 @@ interface FlowStep {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

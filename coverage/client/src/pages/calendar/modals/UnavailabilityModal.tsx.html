@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/171</span>
+                <span class='fraction'>0/176</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/171</span>
+                <span class='fraction'>0/176</span>
             </div>
         
             
@@ -297,7 +297,12 @@
 <a name='L232'></a><a href='#L232'>232</a>
 <a name='L233'></a><a href='#L233'>233</a>
 <a name='L234'></a><a href='#L234'>234</a>
-<a name='L235'></a><a href='#L235'>235</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -461,7 +466,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -691,17 +701,22 @@ interface UnavailabilityModalProps {
 <span class="cstat-no" title="statement not covered" >                onClick={() =&gt; setShowDateRangePicker(true)}</span>
 <span class="cstat-no" title="statement not covered" >                className="w-full p-3 border border-input rounded-xl text-left bg-background text-foreground hover:border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 relative transition-colors"</span>
               &gt;
-<span class="cstat-no" title="statement not covered" >                &lt;span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;div className="pr-8"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                  {startDate ? (</span>
 <span class="cstat-no" title="statement not covered" >                    endDate &amp;&amp; endDate !== startDate ? (</span>
-<span class="cstat-no" title="statement not covered" >                      `${format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')} - ${format(new Date(endDate + 'T00:00:00'), 'dd/MM/yyyy')}`</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;span className="text-foreground"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        {format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')} - {format(new Date(endDate + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;/span&gt;</span>
                     ) : (
-<span class="cstat-no" title="statement not covered" >                      format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;div&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;span className="text-foreground"&gt;{format(new Date(startDate + 'T00:00:00'), 'dd/MM/yyyy')}&lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;span className="text-muted-foreground text-sm ml-2"&gt;- click to add end date&lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;/div&gt;</span>
                     )
                   ) : (
-<span class="cstat-no" title="statement not covered" >                    'Select dates'</span>
+<span class="cstat-no" title="statement not covered" >                    &lt;span className="text-foreground"&gt;Select dates&lt;/span&gt;</span>
                   )}
-<span class="cstat-no" title="statement not covered" >                &lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                &lt;i className="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"&gt;&lt;/i&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/button&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
@@ -772,7 +787,7 @@ interface UnavailabilityModalProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T19:18:56.444Z
+                at 2025-11-17T23:53:31.456Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

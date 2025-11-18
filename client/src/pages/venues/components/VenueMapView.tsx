@@ -71,7 +71,7 @@ export default function VenueMapView({ artistId }: VenueMapViewProps) {
   }
 
   return (
-    <div className="relative w-full h-[calc(100vh-200px)] sm:h-[calc(100vh-200px)] rounded-lg overflow-hidden">
+    <div className="fixed top-[64px] left-0 right-0 bottom-[60px] lg:bottom-0 lg:left-64 z-10">
       <MapContainer>
         <VenueMarkerLayer
           venues={venues}
