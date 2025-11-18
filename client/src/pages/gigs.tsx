@@ -1,15 +1,23 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Music } from "lucide-react";
-import type { Event } from "@/types/api";
+import { Music, Plus, Map, List, Search } from "lucide-react";
+import type { Event, ArtistMembership } from "@/types/api";
 import { apiRequest } from "@/lib/queryClient";
+
+// Import calendar components for modal
+import { CalendarProvider, useCalendarContext } from './calendar/CalendarContext';
+import EventDetails from './calendar/modals/EventDetails';
+import PublicGigWizard from './calendar/modals/PublicGigWizard';
 
 // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
 const getOrdinalSuffix = (day: number): string => {
@@ -24,10 +32,24 @@ const getOrdinalSuffix = (day: number): string => {
 
 interface GigsProps {
   artistId: string;
+  membership: ArtistMembership;
 }
 
-export default function Gigs({ artistId }: GigsProps) {
+function GigsContent({ artistId, membership }: GigsProps) {
   const { session } = useServerAuth();
+  const { currentMembership, userProfile } = useUser();
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'upcoming' | 'past'>('upcoming');
+  const [showAddGigWizard, setShowAddGigWizard] = useState(false);
+
+  // Calendar context for modal handling
+  const {
+    selectedEvent,
+    setSelectedEvent,
+    showEventDetails,
+    setShowEventDetails,
+  } = useCalendarContext();
 
   // Fetch all gigs (past and future)
   const { data: gigsData, isLoading } = useQuery<{
@@ -52,16 +74,67 @@ export default function Gigs({ artistId }: GigsProps) {
   });
 
   // Extract only this artist's gigs
-  const allGigs = (gigsData?.artistEvents || [])
-    .filter((event) => event.type === "gig")
-    .sort((a, b) => {
-      // Sort by date descending (most recent first)
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
+  const allGigs = useMemo(() => {
+    return (gigsData?.artistEvents || [])
+      .filter((event) => event.type === "gig")
+      .sort((a, b) => {
+        // Sort by date descending (most recent first)
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+  }, [gigsData]);
 
-  const todayGigs = allGigs.filter((gig) => isToday(new Date(gig.date)));
-  const futureGigs = allGigs.filter((gig) => isFuture(new Date(gig.date)) && !isToday(new Date(gig.date)));
-  const pastGigs = allGigs.filter((gig) => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+  // Filter gigs based on search and time filter
+  const filteredGigs = useMemo(() => {
+    let result = [...allGigs];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(gig => {
+        const title = gig.title?.toLowerCase() || '';
+        const venue = gig.venue?.toLowerCase() || '';
+        const location = gig.location?.toLowerCase() || '';
+        const dateStr = format(new Date(gig.date), 'EEEE do MMMM yyyy').toLowerCase();
+        return title.includes(query) || venue.includes(query) || location.includes(query) || dateStr.includes(query);
+      });
+    }
+
+    // Time filter
+    if (timeFilter === 'today') {
+      result = result.filter(gig => isToday(new Date(gig.date)));
+    } else if (timeFilter === 'upcoming') {
+      result = result.filter(gig => isFuture(new Date(gig.date)) || isToday(new Date(gig.date)));
+    } else if (timeFilter === 'past') {
+      result = result.filter(gig => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+    }
+
+    return result;
+  }, [allGigs, searchQuery, timeFilter]);
+
+  // Group filtered gigs
+  const todayGigs = filteredGigs.filter((gig) => isToday(new Date(gig.date)));
+  const futureGigs = filteredGigs.filter((gig) => isFuture(new Date(gig.date)) && !isToday(new Date(gig.date)));
+  const pastGigs = filteredGigs.filter((gig) => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+
+  const handleGigClick = (gig: Event) => {
+    setSelectedEvent(gig);
+    setShowEventDetails(true);
+  };
+
+  const handleEditEvent = () => {
+    // EventDetails modal will handle edit via PublicGigWizard
+    setShowEventDetails(false);
+  };
+
+  const handleDeleteEvent = async () => {
+    // EventDetails modal handles delete
+    setShowEventDetails(false);
+  };
+
+  const canEditEvent = (event: Event) => {
+    // Check if user can edit this event
+    return event.membershipId === currentMembership?.membership_id;
+  };
 
   if (isLoading) {
     return (
@@ -73,60 +146,231 @@ export default function Gigs({ artistId }: GigsProps) {
 
   return (
     <PageContainer>
-      <PageHeader title="Gigs" />
-
-      {allGigs.length === 0 ? (
-        <EmptyState
-          icon={<Music className="h-12 w-12" />}
-          title="No gigs yet"
-          description="Add your first gig to get started"
-        />
-      ) : (
-          <div className="space-y-8">
-            {/* Today's Gigs */}
-            {todayGigs.length > 0 && (
-              <div>
-                <h2 className="text-xl font-serif font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-orange-500">🎸</span> Today
-                </h2>
-                <div className="space-y-3">
-                  {todayGigs.map((gig) => (
-                    <GigCard key={gig.id} gig={gig} highlighted />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Future Gigs */}
-            {futureGigs.length > 0 && (
-              <div>
-                <h2 className="text-xl font-serif font-bold text-foreground mb-4">
-                  Upcoming
-                </h2>
-                <div className="space-y-3">
-                  {futureGigs.map((gig) => (
-                    <GigCard key={gig.id} gig={gig} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Past Gigs */}
-            {pastGigs.length > 0 && (
-              <div>
-                <h2 className="text-xl font-serif font-bold text-foreground mb-4">
-                  Past Gigs
-                </h2>
-                <div className="space-y-3">
-                  {pastGigs.map((gig) => (
-                    <GigCard key={gig.id} gig={gig} past />
-                  ))}
-                </div>
-              </div>
-            )}
+      <PageHeader
+        title="Gigs"
+        showTitleOnMobile={true}
+        actions={
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              onClick={() => setViewMode('list')}
+              size="sm"
+            >
+              <List className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">List</span>
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'outline'}
+              onClick={() => setViewMode('map')}
+              size="sm"
+            >
+              <Map className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Map</span>
+            </Button>
+            <Button
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => setShowAddGigWizard(true)}
+              size="sm"
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Gig</span>
+            </Button>
           </div>
-        )}
+        }
+        filters={
+          allGigs.length > 0 ? (
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={timeFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimeFilter('all')}
+              >
+                All Gigs
+              </Button>
+              <Button
+                variant={timeFilter === 'today' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimeFilter('today')}
+              >
+                Today
+              </Button>
+              <Button
+                variant={timeFilter === 'upcoming' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimeFilter('upcoming')}
+              >
+                Upcoming
+              </Button>
+              <Button
+                variant={timeFilter === 'past' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimeFilter('past')}
+              >
+                Past Gigs
+              </Button>
+            </div>
+          ) : undefined
+        }
+        search={
+          allGigs.length > 0 ? (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search gigs by venue, title, or date..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          ) : undefined
+        }
+      />
+
+      {/* Map View (TODO: Create GigsMapView component) */}
+      {viewMode === 'map' ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Map view coming soon...</p>
+        </div>
+      ) : (
+        <>
+          {/* Active Filter Count */}
+          {allGigs.length > 0 && (searchQuery || timeFilter !== 'upcoming') && (
+            <div className="flex items-center justify-between text-sm mb-6">
+              <p className="text-muted-foreground">
+                Showing {filteredGigs.length} of {allGigs.length} gigs
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setTimeFilter('upcoming');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+
+          {/* Gigs List */}
+          {allGigs.length === 0 ? (
+            <EmptyState
+              icon={<Music className="h-12 w-12" />}
+              title="No gigs yet"
+              description="Add your first gig to get started"
+              action={
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => setShowAddGigWizard(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Gig
+                </Button>
+              }
+            />
+          ) : filteredGigs.length === 0 ? (
+            <EmptyState
+              icon={<Search className="h-12 w-12" />}
+              title="No gigs found"
+              description="Try adjusting your search or filters"
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setTimeFilter('upcoming');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-8">
+              {/* Today's Gigs */}
+              {todayGigs.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span className="text-orange-500">🎸</span> Today
+                  </h2>
+                  <div className="space-y-3">
+                    {todayGigs.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} highlighted onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Future Gigs */}
+              {futureGigs.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+                    Upcoming
+                  </h2>
+                  <div className="space-y-3">
+                    {futureGigs.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Past Gigs */}
+              {pastGigs.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+                    Past Gigs
+                  </h2>
+                  <div className="space-y-3">
+                    {pastGigs.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} past onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Add Gig Wizard */}
+      {showAddGigWizard && (
+        <PublicGigWizard
+          open={showAddGigWizard}
+          onClose={() => setShowAddGigWizard(false)}
+          artistId={artistId}
+          artistName={membership.artist?.name || membership.name}
+        />
+      )}
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <EventDetails
+          event={selectedEvent}
+          open={showEventDetails}
+          onClose={() => {
+            setShowEventDetails(false);
+            setSelectedEvent(null);
+          }}
+          onEdit={handleEditEvent}
+          onDelete={handleDeleteEvent}
+          artistMembers={[]}
+          currentMembershipId={currentMembership?.membership_id || null}
+          currentUserId={userProfile?.user.id || null}
+          canEdit={canEditEvent}
+        />
+      )}
     </PageContainer>
+  );
+}
+
+// Wrapper component with CalendarProvider
+export default function Gigs(props: GigsProps) {
+  return (
+    <CalendarProvider>
+      <GigsContent {...props} />
+    </CalendarProvider>
   );
 }
 
@@ -134,9 +378,10 @@ interface GigCardProps {
   gig: Event;
   highlighted?: boolean;
   past?: boolean;
+  onClick?: () => void;
 }
 
-function GigCard({ gig, highlighted, past }: GigCardProps) {
+function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
   // Format date with full day name and ordinal (e.g., "Saturday 15th November")
   const gigDateObj = new Date(gig.date);
   const dayName = format(gigDateObj, 'EEEE');
@@ -154,6 +399,7 @@ function GigCard({ gig, highlighted, past }: GigCardProps) {
         highlighted ? "shadow-lg" : ""
       } ${past ? "opacity-70" : ""}`}
       style={{ borderLeftColor: borderColor }}
+      onClick={onClick}
     >
       <CardContent className="p-4">
         <div className="flex items-center space-x-3">
