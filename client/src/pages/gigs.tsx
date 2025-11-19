@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
@@ -147,6 +147,21 @@ function GigsContent({ artistId, membership }: GigsProps) {
       pastByMonth: Object.entries(pastByMonth).sort(([a], [b]) => b.localeCompare(a)),
     };
   }, [filteredGigs]);
+
+  // Auto-expand the first future month
+  useEffect(() => {
+    if (groupedGigs.futureByMonth.length > 0) {
+      const firstMonthKey = groupedGigs.futureByMonth[0][0];
+      setExpandedMonths(prev => {
+        if (!prev.has(firstMonthKey)) {
+          const newSet = new Set(prev);
+          newSet.add(firstMonthKey);
+          return newSet;
+        }
+        return prev;
+      });
+    }
+  }, [groupedGigs.futureByMonth]);
 
   const toggleMonth = (monthKey: string) => {
     setExpandedMonths(prev => {
