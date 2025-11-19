@@ -117,6 +117,7 @@ export interface Event {
   venueId?: string | null;
   /** Venue details enriched from bndy-venues table */
   venueAddress?: string | null;
+  venueCity?: string | null;
   venueLatitude?: number | null;
   venueLongitude?: number | null;
   venueGooglePlaceId?: string | null;

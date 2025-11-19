@@ -518,6 +518,9 @@ function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
                 <h3 className="text-base font-sans font-semibold text-card-foreground flex items-center gap-1.5">
                   <span className="text-muted-foreground">📍</span>
                   {gig.venue}
+                  {gig.venueCity && (
+                    <span className="text-sm font-normal text-muted-foreground">• {gig.venueCity}</span>
+                  )}
                 </h3>
                 {highlighted && (
                   <Badge className="bg-orange-500 text-white">Today</Badge>
