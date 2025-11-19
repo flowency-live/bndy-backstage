@@ -480,13 +480,16 @@ interface GigCardProps {
 }
 
 function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
-  // Format date with full day name and ordinal (e.g., "Saturday 15th November")
+  // Format date with short day name (e.g., "Sat 31st Jan")
   const gigDateObj = new Date(gig.date);
-  const dayName = format(gigDateObj, 'EEEE');
+  const dayName = format(gigDateObj, 'EEE');
   const day = gigDateObj.getDate();
-  const monthName = format(gigDateObj, 'MMMM');
+  const monthName = format(gigDateObj, 'MMM');
   const gigDate = `${dayName} ${day}${getOrdinalSuffix(day)} ${monthName}`;
-  const gigTime = gig.startTime ? ` • ${gig.startTime}${gig.endTime && gig.endTime !== "00:00" ? ` - ${gig.endTime}` : ''}` : '';
+
+  // Format time - always show if available
+  const gigTime = gig.startTime || null;
+  const gigEndTime = gig.endTime && gig.endTime !== "00:00" ? gig.endTime : null;
 
   // Check if title is custom or default format (ArtistName @ VenueName)
   const isDefaultTitle = gig.venue && gig.title?.includes(' @ ') && gig.title?.includes(gig.venue);
@@ -503,50 +506,46 @@ function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
       style={{ borderLeftColor: borderColor }}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground flex-shrink-0"
-            style={{ backgroundColor: borderColor }}
-          >
-            <span className="text-lg">🎵</span>
-          </div>
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            {/* Venue Name - Leading Element */}
-            {gig.venue && (
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-base font-sans font-semibold text-card-foreground flex items-center gap-1.5">
-                  <span className="text-muted-foreground">📍</span>
-                  {gig.venue}
-                  {gig.venueCity && (
-                    <span className="text-sm font-normal text-muted-foreground">• {gig.venueCity}</span>
-                  )}
-                </h3>
-                {highlighted && (
-                  <Badge className="bg-orange-500 text-white">Today</Badge>
-                )}
-                {gig.isPublic && !highlighted && (
-                  <Badge variant="secondary">Public</Badge>
-                )}
-              </div>
-            )}
+            {/* Venue Name with City */}
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className="text-base font-semibold text-card-foreground">
+                {gig.venue || 'Unknown Venue'}
+              </h3>
+              {gig.venueCity && (
+                <span className="text-sm text-muted-foreground">• {gig.venueCity}</span>
+              )}
+              {highlighted && (
+                <Badge className="bg-orange-500 text-white text-xs">Today</Badge>
+              )}
+              {!gig.isPublic && (
+                <Badge variant="outline" className="text-xs">Private</Badge>
+              )}
+            </div>
 
             {/* Custom Title - Only show if not default */}
             {displayTitle && (
-              <p className="text-sm text-card-foreground mb-1 font-medium">
+              <p className="text-sm text-muted-foreground mb-1">
                 {displayTitle}
               </p>
             )}
 
-            {/* Date and Time */}
-            <p className="text-muted-foreground text-sm font-medium">
-              {gigDate}
-              {gigTime}
-            </p>
+            {/* Date and Time - Compact */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{gigDate}</span>
+              {gigTime && (
+                <>
+                  <span>•</span>
+                  <span className="font-medium">{gigTime}{gigEndTime ? ` - ${gigEndTime}` : ''}</span>
+                </>
+              )}
+            </div>
 
             {/* Description */}
             {gig.description && (
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+              <p className="text-sm text-muted-foreground mt-1.5 line-clamp-1">
                 {gig.description}
               </p>
             )}
