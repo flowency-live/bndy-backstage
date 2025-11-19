@@ -510,18 +510,21 @@ function GigCard({ gig, highlighted, past, onClick }: GigCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             {/* Venue Name with City */}
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h3 className="text-base font-semibold text-card-foreground">
-                {gig.venue || 'Unknown Venue'}
-              </h3>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-muted-foreground">📍</span>
+                <h3 className="text-base font-semibold text-card-foreground">
+                  {gig.venue || 'Unknown Venue'}
+                </h3>
+                {highlighted && (
+                  <Badge className="bg-orange-500 text-white text-xs ml-1">Today</Badge>
+                )}
+                {!gig.isPublic && (
+                  <Badge variant="outline" className="text-xs ml-1">Private</Badge>
+                )}
+              </div>
               {gig.venueCity && (
-                <span className="text-sm text-muted-foreground">• {gig.venueCity}</span>
-              )}
-              {highlighted && (
-                <Badge className="bg-orange-500 text-white text-xs">Today</Badge>
-              )}
-              {!gig.isPublic && (
-                <Badge variant="outline" className="text-xs">Private</Badge>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">{gig.venueCity}</span>
               )}
             </div>
 
