@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Save, RefreshCw } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronLeft, ChevronRight, Save, RefreshCw, CheckCircle } from 'lucide-react';
 import { LocationSelector } from '@/components/ui/location-selector';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
@@ -80,6 +81,48 @@ export default function ArtistEditModal({
     } catch (error: any) {
       toast({
         title: 'Error saving artist',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleValidate = async () => {
+    if (!editForm) return;
+
+    setSaving(true);
+    try {
+      // Save with validated set to true
+      const validatedForm = { ...editForm, validated: true };
+      await onSave(validatedForm);
+      setHasChanges(false);
+
+      toast({
+        title: 'Artist validated',
+        description: 'Artist marked as validated successfully',
+      });
+
+      // Find next unvalidated artist
+      const nextUnvalidatedIndex = artists.findIndex((artist, idx) =>
+        idx > currentIndex && artist.validated !== true
+      );
+
+      if (nextUnvalidatedIndex >= 0) {
+        // Navigate to next unvalidated artist
+        onNavigate(nextUnvalidatedIndex);
+      } else {
+        // No more unvalidated artists
+        toast({
+          title: 'All done!',
+          description: 'No more unvalidated artists in this list',
+        });
+        onClose();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error validating artist',
         description: error.message || 'Please try again',
         variant: 'destructive',
       });
@@ -269,6 +312,29 @@ export default function ArtistEditModal({
             />
           </div>
 
+          {/* Bio */}
+          <div>
+            <Label htmlFor="artist-bio">Bio</Label>
+            <Textarea
+              id="artist-bio"
+              value={editForm.bio || ''}
+              onChange={(e) => {
+                setEditForm({ ...editForm, bio: e.target.value });
+                setHasChanges(true);
+              }}
+              placeholder="Artist biography..."
+              rows={4}
+            />
+          </div>
+
+          {/* Event Count (Read-only) */}
+          <div>
+            <Label>Events</Label>
+            <div className="text-sm text-muted-foreground">
+              {editForm.eventCount || 0} total events
+            </div>
+          </div>
+
           {/* Genres */}
           <div>
             <Label>Genres</Label>
@@ -386,28 +452,47 @@ export default function ArtistEditModal({
           </div>
         </div>
 
-        {/* Footer with Save */}
+        {/* Footer with Save and Validate */}
         <div className="flex justify-between items-center pt-4 border-t">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Close
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            variant="default"
-          >
-            {saving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleValidate}
+              disabled={editForm.validated === true || saving}
+              variant="secondary"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Validate
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+              variant="default"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

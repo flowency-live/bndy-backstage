@@ -21,7 +21,7 @@ export default function VenuesPage() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venuesLoading, setVenuesLoading] = useState(false);
   const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [venueFilter, setVenueFilter] = useState<'all' | 'no-place-id' | 'no-socials'>('all');
+  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'no-place-id' | 'no-socials'>('all');
   const [venueSearch, setVenueSearch] = useState('');
   const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
   const [venuePage, setVenuePage] = useState(1);
@@ -111,6 +111,8 @@ export default function VenuesPage() {
                          (v.address && String(v.address).toLowerCase().includes(venueSearch.toLowerCase())) ||
                          (v.postcode && String(v.postcode).toLowerCase().includes(venueSearch.toLowerCase()));
     if (!matchesSearch) return false;
+    if (venueFilter === 'validated') return v.validated === true;
+    if (venueFilter === 'unvalidated') return v.validated !== true;
     if (venueFilter === 'no-place-id') return !v.googlePlaceId;
     if (venueFilter === 'no-socials') {
       const hasSocials = v.website ||
@@ -129,6 +131,8 @@ export default function VenuesPage() {
   // Stats
   const venueStats = {
     total: venues.length,
+    validated: venues.filter(v => v.validated === true).length,
+    unvalidated: venues.filter(v => v.validated !== true).length,
     noPlaceId: venues.filter(v => !v.googlePlaceId).length,
     noSocials: venues.filter(v => {
       const hasSocials = v.website ||
@@ -179,6 +183,20 @@ export default function VenuesPage() {
               All ({venueStats.total})
             </Button>
             <Button
+              variant={venueFilter === 'validated' ? 'default' : 'outline'}
+              onClick={() => setVenueFilter('validated')}
+              size="sm"
+            >
+              Validated ({venueStats.validated})
+            </Button>
+            <Button
+              variant={venueFilter === 'unvalidated' ? 'default' : 'outline'}
+              onClick={() => setVenueFilter('unvalidated')}
+              size="sm"
+            >
+              Unvalidated ({venueStats.unvalidated})
+            </Button>
+            <Button
               variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
               onClick={() => setVenueFilter('no-place-id')}
               size="sm"
@@ -218,6 +236,7 @@ export default function VenuesPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Address</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Events</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Coordinates</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
@@ -245,6 +264,7 @@ export default function VenuesPage() {
                     <td className="px-4 py-3">
                       <div className="text-sm max-w-xs truncate">{venue.address}</div>
                     </td>
+                    <td className="px-4 py-3 text-sm">{venue.eventCount || 0}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         {venue.website && (

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Save, X, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, X, Plus, CheckCircle } from 'lucide-react';
 import VenueAutocomplete from '@/components/ui/venue-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import type { Venue } from '@/types/api';
@@ -124,6 +124,48 @@ export default function VenueEditModal({
     } catch (error: any) {
       toast({
         title: 'Error saving venue',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleValidate = async () => {
+    if (!editForm) return;
+
+    setSaving(true);
+    try {
+      // Save with validated set to true
+      const validatedForm = { ...editForm, validated: true };
+      await onSave(validatedForm);
+      setHasChanges(false);
+
+      toast({
+        title: 'Venue validated',
+        description: 'Venue marked as validated successfully',
+      });
+
+      // Find next unvalidated venue
+      const nextUnvalidatedIndex = venues.findIndex((venue, idx) =>
+        idx > currentIndex && venue.validated !== true
+      );
+
+      if (nextUnvalidatedIndex >= 0) {
+        // Navigate to next unvalidated venue
+        onNavigate(nextUnvalidatedIndex);
+      } else {
+        // No more unvalidated venues
+        toast({
+          title: 'All done!',
+          description: 'No more unvalidated venues in this list',
+        });
+        onClose();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error validating venue',
         description: error.message || 'Please try again',
         variant: 'destructive',
       });
@@ -332,6 +374,14 @@ export default function VenueEditModal({
             )}
           </div>
 
+          {/* Event Count (Read-only) */}
+          <div>
+            <Label>Events</Label>
+            <div className="text-sm text-muted-foreground">
+              {editForm.eventCount || 0} total events
+            </div>
+          </div>
+
           {/* Social Media URLs */}
           <div className="space-y-3">
             <Label>Social Media Links</Label>
@@ -377,28 +427,47 @@ export default function VenueEditModal({
           </div>
         </div>
 
-        {/* Footer with Save */}
+        {/* Footer with Save and Validate */}
         <div className="flex justify-between items-center pt-4 border-t">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Close
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            variant="default"
-          >
-            {saving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleValidate}
+              disabled={editForm.validated === true || saving}
+              variant="secondary"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Validate
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+              variant="default"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
