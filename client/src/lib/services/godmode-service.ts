@@ -24,6 +24,8 @@ export interface Artist {
   owner_user_id?: string | null;
   source?: 'frontstage' | 'community' | 'backstage' | null;
   needs_review?: boolean | null;
+  validated?: boolean;
+  eventCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -74,6 +76,7 @@ export interface Venue {
     date: string;
   };
   enrichment_date?: string;
+  eventCount?: number;
   createdAt: string;
   updatedAt?: string;
 }

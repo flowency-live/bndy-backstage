@@ -24,7 +24,7 @@ export default function ArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(false);
   const [artistsError, setArtistsError] = useState<string | null>(null);
-  const [artistFilter, setArtistFilter] = useState<'all' | 'no-genres' | 'no-socials' | 'no-location' | 'needs-review' | 'frontstage' | 'backstage'>('all');
+  const [artistFilter, setArtistFilter] = useState<'all' | 'validated' | 'unvalidated' | 'no-genres' | 'no-socials' | 'no-location' | 'needs-review' | 'frontstage' | 'backstage'>('all');
   const [artistSearch, setArtistSearch] = useState('');
   const [artistTypeFilter, setArtistTypeFilter] = useState<string>('');
   const [acousticFilter, setAcousticFilter] = useState<string>('all');
@@ -154,6 +154,12 @@ export default function ArtistsPage() {
     if (!matchesSearch) return false;
 
     // Apply category filter
+    if (artistFilter === 'validated') {
+      if (a.validated !== true) return false;
+    }
+    if (artistFilter === 'unvalidated') {
+      if (a.validated === true) return false;
+    }
     if (artistFilter === 'no-genres') {
       if (a.genres && Array.isArray(a.genres) && a.genres.length > 0) return false;
     }
@@ -195,6 +201,8 @@ export default function ArtistsPage() {
   // Stats
   const artistStats = {
     total: artists.length,
+    validated: artists.filter(a => a.validated === true).length,
+    unvalidated: artists.filter(a => a.validated !== true).length,
     noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
     noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
     noLocation: artists.filter(a => !a.location).length,
@@ -290,6 +298,20 @@ export default function ArtistsPage() {
               All ({artistStats.total})
             </Button>
             <Button
+              variant={artistFilter === 'validated' ? 'default' : 'outline'}
+              onClick={() => setArtistFilter('validated')}
+              size="sm"
+            >
+              Validated ({artistStats.validated})
+            </Button>
+            <Button
+              variant={artistFilter === 'unvalidated' ? 'default' : 'outline'}
+              onClick={() => setArtistFilter('unvalidated')}
+              size="sm"
+            >
+              Unvalidated ({artistStats.unvalidated})
+            </Button>
+            <Button
               variant={artistFilter === 'no-genres' ? 'default' : 'outline'}
               onClick={() => setArtistFilter('no-genres')}
               size="sm"
@@ -357,6 +379,7 @@ export default function ArtistsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Location</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genres</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Events</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Owner</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
@@ -371,6 +394,7 @@ export default function ArtistsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">{artist.location}</td>
                     <td className="px-4 py-3 text-sm">{Array.isArray(artist.genres) ? artist.genres.slice(0, 2).join(', ') : (artist.genres || '-')}</td>
+                    <td className="px-4 py-3 text-sm">{artist.eventCount || 0}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         {artist.websiteUrl && (
