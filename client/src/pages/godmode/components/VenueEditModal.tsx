@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Save, X, Plus, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, X, Plus, CheckCircle, Trash2 } from 'lucide-react';
 import VenueAutocomplete from '@/components/ui/venue-autocomplete';
 import { useToast } from '@/hooks/use-toast';
 import type { Venue } from '@/types/api';
@@ -15,6 +15,7 @@ interface VenueEditModalProps {
   currentIndex: number;
   onSave: (venue: Venue) => Promise<void>;
   onNavigate: (index: number) => void;
+  onDelete?: (venueId: string) => Promise<void>;
 }
 
 export default function VenueEditModal({
@@ -24,12 +25,14 @@ export default function VenueEditModal({
   currentIndex,
   onSave,
   onNavigate,
+  onDelete,
 }: VenueEditModalProps) {
   const { toast } = useToast();
   const [editForm, setEditForm] = useState<Venue | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newOtherName, setNewOtherName] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const currentVenue = venues[currentIndex];
 
@@ -171,6 +174,41 @@ export default function VenueEditModal({
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editForm || !onDelete) return;
+
+    setDeleting(true);
+    try {
+      await onDelete(editForm.id);
+
+      toast({
+        title: 'Venue deleted',
+        description: 'Venue removed successfully',
+      });
+
+      // Find next unvalidated venue to navigate to
+      const nextUnvalidatedIndex = venues.findIndex((venue, idx) =>
+        idx > currentIndex && venue.validated !== true && venue.id !== editForm.id
+      );
+
+      if (nextUnvalidatedIndex >= 0) {
+        // Navigate to next unvalidated venue
+        onNavigate(nextUnvalidatedIndex);
+      } else {
+        // No more unvalidated venues, close modal
+        onClose();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error deleting venue',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -427,15 +465,36 @@ export default function VenueEditModal({
           </div>
         </div>
 
-        {/* Footer with Save and Validate */}
+        {/* Footer with Save, Validate, and Delete */}
         <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} disabled={saving || deleting}>
+              Close
+            </Button>
+            {onDelete && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button
               onClick={handleValidate}
-              disabled={editForm.validated === true || saving}
+              disabled={editForm.validated === true || saving || deleting}
               variant="secondary"
             >
               {saving ? (
@@ -452,7 +511,7 @@ export default function VenueEditModal({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!hasChanges || saving}
+              disabled={!hasChanges || saving || deleting}
               variant="default"
             >
               {saving ? (

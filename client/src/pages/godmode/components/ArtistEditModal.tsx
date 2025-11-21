@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronLeft, ChevronRight, Save, RefreshCw, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, RefreshCw, CheckCircle, Trash2 } from 'lucide-react';
 import { LocationSelector } from '@/components/ui/location-selector';
 import { useToast } from '@/hooks/use-toast';
 import type { Artist } from '@/lib/services/godmode-service';
@@ -24,6 +24,7 @@ interface ArtistEditModalProps {
   currentIndex: number;
   onSave: (artist: Artist) => Promise<void>;
   onNavigate: (index: number) => void;
+  onDelete?: (artistId: string) => Promise<void>;
 }
 
 export default function ArtistEditModal({
@@ -33,6 +34,7 @@ export default function ArtistEditModal({
   currentIndex,
   onSave,
   onNavigate,
+  onDelete,
 }: ArtistEditModalProps) {
   const { toast } = useToast();
   const { isLoaded: googleMapsLoaded, loadGoogleMaps } = useGoogleMaps();
@@ -40,6 +42,7 @@ export default function ArtistEditModal({
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [refreshingImage, setRefreshingImage] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const currentArtist = artists[currentIndex];
 
@@ -128,6 +131,41 @@ export default function ArtistEditModal({
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editForm || !onDelete) return;
+
+    setDeleting(true);
+    try {
+      await onDelete(editForm.id);
+
+      toast({
+        title: 'Artist deleted',
+        description: 'Artist removed successfully',
+      });
+
+      // Find next unvalidated artist to navigate to
+      const nextUnvalidatedIndex = artists.findIndex((artist, idx) =>
+        idx > currentIndex && artist.validated !== true && artist.id !== editForm.id
+      );
+
+      if (nextUnvalidatedIndex >= 0) {
+        // Navigate to next unvalidated artist
+        onNavigate(nextUnvalidatedIndex);
+      } else {
+        // No more unvalidated artists, close modal
+        onClose();
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error deleting artist',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -452,15 +490,36 @@ export default function ArtistEditModal({
           </div>
         </div>
 
-        {/* Footer with Save and Validate */}
+        {/* Footer with Save, Validate, and Delete */}
         <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} disabled={saving || deleting}>
+              Close
+            </Button>
+            {onDelete && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button
               onClick={handleValidate}
-              disabled={editForm.validated === true || saving}
+              disabled={editForm.validated === true || saving || deleting}
               variant="secondary"
             >
               {saving ? (
@@ -477,7 +536,7 @@ export default function ArtistEditModal({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!hasChanges || saving}
+              disabled={!hasChanges || saving || deleting}
               variant="default"
             >
               {saving ? (

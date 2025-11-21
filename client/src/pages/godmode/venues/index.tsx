@@ -389,6 +389,7 @@ export default function VenuesPage() {
           currentIndex={venueEditIndex}
           onSave={handleVenueBatchSave}
           onNavigate={setVenueEditIndex}
+          onDelete={handleVenueDelete}
         />
       )}
 

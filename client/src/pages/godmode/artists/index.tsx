@@ -534,6 +534,7 @@ export default function ArtistsPage() {
           currentIndex={artistEditIndex}
           onSave={handleArtistBatchSave}
           onNavigate={setArtistEditIndex}
+          onDelete={handleArtistDelete}
         />
       )}
     </div>
