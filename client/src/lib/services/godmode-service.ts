@@ -66,9 +66,12 @@ export interface Venue {
   facilities: string[];
   socialMediaUrls: Array<string | { platform: string; url: string }>;
   profileImageUrl: string | null;
-  standardTicketed: boolean;
-  standardTicketInformation: string;
-  standardTicketUrl: string;
+  isTicketed: boolean;
+  ticketInformation: string;
+  ticketUrl: string;
+  defaultTicketPrice?: number | null;
+  defaultStartTime?: string | null;
+  defaultEndTime?: string | null;
   enrichment_status?: 'high_confidence' | 'needs_review' | 'reviewed' | 'rejected';
   enrichment_data?: {
     suggested_website: string | null;

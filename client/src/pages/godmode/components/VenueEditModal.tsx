@@ -463,6 +463,110 @@ export default function VenueEditModal({
               />
             </div>
           </div>
+
+          {/* Ticketing Information */}
+          <div className="space-y-3">
+            <Label>Ticketing & Event Defaults</Label>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="venue-ticketed"
+                checked={editForm.isTicketed || false}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, isTicketed: e.target.checked });
+                  setHasChanges(true);
+                }}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="venue-ticketed" className="text-sm text-muted-foreground cursor-pointer">
+                Ticketed Venue (events require tickets)
+              </Label>
+            </div>
+
+            <div>
+              <Label htmlFor="venue-ticket-url" className="text-sm text-muted-foreground">
+                Default Ticket URL
+              </Label>
+              <Input
+                id="venue-ticket-url"
+                type="url"
+                value={editForm.ticketUrl || ''}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, ticketUrl: e.target.value });
+                  setHasChanges(true);
+                }}
+                placeholder="https://tickets.example.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="venue-ticket-info" className="text-sm text-muted-foreground">
+                Ticket Information
+              </Label>
+              <Input
+                id="venue-ticket-info"
+                value={editForm.ticketInformation || ''}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, ticketInformation: e.target.value });
+                  setHasChanges(true);
+                }}
+                placeholder="e.g., Available at the door or online"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="venue-ticket-price" className="text-sm text-muted-foreground">
+                Default Ticket Price (£)
+              </Label>
+              <Input
+                id="venue-ticket-price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={editForm.defaultTicketPrice || ''}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, defaultTicketPrice: e.target.value ? parseFloat(e.target.value) : null });
+                  setHasChanges(true);
+                }}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="venue-start-time" className="text-sm text-muted-foreground">
+                  Default Start Time
+                </Label>
+                <Input
+                  id="venue-start-time"
+                  type="time"
+                  value={editForm.defaultStartTime || ''}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, defaultStartTime: e.target.value || null });
+                    setHasChanges(true);
+                  }}
+                  placeholder="19:00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="venue-end-time" className="text-sm text-muted-foreground">
+                  Default End Time
+                </Label>
+                <Input
+                  id="venue-end-time"
+                  type="time"
+                  value={editForm.defaultEndTime || ''}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, defaultEndTime: e.target.value || null });
+                    setHasChanges(true);
+                  }}
+                  placeholder="23:00"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer with Save, Validate, and Delete */}
