@@ -192,13 +192,27 @@ export default function ArtistEditModal({
     onNavigate(newIndex);
   };
 
-  const handleLocationChange = (location: string, locationType: 'national' | 'region' | 'city') => {
+  const handleLocationChange = (location: string, locationType: 'national' | 'region' | 'city', coordinates?: { lat: number; lng: number }) => {
     if (!editForm) return;
+
+    const updates: Partial<Artist> = {
+      location,
+      locationType,
+    };
+
+    // Store coordinates only for city type
+    if (locationType === 'city' && coordinates) {
+      updates.locationLat = coordinates.lat;
+      updates.locationLng = coordinates.lng;
+    } else {
+      // Clear coordinates for national/regional
+      updates.locationLat = null;
+      updates.locationLng = null;
+    }
 
     setEditForm({
       ...editForm,
-      location,
-      locationType,
+      ...updates,
     });
     setHasChanges(true);
   };

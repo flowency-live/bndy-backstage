@@ -9,6 +9,8 @@ export interface Artist {
   bio: string;
   location: string;
   locationType?: 'national' | 'region' | 'city';
+  locationLat?: number | null;
+  locationLng?: number | null;
   genres: string[];
   artistType?: string;
   actType?: string[];

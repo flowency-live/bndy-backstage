@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
+import { getPlaceDetails } from '@/lib/services/places-service';
 
 // UK Regions - Keep this list synchronized between codebases
 const UK_REGIONS = [
@@ -21,7 +22,7 @@ const UK_REGIONS = [
 
 interface LocationSelectorProps {
   value: string;
-  onChange: (location: string, locationType: 'national' | 'region' | 'city') => void;
+  onChange: (location: string, locationType: 'national' | 'region' | 'city', coordinates?: { lat: number; lng: number }) => void;
   onCitySearch?: (query: string) => Promise<Array<{ place_id: string; description: string; structured_formatting?: { main_text: string; secondary_text: string } }>>;
   className?: string;
   required?: boolean;
@@ -102,11 +103,32 @@ export function LocationSelector({ value, onChange, onCitySearch, className, req
     onChange(region, type);
   };
 
-  const handleCitySelect = (prediction: { place_id: string; description: string }) => {
+  const handleCitySelect = async (prediction: { place_id: string; description: string }) => {
     setCitySearch(prediction.description);
-    onChange(prediction.description, 'city');
     setShowCityDropdown(false);
     setCityPredictions([]);
+
+    // Fetch place details to get coordinates
+    try {
+      const placeDetails = await getPlaceDetails(prediction.place_id, ['geometry']);
+      if (placeDetails?.geometry?.location) {
+        const lat = typeof placeDetails.geometry.location.lat === 'function'
+          ? placeDetails.geometry.location.lat()
+          : placeDetails.geometry.location.lat;
+        const lng = typeof placeDetails.geometry.location.lng === 'function'
+          ? placeDetails.geometry.location.lng()
+          : placeDetails.geometry.location.lng;
+
+        onChange(prediction.description, 'city', { lat, lng });
+      } else {
+        // If coordinates not available, call without them
+        onChange(prediction.description, 'city');
+      }
+    } catch (error) {
+      console.error('Error fetching place coordinates:', error);
+      // Fallback: call without coordinates
+      onChange(prediction.description, 'city');
+    }
   };
 
   return (

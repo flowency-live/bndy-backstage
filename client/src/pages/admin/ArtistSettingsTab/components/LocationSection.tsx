@@ -14,12 +14,16 @@ export default function LocationSection({
   locationLng,
   onChange
 }: LocationSectionProps) {
+  const handleLocationChange = (location: string, lat?: number, lng?: number) => {
+    onChange(location, lat || null, lng || null);
+  };
+
   return (
     <div>
       <Label className="text-card-foreground font-semibold mb-3 block">Location</Label>
       <LocationAutocomplete
         value={location}
-        onChange={onChange}
+        onChange={handleLocationChange}
         placeholder="e.g., Stoke-on-Trent, Manchester, London"
       />
       {locationLat && locationLng && (

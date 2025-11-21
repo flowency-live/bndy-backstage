@@ -24,8 +24,9 @@ export interface Artist {
   name: string;
   bio?: string | null;
   location?: string | null;
-  locationLat?: number;
-  locationLng?: number;
+  locationType?: 'national' | 'region' | 'city';
+  locationLat?: number | null;
+  locationLng?: number | null;
   displayColour?: string; // Hex color for gig events on calendar (default: #f97316 Orange 500)
   genres?: string[];  // Flat list of genres (simplified 2025-11-07)
   artistType?: string; // camelCase version
