@@ -10,7 +10,9 @@ import { GoogleMapsProvider } from "@/components/providers/google-maps-provider"
 import MemberGate from "@/components/member-gate";
 import ProfileGate from "@/components/profile-gate";
 import Layout, { AppLayout } from "@/components/layout";
-import Landing from "@/pages/landing";
+import LandingPage from "@/pages/public/LandingPage";
+import AboutPage from "@/pages/public/AboutPage";
+import StagePage from "@/pages/public/StagePage";
 import Launch from "@/pages/launch";
 import Dashboard from "@/pages/dashboard";
 import MyArtists from "@/pages/my-artists";
@@ -50,7 +52,12 @@ import UsersPage from "@/pages/godmode/users";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Landing} />
+      {/* Public routes */}
+      <Route path="/" component={LandingPage} />
+      <Route path="/about" component={AboutPage} />
+      <Route path="/stage" component={StagePage} />
+
+      {/* Auth and app routes */}
       <Route path="/launch" component={Launch} />
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={OAuthCallback} />
