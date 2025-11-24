@@ -7,6 +7,21 @@ interface VotingControlsProps {
 
 export default function VotingControls({ currentVote, onVote }: VotingControlsProps) {
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
+  const [showPooConfirmation, setShowPooConfirmation] = useState(false);
+
+  const handlePooClick = () => {
+    console.log('[VotingControls] Poo button clicked, showing confirmation modal');
+    setShowPooConfirmation(true);
+  };
+
+  const confirmPooVote = () => {
+    setShowPooConfirmation(false);
+    onVote(0);
+  };
+
+  const cancelPooVote = () => {
+    setShowPooConfirmation(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -16,7 +31,7 @@ export default function VotingControls({ currentVote, onVote }: VotingControlsPr
 
       {/* Poo Button (0 vote) */}
       <button
-        onClick={() => onVote(0)}
+        onClick={handlePooClick}
         onMouseEnter={() => setHoveredValue(0)}
         onMouseLeave={() => setHoveredValue(null)}
         className={`
@@ -30,6 +45,35 @@ export default function VotingControls({ currentVote, onVote }: VotingControlsPr
         <span className="text-2xl">💩</span>
         <span className="font-medium">Pass</span>
       </button>
+
+      {/* Poo Vote Confirmation Modal */}
+      {showPooConfirmation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-card rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">💩</div>
+              <h3 className="text-xl font-semibold mb-3">Are you sure?</h3>
+              <p className="text-muted-foreground">
+                Voting this as <span className="text-2xl">💩</span> will immediately stop voting and mark the song as discarded!
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelPooVote}
+                className="flex-1 px-4 py-3 rounded-lg border border-border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPooVote}
+                className="flex-1 px-4 py-3 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium"
+              >
+                Yes, it's 💩
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Star Rating (1-5) */}
       <div className="flex gap-2 justify-center">

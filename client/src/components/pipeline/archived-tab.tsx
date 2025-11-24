@@ -83,6 +83,15 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
         </div>
       </div>
 
+      {song.notes && song.notes.trim() && (
+        <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border">
+          <div className="flex items-start gap-2">
+            <i className="fas fa-sticky-note text-muted-foreground mt-0.5"></i>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{song.notes}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <button
           onClick={() => statusMutation.mutate({ songId: song.id, newStatus: 'voting' })}
