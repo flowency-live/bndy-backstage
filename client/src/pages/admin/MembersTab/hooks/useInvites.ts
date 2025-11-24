@@ -12,7 +12,7 @@ export function useInvites(artistId: string) {
   // Generate general invite link
   const generateInviteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/artists/${artistId}/invites/general`);
+      const response = await apiRequest('POST', `/api/artists/${artistId}/invites/general`);
       return response.json();
     },
     onSuccess: (data) => {
@@ -35,7 +35,7 @@ export function useInvites(artistId: string) {
   // Send phone invite
   const sendPhoneInviteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/artists/${artistId}/invites/phone`, {
+      const response = await apiRequest('POST', `/api/artists/${artistId}/invites/phone`, {
         phoneNumber
       });
       return response.json();
