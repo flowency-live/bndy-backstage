@@ -524,7 +524,7 @@ export default function Members({ artistId, membership }: MembersProps) {
                     <div className="divide-y divide-border/40">
                       {activeInvites.map((invite) => {
                         const expiryDate = new Date(invite.expiresAt * 1000);
-                        const inviteLink = `https://backstage.bndy.co.uk/invite/${invite.token}`;
+                        const inviteLink = `https://www.bndy.co.uk/invite/${invite.token}`;
 
                         return (
                           <div

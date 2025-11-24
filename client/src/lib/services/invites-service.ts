@@ -110,7 +110,7 @@ class InvitesService {
    * Get invite link URL
    */
   getInviteLink(token: string): string {
-    return `https://backstage.bndy.co.uk/invite/${token}`;
+    return `https://www.bndy.co.uk/invite/${token}`;
   }
 }
 
