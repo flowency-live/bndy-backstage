@@ -63,10 +63,14 @@ export default function AddSuggestionModal({
         allSongs.flat().forEach((song: any) => {
           if (song.song_id) {
             songIds.add(song.song_id);
+            if (song.globalSong?.title?.toLowerCase().includes('what')) {
+              console.log('[AddSuggestion] Found existing song:', song.globalSong.title, 'ID:', song.song_id, 'Status:', song.status);
+            }
           }
         });
 
         console.log('[AddSuggestion] Loaded', songIds.size, 'existing artist songs');
+        console.log('[AddSuggestion] Sample IDs:', Array.from(songIds).slice(0, 5));
         setExistingSongIds(songIds);
       } catch (error) {
         console.error('[AddSuggestion] Failed to fetch existing songs:', error);
@@ -331,6 +335,10 @@ export default function AddSuggestionModal({
 
                 {searchResults.map((song) => {
                   const isExisting = existingSongIds.has(song.id);
+                  if (song.title.toLowerCase().includes('what')) {
+                    console.log('[AddSuggestion] Checking song:', song.title, 'ID:', song.id, 'isExisting:', isExisting);
+                    console.log('[AddSuggestion] existingSongIds size:', existingSongIds.size);
+                  }
                   return (
                   <button
                     key={`${song.source}-${song.id}`}
