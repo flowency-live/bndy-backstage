@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { artistsService } from "@/lib/services/artists-service";
@@ -11,6 +12,7 @@ interface ArchivedTabProps {
 export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: archivedSongs = [], isLoading: loadingArchived } = useQuery({
     queryKey: ['pipeline', artistId, 'archived'],
@@ -31,6 +33,24 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipeline', artistId] });
       toast({ title: 'Song restored', description: 'Song moved successfully' });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (songId: string) => {
+      return await artistsService.deletePipelineSong(artistId, songId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pipeline', artistId] });
+      toast({ title: 'Song deleted', description: 'Song permanently removed from pipeline' });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete song';
+      toast({
+        title: 'Delete failed',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     }
   });
 
@@ -109,12 +129,59 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
           <i className="fas fa-guitar mr-2"></i>
           To Practice
         </button>
+        <button
+          onClick={() => setDeleteConfirmId(song.id)}
+          disabled={deleteMutation.isPending}
+          className="px-3 py-2 rounded-lg bg-destructive/20 hover:bg-destructive/30 text-destructive transition-colors"
+          title="Permanently delete"
+        >
+          <i className="fas fa-trash"></i>
+        </button>
       </div>
     </div>
   );
 
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteMutation.mutate(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-card rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">
+                <i className="fas fa-trash text-destructive"></i>
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Permanently Delete Song?</h3>
+              <p className="text-muted-foreground">
+                This will permanently remove this song from the pipeline. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 px-4 py-3 rounded-lg border border-border hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="flex-1 px-4 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Parked Section */}
       {parkedSongs.length > 0 && (
         <div>
