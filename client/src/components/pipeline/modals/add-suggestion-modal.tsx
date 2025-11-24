@@ -44,10 +44,37 @@ export default function AddSuggestionModal({
   const [destination, setDestination] = useState<DestinationType | null>(null);
   const [comment, setComment] = useState("");
   const [voteValue, setVoteValue] = useState<number | null>(null);
+  const [existingSongIds, setExistingSongIds] = useState<Set<string>>(new Set());
   const { session } = useServerAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch existing artist songs on mount to grey them out
+  useEffect(() => {
+    const fetchExistingSongs = async () => {
+      try {
+        const statuses = ['voting', 'practice', 'review', 'playbook', 'active', 'parked', 'discarded'];
+        const allSongs = await Promise.all(
+          statuses.map(status => artistsService.getPipelineSongs(artistId, status))
+        );
+
+        const songIds = new Set<string>();
+        allSongs.flat().forEach((song: any) => {
+          if (song.song_id) {
+            songIds.add(song.song_id);
+          }
+        });
+
+        console.log('[AddSuggestion] Loaded', songIds.size, 'existing artist songs');
+        setExistingSongIds(songIds);
+      } catch (error) {
+        console.error('[AddSuggestion] Failed to fetch existing songs:', error);
+      }
+    };
+
+    fetchExistingSongs();
+  }, [artistId]);
 
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -204,10 +231,16 @@ export default function AddSuggestionModal({
       });
       onSuccess();
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      // Extract error message from 409 response or other errors
+      const errorMessage = error.response?.data?.message
+        || error.response?.data?.error
+        || error.message
+        || "An error occurred while adding the song";
+
       toast({
         title: "Failed to add song",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -296,11 +329,18 @@ export default function AddSuggestionModal({
                   </div>
                 )}
 
-                {searchResults.map((song) => (
+                {searchResults.map((song) => {
+                  const isExisting = existingSongIds.has(song.id);
+                  return (
                   <button
                     key={`${song.source}-${song.id}`}
-                    onClick={() => setSelectedSong(song)}
-                    className="w-full p-3 sm:p-4 border-b hover:bg-muted/50 flex items-center space-x-3 sm:space-x-4 text-left transition-colors"
+                    onClick={() => !isExisting && setSelectedSong(song)}
+                    disabled={isExisting}
+                    className={`w-full p-3 sm:p-4 border-b flex items-center space-x-3 sm:space-x-4 text-left transition-colors ${
+                      isExisting
+                        ? 'opacity-50 cursor-not-allowed bg-muted/30'
+                        : 'hover:bg-muted/50'
+                    }`}
                   >
                     {/* Album artwork with orange corner marker for bndy-songs */}
                     <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-muted rounded flex-shrink-0 overflow-hidden">
@@ -333,11 +373,19 @@ export default function AddSuggestionModal({
                     </div>
 
                     {/* Select icon */}
-                    <div className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
-                      <i className="fas fa-chevron-right"></i>
-                    </div>
+                    {isExisting ? (
+                      <div className="px-3 sm:px-4 py-2 bg-muted text-muted-foreground rounded-lg flex items-center space-x-2 flex-shrink-0 text-xs sm:text-sm">
+                        <i className="fas fa-check"></i>
+                        <span className="hidden sm:inline">Added</span>
+                      </div>
+                    ) : (
+                      <div className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg flex items-center space-x-2 flex-shrink-0 text-sm sm:text-base">
+                        <i className="fas fa-chevron-right"></i>
+                      </div>
+                    )}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
