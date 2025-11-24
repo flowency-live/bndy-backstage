@@ -79,65 +79,71 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
   }
 
   const SongCard = ({ song, type }: { song: any; type: 'parked' | 'discarded' }) => (
-    <div className="rounded-lg border border-border p-4 bg-card">
-      <div className="flex gap-3 mb-4">
+    <div className="rounded-lg border border-border p-3 bg-card hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-3">
+        {/* Thumbnail */}
         {song.globalSong.thumbnail_url ? (
           <img
             src={song.globalSong.thumbnail_url}
             alt={song.globalSong.title}
-            className="w-16 h-16 rounded object-cover"
+            className="w-12 h-12 rounded object-cover flex-shrink-0"
           />
         ) : (
-          <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
+          <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
             <i className="fas fa-music text-muted-foreground"></i>
           </div>
         )}
-        <div className="flex-1">
-          <h3 className="font-medium text-foreground">{song.globalSong.title}</h3>
-          <p className="text-sm text-muted-foreground">{song.globalSong.artist_name}</p>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            type === 'parked' ? 'bg-blue-500/20 text-blue-500' : 'bg-muted text-muted-foreground'
-          }`}>
-            {type === 'parked' ? 'Parked' : 'Discarded'}
-          </span>
+
+        {/* Status Icon */}
+        <div className="flex-shrink-0">
+          {type === 'parked' ? (
+            <i className="fas fa-pause-circle text-blue-500 text-xl" title="Parked"></i>
+          ) : (
+            <i className="fas fa-times-circle text-muted-foreground text-xl" title="Discarded"></i>
+          )}
+        </div>
+
+        {/* Song Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-foreground truncate">{song.globalSong.title}</h3>
+          <p className="text-sm text-muted-foreground truncate">{song.globalSong.artist_name}</p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={() => statusMutation.mutate({ songId: song.id, newStatus: 'voting' })}
+            disabled={statusMutation.isPending}
+            className="px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-sm transition-colors"
+            title="Move to Voting"
+          >
+            <i className="fas fa-vote-yea"></i>
+          </button>
+          <button
+            onClick={() => statusMutation.mutate({ songId: song.id, newStatus: 'practice' })}
+            disabled={statusMutation.isPending}
+            className="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 text-sm transition-colors"
+            title="Move to Practice"
+          >
+            <i className="fas fa-guitar"></i>
+          </button>
+          <button
+            onClick={() => setDeleteConfirmId(song.id)}
+            disabled={deleteMutation.isPending}
+            className="px-3 py-2 rounded-lg bg-destructive/20 hover:bg-destructive/30 text-destructive transition-colors"
+            title="Permanently delete"
+          >
+            <i className="fas fa-trash"></i>
+          </button>
         </div>
       </div>
 
+      {/* Notes (if present, show below in condensed format) */}
       {song.notes && song.notes.trim() && (
-        <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border">
-          <div className="flex items-start gap-2">
-            <i className="fas fa-sticky-note text-muted-foreground mt-0.5"></i>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{song.notes}</p>
-          </div>
+        <div className="mt-2 pl-14 pr-2">
+          <p className="text-xs text-muted-foreground italic line-clamp-2">{song.notes}</p>
         </div>
       )}
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => statusMutation.mutate({ songId: song.id, newStatus: 'voting' })}
-          disabled={statusMutation.isPending}
-          className="flex-1 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-sm font-medium transition-colors"
-        >
-          <i className="fas fa-vote-yea mr-2"></i>
-          To Voting
-        </button>
-        <button
-          onClick={() => statusMutation.mutate({ songId: song.id, newStatus: 'practice' })}
-          disabled={statusMutation.isPending}
-          className="flex-1 px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 text-sm font-medium transition-colors"
-        >
-          <i className="fas fa-guitar mr-2"></i>
-          To Practice
-        </button>
-        <button
-          onClick={() => setDeleteConfirmId(song.id)}
-          disabled={deleteMutation.isPending}
-          className="px-3 py-2 rounded-lg bg-destructive/20 hover:bg-destructive/30 text-destructive transition-colors"
-          title="Permanently delete"
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </div>
     </div>
   );
 
@@ -149,7 +155,7 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto">
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
@@ -175,42 +181,22 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
                 disabled={deleteMutation.isPending}
                 className="flex-1 px-4 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteMutation.isPending ? 'Deleting..' : 'Delete'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Parked Section */}
-      {parkedSongs.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <i className="fas fa-pause-circle text-blue-500"></i>
-            Parked Songs ({parkedSongs.length})
-          </h3>
-          <div className="space-y-3">
-            {parkedSongs.map((song: any) => (
-              <SongCard key={song.id} song={song} type="parked" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Discarded Section */}
-      {discardedSongs.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <i className="fas fa-times-circle text-muted-foreground"></i>
-            Discarded Songs ({discardedSongs.length})
-          </h3>
-          <div className="space-y-3">
-            {discardedSongs.map((song: any) => (
-              <SongCard key={song.id} song={song} type="discarded" />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* All Archived Songs - Parked and Discarded mixed together */}
+      <div className="space-y-2">
+        {parkedSongs.map((song: any) => (
+          <SongCard key={song.id} song={song} type="parked" />
+        ))}
+        {discardedSongs.map((song: any) => (
+          <SongCard key={song.id} song={song} type="discarded" />
+        ))}
+      </div>
     </div>
   );
 }

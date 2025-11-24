@@ -24,7 +24,7 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
   const [activeTab, setActiveTab] = useState<TabType>('voting');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Query vote counts for badge display (voting + review)
+  // Query counts for badge display
   const { data: votingCount = 0 } = useQuery({
     queryKey: ['pipeline-count', artistId, 'voting'],
     queryFn: async () => {
@@ -34,10 +34,28 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
     refetchInterval: 30000
   });
 
+  const { data: practiceCount = 0 } = useQuery({
+    queryKey: ['pipeline-count', artistId, 'practice'],
+    queryFn: async () => {
+      const songs = await artistsService.getPipelineSongs(artistId, 'practice');
+      return songs.length;
+    },
+    refetchInterval: 30000
+  });
+
+  const { data: archivedCount = 0 } = useQuery({
+    queryKey: ['pipeline-count', artistId, 'archived'],
+    queryFn: async () => {
+      const songs = await artistsService.getArchivedPipelineSongs(artistId);
+      return songs.length;
+    },
+    refetchInterval: 30000
+  });
+
   const tabs = [
     { id: 'voting' as TabType, label: 'Voting', count: votingCount },
-    { id: 'practice' as TabType, label: 'Practice', count: null },
-    { id: 'archived' as TabType, label: 'Other', count: null }
+    { id: 'practice' as TabType, label: 'Practice', count: practiceCount },
+    { id: 'archived' as TabType, label: 'Other', count: archivedCount }
   ];
 
   return (
