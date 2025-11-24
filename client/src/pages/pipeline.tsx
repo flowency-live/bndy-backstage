@@ -62,14 +62,14 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
     <PageContainer>
       <PageHeader
         tabs={
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2 border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex gap-2 border-b border-border overflow-x-auto">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    px-4 py-2 font-medium transition-colors
+                    px-4 py-2 font-medium transition-colors whitespace-nowrap
                     ${activeTab === tab.id
                       ? 'text-orange-500 border-b-2 border-orange-500'
                       : 'text-muted-foreground hover:text-foreground'
@@ -88,7 +88,7 @@ export default function Pipeline({ artistId, membership }: PipelineProps) {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 flex-shrink-0"
               data-testid="button-suggest-song"
             >
               <i className="fas fa-plus"></i>
