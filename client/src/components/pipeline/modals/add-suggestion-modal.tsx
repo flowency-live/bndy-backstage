@@ -45,6 +45,7 @@ export default function AddSuggestionModal({
   const [comment, setComment] = useState("");
   const [voteValue, setVoteValue] = useState<number | null>(null);
   const [existingSongIds, setExistingSongIds] = useState<Set<string>>(new Set());
+  const [existingSongKeys, setExistingSongKeys] = useState<Set<string>>(new Set()); // title+artist combos
   const { session } = useServerAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,15 +61,24 @@ export default function AddSuggestionModal({
         );
 
         const songIds = new Set<string>();
+        const songKeys = new Set<string>();
+
         allSongs.flat().forEach((song: any) => {
           if (song.song_id) {
             songIds.add(song.song_id);
+
+            // Also store title+artist key for Spotify deduplication
+            if (song.globalSong?.title && song.globalSong?.artist_name) {
+              const key = `${song.globalSong.title.toLowerCase().trim()}|${song.globalSong.artist_name.toLowerCase().trim()}`;
+              songKeys.add(key);
+            }
           }
         });
 
         console.log('[AddSuggestion] Loaded', songIds.size, 'existing artist songs');
-        console.log('[AddSuggestion] Existing song IDs:', Array.from(songIds));
+        console.log('[AddSuggestion] Loaded', songKeys.size, 'unique title+artist combos');
         setExistingSongIds(songIds);
+        setExistingSongKeys(songKeys);
       } catch (error) {
         console.error('[AddSuggestion] Failed to fetch existing songs:', error);
       }
@@ -331,8 +341,13 @@ export default function AddSuggestionModal({
                 )}
 
                 {searchResults.map((song) => {
-                  const isExisting = existingSongIds.has(song.id);
-                  console.log(`[AddSuggestion] Song "${song.title}" (ID: ${song.id}) - isExisting: ${isExisting}`);
+                  // Check by ID (for bndy-songs) OR by title+artist combo (for Spotify songs)
+                  const songKey = `${song.title.toLowerCase().trim()}|${song.artistName.toLowerCase().trim()}`;
+                  const isExistingById = existingSongIds.has(song.id);
+                  const isExistingByKey = existingSongKeys.has(songKey);
+                  const isExisting = isExistingById || isExistingByKey;
+
+                  console.log(`[AddSuggestion] "${song.title}" (${song.source}) ID:${song.id} - byId:${isExistingById} byKey:${isExistingByKey} final:${isExisting}`);
                   return (
                   <button
                     key={`${song.source}-${song.id}`}
