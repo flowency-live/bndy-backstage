@@ -27,8 +27,9 @@ export function getEventDisplayName(
     if (event.displayName) {
       // Backend enriched with display name
       eventName = event.displayName;
-    } else if (event.membershipId) {
+    } else if (event.membershipId && Array.isArray(artistMembers)) {
       // Legacy band member unavailable event
+      // Safe lookup: artistMembers might not include cross-artist members
       const member = artistMembers.find(
         m => m.membership_id === event.membershipId || m.user_id === event.membershipId
       );

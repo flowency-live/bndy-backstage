@@ -20,6 +20,7 @@ interface AgendaViewProps {
   currentDate: Date;
   events: Event[];
   artistDisplayColour?: string;
+  artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
   effectiveArtistId?: string | null;
@@ -36,6 +37,7 @@ export function AgendaView({
   currentDate,
   events,
   artistDisplayColour,
+  artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
   effectiveArtistId,
@@ -114,10 +116,20 @@ export function AgendaView({
             {monthEvents.map((event) => {
               const isGig = event.type === 'gig' || event.type === 'public_gig';
               const isRecurring = !!(event as RecurringEvent).recurring;
-              const displayColour = artistDisplayColour || '#f97316';
-              const eventColor = isGig
-                ? (event as any).artistDisplayColour || displayColour
-                : getEventColor(event, displayColour, effectiveArtistId);
+
+              // Get event color - check artistColorMap first for cross-artist events
+              const eventColor = (() => {
+                if (isGig && event.artistId && artistColorMap?.[event.artistId]) {
+                  // Use the event's own artist color
+                  return artistColorMap[event.artistId];
+                }
+                if (isGig) {
+                  // Use current artist color for gigs without artistId
+                  return artistDisplayColour || '#f97316';
+                }
+                // For other event types: use standard event type colors
+                return getEventColor(event, artistDisplayColour || '#f97316', effectiveArtistId);
+              })();
 
               // Determine what to display based on event type and flags
               const isPublicGig = isGig && event.isPublic;

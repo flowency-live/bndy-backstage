@@ -6,6 +6,7 @@ interface CalendarGridViewProps {
   currentDate: Date;
   events: Event[];
   artistDisplayColour?: string;
+  artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
   effectiveArtistId?: string | null;
@@ -25,6 +26,7 @@ export function CalendarGridView({
   currentDate,
   events,
   artistDisplayColour,
+  artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
   effectiveArtistId,
@@ -65,6 +67,7 @@ export function CalendarGridView({
             events={events}
             currentDate={currentDate}
             artistDisplayColour={artistDisplayColour}
+            artistColorMap={artistColorMap}
             artistMembers={artistMembers}
             currentUserDisplayName={currentUserDisplayName}
             effectiveArtistId={effectiveArtistId}

@@ -42,7 +42,10 @@ export default function EventDetails({
   const eventConfig =
     EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG] ||
     EVENT_TYPE_CONFIG.practice;
-  const eventMember = event.membershipId
+
+  // Safe lookup: artistMembers might not include cross-artist event members
+  // For cross-artist unavailability, rely on event.displayName from API
+  const eventMember = event.membershipId && Array.isArray(artistMembers)
     ? artistMembers.find(
         (m) => m.membership_id === event.membershipId || m.user_id === event.membershipId
       )

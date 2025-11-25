@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { format, startOfMonth, endOfMonth, startOfDay, addMonths } from 'date-fns';
@@ -58,6 +58,17 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   // Use context values if props aren't provided (for standalone usage)
   const effectiveArtistId = artistId ?? currentArtistId;
   const effectiveMembership = membership ?? currentMembership;
+
+  // Build artist color map for cross-artist event rendering
+  const artistColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    userProfile?.artists?.forEach(membership => {
+      if (membership.artist?.displayColour && membership.artist_id) {
+        map[membership.artist_id] = membership.artist.displayColour;
+      }
+    });
+    return map;
+  }, [userProfile?.artists]);
 
   // Get calendar context state
   const {
@@ -573,6 +584,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             currentDate={currentDate}
             events={events}
             artistDisplayColour={artistData?.displayColour}
+            artistColorMap={artistColorMap}
             artistMembers={artistMembers}
             currentUserDisplayName={userProfile?.user?.displayName}
             effectiveArtistId={effectiveArtistId}
@@ -588,6 +600,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         <AgendaView
           events={events}
           artistDisplayColour={artistData?.displayColour}
+          artistColorMap={artistColorMap}
           artistMembers={artistMembers}
           currentUserDisplayName={userProfile?.user?.displayName}
           effectiveArtistId={effectiveArtistId}

@@ -6,6 +6,7 @@ import type { RecurringEvent } from '../utils/recurringCalculations';
 interface EventBadgeProps {
   event: Event;
   artistDisplayColour?: string;
+  artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
   effectiveArtistId?: string | null;
@@ -23,6 +24,7 @@ interface EventBadgeProps {
 export function EventBadge({
   event,
   artistDisplayColour,
+  artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
   effectiveArtistId,
@@ -42,9 +44,21 @@ export function EventBadge({
     currentUserDisplayName,
   });
 
-  // Get colors
-  const displayColour = artistDisplayColour || '#f97316';
-  const baseColor = isGig ? displayColour : getEventColor(event, displayColour, effectiveArtistId);
+  // Get event color - check artistColorMap first for cross-artist events
+  const getEventColorForBadge = () => {
+    // For gigs: use the event's own artist color if available in the map
+    if (isGig && event.artistId && artistColorMap?.[event.artistId]) {
+      return artistColorMap[event.artistId];
+    }
+    // For gigs without artistId (personal events): use current artist color
+    if (isGig) {
+      return artistDisplayColour || '#f97316';
+    }
+    // For other event types: use standard event type colors
+    return getEventColor(event, artistDisplayColour || '#f97316', effectiveArtistId);
+  };
+
+  const baseColor = getEventColorForBadge();
 
   // Get color classes based on event type
   const getColorClasses = () => {

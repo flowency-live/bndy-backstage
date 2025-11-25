@@ -18,6 +18,7 @@ interface CalendarDayProps {
   events: Event[];
   currentDate: Date;
   artistDisplayColour?: string;
+  artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
   effectiveArtistId?: string | null;
@@ -38,6 +39,7 @@ export function CalendarDay({
   events,
   currentDate,
   artistDisplayColour,
+  artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
   effectiveArtistId,
@@ -105,6 +107,7 @@ export function CalendarDay({
             key={`unavail-${event.id}-${eventIndex}`}
             event={event}
             artistDisplayColour={artistDisplayColour}
+            artistColorMap={artistColorMap}
             artistMembers={artistMembers}
             currentUserDisplayName={currentUserDisplayName}
             effectiveArtistId={effectiveArtistId}
@@ -130,6 +133,7 @@ export function CalendarDay({
               key={`start-${event.id}-${eventIndex}`}
               event={event}
               artistDisplayColour={artistDisplayColour}
+              artistColorMap={artistColorMap}
               artistMembers={artistMembers}
               currentUserDisplayName={currentUserDisplayName}
               effectiveArtistId={effectiveArtistId}
@@ -172,6 +176,7 @@ export function CalendarDay({
                 key={`extend-${event.id}-${eventIndex}`}
                 event={event}
                 artistDisplayColour={artistDisplayColour}
+                artistColorMap={artistColorMap}
                 artistMembers={artistMembers}
                 currentUserDisplayName={currentUserDisplayName}
                 effectiveArtistId={effectiveArtistId}
