@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -135,28 +135,39 @@ export default function Invite() {
       !alreadyHasMembership;
 
     if (shouldAutoAccept) {
+      console.log('[INVITE] Auto-accepting invite for new user with 0 memberships');
       hasAttemptedAutoAccept.current = true;
-      handleAcceptInvite(); // Actually accept the invite via API
-    }
-  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership]);
 
-  const handleAcceptInvite = async () => {
+      // Call async function properly
+      (async () => {
+        await handleAcceptInvite();
+      })();
+    }
+  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership, handleAcceptInvite]);
+
+  const handleAcceptInvite = useCallback(async () => {
+    console.log('[INVITE] handleAcceptInvite called', { isAuthenticated, profileComplete, token });
+
     if (!isAuthenticated) {
       // Not logged in - redirect to login (token already in localStorage)
+      console.log('[INVITE] Not authenticated, redirecting to /login');
       setLocation("/login");
       return;
     }
 
     if (!profileComplete) {
       // Profile incomplete - automatically redirect to profile (no button click needed)
+      console.log('[INVITE] Profile incomplete, redirecting to /profile');
       setLocation("/profile");
       return;
     }
 
     // Authenticated and profile complete - accept invite
+    console.log('[INVITE] Accepting invite via API', { token });
     setAccepting(true);
     try {
       const result = await authService.acceptInvite(token!);
+      console.log('[INVITE] Invite accepted successfully', result);
 
       // Clean up invite token
       localStorage.removeItem('pendingInvite');
@@ -176,6 +187,7 @@ export default function Invite() {
       // Redirect to dashboard - UserProvider will load the artist context
       setLocation('/dashboard');
     } catch (error: any) {
+      console.error('[INVITE] Error accepting invite:', error);
       // Check if user is already a member - treat as success
       if (error.message && error.message.includes('already a member')) {
         // Clean up invite token
@@ -191,7 +203,7 @@ export default function Invite() {
       });
       setAccepting(false);
     }
-  };
+  }, [isAuthenticated, profileComplete, token, setLocation, toast]);
 
   // Safety check: Clear stale invite tokens on mount if user already has membership
   useEffect(() => {
