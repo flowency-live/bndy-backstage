@@ -91,60 +91,7 @@ export default function Invite() {
     (artist: any) => artist.id === inviteDetails?.artistId
   );
 
-  // Smart redirect: If user is already a member, skip invite flow entirely
-  useEffect(() => {
-    if (
-      !loadingInvite &&
-      !loadingAuth &&
-      !loadingMemberships &&
-      isAuthenticated &&
-      inviteDetails &&
-      alreadyHasMembership &&
-      !hasAttemptedProfileRedirect.current
-    ) {
-      hasAttemptedProfileRedirect.current = true;
-      localStorage.removeItem('pendingInvite');
-
-      toast({
-        title: "You're already a member!",
-        description: `Taking you to your dashboard...`,
-        variant: "default"
-      });
-
-      setTimeout(() => {
-        setLocation('/dashboard');
-      }, 1000);
-    }
-  }, [loadingInvite, loadingAuth, loadingMemberships, isAuthenticated, inviteDetails, alreadyHasMembership, toast, setLocation]);
-
-  // Auto-accept invite for brand new users (0 memberships) with complete profiles
-  // Users with existing memberships should see the confirmation page
-  useEffect(() => {
-    const shouldAutoAccept =
-      token &&
-      isAuthenticated &&
-      profileComplete &&
-      !accepting &&
-      !loadingInvite &&
-      !loadingAuth &&
-      !loadingMemberships &&
-      inviteDetails &&
-      localStorage.getItem('pendingInvite') === token &&
-      !hasAttemptedAutoAccept.current &&
-      membershipCount === 0 &&
-      !alreadyHasMembership;
-
-    if (shouldAutoAccept) {
-      console.log('[INVITE] Auto-accepting invite for new user with 0 memberships');
-      hasAttemptedAutoAccept.current = true;
-
-      // Call async function properly
-      (async () => {
-        await handleAcceptInvite();
-      })();
-    }
-  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership, handleAcceptInvite]);
-
+  // Handle invite acceptance - defined here so it can be used in useEffect below
   const handleAcceptInvite = useCallback(async () => {
     console.log('[INVITE] handleAcceptInvite called', { isAuthenticated, profileComplete, token });
 
@@ -204,6 +151,60 @@ export default function Invite() {
       setAccepting(false);
     }
   }, [isAuthenticated, profileComplete, token, setLocation, toast]);
+
+  // Smart redirect: If user is already a member, skip invite flow entirely
+  useEffect(() => {
+    if (
+      !loadingInvite &&
+      !loadingAuth &&
+      !loadingMemberships &&
+      isAuthenticated &&
+      inviteDetails &&
+      alreadyHasMembership &&
+      !hasAttemptedProfileRedirect.current
+    ) {
+      hasAttemptedProfileRedirect.current = true;
+      localStorage.removeItem('pendingInvite');
+
+      toast({
+        title: "You're already a member!",
+        description: `Taking you to your dashboard...`,
+        variant: "default"
+      });
+
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 1000);
+    }
+  }, [loadingInvite, loadingAuth, loadingMemberships, isAuthenticated, inviteDetails, alreadyHasMembership, toast, setLocation]);
+
+  // Auto-accept invite for brand new users (0 memberships) with complete profiles
+  // Users with existing memberships should see the confirmation page
+  useEffect(() => {
+    const shouldAutoAccept =
+      token &&
+      isAuthenticated &&
+      profileComplete &&
+      !accepting &&
+      !loadingInvite &&
+      !loadingAuth &&
+      !loadingMemberships &&
+      inviteDetails &&
+      localStorage.getItem('pendingInvite') === token &&
+      !hasAttemptedAutoAccept.current &&
+      membershipCount === 0 &&
+      !alreadyHasMembership;
+
+    if (shouldAutoAccept) {
+      console.log('[INVITE] Auto-accepting invite for new user with 0 memberships');
+      hasAttemptedAutoAccept.current = true;
+
+      // Call async function properly
+      (async () => {
+        await handleAcceptInvite();
+      })();
+    }
+  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership, handleAcceptInvite]);
 
   // Safety check: Clear stale invite tokens on mount if user already has membership
   useEffect(() => {
