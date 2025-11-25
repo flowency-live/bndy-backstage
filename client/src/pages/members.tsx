@@ -154,8 +154,17 @@ export default function Members({ artistId, membership }: MembersProps) {
 
   // Ensure artistMembers is always an array
   const artistMembers: Member[] = Array.isArray(membersResponse) ? membersResponse : (membersResponse?.members || []);
+
+  // Filter invites: only show pending invites that are NOT expired or disabled
   const activeInvites = invitesData?.filter(invite => {
-    return invite.status === 'pending';
+    // Only show pending invites
+    if (invite.status !== 'pending') return false;
+
+    // Check if expired (expiresAt is in seconds, Date.now() is in milliseconds)
+    const now = Math.floor(Date.now() / 1000);
+    if (invite.expiresAt && invite.expiresAt < now) return false;
+
+    return true;
   }) || [];
   // Remove member mutation
   const removeMemberMutation = useMutation({
