@@ -66,7 +66,19 @@ export default function ActiveInvitesList({ artistId }: ActiveInvitesListProps) 
     );
   }
 
-  if (!invites || invites.length === 0) {
+  // Filter out expired and disabled invites
+  const activeInvites = invites?.filter((invite) => {
+    // Don't show disabled invites
+    if (invite.status === 'disabled') return false;
+
+    // Don't show expired invites (expiresAt is in seconds, convert to ms)
+    const expiryTimeMs = invite.expiresAt * 1000;
+    if (invite.status === 'expired' || Date.now() > expiryTimeMs) return false;
+
+    return true;
+  }) || [];
+
+  if (activeInvites.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="p-8 text-center">
@@ -79,8 +91,8 @@ export default function ActiveInvitesList({ artistId }: ActiveInvitesListProps) 
 
   return (
     <div className="space-y-3">
-      {Array.isArray(invites) && invites.map((invite) => {
-        const isExpired = invite.status === 'expired' || Date.now() > invite.expiresAt;
+      {activeInvites.map((invite) => {
+        const isExpired = invite.status === 'expired' || Date.now() > (invite.expiresAt * 1000);
         const isDisabled = invite.status === 'disabled';
 
         return (
@@ -127,7 +139,7 @@ export default function ActiveInvitesList({ artistId }: ActiveInvitesListProps) 
                       Created: {format(new Date(invite.createdAt), 'MMM d, yyyy')}
                     </div>
                     <div>
-                      Expires: {format(new Date(invite.expiresAt), 'MMM d, yyyy')}
+                      Expires: {format(new Date(invite.expiresAt * 1000), 'MMM d, yyyy')}
                     </div>
                     {invite.inviteType === 'phone-specific' && invite.phone && (
                       <div className="flex items-center gap-1">
