@@ -117,27 +117,28 @@ export default function Invite() {
     }
   }, [loadingInvite, loadingAuth, loadingMemberships, isAuthenticated, inviteDetails, alreadyHasMembership, toast, setLocation]);
 
-  // Auto-redirect ONLY users with 0 memberships to dashboard (invite handled silently)
+  // Auto-accept invite for brand new users (0 memberships) with complete profiles
   // Users with existing memberships should see the confirmation page
   useEffect(() => {
-    const shouldRedirectToDashboard =
+    const shouldAutoAccept =
       token &&
       isAuthenticated &&
+      profileComplete &&
       !accepting &&
       !loadingInvite &&
       !loadingAuth &&
       !loadingMemberships &&
       inviteDetails &&
       localStorage.getItem('pendingInvite') === token &&
-      !hasAttemptedProfileRedirect.current &&
+      !hasAttemptedAutoAccept.current &&
       membershipCount === 0 &&
       !alreadyHasMembership;
 
-    if (shouldRedirectToDashboard) {
-      hasAttemptedProfileRedirect.current = true;
-      setLocation('/dashboard');
+    if (shouldAutoAccept) {
+      hasAttemptedAutoAccept.current = true;
+      handleAcceptInvite(); // Actually accept the invite via API
     }
-  }, [token, isAuthenticated, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership]);
+  }, [token, isAuthenticated, profileComplete, accepting, loadingInvite, loadingAuth, loadingMemberships, inviteDetails, membershipCount, alreadyHasMembership]);
 
   const handleAcceptInvite = async () => {
     if (!isAuthenticated) {
@@ -285,7 +286,7 @@ export default function Invite() {
 
           {!isAuthenticated ? (
             <p className="text-gray-600 mb-6">
-              <strong>Ready to join?</strong> Sign in or create your account to accept this invitation and start collaborating with {inviteDetails.metadata.artistName}.
+              <strong>Ready to join?</strong> Register or sign in to accept this invitation and start collaborating with {inviteDetails.metadata.artistName}.
             </p>
           ) : !profileComplete ? (
             <p className="text-gray-600 mb-6">
@@ -317,7 +318,7 @@ export default function Invite() {
               ) : !isAuthenticated ? (
                 <>
                   <i className="fas fa-sign-in-alt mr-2"></i>
-                  Sign In to Join
+                  Register or Sign-In to Accept
                 </>
               ) : (
                 <>
