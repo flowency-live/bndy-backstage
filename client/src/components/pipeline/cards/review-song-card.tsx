@@ -13,6 +13,7 @@ interface PipelineSong {
   status: string;
   votes: Record<string, { value: number; updated_at: string }>;
   vote_score_percentage: number;
+  has_disagreement?: boolean;
   suggested_by_user_id: string;
   suggested_comment: string;
   globalSong: {
@@ -114,6 +115,8 @@ export default function ReviewSongCard({ song, memberCount }: ReviewSongCardProp
           score={song.vote_score_percentage}
           voteCount={voteCount}
           zeroVoteCount={zeroVoteCount}
+          hasDisagreement={song.has_disagreement}
+          votes={song.votes}
         />
 
         {/* Spotify Player */}

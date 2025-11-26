@@ -2,10 +2,15 @@ interface ScoreDisplayProps {
   score: number;
   voteCount: number;
   zeroVoteCount: number;
+  hasDisagreement?: boolean;
+  votes?: Record<string, { value: number; updated_at: string }>;
 }
 
-export default function ScoreDisplay({ score, voteCount, zeroVoteCount }: ScoreDisplayProps) {
+export default function ScoreDisplay({ score, voteCount, zeroVoteCount, hasDisagreement, votes }: ScoreDisplayProps) {
   const isHighScore = score >= 85;
+
+  // Extract individual vote values
+  const voteValues = votes ? Object.values(votes).map(v => v.value).sort((a, b) => b - a) : [];
 
   return (
     <div className="text-center py-6">
@@ -25,6 +30,19 @@ export default function ScoreDisplay({ score, voteCount, zeroVoteCount }: ScoreD
       <p className="text-sm text-muted-foreground mb-2">
         {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
       </p>
+
+      {/* Disagreement Flag and Vote Breakdown */}
+      {hasDisagreement && voteValues.length > 0 && (
+        <div className="mt-3 px-4 py-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+          <div className="flex items-center justify-center gap-2 text-orange-500 mb-2">
+            <i className="fas fa-exclamation-triangle"></i>
+            <span className="text-sm font-semibold">Vote Disagreement</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Votes: {voteValues.join(', ')}
+          </p>
+        </div>
+      )}
 
       {/* Zero Votes Warning */}
       {zeroVoteCount > 0 && (
