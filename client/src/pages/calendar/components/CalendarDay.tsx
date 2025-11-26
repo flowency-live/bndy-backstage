@@ -106,22 +106,25 @@ export function CalendarDay({
         </div>
       </div>
 
-      {/* Events */}
-      <div className="space-y-1 px-1">
-        {/* Consolidated Unavailability Badge */}
-        {hasUnavailability && (
+      {/* Unavailability Badge - Top Right */}
+      {hasUnavailability && (
+        <div className="absolute top-1 right-1 z-20">
           <div
             onClick={(e) => {
               e.stopPropagation();
               setShowUnavailabilityPopup(true);
             }}
-            className="cursor-pointer hover:opacity-90 transition-opacity flex justify-center"
+            className="cursor-pointer hover:opacity-90 transition-opacity"
           >
-            <div className="flex items-center justify-center w-8 h-8 bg-red-500 text-white rounded-full font-bold text-sm shadow-md hover:shadow-lg">
+            <div className="flex items-center justify-center w-6 h-6 bg-red-500 text-white rounded-full font-bold text-xs shadow-md hover:shadow-lg">
               {unavailabilityEvents.length}
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Events */}
+      <div className="space-y-1 px-1">
 
         {/* Starting events (gigs, rehearsals, other) */}
         {startingEvents.slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityBadgeCount)).map((event, eventIndex) => {
