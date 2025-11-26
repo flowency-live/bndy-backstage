@@ -115,15 +115,10 @@ export function CalendarDay({
               e.stopPropagation();
               setShowUnavailabilityPopup(true);
             }}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer hover:opacity-90 transition-opacity flex justify-center"
           >
-            <div className="flex items-center justify-center gap-2 px-2 py-1 rounded bg-red-500 border border-red-600 text-white text-xs">
-              <div className="flex items-center justify-center w-5 h-5 bg-white text-red-500 rounded-full font-bold">
-                {unavailabilityEvents.length}
-              </div>
-              <span className="font-medium">
-                {unavailabilityEvents.length === 1 ? 'member' : 'members'} unavailable
-              </span>
+            <div className="flex items-center justify-center w-8 h-8 bg-red-500 text-white rounded-full font-bold text-sm shadow-md hover:shadow-lg">
+              {unavailabilityEvents.length}
             </div>
           </div>
         )}

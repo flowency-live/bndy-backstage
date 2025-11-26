@@ -28,8 +28,8 @@ export function UnavailabilityPopup({
   const formattedDate = format(date, 'MMMM d, yyyy');
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-[400px] sm:w-[540px]" onClick={(e) => e.stopPropagation()}>
         <SheetHeader>
           <SheetTitle className="text-red-600 dark:text-red-400">
             Members Unavailable
