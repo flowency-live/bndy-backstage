@@ -114,10 +114,10 @@ export function CalendarDay({
               e.stopPropagation();
               setShowUnavailabilityPopup(true);
             }}
-            className="cursor-pointer bg-red-500 hover:bg-red-600 transition-colors py-1 px-2 flex items-center justify-center gap-1"
+            className="cursor-pointer bg-red-500 hover:bg-red-600 transition-colors py-1 flex items-center justify-center"
           >
-            <span className="text-white text-xs font-medium">
-              {unavailabilityEvents.length} unavailable
+            <span className="text-white text-sm font-bold">
+              {unavailabilityEvents.length}
             </span>
           </div>
         </div>
