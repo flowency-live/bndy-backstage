@@ -1,6 +1,8 @@
 import { format, isSameMonth, isToday } from 'date-fns';
+import { useState } from 'react';
 import type { Event } from '@/types/api';
 import { EventBadge } from './EventBadge';
+import { UnavailabilityPopup } from './UnavailabilityPopup';
 import {
   getEventsForDate,
   getEventsStartingOnDate,
@@ -21,6 +23,7 @@ interface CalendarDayProps {
   artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
+  currentUserId?: string;
   effectiveArtistId?: string | null;
   onEventClick: (event: Event) => void;
   onDayClick?: (date: string) => void;
@@ -42,12 +45,14 @@ export function CalendarDay({
   artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
+  currentUserId,
   effectiveArtistId,
   onEventClick,
   onDayClick,
   onAddEvent,
   totalDays,
 }: CalendarDayProps) {
+  const [showUnavailabilityPopup, setShowUnavailabilityPopup] = useState(false);
   const dateStr = format(date, 'yyyy-MM-dd');
   const dayEvents = getEventsForDate(events, dateStr);
 
@@ -62,13 +67,15 @@ export function CalendarDay({
   const hasUnavailability = unavailabilityEvents.length > 0;
 
   const MAX_VISIBLE_EVENTS = 3;
-  const overflowCount = unavailabilityEvents.length + startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
+  // When consolidating unavailability into one badge, adjust overflow calculation
+  const unavailabilityBadgeCount = hasUnavailability ? 1 : 0;
+  const overflowCount = unavailabilityBadgeCount + startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
   const hasOverflow = overflowCount > 0;
 
   // Determine background color based on unavailability
   const getBackgroundClass = () => {
     if (hasUnavailability) {
-      return 'bg-red-50 dark:bg-red-950/20';
+      return 'bg-red-100 dark:bg-red-900/40';
     }
     if (isCurrentMonth) {
       return 'bg-white dark:bg-slate-900';
@@ -101,27 +108,28 @@ export function CalendarDay({
 
       {/* Events */}
       <div className="space-y-1 px-1">
-        {/* Unavailability events - full width per day, first row */}
-        {unavailabilityEvents.slice(0, MAX_VISIBLE_EVENTS).map((event, eventIndex) => (
-          <EventBadge
-            key={`unavail-${event.id}-${eventIndex}`}
-            event={event}
-            artistDisplayColour={artistDisplayColour}
-            artistColorMap={artistColorMap}
-            artistMembers={artistMembers}
-            currentUserDisplayName={currentUserDisplayName}
-            effectiveArtistId={effectiveArtistId}
+        {/* Consolidated Unavailability Badge */}
+        {hasUnavailability && (
+          <div
             onClick={(e) => {
               e.stopPropagation();
-              onEventClick(event);
+              setShowUnavailabilityPopup(true);
             }}
-            isMultiDay={false}
-            spanDays={1}
-          />
-        ))}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="flex items-center justify-center gap-2 px-2 py-1 rounded bg-red-500 border border-red-600 text-white text-xs">
+              <div className="flex items-center justify-center w-5 h-5 bg-white text-red-500 rounded-full font-bold">
+                {unavailabilityEvents.length}
+              </div>
+              <span className="font-medium">
+                {unavailabilityEvents.length === 1 ? 'member' : 'members'} unavailable
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Starting events (gigs, rehearsals, other) */}
-        {startingEvents.slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityEvents.length)).map((event, eventIndex) => {
+        {startingEvents.slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityBadgeCount)).map((event, eventIndex) => {
           const spanDays = Math.min(
             getEventSpanDays(event),
             getRemainingDaysInWeek(dayIndex)
@@ -145,8 +153,8 @@ export function CalendarDay({
               spanDays={spanDays}
               className={isMultiDay ? '' : ''}
               style={{
-                zIndex: 10 + unavailabilityEvents.length + eventIndex,
-                top: isMultiDay ? `${36 + (unavailabilityEvents.length + eventIndex) * 26}px` : 'auto',
+                zIndex: 10 + unavailabilityBadgeCount + eventIndex,
+                top: isMultiDay ? `${36 + (unavailabilityBadgeCount + eventIndex) * 26}px` : 'auto',
                 width: isMultiDay
                   ? spanDays < getRemainingDaysInWeek(dayIndex)
                     ? `calc(${(spanDays / 7) * 100}% - 8px)`
@@ -159,7 +167,7 @@ export function CalendarDay({
 
         {/* Extending events (multi-day continuations) */}
         {extendingEvents
-          .slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityEvents.length - startingEvents.length))
+          .slice(0, Math.max(0, MAX_VISIBLE_EVENTS - unavailabilityBadgeCount - startingEvents.length))
           .map((event, eventIndex) => {
             const remainingDays = getRemainingDaysInWeek(dayIndex);
             const eventEndDate = new Date(event.endDate! + 'T00:00:00');
@@ -187,8 +195,8 @@ export function CalendarDay({
                 isMultiDay={true}
                 spanDays={spanDays}
                 style={{
-                  zIndex: 10 + unavailabilityEvents.length + startingEvents.length + eventIndex,
-                  top: `${36 + (unavailabilityEvents.length + startingEvents.length + eventIndex) * 26}px`,
+                  zIndex: 10 + unavailabilityBadgeCount + startingEvents.length + eventIndex,
+                  top: `${36 + (unavailabilityBadgeCount + startingEvents.length + eventIndex) * 26}px`,
                   width: spanDays < remainingDays ? 'auto' : 'calc(100% - 8px)',
                 }}
               />
@@ -225,6 +233,19 @@ export function CalendarDay({
           </button>
         </div>
       )}
+
+      {/* Unavailability Popup */}
+      <UnavailabilityPopup
+        isOpen={showUnavailabilityPopup}
+        onClose={() => setShowUnavailabilityPopup(false)}
+        date={date}
+        unavailabilityEvents={unavailabilityEvents}
+        currentUserId={currentUserId}
+        onEditUserUnavailability={(event) => {
+          setShowUnavailabilityPopup(false);
+          onEventClick(event);
+        }}
+      />
     </div>
   );
 }

@@ -587,6 +587,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             artistColorMap={artistColorMap}
             artistMembers={artistMembers}
             currentUserDisplayName={userProfile?.user?.displayName}
+            currentUserId={session?.user?.id}
             effectiveArtistId={effectiveArtistId}
             onEventClick={handleEventClick}
             onDayClick={handleDayClick}

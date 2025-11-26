@@ -9,6 +9,7 @@ interface CalendarGridViewProps {
   artistColorMap?: Record<string, string>;
   artistMembers?: any[];
   currentUserDisplayName?: string;
+  currentUserId?: string;
   effectiveArtistId?: string | null;
   onEventClick: (event: Event) => void;
   onDayClick?: (date: string) => void;
@@ -29,6 +30,7 @@ export function CalendarGridView({
   artistColorMap,
   artistMembers = [],
   currentUserDisplayName,
+  currentUserId,
   effectiveArtistId,
   onEventClick,
   onDayClick,
@@ -70,6 +72,7 @@ export function CalendarGridView({
             artistColorMap={artistColorMap}
             artistMembers={artistMembers}
             currentUserDisplayName={currentUserDisplayName}
+            currentUserId={currentUserId}
             effectiveArtistId={effectiveArtistId}
             onEventClick={onEventClick}
             onDayClick={onDayClick}
