@@ -106,19 +106,19 @@ export function CalendarDay({
         </div>
       </div>
 
-      {/* Unavailability Badge - Top Right */}
+      {/* Unavailability Banner - Bottom */}
       {hasUnavailability && (
-        <div className="absolute top-1 right-1 z-20">
+        <div className="absolute bottom-0 left-0 right-0 z-20">
           <div
             onClick={(e) => {
               e.stopPropagation();
               setShowUnavailabilityPopup(true);
             }}
-            className="cursor-pointer hover:opacity-90 transition-opacity"
+            className="cursor-pointer bg-red-500 hover:bg-red-600 transition-colors py-1 px-2 flex items-center justify-center gap-1"
           >
-            <div className="flex items-center justify-center w-6 h-6 bg-red-500 text-white rounded-full font-bold text-xs shadow-md hover:shadow-lg">
-              {unavailabilityEvents.length}
-            </div>
+            <span className="text-white text-xs font-medium">
+              {unavailabilityEvents.length} unavailable
+            </span>
           </div>
         </div>
       )}
