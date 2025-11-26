@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle } from 'lucide-react';
+import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, Lock, LockOpen, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,12 @@ import {
   type Membership
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
+import { useToast } from '@/hooks/use-toast';
 import ArtistEditModal from '../components/ArtistEditModal';
 
 export default function ArtistsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
+  const { toast } = useToast();
 
   // Artists State
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -133,6 +135,42 @@ export default function ArtistsPage() {
     } finally {
       setReviewingArtist(null);
     }
+  };
+
+  const handleToggleBackstage = async (artist: Artist) => {
+    const newSource = artist.source === 'backstage' ? 'community' : 'backstage';
+    const actionText = newSource === 'backstage' ? 'enable in Backstage' : 'revert to Community';
+
+    const confirmed = await confirm({
+      title: `${newSource === 'backstage' ? 'Enable' : 'Disable'} Backstage Access`,
+      description: `Are you sure you want to ${actionText} for "${artist.name}"? ${newSource === 'backstage' ? 'This will allow artist owners to manage their profile and create gigs.' : 'This will remove Backstage access.'}`,
+      confirmText: newSource === 'backstage' ? 'Enable Backstage' : 'Revert to Community',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const updated = await updateArtist(artist.id, { source: newSource });
+      setArtists(artists.map(a => a.id === updated.id ? updated : a));
+      toast({
+        title: "Success",
+        description: `Artist ${newSource === 'backstage' ? 'enabled in Backstage' : 'reverted to Community'}.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'Failed to update artist',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGenerateInvite = async (artist: Artist) => {
+    // TODO: Implement invite generation endpoint
+    toast({
+      title: "Coming Soon",
+      description: "Invite generation will be implemented next.",
+    });
   };
 
   // Batch Edit Modal Handlers
@@ -453,7 +491,7 @@ export default function ArtistsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-wrap">
                         {artist.needs_review && (
                           <Button
                             size="sm"
@@ -463,6 +501,26 @@ export default function ArtistsPage() {
                             title="Mark as reviewed"
                           >
                             <CheckCircle className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {(artist.source === 'community' || artist.source === 'backstage') && (
+                          <Button
+                            size="sm"
+                            variant={artist.source === 'backstage' ? 'secondary' : 'default'}
+                            onClick={() => handleToggleBackstage(artist)}
+                            title={artist.source === 'backstage' ? 'Disable Backstage access' : 'Enable in Backstage'}
+                          >
+                            {artist.source === 'backstage' ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+                          </Button>
+                        )}
+                        {artist.source === 'backstage' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleGenerateInvite(artist)}
+                            title="Generate invite link"
+                          >
+                            <UserPlus className="h-3 w-3" />
                           </Button>
                         )}
                         <Button

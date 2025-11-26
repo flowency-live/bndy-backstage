@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
+import { useUser } from "@/lib/user-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Plus, LogOut, Settings, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronDown, Plus, LogOut, Settings, Eye } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
 interface UserProfile {
@@ -36,8 +38,9 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
   const [, setLocation] = useLocation();
   const { session, signOut } = useServerAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const { isUberAdmin, isStealthMode } = useUser();
 
-  // Get user profile and all artists
+  // Get user profile and all artists (memberships)
   const { data: userProfile } = useQuery<UserProfile>({
     queryKey: ["/api/memberships/me"],
     queryFn: async () => {
@@ -59,6 +62,8 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
     window.location.reload(); // Force a full page reload to switch context
   };
 
+  const availableArtists = userProfile?.artists || [];
+
   const handleCreateContext = () => {
     setLocation('/onboarding');  // Will handle venue creation etc in future
   };
@@ -71,7 +76,7 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
     setLocation('/login');
   };
 
-  const otherContexts = userProfile?.artists.filter(membership => membership.artist_id !== currentContextId) || [];
+  const otherContexts = availableArtists.filter(artist => artist.artist_id !== currentContextId) || [];
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -81,19 +86,26 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
           className="w-full justify-between bg-white/10 hover:bg-white/20 text-white border-white/20"
           data-testid="button-context-switcher"
         >
-          <div className="flex items-center gap-3">
-            <div 
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: currentMembership.color }}
             >
               <i className={`fas ${currentMembership.icon} text-white text-sm`}></i>
             </div>
             <div className="text-left min-w-0 flex-1">
-              <div className="font-medium text-sm truncate">{currentMembership.artist?.name || currentMembership.name}</div>
+              <div className="font-medium text-sm truncate flex items-center gap-2">
+                {currentMembership.artist?.name || currentMembership.name}
+                {isStealthMode && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 bg-white/20">
+                    <Eye className="h-2.5 w-2.5" />
+                  </Badge>
+                )}
+              </div>
               <div className="text-xs text-white/70 truncate">{currentMembership.resolved_display_name || currentMembership.display_name}</div>
             </div>
           </div>
-          <ChevronDown className="h-4 w-4 text-white/70" />
+          <ChevronDown className="h-4 w-4 text-white/70 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       
@@ -134,12 +146,20 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
                 data-testid={`button-switch-to-context-${membership.artist_id}`}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: membership.color }}
-                  >
-                    <i className={`fas ${membership.icon} text-white text-sm`}></i>
-                  </div>
+                  {membership.artist?.profileImageUrl || membership.resolved_avatar_url ? (
+                    <img
+                      src={membership.artist?.profileImageUrl || membership.resolved_avatar_url}
+                      alt={`${membership.artist?.name || membership.name} avatar`}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: membership.color }}
+                    >
+                      <i className={`fas ${membership.icon} text-white text-sm`}></i>
+                    </div>
+                  )}
                   <div className="text-left min-w-0 flex-1">
                     <div className="font-medium text-sm truncate">{membership.artist?.name || membership.name}</div>
                     <div className="text-xs text-gray-500 truncate">

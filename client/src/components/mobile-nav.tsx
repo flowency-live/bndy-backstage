@@ -23,7 +23,8 @@ import {
   LogOut,
   Bug,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Eye
 } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
@@ -40,8 +41,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const [isOpen, setIsOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
   const { toast } = useToast();
-  const { signOut } = useServerAuth();
-  const { clearArtistSelection, userProfile, selectArtist, currentArtistId } = useUser();
+  const { signOut, session } = useServerAuth();
+  const { clearArtistSelection, userProfile, selectArtist, currentArtistId, isUberAdmin, isStealthMode } = useUser();
+
+  const availableArtists = userProfile?.artists || [];
 
   const handleExitArtist = () => {
     clearArtistSelection();
@@ -146,8 +149,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-foreground truncate">
+                              <div className="font-semibold text-foreground truncate flex items-center gap-2">
                                 {currentMembership.artist?.name || currentMembership.name}
+                                {isStealthMode && (
+                                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
+                                    <Eye className="h-2.5 w-2.5" />
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-sm text-muted-foreground truncate">
                                 {formatDisplayName(currentMembership.resolved_display_name || currentMembership.display_name)} • {currentMembership.role}
@@ -173,13 +181,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                         </DropdownMenuItem>
 
                         {/* Separator if there are other artists */}
-                        {userProfile?.artists?.filter(membership => membership.artist_id !== currentArtistId).length > 0 && (
+                        {availableArtists?.filter(artist => artist.artist_id !== currentArtistId).length > 0 && (
                           <div className="h-px bg-border my-1" />
                         )}
 
                         {/* Other Artists Quick Switch */}
-                        {userProfile?.artists
-                          ?.filter(membership => membership.artist_id !== currentArtistId) // Don't show current artist
+                        {availableArtists
+                          ?.filter(artist => artist.artist_id !== currentArtistId) // Don't show current artist
                           ?.map((membership) => (
                             <DropdownMenuItem
                               key={membership.artist_id}

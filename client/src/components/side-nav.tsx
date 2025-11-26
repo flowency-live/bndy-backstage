@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
-import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import BndyLogo from "@/components/ui/bndy-logo";
@@ -42,11 +42,15 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
     selectArtist,
     currentArtistId,
     currentMembership,
-    userProfile
+    userProfile,
+    isUberAdmin,
+    isStealthMode
   } = useUser();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
+
+  const availableArtists = userProfile?.artists || [];
 
   const handleExitArtist = () => {
     clearArtistSelection();
@@ -86,7 +90,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
     onClose();
   };
 
-  const otherArtists = userProfile?.artists.filter(artist => artist.artist_id !== currentArtistId) || [];
+  const otherArtists = availableArtists.filter(artist => artist.artist_id !== currentArtistId) || [];
 
   return (
     <>
@@ -155,7 +159,14 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                           </div>
                         )}
                         <div className="text-left min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate text-foreground">{currentMembership.artist?.name || currentMembership.name}</div>
+                          <div className="font-medium text-sm truncate text-foreground flex items-center gap-2">
+                            {currentMembership.artist?.name || currentMembership.name}
+                            {isStealthMode && (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
+                                <Eye className="h-2.5 w-2.5" />
+                              </Badge>
+                            )}
+                          </div>
                           <div className="text-xs text-muted-foreground truncate">{formatDisplayName(currentMembership.resolved_display_name)}</div>
                         </div>
                       </>
@@ -240,13 +251,13 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   </DropdownMenuItem>
 
                   {/* Artist Quick Switch Options */}
-                  {userProfile?.artists && userProfile.artists.length > 0 && otherArtists.length > 0 && (
+                  {availableArtists && availableArtists.length > 0 && otherArtists.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
                         Quick Switch
                       </div>
-                      {userProfile.artists
+                      {availableArtists
                         .filter(artist => artist.artist_id !== currentArtistId)
                         .map((artist) => (
                           <DropdownMenuItem
@@ -256,10 +267,10 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                             data-testid={`button-switch-to-artist-${artist.artist_id}`}
                           >
                             <div className="flex items-center gap-3 w-full">
-                              {artist.artist.profileImageUrl ? (
+                              {artist.artist?.profileImageUrl || artist.resolved_avatar_url ? (
                                 <img
-                                  src={artist.artist.profileImageUrl}
-                                  alt={`${artist.artist.name} avatar`}
+                                  src={artist.artist?.profileImageUrl || artist.resolved_avatar_url}
+                                  alt={`${artist.artist?.name || artist.name} avatar`}
                                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                   data-testid={`artist-avatar-image-${artist.artist_id}`}
                                 />
@@ -272,7 +283,7 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                                 </div>
                               )}
                               <div className="text-left min-w-0 flex-1">
-                                <div className="font-medium text-sm truncate">{artist.artist.name}</div>
+                                <div className="font-medium text-sm truncate">{artist.artist?.name || artist.name}</div>
                                 <div className="text-xs text-muted-foreground truncate">
                                   {artist.resolved_display_name} • {artist.role}
                                 </div>
