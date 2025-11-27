@@ -79,8 +79,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check both new and legacy keys for backward compatibility
     const savedArtistId = localStorage.getItem('bndy-selected-artist-id') || localStorage.getItem('bndy-selected-context-id') || localStorage.getItem('bndy-selected-band-id');
+    const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
 
-    if (savedArtistId && userProfile?.artists?.some(a => a.artist_id === savedArtistId)) {
+    if (savedArtistId && (isPlatformAdmin || userProfile?.artists?.some(a => a.artist_id === savedArtistId))) {
+      // Platform admin can access any artist, regular users only their memberships
       setCurrentArtistId(savedArtistId);
       // Migrate to new key
       localStorage.setItem('bndy-selected-artist-id', savedArtistId);
@@ -91,8 +93,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const artistId = userProfile.artists[0].artist_id;
       setCurrentArtistId(artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
-    } else if (savedArtistId && userProfile?.artists && !userProfile.artists.some(a => a.artist_id === savedArtistId)) {
-      // Clear invalid artist selection
+    } else if (savedArtistId && userProfile?.artists && !isPlatformAdmin && !userProfile.artists.some(a => a.artist_id === savedArtistId)) {
+      // Clear invalid artist selection (only for non-admin users)
       localStorage.removeItem('bndy-selected-artist-id');
       localStorage.removeItem('bndy-selected-band-id');
       localStorage.removeItem('bndy-selected-context-id');
@@ -147,7 +149,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     : null;
 
   const selectArtist = (artistId: string) => {
-    if (userProfile?.artists.some(a => a.artist_id === artistId)) {
+    const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
+    // Platform admin can access any artist, regular users only their memberships
+    if (isPlatformAdmin || userProfile?.artists.some(a => a.artist_id === artistId)) {
       setCurrentArtistId(artistId);
       localStorage.setItem('bndy-selected-artist-id', artistId);
       // Clean up legacy keys
@@ -170,7 +174,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const canAccessArtist = (artistId: string): boolean => {
-    return userProfile?.artists.some(a => a.artist_id === artistId) || false;
+    const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
+    // Platform admin can access any artist, regular users only their memberships
+    return isPlatformAdmin || userProfile?.artists.some(a => a.artist_id === artistId) || false;
   };
 
   // Platform admin flags
