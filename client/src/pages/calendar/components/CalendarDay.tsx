@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Event } from '@/types/api';
 import { EventBadge } from './EventBadge';
 import { UnavailabilityPopup } from './UnavailabilityPopup';
+import { AvailabilityPopup } from './AvailabilityPopup';
 import {
   getEventsForDate,
   getEventsStartingOnDate,
@@ -28,6 +29,7 @@ interface CalendarDayProps {
   onEventClick: (event: Event) => void;
   onDayClick?: (date: string) => void;
   onAddEvent?: (date: string) => void;
+  onDeleteAvailability?: (event: Event) => void;
   totalDays: number;
 }
 
@@ -50,9 +52,11 @@ export function CalendarDay({
   onEventClick,
   onDayClick,
   onAddEvent,
+  onDeleteAvailability,
   totalDays,
 }: CalendarDayProps) {
   const [showUnavailabilityPopup, setShowUnavailabilityPopup] = useState(false);
+  const [showAvailabilityPopup, setShowAvailabilityPopup] = useState(false);
   const dateStr = format(date, 'yyyy-MM-dd');
   const dayEvents = getEventsForDate(events, dateStr);
 
@@ -117,7 +121,7 @@ export function CalendarDay({
           <div
             onClick={(e) => {
               e.stopPropagation();
-              // TODO: Open availability popup
+              setShowAvailabilityPopup(true);
             }}
             className="cursor-pointer bg-blue-500 hover:bg-blue-600 transition-colors py-1 flex items-center justify-center"
           >
@@ -264,6 +268,22 @@ export function CalendarDay({
         onEditUserUnavailability={(event) => {
           setShowUnavailabilityPopup(false);
           onEventClick(event);
+        }}
+      />
+
+      {/* Availability Popup */}
+      <AvailabilityPopup
+        isOpen={showAvailabilityPopup}
+        onClose={() => setShowAvailabilityPopup(false)}
+        date={date}
+        availabilityEvents={availabilityEvents}
+        onEditAvailability={(event) => {
+          setShowAvailabilityPopup(false);
+          onEventClick(event);
+        }}
+        onDeleteAvailability={(event) => {
+          setShowAvailabilityPopup(false);
+          onDeleteAvailability?.(event);
         }}
       />
     </div>

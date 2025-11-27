@@ -253,6 +253,43 @@ class EventsService {
       body: JSON.stringify(gigData),
     });
   }
+
+  /**
+   * Toggle availability for a specific date
+   */
+  async toggleAvailability(
+    artistId: string,
+    date: string,
+    notes?: string
+  ): Promise<{ action: 'created' | 'deleted'; event?: Event; id?: string }> {
+    return this.apiRequest<{ action: 'created' | 'deleted'; event?: Event; id?: string }>(
+      `/api/artists/${artistId}/events/toggle-availability`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ date, notes }),
+      }
+    );
+  }
+
+  /**
+   * Bulk set availability based on rules
+   */
+  async bulkSetAvailability(params: {
+    artistId: string;
+    startDate: string;
+    endDate: string;
+    rules: string[];
+    notes?: string;
+  }): Promise<{ created: number; skipped: number; events: Event[] }> {
+    const { artistId, ...body } = params;
+    return this.apiRequest<{ created: number; skipped: number; events: Event[] }>(
+      `/api/artists/${artistId}/events/bulk-availability`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }
+    );
+  }
 }
 
 // Export singleton instance

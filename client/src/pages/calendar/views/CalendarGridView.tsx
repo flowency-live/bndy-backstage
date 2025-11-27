@@ -14,6 +14,7 @@ interface CalendarGridViewProps {
   onEventClick: (event: Event) => void;
   onDayClick?: (date: string) => void;
   onAddEvent?: (date: string) => void;
+  onDeleteAvailability?: (event: Event) => void;
 }
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -35,6 +36,7 @@ export function CalendarGridView({
   onEventClick,
   onDayClick,
   onAddEvent,
+  onDeleteAvailability,
 }: CalendarGridViewProps) {
   // Calculate calendar grid dates
   const monthStart = startOfMonth(currentDate);
@@ -77,6 +79,7 @@ export function CalendarGridView({
             onEventClick={onEventClick}
             onDayClick={onDayClick}
             onAddEvent={onAddEvent}
+            onDeleteAvailability={onDeleteAvailability}
             totalDays={calendarDays.length}
           />
         ))}

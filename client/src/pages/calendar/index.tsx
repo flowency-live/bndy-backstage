@@ -24,6 +24,8 @@ import {
 import FloatingActionButton from '@/components/floating-action-button';
 import { MonthNavigation, SwipeableCalendarWrapper } from './components/MonthNavigation';
 import { UpcomingEventBanner } from './components/UpcomingEventBanner';
+import { MarkerModeToggle } from './components/MarkerModeToggle';
+import { BulkAvailabilityDrawer } from './components/BulkAvailabilityDrawer';
 
 // Views
 import { CalendarGridView } from './views/CalendarGridView';
@@ -101,6 +103,8 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   } = useCalendarContext();
 
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
+  const [markerModeActive, setMarkerModeActive] = useState(false);
+  const [showBulkAvailabilityDrawer, setShowBulkAvailabilityDrawer] = useState(false);
 
   // Scroll to top when component loads
   useEffect(() => {
@@ -252,6 +256,60 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     },
   });
 
+  // Toggle availability mutation
+  const toggleAvailabilityMutation = useMutation({
+    mutationFn: async (date: string) => {
+      if (!effectiveArtistId) throw new Error('No artist selected');
+      return await eventsService.toggleAvailability(effectiveArtistId, date);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/artists', effectiveArtistId, 'calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/me/events'] });
+      toast({
+        title: data.action === 'created' ? 'Added availability' : 'Removed availability',
+        description: data.action === 'created' ? 'Day marked as available' : 'Availability removed',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to toggle availability',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Bulk set availability mutation
+  const bulkAvailabilityMutation = useMutation({
+    mutationFn: async (params: {
+      startDate: string;
+      endDate: string;
+      rules: string[];
+      notes?: string;
+    }) => {
+      if (!effectiveArtistId) throw new Error('No artist selected');
+      return await eventsService.bulkSetAvailability({
+        artistId: effectiveArtistId,
+        ...params,
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/artists', effectiveArtistId, 'calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/me/events'] });
+      toast({
+        title: `Marked ${data.created} days as available`,
+        description: data.skipped > 0 ? `Skipped ${data.skipped} days with existing events` : undefined,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to bulk set availability',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Event handlers
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -294,6 +352,30 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
 
   const handleDeleteEvent = (event: Event, deleteAll?: boolean) => {
     deleteMutation.mutate({ event, deleteAll });
+  };
+
+  const handleDayClickInMarkerMode = (date: string) => {
+    // Check for member unavailability on this date
+    const unavailableMembers = events.filter(
+      (e) => e.type === 'unavailable' && e.date === date
+    );
+
+    if (unavailableMembers.length > 0) {
+      const memberNames = unavailableMembers
+        .map((e) => e.displayName || 'Unknown Member')
+        .join(', ');
+
+      if (!confirm(`${memberNames} is unavailable on this day. Mark as available anyway?`)) {
+        return;
+      }
+    }
+
+    toggleAvailabilityMutation.mutate(date);
+  };
+
+  const handleDeleteAvailability = (event: Event) => {
+    if (!effectiveArtistId) return;
+    deleteMutation.mutate({ event });
   };
 
   const handleSuccess = () => {
@@ -406,52 +488,75 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     <div className="min-h-screen bg-background">
       {/* Calendar Controls - Compact on mobile */}
       <div className="bg-card/80 backdrop-blur-sm border-b border-border p-2 md:p-4">
-        <div className="flex items-center justify-between">
-          {/* Export Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {/* Export Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 md:gap-2 h-8 px-2 md:px-3"
+                  data-testid="button-calendar-export"
+                >
+                  <i className="fas fa-download text-xs md:text-sm"></i>
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                <DropdownMenuItem
+                  onClick={() => handleExportCalendar(false, false)}
+                  data-testid="menu-export-all-public"
+                >
+                  <i className="fas fa-calendar mr-2 w-4 h-4"></i>
+                  Export All Public Events
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleExportCalendar(true, true)}
+                  data-testid="menu-export-personal-all"
+                >
+                  <i className="fas fa-user mr-2 w-4 h-4"></i>
+                  Export My Events (All)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleExportCalendar(false, true)}
+                  data-testid="menu-export-personal-public"
+                >
+                  <i className="fas fa-user mr-2 w-4 h-4"></i>
+                  Export My Public Events
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleGetCalendarUrls}
+                  data-testid="menu-get-calendar-urls"
+                >
+                  <i className="fas fa-link mr-2 w-4 h-4"></i>
+                  Get Subscription URL
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Marker Mode Toggle (Artist context only) */}
+            {effectiveArtistId && viewMode === 'calendar' && (
+              <MarkerModeToggle
+                isActive={markerModeActive}
+                onToggle={() => setMarkerModeActive(!markerModeActive)}
+              />
+            )}
+
+            {/* Bulk Availability Button (Artist context only) */}
+            {effectiveArtistId && viewMode === 'calendar' && (
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setShowBulkAvailabilityDrawer(true)}
                 className="gap-1 md:gap-2 h-8 px-2 md:px-3"
-                data-testid="button-calendar-export"
               >
-                <i className="fas fa-download text-xs md:text-sm"></i>
-                <span className="hidden sm:inline">Export</span>
+                <i className="fas fa-calendar-plus text-xs md:text-sm"></i>
+                <span className="hidden lg:inline">Bulk Availability</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start">
-              <DropdownMenuItem
-                onClick={() => handleExportCalendar(false, false)}
-                data-testid="menu-export-all-public"
-              >
-                <i className="fas fa-calendar mr-2 w-4 h-4"></i>
-                Export All Public Events
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleExportCalendar(true, true)}
-                data-testid="menu-export-personal-all"
-              >
-                <i className="fas fa-user mr-2 w-4 h-4"></i>
-                Export My Events (All)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleExportCalendar(false, true)}
-                data-testid="menu-export-personal-public"
-              >
-                <i className="fas fa-user mr-2 w-4 h-4"></i>
-                Export My Public Events
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleGetCalendarUrls}
-                data-testid="menu-get-calendar-urls"
-              >
-                <i className="fas fa-link mr-2 w-4 h-4"></i>
-                Get Subscription URL
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+          </div>
 
           {/* View Mode Toggle */}
           <div className="flex bg-muted rounded-lg p-0.5 md:p-1">
@@ -590,11 +695,12 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             currentUserId={session?.user?.cognitoId}
             effectiveArtistId={effectiveArtistId}
             onEventClick={handleEventClick}
-            onDayClick={handleDayClick}
+            onDayClick={markerModeActive ? handleDayClickInMarkerMode : handleDayClick}
             onAddEvent={(date) => {
               setSelectedDate(date);
               setShowEventTypeSelector(true);
             }}
+            onDeleteAvailability={handleDeleteAvailability}
           />
         </SwipeableCalendarWrapper>
       ) : (
@@ -713,6 +819,17 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         currentMembershipId={effectiveMembership?.membership_id || null}
         currentUserId={session?.user?.cognitoId || null}
         canEdit={canEdit}
+      />
+
+      {/* Bulk Availability Drawer */}
+      <BulkAvailabilityDrawer
+        isOpen={showBulkAvailabilityDrawer}
+        onClose={() => setShowBulkAvailabilityDrawer(false)}
+        onApply={(params) => {
+          bulkAvailabilityMutation.mutate(params);
+          setShowBulkAvailabilityDrawer(false);
+        }}
+        isLoading={bulkAvailabilityMutation.isPending}
       />
     </div>
   );
