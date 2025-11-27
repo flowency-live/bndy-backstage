@@ -733,7 +733,9 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
   const nextUpEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
 
   // Handle no artist selected case
-  if (!artistId || !membership) {
+  // Platform admins can view artists without membership (stealth mode)
+  const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
+  if (!artistId || (!membership && !isPlatformAdmin)) {
     // No artist memberships - show ONLY create new tile
     if (userProfile?.artists && userProfile.artists.length === 0) {
       return (
