@@ -144,12 +144,40 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, userProfile, queryClient]);
 
   // Find current membership (null if no artist context)
-  const currentMembership = currentArtistId
+  // For platform admins viewing non-member artists, create a synthetic membership
+  const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
+  let currentMembership = currentArtistId
     ? userProfile?.artists.find(a => a.artist_id === currentArtistId) || null
     : null;
 
+  // If platform admin viewing a non-member artist, create synthetic membership
+  if (isPlatformAdmin && currentArtistId && !currentMembership) {
+    currentMembership = {
+      id: 'platform-admin-synthetic',
+      membership_id: 'platform-admin-synthetic',
+      user_id: userProfile?.user?.id || '',
+      artist_id: currentArtistId,
+      role: 'viewer',
+      membership_type: 'platform-admin',
+      display_name: userProfile?.user?.displayName || 'Platform Admin',
+      avatar_url: userProfile?.user?.avatarUrl || null,
+      instrument: null,
+      bio: null,
+      icon: 'fa-eye',
+      color: '#6B7280',
+      permissions: ['view'],
+      status: 'active',
+      joined_at: new Date().toISOString(),
+      joinedAt: new Date().toISOString(),
+      displayName: userProfile?.user?.displayName || 'Platform Admin',
+      avatarUrl: userProfile?.user?.avatarUrl || null,
+      resolved_display_name: userProfile?.user?.displayName || 'Platform Admin',
+      resolved_avatar_url: userProfile?.user?.avatarUrl || null,
+      name: 'Platform Admin Access'
+    } as any;
+  }
+
   const selectArtist = (artistId: string) => {
-    const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
     // Platform admin can access any artist, regular users only their memberships
     if (isPlatformAdmin || userProfile?.artists.some(a => a.artist_id === artistId)) {
       setCurrentArtistId(artistId);
@@ -174,13 +202,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const canAccessArtist = (artistId: string): boolean => {
-    const isPlatformAdmin = userProfile?.user?.platformAdmin || false;
     // Platform admin can access any artist, regular users only their memberships
     return isPlatformAdmin || userProfile?.artists.some(a => a.artist_id === artistId) || false;
   };
 
   // Platform admin flags
-  const isUberAdmin = userProfile?.user?.platformAdmin || false;
+  const isUberAdmin = isPlatformAdmin;
   const isInGodmode = location.startsWith('/godmode');
   const isStealthMode = isUberAdmin && !isInGodmode;
 
