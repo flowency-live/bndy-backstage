@@ -125,6 +125,18 @@ export default function ArtistSettingsTab() {
             </Label>
           </div>
 
+          {/* Publish Availability */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="publishAvailability"
+              checked={settings.publishAvailability || false}
+              onCheckedChange={(checked) => updateField('publishAvailability', checked as boolean)}
+            />
+            <Label htmlFor="publishAvailability" className="text-sm font-medium cursor-pointer">
+              Publish availability on public profile
+            </Label>
+          </div>
+
           {/* Social Media Links */}
           <SocialLinksSection
             values={{

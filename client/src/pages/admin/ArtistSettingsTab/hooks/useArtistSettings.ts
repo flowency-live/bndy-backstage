@@ -17,6 +17,7 @@ interface ArtistSettings {
   artistType?: ArtistType;
   actType?: ActType[];
   acoustic?: boolean;
+  publishAvailability?: boolean;
   facebookUrl: string;
   instagramUrl: string;
   websiteUrl: string;
@@ -41,6 +42,7 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
     artistType: undefined,
     actType: [],
     acoustic: false,
+    publishAvailability: false,
     facebookUrl: '',
     instagramUrl: '',
     websiteUrl: '',
@@ -67,6 +69,7 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         artistType: artistData.artistType as ArtistType,
         actType: (artistData.actType || []) as ActType[],
         acoustic: artistData.acoustic || false,
+        publishAvailability: artistData.publishAvailability || false,
         facebookUrl: artistData.facebookUrl || '',
         instagramUrl: artistData.instagramUrl || '',
         websiteUrl: artistData.websiteUrl || '',
@@ -100,6 +103,7 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         artistType: settings.artistType || null,
         actType: settings.actType || null,
         acoustic: settings.acoustic || false,
+        publishAvailability: settings.publishAvailability || false,
         facebookUrl: settings.facebookUrl || null,
         instagramUrl: settings.instagramUrl || null,
         websiteUrl: settings.websiteUrl || null,

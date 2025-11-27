@@ -33,6 +33,7 @@ export interface Artist {
   artist_type?: string; // Legacy snake_case version
   acoustic?: boolean;  // NEW: Indicates acoustic performance capability
   actType?: string[];  // NEW: Type of act (multiselect: originals, covers, tribute)
+  publishAvailability?: boolean;  // NEW: Control whether availability is public on frontstage (default: false)
   profileImageUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
