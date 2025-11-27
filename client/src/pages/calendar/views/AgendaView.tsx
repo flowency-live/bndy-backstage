@@ -31,7 +31,7 @@ interface AgendaViewProps {
 /**
  * Agenda (list) view component
  * Displays events as a chronological list grouped by month
- * Shows next 3 months of events, excludes unavailability
+ * Shows next 3 months of events, excludes unavailability and availability
  */
 export function AgendaView({
   currentDate,
@@ -47,11 +47,11 @@ export function AgendaView({
   const todayStart = startOfDay(new Date());
   const threeMonthsFromNow = endOfMonth(addMonths(todayStart, 2));
 
-  // Filter events for agenda view (next 3 months, no unavailability)
+  // Filter events for agenda view (next 3 months, no unavailability/availability)
   const agendaEvents = events
     .filter((event) => {
-      // Filter out unavailability events in agenda view
-      if (event.type === 'unavailable') return false;
+      // Filter out unavailability and availability events in agenda view
+      if (event.type === 'unavailable' || event.type === 'available') return false;
 
       const eventDate = new Date(event.date + 'T00:00:00');
 
