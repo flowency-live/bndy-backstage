@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 interface BulkAvailabilityDrawerProps {
   isOpen: boolean;
@@ -79,9 +80,9 @@ export function BulkAvailabilityDrawer({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
+      <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <SheetHeader>
-          <SheetTitle>Bulk Set Availability</SheetTitle>
+          <SheetTitle className="text-blue-600 dark:text-blue-400">Bulk Set Availability</SheetTitle>
           <SheetDescription>
             Mark multiple days as available based on rules
           </SheetDescription>
@@ -90,26 +91,26 @@ export function BulkAvailabilityDrawer({
         <div className="mt-6 space-y-6">
           {/* Date Range */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Date Range</h3>
+            <h3 className="text-sm font-semibold text-foreground">Date Range</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-muted-foreground">Start Date</label>
+                <label className="text-xs text-muted-foreground block">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   min={today}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border rounded-lg"
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">End Date</label>
+                <label className="text-xs text-muted-foreground block">End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   min={startDate || today}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border rounded-lg"
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
                 />
               </div>
             </div>
@@ -117,20 +118,20 @@ export function BulkAvailabilityDrawer({
 
           {/* Rules */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Select Days</h3>
+            <h3 className="text-sm font-semibold text-foreground">Select Days</h3>
             <div className="space-y-2">
               {RULE_OPTIONS.map((rule) => (
                 <label
                   key={rule.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent cursor-pointer"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-accent cursor-pointer transition-colors"
                 >
                   <input
                     type="checkbox"
                     checked={selectedRules.includes(rule.id)}
                     onChange={() => handleRuleToggle(rule.id)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 text-brand-accent rounded border-border focus:ring-brand-accent"
                   />
-                  <span className="text-sm">{rule.label}</span>
+                  <span className="text-sm text-foreground">{rule.label}</span>
                 </label>
               ))}
             </div>
@@ -138,12 +139,12 @@ export function BulkAvailabilityDrawer({
 
           {/* Notes */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Notes (Optional)</label>
+            <label className="text-sm font-semibold text-foreground block">Notes (Optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes about this availability..."
-              className="w-full px-3 py-2 border rounded-lg resize-none"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground resize-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
               rows={3}
             />
           </div>
@@ -161,21 +162,22 @@ export function BulkAvailabilityDrawer({
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
-            <button
+          <div className="flex gap-3 pt-4 border-t border-border">
+            <Button
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 rounded-lg border hover:bg-accent transition-colors disabled:opacity-50"
+              variant="outline"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleApply}
               disabled={!isValid || isLoading}
-              className="flex-1 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
             >
               {isLoading ? 'Applying...' : 'Apply'}
-            </button>
+            </Button>
           </div>
         </div>
       </SheetContent>

@@ -55,7 +55,7 @@ export function AvailabilityPopup({
                     {onEditAvailability && (
                       <button
                         onClick={() => onEditAvailability(event)}
-                        className="text-xs px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                        className="text-xs px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white transition-colors"
                       >
                         Edit
                       </button>
@@ -63,7 +63,7 @@ export function AvailabilityPopup({
                     {onDeleteAvailability && (
                       <button
                         onClick={() => onDeleteAvailability(event)}
-                        className="text-xs px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white transition-colors"
+                        className="text-xs px-3 py-1 rounded bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white transition-colors"
                       >
                         Delete
                       </button>
