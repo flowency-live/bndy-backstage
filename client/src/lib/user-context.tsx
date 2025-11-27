@@ -69,6 +69,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
     enabled: isAuthenticated,
   });
 
+  // Layer 4: For platform admins, fetch artist data when viewing non-member artist
+  const isPlatformAdminCheck = userProfileData?.platformAdmin || false;
+  const savedArtistId = typeof window !== 'undefined' ? localStorage.getItem('bndy-selected-artist-id') : null;
+  const isViewingNonMemberArtist = isPlatformAdminCheck && savedArtistId && !membershipsData?.artists?.some(a => a.artist_id === savedArtistId);
+
+  const { data: stealthArtistData } = useQuery({
+    queryKey: ["stealth-artist", savedArtistId],
+    queryFn: async () => {
+      const response = await fetch(`https://api.bndy.co.uk/api/artists/${savedArtistId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch artist');
+      return response.json();
+    },
+    enabled: isViewingNonMemberArtist && !!savedArtistId,
+  });
+
   // Combine user profile and memberships
   const userProfile: UserProfile | null = (userProfileData && membershipsData) ? {
     user: userProfileData,
@@ -151,7 +168,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     : null;
 
   // If platform admin viewing a non-member artist, create synthetic membership
-  if (isPlatformAdmin && currentArtistId && !currentMembership) {
+  if (isPlatformAdmin && currentArtistId && !currentMembership && stealthArtistData) {
     currentMembership = {
       id: 'platform-admin-synthetic',
       membership_id: 'platform-admin-synthetic',
@@ -164,7 +181,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       instrument: null,
       bio: null,
       icon: 'fa-eye',
-      color: '#6B7280',
+      color: stealthArtistData.displayColour || '#6B7280',
       permissions: ['view'],
       status: 'active',
       joined_at: new Date().toISOString(),
@@ -173,7 +190,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       avatarUrl: userProfile?.user?.avatarUrl || null,
       resolved_display_name: userProfile?.user?.displayName || 'Platform Admin',
       resolved_avatar_url: userProfile?.user?.avatarUrl || null,
-      name: 'Platform Admin Access'
+      name: stealthArtistData.name,
+      artist: stealthArtistData
     } as any;
   }
 
