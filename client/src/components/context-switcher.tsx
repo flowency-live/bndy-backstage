@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Plus, LogOut, Settings, Eye } from "lucide-react";
+import { ChevronDown, Plus, LogOut, Settings, Eye, Users } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
 interface UserProfile {
@@ -173,18 +173,25 @@ export default function ContextSwitcher({ currentContextId, currentMembership }:
         )}
 
         <DropdownMenuSeparator />
-        
+
         {/* Actions */}
+        {isUberAdmin && (
+          <DropdownMenuItem onClick={() => setLocation('/my-artists')} className="cursor-pointer" data-testid="button-all-artists">
+            <Users className="h-4 w-4 mr-2" />
+            All Artists
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuItem onClick={handleCreateContext} className="cursor-pointer" data-testid="button-create-new-context">
           <Plus className="h-4 w-4 mr-2" />
           Create New Artist
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem onClick={() => setLocation('/admin')} className="cursor-pointer" data-testid="button-context-settings">
           <Settings className="h-4 w-4 mr-2" />
           Settings
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
         
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600" data-testid="button-sign-out">

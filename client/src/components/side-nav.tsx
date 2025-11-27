@@ -5,7 +5,7 @@ import { useUser } from "@/lib/user-context";
 import { navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
-import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle, Eye } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle, Eye, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -444,6 +444,17 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   )}
 
                   <DropdownMenuSeparator />
+
+                  {isUberAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => { setLocation('/my-artists'); onClose(); }}
+                      className="cursor-pointer"
+                      data-testid="button-all-artists"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      All Artists
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuItem
                     onClick={handleSignOut}

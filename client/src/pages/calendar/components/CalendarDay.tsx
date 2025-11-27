@@ -56,15 +56,17 @@ export function CalendarDay({
   const dateStr = format(date, 'yyyy-MM-dd');
   const dayEvents = getEventsForDate(events, dateStr);
 
-  // Separate unavailability events from other events
-  // Unavailability events should be full-width per day, not multi-day bars
+  // Separate unavailability and availability events from other events
+  // Unavailability and availability events should be full-width per day, not multi-day bars
   const unavailabilityEvents = dayEvents.filter((e) => e.type === 'unavailable');
-  const startingEvents = getEventsStartingOnDate(events, dateStr).filter((e) => e.type !== 'unavailable');
-  const extendingEvents = getEventsExtendingToDate(events, dateStr).filter((e) => e.type !== 'unavailable');
+  const availabilityEvents = dayEvents.filter((e) => e.type === 'available');
+  const startingEvents = getEventsStartingOnDate(events, dateStr).filter((e) => e.type !== 'unavailable' && e.type !== 'available');
+  const extendingEvents = getEventsExtendingToDate(events, dateStr).filter((e) => e.type !== 'unavailable' && e.type !== 'available');
 
   const isCurrentMonth = isSameMonth(date, currentDate);
   const isToday_ = isToday(date);
   const hasUnavailability = unavailabilityEvents.length > 0;
+  const hasAvailability = availabilityEvents.length > 0;
 
   const MAX_VISIBLE_EVENTS = 3;
   // When consolidating unavailability into one badge, adjust overflow calculation
@@ -72,10 +74,13 @@ export function CalendarDay({
   const overflowCount = unavailabilityBadgeCount + startingEvents.length + extendingEvents.length - MAX_VISIBLE_EVENTS;
   const hasOverflow = overflowCount > 0;
 
-  // Determine background color based on unavailability
+  // Determine background color based on unavailability and availability
   const getBackgroundClass = () => {
     if (hasUnavailability) {
       return 'bg-red-100 dark:bg-red-900/40';
+    }
+    if (hasAvailability) {
+      return 'bg-blue-100 dark:bg-blue-900/40';
     }
     if (isCurrentMonth) {
       return 'bg-white dark:bg-slate-900';
@@ -105,6 +110,23 @@ export function CalendarDay({
           {format(date, 'd')}
         </div>
       </div>
+
+      {/* Availability Banner - Bottom (below unavailability if both exist) */}
+      {hasAvailability && (
+        <div className={`absolute left-0 right-0 z-20 ${hasUnavailability ? 'bottom-7' : 'bottom-0'}`}>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              // TODO: Open availability popup
+            }}
+            className="cursor-pointer bg-blue-500 hover:bg-blue-600 transition-colors py-1 flex items-center justify-center"
+          >
+            <span className="text-white text-sm font-bold">
+              {availabilityEvents.length}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Unavailability Banner - Bottom */}
       {hasUnavailability && (

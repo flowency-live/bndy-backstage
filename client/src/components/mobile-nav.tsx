@@ -24,7 +24,8 @@ import {
   Bug,
   Shield,
   HelpCircle,
-  Eye
+  Eye,
+  Users
 } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
@@ -317,6 +318,18 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                           <HelpCircle className="h-4 w-4 mr-2" />
                           Restart Tour
                         </Button>
+                        {isUberAdmin && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => { setLocation('/my-artists'); setIsOpen(false); }}
+                            className="w-full justify-start"
+                            data-testid="button-all-artists"
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            All Artists
+                          </Button>
+                        )}
+
                         <Button
                           variant="ghost"
                           onClick={handleSignOut}
