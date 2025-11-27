@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import type { User, ArtistMembership } from "@/types/api";
 import { authService } from "@/lib/services/auth-service";
@@ -48,7 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [currentArtistId, setCurrentArtistId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const hasProcessedInvite = useRef(false);
-  const location = useLocation();
+  const [location] = useLocation();
 
   // Layer 2: Get user profile
   const { data: userProfileData, isLoading: profileLoading } = useQuery<User>({
@@ -175,7 +175,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Platform admin flags
   const isUberAdmin = userProfile?.user?.platformAdmin || false;
-  const isInGodmode = location.pathname.startsWith('/godmode');
+  const isInGodmode = location.startsWith('/godmode');
   const isStealthMode = isUberAdmin && !isInGodmode;
 
   const contextValue: UserContextType = {
