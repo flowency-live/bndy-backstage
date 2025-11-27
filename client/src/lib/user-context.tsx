@@ -227,7 +227,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Platform admin flags
   const isUberAdmin = isPlatformAdmin;
   const isInGodmode = location.startsWith('/godmode');
-  const isStealthMode = isUberAdmin && !isInGodmode;
+  // Stealth mode = platform admin viewing a non-member artist (has synthetic membership)
+  const isStealthMode = isUberAdmin && currentMembership?.membership_type === 'platform-admin';
 
   const contextValue: UserContextType = {
     isAuthenticated,
