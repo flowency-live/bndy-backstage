@@ -120,6 +120,7 @@ export default function Members({ artistId, membership }: MembersProps) {
       return Array.isArray(data) ? data : (data?.members || []);
     },
     enabled: !!session && !!artistId,
+    refetchOnMount: true, // Always fetch fresh data on mount to avoid stale cache
   });
 
   // Get active invites
