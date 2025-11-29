@@ -33,7 +33,8 @@ export function UpcomingEventBanner({
   );
 
   const isGig = event.type === 'gig' || event.type === 'public_gig';
-  const displayName = artistName || (event as any).artistName || 'Event';
+  // Prioritize event's artistName (for cross-artist events) over context artist name
+  const displayName = event.artistName || artistName || 'Event';
   const location = event.venue || event.location || 'TBC';
   const eventDate = format(new Date(event.date + 'T00:00:00'), 'EEE MMM do');
   const eventTime = event.startTime ? ` ${event.startTime}` : '';
