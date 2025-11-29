@@ -76,9 +76,9 @@ export default function Setlists2({ artistId, membership }: SetlistsProps) {
     },
     onSuccess: (newSetlist) => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists", artistId, "setlists"] });
-      toast({ title: "Setlist created!" });
       setShowCreateModal(false);
       setNewSetlistName('');
+      // Navigate to new setlist - navigation provides implicit success feedback
       setLocation(`/setlists2/${newSetlist.id}`);
     },
     onError: (error: Error) => {

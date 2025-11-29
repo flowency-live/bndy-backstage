@@ -13,6 +13,14 @@ export default function Launch() {
 
     async function warmupSession() {
       try {
+        // Check for pending invite FIRST (critical for PWA users following invite links)
+        const pendingInvite = localStorage.getItem('pendingInvite');
+        if (pendingInvite) {
+          // Preserve invite flow - redirect to invite page instead of dashboard
+          setLocation(`/invite/${pendingInvite}`);
+          return;
+        }
+
         // First attempt: try to authenticate with cookie
         let response = await authService.checkAuth();
 

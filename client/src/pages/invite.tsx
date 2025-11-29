@@ -129,26 +129,17 @@ export default function Invite() {
 
       toast({
         title: "Welcome to the Band!",
-        description: `You've joined ${result.artist.name}! Taking you to your dashboard...`,
+        description: `You've joined ${result.artist.name}!`,
         variant: "default"
       });
-
-      // Show education toast about bookmarking
-      setTimeout(() => {
-        toast({
-          title: "Tip: Bookmark This Page!",
-          description: "You can access BNDY directly - no need to use invite links again!",
-          variant: "default"
-        });
-      }, 1000);
 
       // Show install prompt for mobile users
       setShowInstallPrompt(true);
 
-      // Delay redirect to allow install prompt to show
+      // Delay redirect to allow toast to auto-dismiss and user to see install prompt
       setTimeout(() => {
         setLocation('/dashboard');
-      }, 2500);
+      }, 5000);
     } catch (error: any) {
       console.error('[INVITE] Error accepting invite:', error);
       // Check if user is already a member - treat as success
@@ -251,11 +242,15 @@ export default function Invite() {
       setTimeout(() => {
         toast({
           title: "Invite Link Expired",
-          description: "This invite has expired, but you're already logged in! Taking you to your dashboard...",
+          description: "This invite has expired, but you're already logged in!",
           variant: "default"
         });
         localStorage.removeItem('pendingInvite');
-        setLocation('/dashboard');
+
+        // Delay redirect to allow toast to show and auto-dismiss
+        setTimeout(() => {
+          setLocation('/dashboard');
+        }, 4500);
       }, 100);
 
       return (
