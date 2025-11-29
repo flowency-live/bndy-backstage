@@ -215,13 +215,45 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     enabled: !!effectiveArtistId,
   });
 
-  // Get next upcoming event
-  const upcomingEvents = events
+  // Fetch ALL upcoming events for banner (independent of current month view)
+  // This ensures the "Next Up" banner shows on page load regardless of which month is being viewed
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const oneYearFromNow = addMonths(today, 12);
+
+  const { data: upcomingEventsData } = useQuery<{
+    artistEvents: Event[];
+    userEvents: Event[];
+    otherArtistEvents: (Event & { artistName: string })[];
+  } | Event[]>({
+    queryKey: effectiveArtistId
+      ? ['/api/artists', effectiveArtistId, 'upcoming-events', format(today, 'yyyy-MM-dd'), format(oneYearFromNow, 'yyyy-MM-dd')]
+      : ['/api/me/upcoming-events', format(today, 'yyyy-MM-dd'), format(oneYearFromNow, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const url = effectiveArtistId
+        ? `/api/artists/${effectiveArtistId}/calendar?startDate=${format(today, 'yyyy-MM-dd')}&endDate=${format(oneYearFromNow, 'yyyy-MM-dd')}`
+        : `/api/me/events?startDate=${format(today, 'yyyy-MM-dd')}&endDate=${format(oneYearFromNow, 'yyyy-MM-dd')}`;
+      const response = await apiRequest('GET', url);
+      return response.json();
+    },
+    enabled: !dismissedHighlight && viewMode === 'calendar',
+  });
+
+  // Get next upcoming event from the dedicated upcoming events query
+  const allUpcomingEvents: Event[] = upcomingEventsData
+    ? Array.isArray(upcomingEventsData)
+      ? upcomingEventsData
+      : [
+          ...upcomingEventsData.artistEvents,
+          ...upcomingEventsData.userEvents,
+          ...upcomingEventsData.otherArtistEvents,
+        ]
+    : [];
+
+  const upcomingEvents = allUpcomingEvents
     .filter((event) => {
-      if (event.type === 'unavailable') return false;
+      if (event.type === 'unavailable' || event.type === 'available') return false;
       const eventDate = new Date(event.date + 'T00:00:00');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
       return eventDate >= today;
     })
     .sort((a, b) => {
