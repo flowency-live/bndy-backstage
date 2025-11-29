@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/services/auth-service";
 import BndyLogo from "@/components/ui/bndy-logo";
 import { queryClient } from "@/lib/queryClient";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 interface InviteDetails {
   token: string;
@@ -25,6 +26,7 @@ export default function Invite() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [accepting, setAccepting] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const hasAttemptedProfileRedirect = useRef(false);
   const hasAttemptedAutoAccept = useRef(false);
 
@@ -131,8 +133,22 @@ export default function Invite() {
         variant: "default"
       });
 
-      // Redirect to dashboard - UserProvider will load the artist context
-      setLocation('/dashboard');
+      // Show education toast about bookmarking
+      setTimeout(() => {
+        toast({
+          title: "Tip: Bookmark This Page!",
+          description: "You can access BNDY directly - no need to use invite links again!",
+          variant: "default"
+        });
+      }, 1000);
+
+      // Show install prompt for mobile users
+      setShowInstallPrompt(true);
+
+      // Delay redirect to allow install prompt to show
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 2500);
     } catch (error: any) {
       console.error('[INVITE] Error accepting invite:', error);
       // Check if user is already a member - treat as success
@@ -166,15 +182,8 @@ export default function Invite() {
       hasAttemptedProfileRedirect.current = true;
       localStorage.removeItem('pendingInvite');
 
-      toast({
-        title: "You're already a member!",
-        description: `Taking you to your dashboard...`,
-        variant: "default"
-      });
-
-      setTimeout(() => {
-        setLocation('/dashboard');
-      }, 1000);
+      // Silent redirect - user doesn't need to know they re-clicked an invite link
+      setLocation('/dashboard');
     }
   }, [loadingInvite, loadingAuth, loadingMemberships, isAuthenticated, inviteDetails, alreadyHasMembership, toast, setLocation]);
 
@@ -235,8 +244,31 @@ export default function Invite() {
     );
   }
 
-  // Error state
+  // Error state - smart redirect for authenticated users
   if (inviteError || !inviteDetails) {
+    // If user is authenticated, redirect to dashboard with friendly message instead of showing error
+    if (isAuthenticated && !loadingAuth) {
+      setTimeout(() => {
+        toast({
+          title: "Invite Link Expired",
+          description: "This invite has expired, but you're already logged in! Taking you to your dashboard...",
+          variant: "default"
+        });
+        localStorage.removeItem('pendingInvite');
+        setLocation('/dashboard');
+      }, 100);
+
+      return (
+        <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Redirecting...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Not authenticated - show error page
     return (
       <div className="min-h-screen bg-gradient-subtle p-4 flex items-center justify-center">
         <div className="max-w-md w-full text-center">
@@ -371,6 +403,14 @@ export default function Invite() {
             </div>
           )}
         </div>
+
+        {/* Install prompt modal */}
+        <InstallPrompt
+          isOpen={showInstallPrompt}
+          onClose={() => setShowInstallPrompt(false)}
+          title="Add BNDY to Your Home Screen"
+          description="Get quick access to your band calendar, setlists, and more!"
+        />
       </div>
     </div>
   );

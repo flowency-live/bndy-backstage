@@ -10,6 +10,9 @@ import { useConditionalDarkMode } from "@/hooks/use-conditional-dark-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { InstallPrompt } from "@/components/InstallPrompt";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { Smartphone } from "lucide-react";
 import type { User, InsertUserProfile, UpdateUserProfile } from "@/types/api";
 
 interface UserProfileResponse {
@@ -22,6 +25,8 @@ export default function Profile() {
   const { session, isAuthenticated, loading } = useServerAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const { canInstall } = useInstallPrompt();
 
   // Profile page now respects theme system - no forced dark mode
 
@@ -166,8 +171,20 @@ export default function Profile() {
     <PageContainer variant="narrow">
       <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
         {/* Profile Form Card with integrated back button */}
-        <Card className="shadow-xl w-full">
+        <Card className="shadow-xl w-full relative">
           <CardContent className="p-6">
+            {/* Install App button - top right corner */}
+            {canInstall && (
+              <button
+                onClick={() => setShowInstallPrompt(true)}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-brand-accent transition-colors flex items-center gap-2 text-sm"
+                title="Add BNDY to home screen"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
+
             {/* Only show back button if profile is complete (edit mode) */}
             {mode === "edit" && (
               <button
@@ -196,6 +213,14 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Install prompt modal */}
+      <InstallPrompt
+        isOpen={showInstallPrompt}
+        onClose={() => setShowInstallPrompt(false)}
+        title="Add BNDY to Your Home Screen"
+        description="Get quick access to your band calendar, setlists, and more!"
+      />
     </PageContainer>
   );
 }
