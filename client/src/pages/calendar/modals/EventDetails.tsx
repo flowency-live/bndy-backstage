@@ -15,9 +15,7 @@ interface EventDetailsProps {
   onClose: () => void;
   onEdit: (event: Event) => void;
   onDelete: (event: Event, deleteAll?: boolean) => void;
-  artistMembers: Array<
-    ArtistMembership & { user: { id: string; displayName: string | null } }
-  >;
+  artistMembers: ArtistMembership[];
   currentMembershipId: string | null;
   currentUserId: string | null;
   canEdit: (event: Event) => boolean;
@@ -303,7 +301,7 @@ export default function EventDetails({
                 <i className="fas fa-lock mr-1"></i>
                 Only{' '}
                 {event.displayName ||
-                  eventMember?.user?.displayName?.trim() ||
+                  eventMember?.resolved_display_name ||
                   eventMember?.displayName ||
                   'the member'}{' '}
                 can edit this unavailability

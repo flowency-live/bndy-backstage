@@ -14,13 +14,6 @@ import { CalendarProvider, useCalendarContext } from './CalendarContext';
 
 // Components
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import FloatingActionButton from '@/components/floating-action-button';
 import { MonthNavigation, SwipeableCalendarWrapper } from './components/MonthNavigation';
 import { UpcomingEventBanner } from './components/UpcomingEventBanner';
@@ -422,99 +415,8 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     return event.membershipId === effectiveMembership?.membership_id;
   };
 
-  // Calendar export functions
-  const handleExportCalendar = async (includePrivate: boolean = false, memberOnly: boolean = false) => {
-    try {
-      if (!session?.access_token) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to export calendar",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!effectiveArtistId) {
-        toast({
-          title: "No artist context",
-          description: "Please select an artist to export calendar",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const { blob, filename } = await eventsService.exportCalendar(effectiveArtistId, {
-        includePrivate,
-        memberOnly,
-        accessToken: session.access_token,
-      });
-
-      // Download the file
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast({
-        title: "Calendar exported",
-        description: `Downloaded ${filename}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "Failed to export calendar. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleGetCalendarUrls = async () => {
-    try {
-      if (!session?.access_token) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to get calendar URLs",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!effectiveArtistId) {
-        toast({
-          title: "No artist context",
-          description: "Please select an artist to get calendar URLs",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const data = await eventsService.getCalendarUrls(effectiveArtistId, session.access_token);
-
-      // Copy the full calendar URL to clipboard
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(data.urls.full);
-        toast({
-          title: "Calendar URL copied",
-          description: "Paste this URL in your calendar app to subscribe to live updates",
-        });
-      } else {
-        toast({
-          title: "Calendar URLs",
-          description: "Calendar subscription URL copied to clipboard",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Failed to get URLs",
-        description: "Failed to get calendar URLs. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
+  // TODO: Implement calendar export functionality properly
+  // Export functionality removed - needs proper implementation with correct auth structure
 
   return (
     <div className="min-h-screen bg-background">
@@ -522,52 +424,6 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
       <div className="bg-card/80 backdrop-blur-sm border-b border-border p-2 md:p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {/* Export Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 md:gap-2 h-8 px-2 md:px-3"
-                  data-testid="button-calendar-export"
-                >
-                  <i className="fas fa-download text-xs md:text-sm"></i>
-                  <span className="hidden sm:inline">Export</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start">
-                <DropdownMenuItem
-                  onClick={() => handleExportCalendar(false, false)}
-                  data-testid="menu-export-all-public"
-                >
-                  <i className="fas fa-calendar mr-2 w-4 h-4"></i>
-                  Export All Public Events
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleExportCalendar(true, true)}
-                  data-testid="menu-export-personal-all"
-                >
-                  <i className="fas fa-user mr-2 w-4 h-4"></i>
-                  Export My Events (All)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleExportCalendar(false, true)}
-                  data-testid="menu-export-personal-public"
-                >
-                  <i className="fas fa-user mr-2 w-4 h-4"></i>
-                  Export My Public Events
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleGetCalendarUrls}
-                  data-testid="menu-get-calendar-urls"
-                >
-                  <i className="fas fa-link mr-2 w-4 h-4"></i>
-                  Get Subscription URL
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {/* Marker Mode Toggle (Artist context only) */}
             {effectiveArtistId && viewMode === 'calendar' && (
               <MarkerModeToggle
@@ -723,7 +579,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
             artistDisplayColour={artistData?.displayColour}
             artistColorMap={artistColorMap}
             artistMembers={artistMembers}
-            currentUserDisplayName={userProfile?.user?.displayName}
+            currentUserDisplayName={userProfile?.user?.displayName || undefined}
             currentUserId={session?.user?.cognitoId}
             effectiveArtistId={effectiveArtistId}
             onEventClick={handleEventClick}
@@ -741,7 +597,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
           artistDisplayColour={artistData?.displayColour}
           artistColorMap={artistColorMap}
           artistMembers={artistMembers}
-          currentUserDisplayName={userProfile?.user?.displayName}
+          currentUserDisplayName={userProfile?.user?.displayName || undefined}
           effectiveArtistId={effectiveArtistId}
           showAllArtists={showAllArtists}
           onEventClick={handleEventClick}
