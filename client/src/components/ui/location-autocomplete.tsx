@@ -40,7 +40,7 @@ export default function LocationAutocomplete({
   // Sync external value changes and update initialValue ref
   useEffect(() => {
     // Update initialValue ref when value changes from parent (like form reset)
-    if (value && value !== searchTerm) {
+    if (value !== searchTerm) {
       initialValue.current = value;
     }
     setSearchTerm(value);
