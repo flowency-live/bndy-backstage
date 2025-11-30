@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, Lock, LockOpen, UserPlus } from 'lucide-react';
+import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, Lock, LockOpen, UserPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import {
   getAllArtists,
   getAllUsers,
   getAllMemberships,
+  createArtist,
   updateArtist,
   deleteArtist,
   markArtistAsReviewed,
@@ -17,6 +18,7 @@ import {
 import { useConfirm } from '@/hooks/use-confirm';
 import { useToast } from '@/hooks/use-toast';
 import ArtistEditModal from '../components/ArtistEditModal';
+import ArtistCreateModal from '../components/ArtistCreateModal';
 
 export default function ArtistsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -45,6 +47,9 @@ export default function ArtistsPage() {
   // Batch Edit Modal State
   const [artistEditModalOpen, setArtistEditModalOpen] = useState(false);
   const [artistEditIndex, setArtistEditIndex] = useState(0);
+
+  // Create Modal State
+  const [artistCreateModalOpen, setArtistCreateModalOpen] = useState(false);
 
   // Fetch Functions
   const fetchArtists = async () => {
@@ -185,6 +190,11 @@ export default function ArtistsPage() {
     setArtists(artists.map(a => a.id === updated.id ? updated : a));
   };
 
+  const handleArtistCreate = async (artistData: any) => {
+    const newArtist = await createArtist(artistData);
+    setArtists([newArtist, ...artists]);
+  };
+
   // Filtered Data
   const filteredArtists = artists.filter(a => {
     const matchesSearch = (a.name && String(a.name).toLowerCase().includes(artistSearch.toLowerCase())) ||
@@ -259,6 +269,10 @@ export default function ArtistsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Manage artists across the platform</p>
         </div>
+        <Button onClick={() => setArtistCreateModalOpen(true)} size="default">
+          <Plus className="h-4 w-4 mr-2" />
+          Create New Artist
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -595,6 +609,13 @@ export default function ArtistsPage() {
           onDelete={handleArtistDelete}
         />
       )}
+
+      {/* Create Modal */}
+      <ArtistCreateModal
+        open={artistCreateModalOpen}
+        onClose={() => setArtistCreateModalOpen(false)}
+        onCreate={handleArtistCreate}
+      />
     </div>
   );
 }

@@ -68,6 +68,7 @@ export default function ArtistEditModal({
       name: editForm.name,
       artistType: editForm.artistType,
       actType: editForm.actType,
+      genres: editForm.genres,
       location: editForm.location,
       locationType: editForm.locationType
     });
