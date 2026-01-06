@@ -8,6 +8,10 @@ export function OnboardingTour() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
 
   useEffect(() => {
+    // Temporarily disabled - Driver.js/Tippy.js causing crashes on desktop
+    // TODO: Re-enable once fixed
+    return;
+
     // Check if user has completed onboarding
     const completed = localStorage.getItem(ONBOARDING_STORAGE_KEY);
     if (!completed) {
