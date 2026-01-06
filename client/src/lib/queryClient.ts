@@ -67,3 +67,20 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// DEBUG: Monitor queries for invalid enabled values
+if (typeof window !== 'undefined') {
+  queryClient.getQueryCache().subscribe((event) => {
+    if (event.type === 'added' || event.type === 'updated') {
+      const query = event.query;
+      const enabled = query.options?.enabled;
+      if (enabled !== undefined && typeof enabled !== 'boolean' && typeof enabled !== 'function') {
+        console.error('[QUERY DEBUG] Invalid enabled value:', {
+          queryKey: query.queryKey,
+          enabled,
+          enabledType: typeof enabled,
+        });
+      }
+    }
+  });
+}
