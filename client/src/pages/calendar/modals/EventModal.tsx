@@ -114,16 +114,10 @@ export function EventModal({
 
       if (isEditMode && event) {
         // Update existing event
-        await apiRequest(`/events/${event.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(eventData),
-        });
+        await apiRequest('PUT', `/events/${event.id}`, eventData);
       } else {
         // Create new event
-        await apiRequest('/events', {
-          method: 'POST',
-          body: JSON.stringify(eventData),
-        });
+        await apiRequest('POST', '/events', eventData);
       }
 
       onSuccess?.();
