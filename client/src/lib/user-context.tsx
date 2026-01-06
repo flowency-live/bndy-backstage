@@ -72,7 +72,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Layer 4: For platform admins, fetch artist data when viewing non-member artist
   const isPlatformAdminCheck = userProfileData?.platformAdmin || false;
   const savedArtistId = typeof window !== 'undefined' ? localStorage.getItem('bndy-selected-artist-id') : null;
-  const isViewingNonMemberArtist = isPlatformAdminCheck && savedArtistId && !membershipsData?.artists?.some(a => a.artist_id === savedArtistId);
+  const isViewingNonMemberArtist = Boolean(isPlatformAdminCheck && savedArtistId && !membershipsData?.artists?.some(a => a.artist_id === savedArtistId));
 
   const { data: stealthArtistData } = useQuery({
     queryKey: ["stealth-artist", savedArtistId],
@@ -83,7 +83,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!response.ok) throw new Error('Failed to fetch artist');
       return response.json();
     },
-    enabled: isViewingNonMemberArtist && !!savedArtistId,
+    enabled: Boolean(isViewingNonMemberArtist && savedArtistId),
   });
 
   // Combine user profile and memberships
