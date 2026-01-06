@@ -11,6 +11,7 @@ frontend:
     baseDirectory: dist
     files:
       - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
+  # Cache temporarily disabled to force fresh npm install
+  # cache:
+  #   paths:
+  #     - node_modules/**/*
