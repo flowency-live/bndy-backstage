@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { eventsService } from '@/lib/services/events-service';
 import type { Event, ArtistMembership } from '@/types/api';
+import { EVENT_TYPE_CONFIG } from '@/types/api';
 
 // Context
 import { CalendarProvider, useCalendarContext } from './CalendarContext';
@@ -98,6 +99,49 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [markerModeActive, setMarkerModeActive] = useState(false);
   const [showBulkAvailabilityDrawer, setShowBulkAvailabilityDrawer] = useState(false);
+
+  const getArtistDisplayName = (artistId?: string, fallback?: string) => {
+    if (!artistId) {
+      return fallback || 'the artist';
+    }
+
+    if (artistId === effectiveArtistId) {
+      return artistData?.name || fallback || 'this artist';
+    }
+
+    const membership = userProfile?.artists?.find(
+      (m) => m.artist_id === artistId || m.artist?.id === artistId
+    );
+
+    return membership?.artist?.name || membership?.name || fallback || 'that artist';
+  };
+
+  const getEventTypeLabel = (event: Event) => {
+    if (EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG]) {
+      return EVENT_TYPE_CONFIG[event.type as keyof typeof EVENT_TYPE_CONFIG].label;
+    }
+
+    const customLabels: Record<string, string> = {
+      public_gig: 'Public gig',
+      available: 'Availability marker',
+    };
+
+    return customLabels[event.type] || event.type || 'event';
+  };
+
+  const confirmCrossArtistDelete = (event: Event): boolean => {
+    if (!event.artistId || event.artistId === effectiveArtistId) {
+      return true;
+    }
+
+    const currentArtistName = artistData?.name || 'this artist';
+    const targetArtistName = getArtistDisplayName(event.artistId, event.artistName);
+    const eventLabel = getEventTypeLabel(event);
+
+    return confirm(
+      `You are working in ${currentArtistName} - are you sure you want to delete this ${eventLabel} from ${targetArtistName}?`
+    );
+  };
 
   // Scroll to top when component loads
   useEffect(() => {
@@ -258,14 +302,35 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: async ({ event, deleteAll }: { event: Event; deleteAll?: boolean }) => {
+    mutationFn: async ({
+      event,
+      deleteAll,
+      artistIdOverride,
+    }: {
+      event: Event;
+      deleteAll?: boolean;
+      artistIdOverride?: string;
+    }) => {
+      const targetArtistId = artistIdOverride ?? effectiveArtistId ?? event.artistId;
+      if (!targetArtistId) {
+        throw new Error('No artist selected for deletion');
+      }
       const url = deleteAll
-        ? `/api/artists/${effectiveArtistId}/events/${event.id}?deleteAll=true`
-        : `/api/artists/${effectiveArtistId}/events/${event.id}`;
+        ? `/api/artists/${targetArtistId}/events/${event.id}?deleteAll=true`
+        : `/api/artists/${targetArtistId}/events/${event.id}`;
       return apiRequest('DELETE', url);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/artists', effectiveArtistId, 'calendar'] });
+    onSuccess: (_, { event }) => {
+      const artistIdsToInvalidate = new Set<string>();
+      if (effectiveArtistId) {
+        artistIdsToInvalidate.add(effectiveArtistId);
+      }
+      if (event.artistId) {
+        artistIdsToInvalidate.add(event.artistId);
+      }
+      artistIdsToInvalidate.forEach((id) => {
+        queryClient.invalidateQueries({ queryKey: ['/api/artists', id, 'calendar'] });
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/me/events'] });
       toast({
         title: 'Event deleted',
@@ -376,7 +441,16 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   };
 
   const handleDeleteEvent = (event: Event, deleteAll?: boolean) => {
-    deleteMutation.mutate({ event, deleteAll });
+    const crossArtist = Boolean(event.artistId && event.artistId !== effectiveArtistId);
+    if (crossArtist && !confirmCrossArtistDelete(event)) {
+      return;
+    }
+
+    deleteMutation.mutate({
+      event,
+      deleteAll,
+      artistIdOverride: crossArtist ? event.artistId : undefined,
+    });
   };
 
   const handleDayClickInMarkerMode = (date: string) => {
@@ -399,8 +473,18 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   };
 
   const handleDeleteAvailability = (event: Event) => {
-    if (!effectiveArtistId) return;
-    deleteMutation.mutate({ event });
+    const crossArtist = Boolean(event.artistId && event.artistId !== effectiveArtistId);
+    if (!effectiveArtistId && !event.artistId) {
+      return;
+    }
+    if (crossArtist && !confirmCrossArtistDelete(event)) {
+      return;
+    }
+
+    deleteMutation.mutate({
+      event,
+      artistIdOverride: crossArtist ? event.artistId : undefined,
+    });
   };
 
   const handleSuccess = () => {
