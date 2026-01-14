@@ -409,10 +409,24 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   };
 
   const canEdit = (event: Event): boolean => {
+    // For unavailability events, only the owner can edit
     if (event.type === 'unavailable') {
-      return event.ownerUserId === session?.user?.cognitoId;
+      return event.ownerUserId === session?.user?.cognitoId || 
+             event.membershipId === effectiveMembership?.membership_id;
     }
-    return event.membershipId === effectiveMembership?.membership_id;
+
+    // For artist events, any member of the artist can edit if the event belongs to that artist
+    if (event.artistId && effectiveArtistId && event.artistId === effectiveArtistId) {
+      return !!effectiveMembership; // User is a member of the artist
+    }
+
+    // For personal events without artist context, allow editing
+    if (!event.artistId) {
+      return true;
+    }
+
+    // Default: no permission
+    return false;
   };
 
   // TODO: Implement calendar export functionality properly

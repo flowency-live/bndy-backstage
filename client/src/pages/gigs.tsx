@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Music, Plus, Map, List, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Music, Plus, Map, List, Search, ChevronDown, ChevronRight, LayoutGrid, AlignJustify } from "lucide-react";
 import type { Event, ArtistMembership } from "@/types/api";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -42,6 +42,7 @@ function GigsContent({ artistId, membership }: GigsProps) {
   const { session } = useServerAuth();
   const { currentMembership, userProfile } = useUser();
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [listViewMode, setListViewMode] = useState<'grouped' | 'flat'>('grouped');
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'upcoming' | 'past'>('upcoming');
   const [showAddGigWizard, setShowAddGigWizard] = useState(false);
@@ -115,6 +116,29 @@ function GigsContent({ artistId, membership }: GigsProps) {
     return result;
   }, [allGigs, searchQuery, timeFilter]);
 
+  // Prepare flat list view data (sorted appropriately)
+  const flatListGigs = useMemo(() => {
+    const todayGigs = filteredGigs.filter((gig) => isToday(new Date(gig.date)));
+    const futureGigs = filteredGigs.filter((gig) => isFuture(new Date(gig.date)) && !isToday(new Date(gig.date)));
+    const pastGigs = filteredGigs.filter((gig) => isPast(new Date(gig.date)) && !isToday(new Date(gig.date)));
+
+    // Sort future gigs ascending (earliest first)
+    const sortedFuture = [...futureGigs].sort((a, b) => {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+
+    // Sort past gigs descending (most recent first)
+    const sortedPast = [...pastGigs].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    return {
+      today: todayGigs,
+      future: sortedFuture,
+      past: sortedPast,
+    };
+  }, [filteredGigs]);
+
   // Group gigs by month
   const groupedGigs = useMemo(() => {
     const todayGigs = filteredGigs.filter((gig) => isToday(new Date(gig.date)));
@@ -131,6 +155,13 @@ function GigsContent({ artistId, membership }: GigsProps) {
       futureByMonth[monthKey].push(gig);
     });
 
+    // Sort future gigs within each month by date ascending (earliest first)
+    Object.keys(futureByMonth).forEach(monthKey => {
+      futureByMonth[monthKey].sort((a, b) => {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
+    });
+
     // Group past gigs by month
     const pastByMonth: Record<string, Event[]> = {};
     pastGigs.forEach(gig => {
@@ -139,6 +170,13 @@ function GigsContent({ artistId, membership }: GigsProps) {
         pastByMonth[monthKey] = [];
       }
       pastByMonth[monthKey].push(gig);
+    });
+
+    // Sort past gigs within each month by date descending (most recent first)
+    Object.keys(pastByMonth).forEach(monthKey => {
+      pastByMonth[monthKey].sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
     });
 
     return {
@@ -191,8 +229,24 @@ function GigsContent({ artistId, membership }: GigsProps) {
   };
 
   const canEditEvent = (event: Event) => {
-    // Check if user can edit this event
-    return event.membershipId === currentMembership?.membership_id;
+    // For unavailability events, only the owner can edit
+    if (event.type === 'unavailable') {
+      return event.ownerUserId === session?.user?.cognitoId || 
+             event.membershipId === currentMembership?.membership_id;
+    }
+
+    // For artist events, any member of the artist can edit if the event belongs to that artist
+    if (event.artistId && artistId && event.artistId === artistId) {
+      return !!currentMembership; // User is a member of the artist
+    }
+
+    // For personal events without artist context, allow editing
+    if (!event.artistId) {
+      return true;
+    }
+
+    // Default: no permission
+    return false;
   };
 
   if (isLoading) {
@@ -226,6 +280,34 @@ function GigsContent({ artistId, membership }: GigsProps) {
               <Map className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Map</span>
             </Button>
+            {viewMode === 'list' && (
+              <div className="flex bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setListViewMode('grouped')}
+                  className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded transition-colors ${
+                    listViewMode === 'grouped'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="Grouped by month"
+                >
+                  <LayoutGrid className="h-4 w-4 inline sm:mr-1" />
+                  <span className="hidden sm:inline">Grouped</span>
+                </button>
+                <button
+                  onClick={() => setListViewMode('flat')}
+                  className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded transition-colors ${
+                    listViewMode === 'flat'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="Flat list"
+                >
+                  <AlignJustify className="h-4 w-4 inline sm:mr-1" />
+                  <span className="hidden sm:inline">Flat</span>
+                </button>
+              </div>
+            )}
             <Button
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => setShowAddGigWizard(true)}
@@ -343,6 +425,50 @@ function GigsContent({ artistId, membership }: GigsProps) {
                 </Button>
               }
             />
+          ) : listViewMode === 'flat' ? (
+            <div className="space-y-6">
+              {/* Today's Gigs */}
+              {flatListGigs.today.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span className="text-orange-500">🎸</span> Today
+                  </h2>
+                  <div className="space-y-3">
+                    {flatListGigs.today.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} highlighted onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Future Gigs - Flat List */}
+              {flatListGigs.future.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+                    Upcoming
+                  </h2>
+                  <div className="space-y-3">
+                    {flatListGigs.future.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Past Gigs - Flat List */}
+              {flatListGigs.past.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-serif font-bold text-foreground mb-4">
+                    Past Gigs
+                  </h2>
+                  <div className="space-y-3">
+                    {flatListGigs.past.map((gig) => (
+                      <GigCard key={gig.id} gig={gig} past onClick={() => handleGigClick(gig)} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="space-y-6">
               {/* Today's Gigs */}

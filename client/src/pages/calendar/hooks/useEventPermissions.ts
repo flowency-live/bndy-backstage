@@ -18,20 +18,20 @@ export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
    * Check if user can edit an event
    */
   const canEdit = (event: Event): boolean => {
-    // For unavailability events, check ownership
+    // For unavailability events, only the owner can edit
     if (event.type === 'unavailable') {
       // User personal unavailable event - check if owned by current user
       if (event.ownerUserId) {
         return event.ownerUserId === session?.user?.cognitoId;
       }
       // Legacy band member unavailable event - check membership
-      return event.membershipId === membership?.id;
+      return event.membershipId === membership?.membership_id || event.membershipId === membership?.id;
     }
 
-    // For artist events, only allow editing if in that artist's context
+    // For artist events, any member of the artist can edit if the event belongs to that artist
     // This prevents users from editing/deleting other artists' events when viewing cross-artist calendar
-    if (event.artistId && artistId) {
-      return event.artistId === artistId;
+    if (event.artistId && artistId && event.artistId === artistId) {
+      return !!membership; // User is a member of the artist
     }
 
     // For personal events without artist context, allow editing

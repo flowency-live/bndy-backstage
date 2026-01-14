@@ -3,6 +3,7 @@ export const ARTIST_TYPES = [
   { value: 'band', label: 'Band' },
   { value: 'solo', label: 'Solo Act' },
   { value: 'duo', label: 'Duo' },
+  { value: 'trio', label: 'Trio' },
   { value: 'group', label: 'Group' },
   { value: 'dj', label: 'DJ' },
   { value: 'collective', label: 'Collective' }
