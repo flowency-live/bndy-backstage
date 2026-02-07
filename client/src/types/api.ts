@@ -34,6 +34,8 @@ export interface Artist {
   acoustic?: boolean;  // NEW: Indicates acoustic performance capability
   actType?: string[];  // NEW: Type of act (multiselect: originals, covers, tribute)
   publishAvailability?: boolean;  // NEW: Control whether availability is public on frontstage (default: false)
+  showMemberVotes?: boolean;  // NEW: Show individual member votes when all votes are collected
+  autoDiscardThreshold?: number | null;  // NEW: Auto-discard songs scoring below this % (null = disabled)
   profileImageUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;

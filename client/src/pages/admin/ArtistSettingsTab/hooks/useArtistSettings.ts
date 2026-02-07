@@ -18,6 +18,8 @@ interface ArtistSettings {
   actType?: ActType[];
   acoustic?: boolean;
   publishAvailability?: boolean;
+  showMemberVotes?: boolean;
+  autoDiscardThreshold?: number | null;
   facebookUrl: string;
   instagramUrl: string;
   websiteUrl: string;
@@ -43,6 +45,8 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
     actType: [],
     acoustic: false,
     publishAvailability: false,
+    showMemberVotes: false,
+    autoDiscardThreshold: null,
     facebookUrl: '',
     instagramUrl: '',
     websiteUrl: '',
@@ -70,6 +74,8 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         actType: (artistData.actType || []) as ActType[],
         acoustic: artistData.acoustic || false,
         publishAvailability: artistData.publishAvailability || false,
+        showMemberVotes: artistData.showMemberVotes || false,
+        autoDiscardThreshold: artistData.autoDiscardThreshold ?? null,
         facebookUrl: artistData.facebookUrl || '',
         instagramUrl: artistData.instagramUrl || '',
         websiteUrl: artistData.websiteUrl || '',
@@ -104,6 +110,8 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         actType: settings.actType || null,
         acoustic: settings.acoustic || false,
         publishAvailability: settings.publishAvailability || false,
+        showMemberVotes: settings.showMemberVotes || false,
+        autoDiscardThreshold: settings.autoDiscardThreshold,
         facebookUrl: settings.facebookUrl || null,
         instagramUrl: settings.instagramUrl || null,
         websiteUrl: settings.websiteUrl || null,

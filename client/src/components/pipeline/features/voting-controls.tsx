@@ -3,11 +3,26 @@ import { useState } from "react";
 interface VotingControlsProps {
   currentVote: number | null;
   onVote: (value: number) => void;
+  maxStars?: 3 | 5;  // 3 for new songs, 5 for legacy (defaults to 5)
 }
 
-export default function VotingControls({ currentVote, onVote }: VotingControlsProps) {
+// Labels for 3-star scale
+const LABELS_3_STAR = {
+  low: "Probably Not",
+  high: "DO IT!"
+};
+
+// Labels for 5-star scale
+const LABELS_5_STAR = {
+  low: "Meh",
+  high: "Love it!"
+};
+
+export default function VotingControls({ currentVote, onVote, maxStars = 5 }: VotingControlsProps) {
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
   const [showPooConfirmation, setShowPooConfirmation] = useState(false);
+
+  const labels = maxStars === 3 ? LABELS_3_STAR : LABELS_5_STAR;
 
   const handlePooClick = () => {
     console.log('[VotingControls] Poo button clicked, showing confirmation modal');
@@ -43,7 +58,7 @@ export default function VotingControls({ currentVote, onVote }: VotingControlsPr
         `}
       >
         <span className="text-2xl">💩</span>
-        <span className="font-medium">Pass</span>
+        <span className="font-medium">Definitely Not</span>
       </button>
 
       {/* Poo Vote Confirmation Modal */}
@@ -75,9 +90,9 @@ export default function VotingControls({ currentVote, onVote }: VotingControlsPr
         </div>
       )}
 
-      {/* Star Rating (1-5) */}
+      {/* Star Rating */}
       <div className="flex gap-2 justify-center">
-        {[1, 2, 3, 4, 5].map((value) => {
+        {Array.from({ length: maxStars }, (_, i) => i + 1).map((value) => {
           const isActive = currentVote !== null && currentVote >= value;
           const isHovered = hoveredValue !== null && hoveredValue >= value;
           const shouldHighlight = isActive || isHovered;
@@ -108,8 +123,8 @@ export default function VotingControls({ currentVote, onVote }: VotingControlsPr
 
       {/* Vote Labels */}
       <div className="flex justify-between text-xs text-muted-foreground px-2">
-        <span>Meh</span>
-        <span>Love it!</span>
+        <span>{labels.low}</span>
+        <span>{labels.high}</span>
       </div>
     </div>
   );

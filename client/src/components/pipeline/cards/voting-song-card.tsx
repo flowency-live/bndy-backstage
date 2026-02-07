@@ -4,8 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
 import VoteProgressBadge from "../features/vote-progress-badge";
 import ScoreProgressBar from "../features/score-progress-bar";
+import MemberVotesReveal from "../features/member-votes-reveal";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import { artistsService } from "@/lib/services/artists-service";
+import type { ArtistMembership } from "@/types/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +25,7 @@ interface PipelineSong {
   song_id: string;
   status: string;
   votes: Record<string, { value: number; updated_at: string }>;
+  voting_scale?: 3 | 5;  // 3 for new songs, 5 for legacy (defaults to 5 if undefined)
   suggested_by_user_id: string;
   suggested_comment: string;
   globalSong: {
@@ -42,6 +45,8 @@ interface VotingSongCardProps {
   memberCount: number;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  memberships?: ArtistMembership[];
+  showMemberVotes?: boolean;
 }
 
 export default function VotingSongCard({
@@ -49,7 +54,9 @@ export default function VotingSongCard({
   userId,
   memberCount,
   isExpanded,
-  onToggleExpand
+  onToggleExpand,
+  memberships = [],
+  showMemberVotes = false
 }: VotingSongCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -58,16 +65,17 @@ export default function VotingSongCard({
   const userVote = song.votes?.[userId]?.value ?? null;
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
+  const votingScale = song.voting_scale || 5;  // Backwards compatible: existing songs use 5
 
   // Check if anyone voted 0 (poop/pass)
   const hasZeroVote = Object.values(song.votes || {}).some((vote: any) => vote.value === 0);
 
-  // Calculate score percentage
+  // Calculate score percentage using the song's voting scale
   const totalScore = Object.values(song.votes || {}).reduce(
     (sum, vote: any) => sum + (vote.value || 0),
     0
   );
-  const maxScore = memberCount * 5;
+  const maxScore = memberCount * votingScale;
   const scorePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
   const voteMutation = useMutation({
@@ -241,7 +249,7 @@ export default function VotingSongCard({
                     className="flex gap-0.5 cursor-pointer hover:scale-110 transition-transform"
                     title="Change your vote"
                   >
-                    {[1, 2, 3, 4, 5].map((star) => (
+                    {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
                       <i
                         key={star}
                         className={`fas fa-star ${
@@ -301,6 +309,15 @@ export default function VotingSongCard({
                 </p>
               </div>
 
+              {/* Member Votes Reveal - only shown if artist setting enabled */}
+              {showMemberVotes && memberships.length > 0 && (
+                <MemberVotesReveal
+                  votes={song.votes}
+                  memberships={memberships}
+                  votingScale={votingScale as 3 | 5}
+                />
+              )}
+
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => statusMutation.mutate('practice')}
@@ -341,6 +358,7 @@ export default function VotingSongCard({
               <VotingControls
                 currentVote={userVote}
                 onVote={handleVote}
+                maxStars={votingScale as 3 | 5}
               />
 
               {/* Actions */}

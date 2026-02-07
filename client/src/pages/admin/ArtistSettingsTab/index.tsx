@@ -7,6 +7,7 @@ import { ArtistTypeSelector } from '@/components/ui/artist-type-selector';
 import { ActTypeSelector } from '@/components/ui/act-type-selector';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
+import { Input } from '@/components/ui/input';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import AvatarUploadSection from './components/AvatarUploadSection';
 import BasicInfoSection from './components/BasicInfoSection';
@@ -135,6 +136,49 @@ export default function ArtistSettingsTab() {
             <Label htmlFor="publishAvailability" className="text-sm font-medium cursor-pointer">
               Publish availability on public profile
             </Label>
+          </div>
+
+          {/* Voting Settings Section */}
+          <div className="border-t pt-6 mt-6">
+            <h3 className="text-lg font-semibold mb-4">Song Voting Settings</h3>
+
+            {/* Show Member Votes */}
+            <div className="flex items-center space-x-2 mb-4">
+              <Checkbox
+                id="showMemberVotes"
+                checked={settings.showMemberVotes || false}
+                onCheckedChange={(checked) => updateField('showMemberVotes', checked as boolean)}
+              />
+              <Label htmlFor="showMemberVotes" className="text-sm font-medium cursor-pointer">
+                Show individual member votes when all votes are collected
+              </Label>
+            </div>
+
+            {/* Auto-Discard Threshold */}
+            <div className="space-y-2">
+              <Label htmlFor="autoDiscardThreshold" className="text-sm font-medium">
+                Auto-discard threshold (optional)
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="autoDiscardThreshold"
+                  type="number"
+                  min={1}
+                  max={99}
+                  placeholder="e.g., 50"
+                  value={settings.autoDiscardThreshold ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                    updateField('autoDiscardThreshold', val);
+                  }}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Songs scoring below this percentage will be automatically discarded after all votes are in. Leave empty to disable.
+              </p>
+            </div>
           </div>
 
           {/* Social Media Links */}

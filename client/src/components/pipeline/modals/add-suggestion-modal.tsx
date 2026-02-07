@@ -539,11 +539,12 @@ export default function AddSuggestionModal({
             />
           </div>
 
-          {/* Voting Controls */}
+          {/* Voting Controls - New suggestions use 3-star scale */}
           <div className="p-4 sm:p-6">
             <VotingControls
               currentVote={voteValue}
               onVote={setVoteValue}
+              maxStars={3}
             />
           </div>
 
