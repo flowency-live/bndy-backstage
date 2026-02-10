@@ -46,6 +46,7 @@ import GodmodeDashboard from "@/pages/godmode/Dashboard";
 import VenuesPage from "@/pages/godmode/venues";
 import EnrichmentQueuePage from "@/pages/godmode/venues/enrichment";
 import ArtistsPage from "@/pages/godmode/artists";
+import EventsPage from "@/pages/godmode/events";
 import SongsPageGodmode from "@/pages/godmode/songs";
 import UsersPage from "@/pages/godmode/users";
 
@@ -306,6 +307,11 @@ function Router() {
       <Route path="/godmode/artists">
         <GodmodeLayout>
           <ArtistsPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/events">
+        <GodmodeLayout>
+          <EventsPage />
         </GodmodeLayout>
       </Route>
       <Route path="/godmode/songs">

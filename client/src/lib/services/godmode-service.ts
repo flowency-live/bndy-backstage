@@ -110,6 +110,29 @@ export interface Membership {
   status: string;
 }
 
+export interface Event {
+  id: string;
+  artistId?: string;
+  venueId?: string;
+  type: string;
+  title?: string;
+  date: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  isPublic?: boolean;
+  isAllDay?: boolean;
+  location?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+  artistName?: string;
+  venueName?: string;
+  venue?: {
+    city?: string;
+  };
+}
+
 class GodmodeService {
   private baseUrl: string;
 
@@ -296,6 +319,44 @@ class GodmodeService {
     const data = await this.apiRequest<{ memberships: Membership[] }>('/api/memberships/all');
     return data.memberships || [];
   }
+
+  // ===== Event Operations =====
+
+  async getAllEvents(startDate?: string, endDate?: string): Promise<Event[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const queryString = params.toString();
+    const endpoint = queryString ? `/api/events/public?${queryString}` : '/api/events/public';
+    const data = await this.apiRequest<{ events: Event[] }>(endpoint);
+    return data.events || [];
+  }
+
+  async getEventById(artistId: string, eventId: string): Promise<Event | null> {
+    if (!artistId || !eventId) return null;
+
+    try {
+      return await this.apiRequest<Event>(`/api/artists/${artistId}/events/${eventId}`);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async updateEvent(artistId: string, eventId: string, eventData: Partial<Event>): Promise<Event> {
+    return this.apiRequest<Event>(`/api/artists/${artistId}/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify(eventData),
+    });
+  }
+
+  async deleteEvent(artistId: string, eventId: string): Promise<void> {
+    return this.apiRequest<void>(`/api/artists/${artistId}/events/${eventId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Export singleton instance
@@ -325,6 +386,11 @@ export const getAllUsers = () => godmodeService.getAllUsers();
 export const deleteUser = (userId: string) => godmodeService.deleteUser(userId);
 
 export const getAllMemberships = () => godmodeService.getAllMemberships();
+
+export const getAllEvents = (startDate?: string, endDate?: string) => godmodeService.getAllEvents(startDate, endDate);
+export const getEventById = (artistId: string, eventId: string) => godmodeService.getEventById(artistId, eventId);
+export const updateEvent = (artistId: string, eventId: string, eventData: Partial<Event>) => godmodeService.updateEvent(artistId, eventId, eventData);
+export const deleteEvent = (artistId: string, eventId: string) => godmodeService.deleteEvent(artistId, eventId);
 
 // Helper Functions
 export function formatGenres(genres: string[]): string {

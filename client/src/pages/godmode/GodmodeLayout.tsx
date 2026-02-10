@@ -5,7 +5,8 @@ import {
   User,
   Music,
   Users,
-  Sparkles
+  Sparkles,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +15,7 @@ const navigation = [
   { name: 'Venues', href: '/godmode/venues', icon: MapPin },
   { name: 'Enrichment Queue', href: '/godmode/venues/enrichment', icon: Sparkles, indent: true },
   { name: 'Artists', href: '/godmode/artists', icon: User },
+  { name: 'Events', href: '/godmode/events', icon: Calendar },
   { name: 'Songs', href: '/godmode/songs', icon: Music },
   { name: 'Users', href: '/godmode/users', icon: Users },
 ];
