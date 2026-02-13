@@ -20,6 +20,8 @@ export interface ArtistMembership {
     name: string;
     location?: string;
     displayColour?: string;
+    showMemberVotes?: boolean;
+    autoDiscardThreshold?: number | null;
     created_at: string;
     updated_at: string;
   };
