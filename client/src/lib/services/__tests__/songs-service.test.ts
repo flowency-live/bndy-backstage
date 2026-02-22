@@ -243,7 +243,7 @@ describe('SongsService', () => {
   describe('addSong', () => {
     it('should add song to artist playbook with all fields', async () => {
       const songRequest = {
-        spotifyUrl: 'https://open.spotify.com/track/xyz',
+        song_id: 'global-xyz',
         tuning: 'Drop D',
         notes: 'Capo on 2nd fret',
         customDuration: 200000,
@@ -277,7 +277,7 @@ describe('SongsService', () => {
 
     it('should add song with minimal required fields', async () => {
       const songRequest = {
-        spotifyUrl: 'https://open.spotify.com/track/abc',
+        song_id: 'global-abc',
       };
 
       server.use(
@@ -291,7 +291,7 @@ describe('SongsService', () => {
             id: 'artist-song-new',
             artistId: 'artist-1',
             globalSongId: 'global-abc',
-            spotifyUrl: songRequest.spotifyUrl,
+            song_id: songRequest.song_id,
             createdAt: '2025-01-01T00:00:00Z',
             readiness: [],
             vetos: [],

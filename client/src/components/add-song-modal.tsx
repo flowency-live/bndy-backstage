@@ -72,16 +72,32 @@ export default function AddSongModal({ isOpen, onClose, artistId, membership }: 
         throw new Error(`"${songData.title}" by ${songData.artistName} is already in your collection`);
       }
 
-      // Use songs-service instead of direct fetch
       const { songsService } = await import("@/lib/services/songs-service");
 
-      if (!songData.spotifyUrl) {
-        throw new Error("Spotify URL is required");
+      let songId = songData.id;
+
+      // If from Spotify, create global song first
+      if (songData.source === "spotify") {
+        if (!songData.spotifyUrl) {
+          throw new Error("Spotify URL is required");
+        }
+        const createdSong = await songsService.createGlobalSong({
+          title: songData.title,
+          artistName: songData.artistName,
+          album: songData.album || "",
+          albumImageUrl: songData.imageUrl || undefined,
+          spotifyUrl: songData.spotifyUrl,
+          duration: songData.duration || 0,
+          genre: songData.genre || undefined,
+          releaseDate: songData.releaseDate || undefined,
+          previewUrl: songData.previewUrl || undefined,
+        });
+        songId = createdSong.id;
       }
 
-      // Add song with Spotify URL - service handles both existing and new songs
+      // Add song to playbook using song_id
       return songsService.addSong(artistId, {
-        spotifyUrl: songData.spotifyUrl,
+        song_id: songId,
       });
     },
     onSuccess: () => {

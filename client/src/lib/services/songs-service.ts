@@ -42,7 +42,7 @@ export interface ArtistSong {
 }
 
 export interface AddSongRequest {
-  spotifyUrl: string;
+  song_id: string;
   tuning?: string;
   notes?: string;
   customDuration?: number;
