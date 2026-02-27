@@ -5,7 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
 import { PageHeader } from "@/components/layout";
 import type { ArtistMembership, Artist } from "@/types/api";
-import type { Setlist, SetlistSet, SetlistSong, PlaybookSong } from "@/types/setlist";
+import type { Setlist, SetlistSet, SetlistSong, SetlistBreak, SetlistItem, PlaybookSong } from "@/types/setlist";
+import { isSetlistSong, isSetlistBreak } from "@/types/setlist";
+import { SetlistBreakLine } from "@/components/setlist/setlist-break-line";
 import {
   DndContext,
   DragOverlay,
@@ -483,7 +485,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       handleAddFromPlaybook(songId, targetSetId, targetIndex);
     } else {
       // Moving within or between sets
-      handleMoveSong(songId, targetSetId, targetIndex);
+      handleMoveItem(songId, targetSetId, targetIndex);
     }
   };
 
@@ -529,25 +531,25 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setHasUnsavedChanges(true);
   };
 
-  const handleMoveSong = (songId: string, targetSetId: string, targetIndex: number) => {
+  const handleMoveItem = (itemId: string, targetSetId: string, targetIndex: number) => {
     if (!workingSetlist) return;
 
-    // Find source set and song
+    // Find source set and item
     let sourceSetId: string | null = null;
     let sourceIndex = -1;
-    let songToMove: SetlistSong | null = null;
+    let itemToMove: SetlistItem | null = null;
 
     for (const set of workingSetlist.sets) {
-      const idx = set.songs.findIndex(s => s.id === songId);
+      const idx = set.songs.findIndex(s => s.id === itemId);
       if (idx !== -1) {
         sourceSetId = set.id;
         sourceIndex = idx;
-        songToMove = set.songs[idx];
+        itemToMove = set.songs[idx];
         break;
       }
     }
 
-    if (!songToMove || !sourceSetId) {
+    if (!itemToMove || !sourceSetId) {
       return;
     }
 
@@ -559,18 +561,21 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     const updatedSets = workingSetlist.sets.map(set => {
       // Remove from source set
       if (set.id === sourceSetId) {
-        const newSongs = set.songs.filter(s => s.id !== songId);
+        const newSongs = set.songs.filter(s => s.id !== itemId);
 
-        // Clear segue flag on the song before the moved song (if it had segue into the moved song)
-        if (sourceIndex > 0) {
+        // Clear segue flag on the item before the moved item (if it had segue into the moved item)
+        if (sourceIndex > 0 && isSetlistSong(newSongs[sourceIndex - 1])) {
           newSongs[sourceIndex - 1] = { ...newSongs[sourceIndex - 1], segueInto: false };
         }
 
         // If source and target are same set, we need to adjust target index
         if (sourceSetId === targetSetId) {
           const adjustedIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-          // Clear segue flag on the moved song (reorder breaks segue)
-          newSongs.splice(adjustedIndex, 0, { ...songToMove, segueInto: false });
+          // Clear segue flag on the moved item if it's a song (reorder breaks segue)
+          const movedItem = isSetlistSong(itemToMove)
+            ? { ...itemToMove, segueInto: false }
+            : itemToMove;
+          newSongs.splice(adjustedIndex, 0, movedItem);
           return {
             ...set,
             songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
@@ -586,8 +591,11 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       // Add to target set (if different from source)
       if (set.id === targetSetId && sourceSetId !== targetSetId) {
         const newSongs = [...set.songs];
-        // Clear segue flag on the moved song (moving to different set breaks segue)
-        newSongs.splice(targetIndex, 0, { ...songToMove, segueInto: false });
+        // Clear segue flag on the moved item if it's a song (moving to different set breaks segue)
+        const movedItem = isSetlistSong(itemToMove)
+          ? { ...itemToMove, segueInto: false }
+          : itemToMove;
+        newSongs.splice(targetIndex, 0, movedItem);
         return {
           ...set,
           songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
@@ -601,17 +609,64 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     setHasUnsavedChanges(true);
   };
 
-  const handleRemoveSong = (setId: string, songId: string) => {
+  const handleRemoveItem = (setId: string, itemId: string) => {
     if (!workingSetlist) return;
 
     const updatedSets = workingSetlist.sets.map(set => {
       if (set.id === setId) {
         return {
           ...set,
-          songs: (set.songs || []).filter(s => s.id !== songId).map((song, idx) => ({
-            ...song,
+          songs: (set.songs || []).filter(s => s.id !== itemId).map((item, idx) => ({
+            ...item,
             position: idx,
           })),
+        };
+      }
+      return set;
+    });
+
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleAddBreak = (setId: string) => {
+    if (!workingSetlist) return;
+
+    const newBreak: SetlistBreak = {
+      id: `break-${Date.now()}-${Math.random()}`,
+      type: 'break',
+      note: 'Break',
+      position: 0,
+    };
+
+    const updatedSets = workingSetlist.sets.map(set => {
+      if (set.id === setId) {
+        // Add break at end of set
+        const newSongs = [...(set.songs || []), newBreak];
+        return {
+          ...set,
+          songs: newSongs.map((s, idx) => ({ ...s, position: idx })),
+        };
+      }
+      return set;
+    });
+
+    setWorkingSetlist({ ...workingSetlist, sets: updatedSets });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleEditBreak = (setId: string, breakId: string, note: string) => {
+    if (!workingSetlist) return;
+
+    const updatedSets = workingSetlist.sets.map(set => {
+      if (set.id === setId) {
+        return {
+          ...set,
+          songs: set.songs.map(item =>
+            item.id === breakId && isSetlistBreak(item)
+              ? { ...item, note }
+              : item
+          ),
         };
       }
       return set;
@@ -628,8 +683,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       if (set.id === setId) {
         return {
           ...set,
-          songs: (set.songs || []).map(song =>
-            song.id === songId ? { ...song, segueInto: !song.segueInto } : song
+          songs: (set.songs || []).map(item =>
+            item.id === songId && isSetlistSong(item)
+              ? { ...item, segueInto: !item.segueInto }
+              : item
           ),
         };
       }
@@ -656,8 +713,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
     if (trimmedTitle && trimmedTitle !== editingSongTitle) {
       const updatedSets = workingSetlist.sets.map(set => ({
         ...set,
-        songs: set.songs.map(song =>
-          song.id === editingSongTitle ? { ...song, title: trimmedTitle } : song
+        songs: set.songs.map(item =>
+          item.id === editingSongTitle && isSetlistSong(item)
+            ? { ...item, title: trimmedTitle }
+            : item
         ),
       }));
 
@@ -797,17 +856,26 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
       return 0;
     }
 
-    const total = set.songs.reduce((sum, song) => {
-      const duration = song?.duration || 0;
-      return sum + duration;
+    const total = set.songs.reduce((sum, item) => {
+      // Only count duration for songs, not breaks
+      if (isSetlistSong(item)) {
+        return sum + (item.duration || 0);
+      }
+      return sum;
     }, 0);
 
     return total;
   };
 
+  const getSongCount = (set: SetlistSet): number => {
+    return set.songs.filter(isSetlistSong).length;
+  };
+
   // Get all song IDs currently in the setlist (use working copy to reflect unsaved changes)
   const songsInSetlist = new Set(
-    (workingSetlist || setlist)?.sets.flatMap(set => (set.songs || []).map(song => song.song_id)) || []
+    (workingSetlist || setlist)?.sets.flatMap(set =>
+      (set.songs || []).filter(isSetlistSong).map(song => song.song_id)
+    ) || []
   );
 
   // Filter playbook songs based on search and "show all" toggle
@@ -1030,7 +1098,17 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                             className="w-3.5 h-3.5 text-orange-500 focus:ring-orange-500 cursor-pointer shrink-0"
                           />
                           <h3 className="font-semibold whitespace-nowrap">{set.name}</h3>
-                          <span className="text-muted-foreground whitespace-nowrap">({set.songs.length})</span>
+                          <span className="text-muted-foreground whitespace-nowrap">({getSongCount(set)})</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddBreak(set.id);
+                            }}
+                            className="text-muted-foreground hover:text-orange-500 p-0.5 shrink-0"
+                            title="Add break"
+                          >
+                            <i className="fas fa-pause text-[10px]"></i>
+                          </button>
                           <div className={`ml-auto flex items-center gap-1 font-medium ${varianceColor} shrink-0`}>
                             <span className="whitespace-nowrap">{formatDuration(totalDuration)}/{formatDuration(set.targetDuration)}</span>
                             <span className="whitespace-nowrap">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
@@ -1057,6 +1135,16 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               className="w-4 h-4 text-orange-500 focus:ring-orange-500 cursor-pointer"
                             />
                             <h3 className="font-semibold">{set.name}</h3>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddBreak(set.id);
+                              }}
+                              className="text-muted-foreground hover:text-orange-500 p-1 transition-colors"
+                              title="Add break"
+                            >
+                              <i className="fas fa-pause text-xs"></i>
+                            </button>
                           </div>
                           <div className="flex items-center space-x-3">
                             <div className={`font-medium ${varianceColor}`}>
@@ -1064,7 +1152,7 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               <span className="ml-1">({variance > 0 ? '+' : ''}{variance.toFixed(0)}%)</span>
                             </div>
                             <span className="text-muted-foreground">
-                              {set.songs.length} song{set.songs.length !== 1 ? 's' : ''}
+                              {getSongCount(set)} song{getSongCount(set) !== 1 ? 's' : ''}
                             </span>
                             <button
                               onClick={(e) => {
@@ -1087,18 +1175,39 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                         >
                           <DroppableSetContainer setId={set.id}>
                             {(() => {
-                              return set.songs?.map((song, idx) => {
-                                if (song.tuning && song.tuning !== 'standard') {
+                              // Track song index separately (for numbering, excluding breaks)
+                              let songIdx = 0;
+                              return set.songs?.map((item, idx) => {
+                                // Check if previous item is a song with segue
+                                const prevItem = idx > 0 ? set.songs[idx - 1] : null;
+                                const prevSongHasSegue = prevItem && isSetlistSong(prevItem) && prevItem.segueInto;
+
+                                if (isSetlistBreak(item)) {
+                                  return (
+                                    <SetlistBreakLine
+                                      key={item.id}
+                                      breakItem={item}
+                                      setId={set.id}
+                                      onEdit={handleEditBreak}
+                                      onRemove={handleRemoveItem}
+                                      isOver={overId === item.id}
+                                    />
+                                  );
                                 }
-                                const prevSongHasSegue = idx > 0 && set.songs[idx - 1]?.segueInto;
+
+                                // It's a song
+                                const song = item as SetlistSong;
+                                const currentSongIdx = songIdx;
+                                songIdx++;
+
                                 return (
                                   <SortableSongCard
                                     key={song.id}
                                     song={song}
                                     setId={set.id}
-                                    idx={idx}
+                                    idx={currentSongIdx}
                                     onToggleSegue={handleToggleSegue}
-                                    onRemove={handleRemoveSong}
+                                    onRemove={handleRemoveItem}
                                     showSegue={song.segueInto && idx < set.songs.length - 1}
                                     isOver={overId === song.id}
                                     drawerOpen={drawerOpen}
@@ -1223,18 +1332,23 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
             <i className="fas fa-grip-vertical text-sm"></i>
             <div className="font-bold text-sm">
               {(() => {
-                // Find the active song being dragged
+                // Find the active item being dragged
                 if (activeId.startsWith('playbook-')) {
                   const songId = activeId.replace('playbook-', '');
                   const song = playbookSongs.find(s => s.id === songId);
                   return song ? song.title : 'Song';
                 } else {
-                  // Find in setlist songs
+                  // Find in setlist items
                   for (const set of (workingSetlist || setlist)?.sets || []) {
-                    const song = set.songs.find(s => s.id === activeId);
-                    if (song) return song.title;
+                    const item = set.songs.find(s => s.id === activeId);
+                    if (item) {
+                      if (isSetlistBreak(item)) {
+                        return `Break: ${item.note}`;
+                      }
+                      return (item as SetlistSong).title;
+                    }
                   }
-                  return 'Song';
+                  return 'Item';
                 }
               })()}
             </div>

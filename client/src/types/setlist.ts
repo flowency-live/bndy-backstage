@@ -6,6 +6,8 @@
 export interface SetlistSong {
   /** Unique instance ID for this song in the set */
   id: string;
+  /** Type discriminator */
+  type?: 'song';
   /** Reference to the playbook song ID */
   song_id: string;
   /** Song title */
@@ -30,6 +32,31 @@ export interface SetlistSong {
   imageUrl?: string;
 }
 
+/** Break line between songs (e.g., guitar retune, instrument swap) */
+export interface SetlistBreak {
+  /** Unique instance ID for this break in the set */
+  id: string;
+  /** Type discriminator */
+  type: 'break';
+  /** Break note (e.g., "Guitar retune to Drop D") */
+  note: string;
+  /** Position in the set (0-indexed) */
+  position: number;
+}
+
+/** Union type for items in a set (songs or breaks) */
+export type SetlistItem = SetlistSong | SetlistBreak;
+
+/** Type guard to check if item is a song */
+export function isSetlistSong(item: SetlistItem): item is SetlistSong {
+  return item.type === 'song' || !('type' in item) || item.type === undefined;
+}
+
+/** Type guard to check if item is a break */
+export function isSetlistBreak(item: SetlistItem): item is SetlistBreak {
+  return item.type === 'break';
+}
+
 export interface SetlistSet {
   /** Unique set ID */
   id: string;
@@ -37,8 +64,8 @@ export interface SetlistSet {
   name: string;
   /** Target duration in seconds */
   targetDuration: number;
-  /** Songs in this set */
-  songs: SetlistSong[];
+  /** Items in this set (songs and breaks) */
+  songs: SetlistItem[];
 }
 
 export interface Setlist {

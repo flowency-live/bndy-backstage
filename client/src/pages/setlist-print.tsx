@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import type { Setlist } from "@/types/setlist";
+import type { Setlist, SetlistSong } from "@/types/setlist";
+import { isSetlistSong, isSetlistBreak } from "@/types/setlist";
+import { SetlistBreakLinePrint } from "@/components/setlist/setlist-break-line";
 
 interface SetlistPrintProps {
   artistId: string;
@@ -107,64 +109,79 @@ export default function SetlistPrint({ artistId, setlistId }: SetlistPrintProps)
 
             {/* Song list */}
             <div className="space-y-3">
-              {set.songs.map((song, idx) => {
-                const prevSong = idx > 0 ? set.songs[idx - 1] : null;
-                const showSegueIcon = prevSong?.segueInto;
+              {(() => {
+                let songIdx = 0;
+                return set.songs.map((item, idx) => {
+                  // Handle break lines
+                  if (isSetlistBreak(item)) {
+                    return (
+                      <SetlistBreakLinePrint key={item.id} note={item.note} />
+                    );
+                  }
 
-                return (
-                  <div key={song.id} className="relative">
-                    {/* Segue indicator */}
-                    {showSegueIcon && (
-                      <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-                        <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center border-2 border-white">
-                          <i className="fas fa-link text-xs"></i>
-                        </div>
-                      </div>
-                    )}
+                  // It's a song
+                  const song = item as SetlistSong;
+                  const currentSongIdx = songIdx;
+                  songIdx++;
 
-                    <div className={!song.segueInto ? 'border-b border-black pb-1.5' : 'pb-1.5'}>
-                      <div className="flex items-center gap-4 text-lg">
-                        {/* Track number */}
-                        <div className="w-12 text-right font-bold text-black shrink-0">
-                          {idx + 1}.
-                        </div>
+                  const prevItem = idx > 0 ? set.songs[idx - 1] : null;
+                  const showSegueIcon = prevItem && isSetlistSong(prevItem) && prevItem.segueInto;
 
-                        {/* Track name */}
-                        <div className="flex-1 font-bold text-black">
-                          {song.title}
-                        </div>
-
-                        {/* Key and Tuning badges */}
-                        <div className="shrink-0 flex items-center gap-2">
-                          {song.key && (
-                            <span className="text-base font-semibold text-black">
-                              {song.key}
-                            </span>
-                          )}
-                          {song.tuning && song.tuning !== 'standard' && (
-                            <span className={`px-3 py-1 text-base font-bold rounded ${
-                              song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
-                              song.tuning === 'eb' ? 'bg-blue-500 text-white' :
-                              'bg-gray-400 text-black'
-                            }`}>
-                              {song.tuning === 'drop-d' ? 'Drop D' :
-                               song.tuning === 'eb' ? 'Eb' :
-                               song.tuning.toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Performance notes */}
-                      {song.notes && (
-                        <div className="ml-16 text-[11px] text-black leading-none">
-                          {song.notes}
+                  return (
+                    <div key={song.id} className="relative">
+                      {/* Segue indicator */}
+                      {showSegueIcon && (
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+                          <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center border-2 border-white">
+                            <i className="fas fa-link text-xs"></i>
+                          </div>
                         </div>
                       )}
+
+                      <div className={!song.segueInto ? 'border-b border-black pb-1.5' : 'pb-1.5'}>
+                        <div className="flex items-center gap-4 text-lg">
+                          {/* Track number */}
+                          <div className="w-12 text-right font-bold text-black shrink-0">
+                            {currentSongIdx + 1}.
+                          </div>
+
+                          {/* Track name */}
+                          <div className="flex-1 font-bold text-black">
+                            {song.title}
+                          </div>
+
+                          {/* Key and Tuning badges */}
+                          <div className="shrink-0 flex items-center gap-2">
+                            {song.key && (
+                              <span className="text-base font-semibold text-black">
+                                {song.key}
+                              </span>
+                            )}
+                            {song.tuning && song.tuning !== 'standard' && (
+                              <span className={`px-3 py-1 text-base font-bold rounded ${
+                                song.tuning === 'drop-d' ? 'bg-yellow-400 text-black' :
+                                song.tuning === 'eb' ? 'bg-blue-500 text-white' :
+                                'bg-gray-400 text-black'
+                              }`}>
+                                {song.tuning === 'drop-d' ? 'Drop D' :
+                                 song.tuning === 'eb' ? 'Eb' :
+                                 song.tuning.toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Performance notes */}
+                        {song.notes && (
+                          <div className="ml-16 text-[11px] text-black leading-none">
+                            {song.notes}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         ))}
