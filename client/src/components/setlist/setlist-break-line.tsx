@@ -130,8 +130,8 @@ export function SetlistBreakLine({
 
 export function SetlistBreakLinePrint({ note }: { note: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 py-1 my-1 border-t border-b border-dashed border-gray-400">
-      <span className="text-[10px] text-gray-600 uppercase tracking-wider">
+    <div className="flex items-center justify-center gap-2 py-1 my-1 border-t border-b border-dashed border-black">
+      <span className="text-[10px] text-black uppercase tracking-wider">
         &#9881; {note}
       </span>
     </div>

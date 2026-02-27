@@ -7,6 +7,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ArtistMembership, Artist } from "@/types/api";
 import type { Setlist, SetlistSet, SetlistSong } from "@/types/setlist";
+import { isSetlistSong, isSetlistBreak } from "@/types/setlist";
 
 interface SetlistsProps {
   artistId: string;
@@ -184,10 +185,20 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
     setLocation(`/setlists/${setlistId}`);
   };
 
-  // Calculate total duration for a set
+  // Calculate total duration for a set (only songs, not breaks)
   const getSetTotalDuration = (set: SetlistSet): number => {
-    const total = set.songs.reduce((total, song) => total + (song.duration || 0), 0);
+    const total = set.songs.reduce((total, item) => {
+      if (isSetlistSong(item)) {
+        return total + (item.duration || 0);
+      }
+      return total;
+    }, 0);
     return total;
+  };
+
+  // Get song count for a set (excluding breaks)
+  const getSongCount = (set: SetlistSet): number => {
+    return set.songs.filter(isSetlistSong).length;
   };
 
   // Calculate total duration for entire setlist
@@ -267,7 +278,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
               const targetDuration = getSetlistTargetDuration(setlist);
               const variance = getDurationVariance(totalDuration, targetDuration);
               const varianceColor = getVarianceColor(variance);
-              const totalSongs = setlist.sets.reduce((total, set) => total + set.songs.length, 0);
+              const totalSongs = setlist.sets.reduce((total, set) => total + getSongCount(set), 0);
 
               return (
                 <div
@@ -463,7 +474,7 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                               </div>
 
                               <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                                ({set.songs.length})
+                                ({getSongCount(set)})
                               </span>
 
                               {/* Duration and controls */}
@@ -552,14 +563,34 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                             {isSetExpanded && (
                               <div className="border-t border-border bg-muted/10 px-2 py-1.5">
                                 <div className="space-y-1">
-                                  {set.songs.map((song, idx) => {
-                                    const songKey = `${setlist.id}-${song.id}`;
-                                    return (
+                                  {(() => {
+                                    let songIdx = 0;
+                                    return set.songs.map((item) => {
+                                      // Handle break lines
+                                      if (isSetlistBreak(item)) {
+                                        return (
+                                          <div
+                                            key={item.id}
+                                            className="flex items-center justify-center gap-2 py-1 border-y border-dashed border-muted-foreground/30 text-xs text-muted-foreground"
+                                          >
+                                            <span>⚙</span>
+                                            <span>{item.note}</span>
+                                          </div>
+                                        );
+                                      }
+
+                                      // It's a song
+                                      const song = item as SetlistSong;
+                                      const currentSongIdx = songIdx;
+                                      songIdx++;
+                                      const songKey = `${setlist.id}-${song.id}`;
+
+                                      return (
                                         <div
                                           key={song.id}
                                           className="flex items-center text-sm text-muted-foreground gap-2 group"
                                         >
-                                          <span className="w-6 text-xs">{idx + 1}.</span>
+                                          <span className="w-6 text-xs">{currentSongIdx + 1}.</span>
                                           {editingSongName === songKey ? (
                                             <input
                                               type="text"
@@ -630,7 +661,8 @@ export default function Setlists({ artistId, membership }: SetlistsProps) {
                                           </span>
                                         </div>
                                       );
-                                  })}
+                                    });
+                                  })()}
                                   {set.songs.length === 0 && (
                                     <div className="text-xs italic text-muted-foreground/60">
                                       No songs yet
