@@ -1104,10 +1104,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                               e.stopPropagation();
                               handleAddBreak(set.id);
                             }}
-                            className="text-muted-foreground hover:text-orange-500 p-0.5 shrink-0"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10 p-1 rounded transition-colors shrink-0 font-bold"
                             title="Add break"
                           >
-                            <i className="fas fa-pause text-[10px]"></i>
+                            <i className="fas fa-grip-lines text-xs"></i>
                           </button>
                           <div className={`ml-auto flex items-center gap-1 font-medium ${varianceColor} shrink-0`}>
                             <span className="whitespace-nowrap">{formatDuration(totalDuration)}/{formatDuration(set.targetDuration)}</span>
@@ -1140,10 +1140,10 @@ export default function SetlistEditor({ artistId, setlistId, membership }: Setli
                                 e.stopPropagation();
                                 handleAddBreak(set.id);
                               }}
-                              className="text-muted-foreground hover:text-orange-500 p-1 transition-colors"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 px-2 py-1 rounded transition-colors font-bold"
                               title="Add break"
                             >
-                              <i className="fas fa-pause text-xs"></i>
+                              <i className="fas fa-grip-lines text-sm"></i>
                             </button>
                           </div>
                           <div className="flex items-center space-x-3">
