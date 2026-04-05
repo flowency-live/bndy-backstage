@@ -805,6 +805,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         currentMembershipId={effectiveMembership?.membership_id || null}
         currentUserId={session?.user?.cognitoId || null}
         canEdit={canEdit}
+        artistId={effectiveArtistId}
       />
 
       {/* Bulk Availability Drawer */}

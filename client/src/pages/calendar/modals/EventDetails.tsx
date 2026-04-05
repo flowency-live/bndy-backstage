@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { EVENT_TYPE_CONFIG } from '@/types/api';
 import { RecurringIndicator } from '../components/RecurringIndicator';
 import { formatRecurringPattern } from '../utils/recurringCalculations';
+import { AddToCalendarButton } from '@/components/ui/add-to-calendar-button';
 import type { Event, ArtistMembership } from '@/types/api';
 
 interface EventDetailsProps {
@@ -19,6 +20,7 @@ interface EventDetailsProps {
   currentMembershipId: string | null;
   currentUserId: string | null;
   canEdit: (event: Event) => boolean;
+  artistId?: string | null;
 }
 
 export default function EventDetails({
@@ -31,6 +33,7 @@ export default function EventDetails({
   currentMembershipId,
   currentUserId,
   canEdit,
+  artistId,
 }: EventDetailsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteMode, setDeleteMode] = useState<'single' | 'all'>('single');
@@ -226,6 +229,29 @@ export default function EventDetails({
                 <i className="fas fa-globe mr-1"></i>
                 Public Event
               </Badge>
+            </div>
+          )}
+
+          {/* Add to Calendar - show for gigs and practices, hide for unavailability */}
+          {event.type !== 'unavailable' && artistId && (
+            <div className="flex justify-end">
+              <AddToCalendarButton
+                event={{
+                  id: event.id,
+                  artistId: event.artistId || artistId,
+                  type: event.type as 'gig' | 'practice' | 'recording' | 'other',
+                  title: event.title,
+                  venue: event.venue,
+                  location: event.location,
+                  date: event.date,
+                  startTime: event.startTime,
+                  endTime: event.endTime,
+                  notes: event.notes,
+                  createdAt: event.createdAt || '',
+                  updatedAt: event.updatedAt || '',
+                }}
+                artistId={artistId}
+              />
             </div>
           )}
 

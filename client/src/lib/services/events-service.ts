@@ -51,6 +51,18 @@ export interface UpdateEventRequest {
   setlistId?: string;
 }
 
+export interface CalendarSubscription {
+  token: string;
+  userId: string;
+  artistId: string;
+  scope: 'full' | 'public' | 'personal';
+  createdAt: string;
+  lastUsedAt: string;
+  revokedAt: string | null;
+  subscriptionUrl: string;
+  webcalUrl: string;
+}
+
 class EventsService {
   private baseUrl: string;
 
@@ -289,6 +301,65 @@ class EventsService {
         body: JSON.stringify(body),
       }
     );
+  }
+
+  // ============================================
+  // CALENDAR SYNC METHODS
+  // ============================================
+
+  /**
+   * Create a calendar subscription token
+   * Returns subscription URL for calendar apps (Google Calendar, Apple Calendar, etc.)
+   */
+  async createCalendarSubscription(
+    artistId: string,
+    scope: 'full' | 'public' | 'personal' = 'full'
+  ): Promise<CalendarSubscription> {
+    return this.apiRequest<CalendarSubscription>(
+      `/api/artists/${artistId}/calendar/subscribe`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ scope }),
+      }
+    );
+  }
+
+  /**
+   * Get all active calendar subscriptions for user
+   */
+  async getCalendarSubscriptions(artistId: string): Promise<{ subscriptions: CalendarSubscription[] }> {
+    return this.apiRequest<{ subscriptions: CalendarSubscription[] }>(
+      `/api/artists/${artistId}/calendar/subscriptions`
+    );
+  }
+
+  /**
+   * Revoke a calendar subscription token
+   */
+  async revokeCalendarSubscription(artistId: string, token: string): Promise<void> {
+    return this.apiRequest<void>(
+      `/api/artists/${artistId}/calendar/subscriptions/${token}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
+
+  /**
+   * Download a single event as iCal file
+   */
+  async downloadEventIcal(artistId: string, eventId: string): Promise<Blob> {
+    const url = `${this.baseUrl}/api/artists/${artistId}/events/${eventId}/ical`;
+
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download event calendar file');
+    }
+
+    return response.blob();
   }
 }
 
