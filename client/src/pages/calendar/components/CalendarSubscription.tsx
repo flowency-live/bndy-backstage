@@ -2,18 +2,13 @@
  * CalendarSubscriptionModal Component
  *
  * Modal for managing calendar subscription tokens for iCal feed access.
- * Allows users to:
- * - Generate subscription URLs for calendar apps
- * - Select scope (full, public, personal)
- * - Copy webcal:// URLs to clipboard
- * - View and revoke existing subscriptions
+ * Syncs public gigs and rehearsals to external calendar apps.
  */
 
 import { useState, useEffect } from 'react';
 import { Copy, Check, Trash2, RefreshCw, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -31,28 +26,13 @@ import { eventsService, type CalendarSubscription as SubscriptionType } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 
-type SubscriptionScope = 'full' | 'public' | 'personal';
-
 interface CalendarSubscriptionModalProps {
   artistId: string | null;
   open: boolean;
   onClose: () => void;
 }
 
-const SCOPE_OPTIONS: Array<{ value: SubscriptionScope; label: string; description: string }> = [
-  { value: 'full', label: 'All Events', description: 'Gigs, rehearsals, and all private events' },
-  { value: 'public', label: 'Public Only', description: 'Only public gigs visible to fans' },
-  { value: 'personal', label: 'Personal', description: 'Your unavailability and personal events' },
-];
-
-const SCOPE_LABELS: Record<SubscriptionScope, string> = {
-  full: 'Full',
-  public: 'Public',
-  personal: 'Personal',
-};
-
 export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarSubscriptionModalProps) {
-  const [selectedScope, setSelectedScope] = useState<SubscriptionScope>('full');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSubscription, setGeneratedSubscription] = useState<SubscriptionType | null>(null);
   const [existingSubscriptions, setExistingSubscriptions] = useState<SubscriptionType[]>([]);
@@ -88,13 +68,25 @@ export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarS
 
     setIsGenerating(true);
     try {
-      const subscription = await eventsService.createCalendarSubscription(artistId, selectedScope);
+      const subscription = await eventsService.createCalendarSubscription(artistId, 'default');
       setGeneratedSubscription(subscription);
       loadSubscriptions();
-      toast({
-        title: 'Subscription created',
-        description: 'Your calendar subscription URL is ready',
-      });
+
+      // Auto-copy to clipboard
+      try {
+        await navigator.clipboard.writeText(subscription.webcalUrl);
+        setCopiedUrl(true);
+        setTimeout(() => setCopiedUrl(false), 2000);
+        toast({
+          title: 'URL copied to clipboard',
+          description: 'Paste this in your calendar app to subscribe',
+        });
+      } catch {
+        toast({
+          title: 'Subscription created',
+          description: 'Click copy to get your subscription URL',
+        });
+      }
     } catch (error) {
       toast({
         title: 'Failed to create subscription',
@@ -170,31 +162,10 @@ export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarS
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
-          {/* Scope Selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">What to sync</label>
-            <div className="grid grid-cols-1 gap-2">
-              {SCOPE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setSelectedScope(option.value)}
-                  disabled={isDisabled}
-                  className={`
-                    p-3 rounded-lg border text-left transition-colors
-                    ${
-                      selectedScope === option.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }
-                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  `}
-                >
-                  <div className="font-medium text-sm">{option.label}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Info */}
+          <p className="text-sm text-muted-foreground">
+            Syncs your public gigs and rehearsals to your calendar app.
+          </p>
 
           {/* Generate Button */}
           <Button
@@ -319,14 +290,9 @@ export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarS
                     className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
                   >
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {SCOPE_LABELS[sub.scope]}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          Created {formatDate(sub.createdAt)}
-                        </span>
-                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Created {formatDate(sub.createdAt)}
+                      </span>
                       <div className="text-xs font-mono text-muted-foreground truncate max-w-[200px]">
                         {sub.token}
                       </div>
