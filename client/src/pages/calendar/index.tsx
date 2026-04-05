@@ -20,6 +20,7 @@ import { MonthNavigation, SwipeableCalendarWrapper } from './components/MonthNav
 import { UpcomingEventBanner } from './components/UpcomingEventBanner';
 import { MarkerModeToggle } from './components/MarkerModeToggle';
 import { BulkAvailabilityDrawer } from './components/BulkAvailabilityDrawer';
+import { CalendarSubscription } from './components/CalendarSubscription';
 
 // Views
 import { CalendarGridView } from './views/CalendarGridView';
@@ -598,6 +599,15 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
           hasArtistContext={!!effectiveArtistId}
           hasMultipleArtists={userProfile?.artists && userProfile.artists.length > 1}
         />
+      )}
+
+      {/* Calendar Sync (Artist context only) */}
+      {effectiveArtistId && (
+        <div className="px-4 md:px-6 py-4">
+          <div className="max-w-3xl mx-auto">
+            <CalendarSubscription artistId={effectiveArtistId} />
+          </div>
+        </div>
       )}
 
       {/* Agenda View Filter Buttons - COPIED from calendar.tsx.old lines 737-801 */}
