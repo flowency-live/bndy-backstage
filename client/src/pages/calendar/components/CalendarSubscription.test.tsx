@@ -1,7 +1,7 @@
 /**
- * CalendarSubscription Component Tests
+ * CalendarSubscriptionModal Component Tests
  *
- * Tests for calendar subscription management UI:
+ * Tests for calendar subscription management modal:
  * - Generate subscription URL
  * - Scope selection (full, public, personal)
  * - Copy to clipboard functionality
@@ -10,8 +10,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { CalendarSubscription } from './CalendarSubscription';
+import { CalendarSubscriptionModal } from './CalendarSubscription';
 import { eventsService } from '@/lib/services/events-service';
 
 // Mock the events service
@@ -37,7 +36,7 @@ Object.assign(navigator, {
   },
 });
 
-describe('CalendarSubscription', () => {
+describe('CalendarSubscriptionModal', () => {
   const mockSubscription = {
     token: 'cal_test-token-123',
     userId: 'user-001',
@@ -50,6 +49,8 @@ describe('CalendarSubscription', () => {
     webcalUrl: 'webcal://api.bndy.co.uk/api/calendar/ical/cal_test-token-123',
   };
 
+  const mockOnClose = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
     (eventsService.getCalendarSubscriptions as jest.Mock).mockResolvedValue({
@@ -57,14 +58,38 @@ describe('CalendarSubscription', () => {
     });
   });
 
-  it('should render the component', () => {
-    render(<CalendarSubscription artistId="artist-456" />);
+  it('should render the modal when open', () => {
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     expect(screen.getByText('Calendar Sync')).toBeInTheDocument();
   });
 
+  it('should not render content when closed', () => {
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={false}
+        onClose={mockOnClose}
+      />
+    );
+
+    expect(screen.queryByText('Calendar Sync')).not.toBeInTheDocument();
+  });
+
   it('should show scope selector', () => {
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     expect(screen.getByText('All Events')).toBeInTheDocument();
     expect(screen.getByText('Public Only')).toBeInTheDocument();
@@ -74,7 +99,13 @@ describe('CalendarSubscription', () => {
   it('should generate subscription when button is clicked', async () => {
     (eventsService.createCalendarSubscription as jest.Mock).mockResolvedValue(mockSubscription);
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     fireEvent.click(screen.getByTestId('generate-subscription-button'));
 
@@ -89,7 +120,13 @@ describe('CalendarSubscription', () => {
       scope: 'public',
     });
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     // Select "Public Only" scope
     fireEvent.click(screen.getByText('Public Only'));
@@ -103,7 +140,13 @@ describe('CalendarSubscription', () => {
   it('should display generated subscription URL', async () => {
     (eventsService.createCalendarSubscription as jest.Mock).mockResolvedValue(mockSubscription);
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     fireEvent.click(screen.getByTestId('generate-subscription-button'));
 
@@ -116,7 +159,13 @@ describe('CalendarSubscription', () => {
     (eventsService.createCalendarSubscription as jest.Mock).mockResolvedValue(mockSubscription);
     mockWriteText.mockResolvedValue(undefined);
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     fireEvent.click(screen.getByTestId('generate-subscription-button'));
 
@@ -137,12 +186,18 @@ describe('CalendarSubscription', () => {
     );
   });
 
-  it('should load existing subscriptions on mount', async () => {
+  it('should load existing subscriptions when modal opens', async () => {
     (eventsService.getCalendarSubscriptions as jest.Mock).mockResolvedValue({
       subscriptions: [mockSubscription],
     });
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     await waitFor(() => {
       expect(eventsService.getCalendarSubscriptions).toHaveBeenCalledWith('artist-456');
@@ -154,7 +209,13 @@ describe('CalendarSubscription', () => {
       subscriptions: [mockSubscription],
     });
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Active Subscriptions')).toBeInTheDocument();
@@ -170,7 +231,13 @@ describe('CalendarSubscription', () => {
     });
     (eventsService.revokeCalendarSubscription as jest.Mock).mockResolvedValue(undefined);
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('revoke-subscription-button')).toBeInTheDocument();
@@ -187,13 +254,31 @@ describe('CalendarSubscription', () => {
   });
 
   it('should show instructions accordion', () => {
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     expect(screen.getByText('How to add to your calendar')).toBeInTheDocument();
   });
 
   it('should expand Google Calendar instructions when clicked', async () => {
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
+
+    fireEvent.click(screen.getByText('How to add to your calendar'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Google Calendar')).toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByText('Google Calendar'));
 
@@ -203,7 +288,13 @@ describe('CalendarSubscription', () => {
   });
 
   it('should be disabled when no artistId is provided', () => {
-    render(<CalendarSubscription artistId={null} />);
+    render(
+      <CalendarSubscriptionModal
+        artistId={null}
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     expect(screen.getByTestId('generate-subscription-button')).toBeDisabled();
   });
@@ -214,7 +305,13 @@ describe('CalendarSubscription', () => {
       () => new Promise((resolve) => setTimeout(() => resolve(mockSubscription), 100))
     );
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     fireEvent.click(screen.getByTestId('generate-subscription-button'));
 
@@ -226,7 +323,13 @@ describe('CalendarSubscription', () => {
       new Error('Failed to create subscription')
     );
 
-    render(<CalendarSubscription artistId="artist-456" />);
+    render(
+      <CalendarSubscriptionModal
+        artistId="artist-456"
+        open={true}
+        onClose={mockOnClose}
+      />
+    );
 
     fireEvent.click(screen.getByTestId('generate-subscription-button'));
 

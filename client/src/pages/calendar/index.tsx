@@ -100,6 +100,7 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   const [dismissedHighlight, setDismissedHighlight] = useState(false);
   const [markerModeActive, setMarkerModeActive] = useState(false);
   const [showBulkAvailabilityDrawer, setShowBulkAvailabilityDrawer] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
 
   const getArtistDisplayName = (artistId?: string, fallback?: string) => {
     if (!artistId) {
@@ -543,6 +544,20 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
                 <span className="hidden lg:inline">Bulk Availability</span>
               </Button>
             )}
+
+            {/* Calendar Sync Button (Artist context only) */}
+            {effectiveArtistId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSyncModal(true)}
+                className="h-8 w-8 p-0"
+                title="Sync to your calendar"
+                data-testid="button-calendar-sync"
+              >
+                <i className="fas fa-sync text-xs md:text-sm"></i>
+              </Button>
+            )}
           </div>
 
           {/* View Mode Toggle */}
@@ -601,14 +616,12 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         />
       )}
 
-      {/* Calendar Sync (Artist context only) */}
-      {effectiveArtistId && (
-        <div className="px-4 md:px-6 py-4">
-          <div className="max-w-3xl mx-auto">
-            <CalendarSubscription artistId={effectiveArtistId} />
-          </div>
-        </div>
-      )}
+      {/* Calendar Sync Modal */}
+      <CalendarSubscription
+        artistId={effectiveArtistId}
+        open={showSyncModal}
+        onClose={() => setShowSyncModal(false)}
+      />
 
       {/* Agenda View Filter Buttons - COPIED from calendar.tsx.old lines 737-801 */}
       {viewMode === 'agenda' && (

@@ -1,7 +1,7 @@
 /**
- * CalendarSubscription Component
+ * CalendarSubscriptionModal Component
  *
- * Manages calendar subscription tokens for iCal feed access.
+ * Modal for managing calendar subscription tokens for iCal feed access.
  * Allows users to:
  * - Generate subscription URLs for calendar apps
  * - Select scope (full, public, personal)
@@ -10,11 +10,17 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Copy, Check, Trash2, RefreshCw, Link, Calendar } from 'lucide-react';
+import { Copy, Check, Trash2, RefreshCw, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Accordion,
   AccordionContent,
@@ -27,8 +33,10 @@ import { format, parseISO } from 'date-fns';
 
 type SubscriptionScope = 'full' | 'public' | 'personal';
 
-interface CalendarSubscriptionProps {
+interface CalendarSubscriptionModalProps {
   artistId: string | null;
+  open: boolean;
+  onClose: () => void;
 }
 
 const SCOPE_OPTIONS: Array<{ value: SubscriptionScope; label: string; description: string }> = [
@@ -43,7 +51,7 @@ const SCOPE_LABELS: Record<SubscriptionScope, string> = {
   personal: 'Personal',
 };
 
-export function CalendarSubscription({ artistId }: CalendarSubscriptionProps) {
+export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarSubscriptionModalProps) {
   const [selectedScope, setSelectedScope] = useState<SubscriptionScope>('full');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSubscription, setGeneratedSubscription] = useState<SubscriptionType | null>(null);
@@ -54,12 +62,12 @@ export function CalendarSubscription({ artistId }: CalendarSubscriptionProps) {
 
   const isDisabled = !artistId;
 
-  // Load existing subscriptions on mount
+  // Load existing subscriptions when modal opens
   useEffect(() => {
-    if (artistId) {
+    if (artistId && open) {
       loadSubscriptions();
     }
-  }, [artistId]);
+  }, [artistId, open]);
 
   const loadSubscriptions = async () => {
     if (!artistId) return;
@@ -82,7 +90,6 @@ export function CalendarSubscription({ artistId }: CalendarSubscriptionProps) {
     try {
       const subscription = await eventsService.createCalendarSubscription(artistId, selectedScope);
       setGeneratedSubscription(subscription);
-      // Refresh the list
       loadSubscriptions();
       toast({
         title: 'Subscription created',
@@ -150,193 +157,199 @@ export function CalendarSubscription({ artistId }: CalendarSubscriptionProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Calendar Sync
-        </CardTitle>
-        <CardDescription>
-          Subscribe to your calendar from Google Calendar, Apple Calendar, or Outlook
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Scope Selector */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">What to sync</label>
-          <div className="grid grid-cols-3 gap-2">
-            {SCOPE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedScope(option.value)}
-                disabled={isDisabled}
-                className={`
-                  p-3 rounded-lg border text-left transition-colors
-                  ${
-                    selectedScope === option.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }
-                  ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-              >
-                <div className="font-medium text-sm">{option.label}</div>
-                <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
-              </button>
-            ))}
-          </div>
-        </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <RefreshCw className="w-5 h-5" />
+            Calendar Sync
+          </DialogTitle>
+          <DialogDescription>
+            Subscribe to your calendar from Google Calendar, Apple Calendar, or Outlook
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Generate Button */}
-        <Button
-          onClick={handleGenerateSubscription}
-          disabled={isDisabled || isGenerating}
-          className="w-full"
-          data-testid="generate-subscription-button"
-        >
-          {isGenerating ? (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Link className="w-4 h-4 mr-2" />
-              Generate Subscription URL
-            </>
-          )}
-        </Button>
-
-        {/* Generated URL Display */}
-        {generatedSubscription && (
+        <div className="space-y-6 pt-4">
+          {/* Scope Selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Your subscription URL</label>
-            <div className="flex gap-2">
-              <Input
-                value={generatedSubscription.webcalUrl}
-                readOnly
-                className="font-mono text-xs"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopyUrl}
-                data-testid="copy-url-button"
-              >
-                {copiedUrl ? (
-                  <Check className="w-4 h-4 text-green-500" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This URL auto-syncs. Your calendar app will check for updates periodically.
-            </p>
-          </div>
-        )}
-
-        {/* Instructions Accordion */}
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="instructions">
-            <AccordionTrigger className="text-sm">How to add to your calendar</AccordionTrigger>
-            <AccordionContent className="space-y-4">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="google">
-                  <AccordionTrigger className="text-sm">
-                    <span className="flex items-center gap-2">
-                      <i className="fab fa-google"></i>
-                      Google Calendar
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground space-y-2">
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Open Google Calendar on your computer</li>
-                      <li>Click the + next to "Other calendars"</li>
-                      <li>Select "From URL"</li>
-                      <li>Paste the subscription URL</li>
-                      <li>Click "Add calendar"</li>
-                    </ol>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="apple">
-                  <AccordionTrigger className="text-sm">
-                    <span className="flex items-center gap-2">
-                      <i className="fab fa-apple"></i>
-                      Apple Calendar
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground space-y-2">
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Open Calendar app</li>
-                      <li>File → New Calendar Subscription</li>
-                      <li>Paste the subscription URL</li>
-                      <li>Click "Subscribe"</li>
-                      <li>Set refresh frequency to "Every hour" or "Every day"</li>
-                    </ol>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="outlook">
-                  <AccordionTrigger className="text-sm">
-                    <span className="flex items-center gap-2">
-                      <i className="fab fa-microsoft"></i>
-                      Outlook
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground space-y-2">
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Open Outlook Calendar</li>
-                      <li>Click "Add calendar" → "Subscribe from web"</li>
-                      <li>Paste the subscription URL</li>
-                      <li>Give it a name and click "Import"</li>
-                    </ol>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Existing Subscriptions */}
-        {existingSubscriptions.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Active Subscriptions</label>
-            <div className="space-y-2">
-              {existingSubscriptions.map((sub) => (
-                <div
-                  key={sub.token}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+            <label className="text-sm font-medium">What to sync</label>
+            <div className="grid grid-cols-1 gap-2">
+              {SCOPE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedScope(option.value)}
+                  disabled={isDisabled}
+                  className={`
+                    p-3 rounded-lg border text-left transition-colors
+                    ${
+                      selectedScope === option.value
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }
+                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  `}
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {SCOPE_LABELS[sub.scope]}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Created {formatDate(sub.createdAt)}
-                      </span>
-                    </div>
-                    <div className="text-xs font-mono text-muted-foreground truncate max-w-[200px]">
-                      {sub.token}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRevokeSubscription(sub.token)}
-                    className="text-destructive hover:text-destructive"
-                    data-testid="revoke-subscription-button"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                  <div className="font-medium text-sm">{option.label}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
+                </button>
               ))}
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Generate Button */}
+          <Button
+            onClick={handleGenerateSubscription}
+            disabled={isDisabled || isGenerating}
+            className="w-full"
+            data-testid="generate-subscription-button"
+          >
+            {isGenerating ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Link className="w-4 h-4 mr-2" />
+                Generate Subscription URL
+              </>
+            )}
+          </Button>
+
+          {/* Generated URL Display */}
+          {generatedSubscription && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Your subscription URL</label>
+              <div className="flex gap-2">
+                <Input
+                  value={generatedSubscription.webcalUrl}
+                  readOnly
+                  className="font-mono text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyUrl}
+                  data-testid="copy-url-button"
+                >
+                  {copiedUrl ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This URL auto-syncs. Your calendar app will check for updates periodically.
+              </p>
+            </div>
+          )}
+
+          {/* Instructions Accordion */}
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="instructions">
+              <AccordionTrigger className="text-sm">How to add to your calendar</AccordionTrigger>
+              <AccordionContent className="space-y-4">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="google">
+                    <AccordionTrigger className="text-sm">
+                      <span className="flex items-center gap-2">
+                        <i className="fab fa-google"></i>
+                        Google Calendar
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground space-y-2">
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Open Google Calendar on your computer</li>
+                        <li>Click the + next to "Other calendars"</li>
+                        <li>Select "From URL"</li>
+                        <li>Paste the subscription URL</li>
+                        <li>Click "Add calendar"</li>
+                      </ol>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="apple">
+                    <AccordionTrigger className="text-sm">
+                      <span className="flex items-center gap-2">
+                        <i className="fab fa-apple"></i>
+                        Apple Calendar
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground space-y-2">
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Open Calendar app</li>
+                        <li>File → New Calendar Subscription</li>
+                        <li>Paste the subscription URL</li>
+                        <li>Click "Subscribe"</li>
+                        <li>Set refresh frequency to "Every hour" or "Every day"</li>
+                      </ol>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="outlook">
+                    <AccordionTrigger className="text-sm">
+                      <span className="flex items-center gap-2">
+                        <i className="fab fa-microsoft"></i>
+                        Outlook
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground space-y-2">
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Open Outlook Calendar</li>
+                        <li>Click "Add calendar" → "Subscribe from web"</li>
+                        <li>Paste the subscription URL</li>
+                        <li>Give it a name and click "Import"</li>
+                      </ol>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          {/* Existing Subscriptions */}
+          {existingSubscriptions.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Active Subscriptions</label>
+              <div className="space-y-2">
+                {existingSubscriptions.map((sub) => (
+                  <div
+                    key={sub.token}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {SCOPE_LABELS[sub.scope]}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Created {formatDate(sub.createdAt)}
+                        </span>
+                      </div>
+                      <div className="text-xs font-mono text-muted-foreground truncate max-w-[200px]">
+                        {sub.token}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRevokeSubscription(sub.token)}
+                      className="text-destructive hover:text-destructive"
+                      data-testid="revoke-subscription-button"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
+
+// Keep the old export name for backwards compatibility
+export { CalendarSubscriptionModal as CalendarSubscription };

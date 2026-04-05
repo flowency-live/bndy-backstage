@@ -1,4 +1,4 @@
-import { Download, Calendar, List, Users, User, Layers } from 'lucide-react';
+import { Download, Calendar, List, Users, User, Layers, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,6 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useCalendarExport } from '../hooks/useCalendarExport';
 
 interface CalendarControlsProps {
@@ -21,6 +27,7 @@ interface CalendarControlsProps {
   onShowAllArtistsChange: (show: boolean) => void;
   hasMultipleArtists?: boolean;
   onGetSubscriptionUrl?: () => void;
+  onSyncClick?: () => void;
 }
 
 /**
@@ -39,6 +46,7 @@ export function CalendarControls({
   onShowAllArtistsChange,
   hasMultipleArtists = false,
   onGetSubscriptionUrl,
+  onSyncClick,
 }: CalendarControlsProps) {
   const {
     exportAllPublic,
@@ -50,8 +58,9 @@ export function CalendarControls({
   return (
     <div className="bg-card/80 backdrop-blur-sm border-b border-border p-2 md:p-4">
       <div className="flex items-center justify-between">
-        {/* Export Menu */}
-        <DropdownMenu>
+        {/* Export Menu + Sync Button */}
+        <div className="flex items-center gap-1 md:gap-2">
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -100,6 +109,29 @@ export function CalendarControls({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+          {/* Sync Button */}
+          {onSyncClick && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={onSyncClick}
+                    data-testid="button-calendar-sync"
+                  >
+                    <RefreshCw className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Sync to your calendar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
 
         {/* View Mode Toggle */}
         <div className="flex bg-muted rounded-lg p-0.5 md:p-1">
