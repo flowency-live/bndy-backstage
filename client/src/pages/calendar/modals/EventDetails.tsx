@@ -16,10 +16,13 @@ interface EventDetailsProps {
   onClose: () => void;
   onEdit: (event: Event) => void;
   onDelete: (event: Event, deleteAll?: boolean) => void;
+  onLeave?: (event: Event) => void;
   artistMembers: ArtistMembership[];
   currentMembershipId: string | null;
   currentUserId: string | null;
   canEdit: (event: Event) => boolean;
+  canDelete?: (event: Event) => boolean;
+  canLeave?: (event: Event) => boolean;
   artistId?: string | null;
 }
 
@@ -29,10 +32,13 @@ export default function EventDetails({
   onClose,
   onEdit,
   onDelete,
+  onLeave,
   artistMembers,
   currentMembershipId,
   currentUserId,
   canEdit,
+  canDelete,
+  canLeave,
   artistId,
 }: EventDetailsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -214,6 +220,27 @@ export default function EventDetails({
             </div>
           )}
 
+          {/* Multi-artist display - show all artists for multi-artist events */}
+          {event.artistNames && event.artistNames.length > 1 && (
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">
+                Artists ({event.artistNames.length})
+              </h4>
+              <div className="flex flex-wrap gap-1">
+                {event.artistNames.map((name, index) => (
+                  <Badge
+                    key={index}
+                    variant={index === 0 ? 'default' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {name}
+                    {index === 0 && <span className="ml-1 opacity-60">(lead)</span>}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Notes */}
           {event.notes && (
             <div>
@@ -302,7 +329,44 @@ export default function EventDetails({
               </Button>
             )}
 
-            {canEditEvent && (
+            {/* Delete button - only for primary artist (owner) */}
+            {canDelete?.(event) && (
+              <Button
+                onClick={handleDelete}
+                variant={showDeleteConfirm ? 'destructive' : 'outline'}
+                data-testid="button-delete-event"
+              >
+                {showDeleteConfirm ? (
+                  <>
+                    <i className="fas fa-check mr-2"></i>
+                    Confirm
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash mr-2"></i>
+                    Delete
+                  </>
+                )}
+              </Button>
+            )}
+
+            {/* Leave button - only for collaborating artists */}
+            {canLeave?.(event) && onLeave && (
+              <Button
+                onClick={() => {
+                  onLeave(event);
+                  onClose();
+                }}
+                variant="outline"
+                data-testid="button-leave-event"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                Leave Event
+              </Button>
+            )}
+
+            {/* Fallback for canEdit without canDelete (backwards compatibility) */}
+            {canEditEvent && !canDelete && !canLeave && (
               <Button
                 onClick={handleDelete}
                 variant={showDeleteConfirm ? 'destructive' : 'outline'}

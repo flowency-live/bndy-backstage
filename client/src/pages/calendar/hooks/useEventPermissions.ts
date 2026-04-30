@@ -9,10 +9,37 @@ interface UseEventPermissionsOptions {
 /**
  * Hook for checking event permissions
  * Handles ownership and context-based permission checks
+ * Supports multi-artist events with primary/collaborating artist distinction
  */
 export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
   const { artistId, membership } = options;
   const { session } = useServerAuth();
+
+  /**
+   * Check if current artist is the primary artist for the event
+   */
+  const isPrimaryArtist = (event: Event): boolean => {
+    if (!artistId) return false;
+    return event.artistId === artistId;
+  };
+
+  /**
+   * Check if current artist is a collaborating artist (not primary)
+   */
+  const isCollaboratingArtist = (event: Event): boolean => {
+    if (!artistId) return false;
+    return event.collaboratingArtistIds?.includes(artistId) || false;
+  };
+
+  /**
+   * Check if current artist is part of the event (primary or collaborating)
+   */
+  const isPartOfEvent = (event: Event): boolean => {
+    if (!artistId) return false;
+    // Check if in artistIds array (enriched) or check primary + collaborating
+    if (event.artistIds?.includes(artistId)) return true;
+    return isPrimaryArtist(event) || isCollaboratingArtist(event);
+  };
 
   /**
    * Check if user can edit an event
@@ -28,9 +55,9 @@ export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
       return event.membershipId === membership?.membership_id || event.membershipId === membership?.id;
     }
 
-    // For artist events, any member of the artist can edit if the event belongs to that artist
-    // This prevents users from editing/deleting other artists' events when viewing cross-artist calendar
-    if (event.artistId && artistId && event.artistId === artistId) {
+    // For artist events, any member of the artist can edit if they are part of the event
+    // This includes both primary and collaborating artists
+    if (artistId && isPartOfEvent(event)) {
       return !!membership; // User is a member of the artist
     }
 
@@ -45,10 +72,39 @@ export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
 
   /**
    * Check if user can delete an event
-   * Same logic as canEdit for now, but separated for future granularity
+   * Only primary artist (or owner) can delete - collaborators should use "Leave"
    */
   const canDelete = (event: Event): boolean => {
-    return canEdit(event);
+    // For unavailability events, use same logic as canEdit
+    if (event.type === 'unavailable') {
+      return canEdit(event);
+    }
+
+    // For artist events, only the primary artist can delete
+    // Collaborating artists must use "Leave Event" instead
+    if (artistId && isPrimaryArtist(event)) {
+      return !!membership;
+    }
+
+    // For personal events without artist context, allow deleting
+    if (!event.artistId) {
+      return true;
+    }
+
+    // Collaborating artists cannot delete - they can only leave
+    return false;
+  };
+
+  /**
+   * Check if user can leave an event (for collaborating artists)
+   * Primary artist cannot leave - they must delete the event
+   */
+  const canLeave = (event: Event): boolean => {
+    // Only for artist events with multiple artists
+    if (!artistId || !membership) return false;
+
+    // Must be a collaborating artist (not primary)
+    return isCollaboratingArtist(event);
   };
 
   /**
@@ -63,7 +119,11 @@ export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
       return event.membershipId === membership?.id;
     }
 
-    // For artist events, check if the artist matches the current context
+    // For artist events, check if they are the primary artist (owner)
+    // ownerArtistId takes precedence if set
+    if (event.ownerArtistId && artistId) {
+      return event.ownerArtistId === artistId;
+    }
     if (event.artistId && artistId) {
       return event.artistId === artistId;
     }
@@ -101,7 +161,11 @@ export function useEventPermissions(options: UseEventPermissionsOptions = {}) {
   return {
     canEdit,
     canDelete,
+    canLeave,
     isOwner,
     canCreate,
+    isPrimaryArtist,
+    isCollaboratingArtist,
+    isPartOfEvent,
   };
 }

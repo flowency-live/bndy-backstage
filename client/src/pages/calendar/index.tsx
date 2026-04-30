@@ -497,13 +497,20 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
   const canEdit = (event: Event): boolean => {
     // For unavailability events, only the owner can edit
     if (event.type === 'unavailable') {
-      return event.ownerUserId === session?.user?.cognitoId || 
+      return event.ownerUserId === session?.user?.cognitoId ||
              event.membershipId === effectiveMembership?.membership_id;
     }
 
-    // For artist events, any member of the artist can edit if the event belongs to that artist
-    if (event.artistId && effectiveArtistId && event.artistId === effectiveArtistId) {
-      return !!effectiveMembership; // User is a member of the artist
+    // For artist events, check if current artist is part of the event (primary or collaborating)
+    if (effectiveArtistId && effectiveMembership) {
+      const allArtistIds = event.artistIds || [event.artistId];
+      if (allArtistIds.includes(effectiveArtistId)) {
+        return true;
+      }
+      // Also check collaboratingArtistIds
+      if (event.collaboratingArtistIds?.includes(effectiveArtistId)) {
+        return true;
+      }
     }
 
     // For personal events without artist context, allow editing
@@ -513,6 +520,69 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
 
     // Default: no permission
     return false;
+  };
+
+  // Check if user can delete (primary artist only for multi-artist events)
+  const canDelete = (event: Event): boolean => {
+    // For unavailability events, same as canEdit
+    if (event.type === 'unavailable') {
+      return canEdit(event);
+    }
+
+    // For artist events, only the primary artist (owner) can delete
+    if (effectiveArtistId && effectiveMembership) {
+      // Primary artist is event.artistId (or event.ownerArtistId if set)
+      const ownerArtistId = event.ownerArtistId || event.artistId;
+      return ownerArtistId === effectiveArtistId;
+    }
+
+    // For personal events without artist context, allow deleting
+    if (!event.artistId) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Check if user can leave (collaborating artist only)
+  const canLeave = (event: Event): boolean => {
+    if (!effectiveArtistId || !effectiveMembership) return false;
+
+    // Must be a collaborating artist (not primary)
+    const isPrimary = (event.ownerArtistId || event.artistId) === effectiveArtistId;
+    if (isPrimary) return false;
+
+    // Check if in collaborating list
+    if (event.collaboratingArtistIds?.includes(effectiveArtistId)) {
+      return true;
+    }
+
+    // Also check artistIds array (if not primary)
+    const allArtistIds = event.artistIds || [];
+    return allArtistIds.includes(effectiveArtistId) && !isPrimary;
+  };
+
+  // Handle leaving a multi-artist event
+  const handleLeaveEvent = async (event: Event) => {
+    try {
+      const response = await fetch(
+        `https://api.bndy.co.uk/api/artists/${effectiveArtistId}/events/${event.id}/leave`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to leave event');
+      }
+
+      toast.success('Left event successfully');
+      handleSuccess();
+    } catch (error) {
+      console.error('Error leaving event:', error);
+      toast.error('Failed to leave event');
+    }
   };
 
   // TODO: Implement calendar export functionality properly
@@ -824,10 +894,13 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
         }}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
+        onLeave={handleLeaveEvent}
         artistMembers={artistMembers}
         currentMembershipId={effectiveMembership?.membership_id || null}
         currentUserId={session?.user?.cognitoId || null}
         canEdit={canEdit}
+        canDelete={canDelete}
+        canLeave={canLeave}
         artistId={effectiveArtistId}
       />
 

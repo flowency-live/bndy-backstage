@@ -98,8 +98,18 @@ export type UserBand = ArtistMembership;
 
 export interface Event {
   id: string;
-  /** Artist ID - Optional: undefined for user-only events, defined for artist events */
+  /** Artist ID - Primary artist (first in list for multi-artist events) */
   artistId?: string;
+  /** Collaborating artist IDs (additional artists beyond primary) */
+  collaboratingArtistIds?: string[];
+  /** All artist IDs (primary + collaborating, enriched by backend) */
+  artistIds?: string[];
+  /** All artist names (enriched by backend for display) */
+  artistNames?: string[];
+  /** Owner artist ID - who created/owns the event */
+  ownerArtistId?: string;
+  /** Source of event creation */
+  source?: 'frontstage' | 'backstage';
   /** Owner User ID (cognito_id) - For user unavailability events */
   ownerUserId?: string;
   /** Membership ID - For artist-specific events */
@@ -129,7 +139,7 @@ export interface Event {
   updatedAt: string;
   /** Display name for unavailability events (enriched by backend) */
   displayName?: string;
-  /** Artist name for cross-artist events */
+  /** Artist name for cross-artist events (single artist display) */
   artistName?: string;
 }
 
