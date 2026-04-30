@@ -315,6 +315,8 @@ export default function VotingSongCard({
                   votes={song.votes}
                   memberships={memberships}
                   votingScale={votingScale as 3 | 5}
+                  currentUserId={userId}
+                  showPendingOnly={false}
                 />
               )}
 
@@ -360,6 +362,17 @@ export default function VotingSongCard({
                 onVote={handleVote}
                 maxStars={votingScale as 3 | 5}
               />
+
+              {/* Member Votes Reveal - during voting phase */}
+              {showMemberVotes && memberships.length > 0 && (
+                <MemberVotesReveal
+                  votes={song.votes}
+                  memberships={memberships}
+                  votingScale={votingScale as 3 | 5}
+                  currentUserId={userId}
+                  showPendingOnly={!userHasVoted}
+                />
+              )}
 
               {/* Actions */}
               <div className="flex gap-2">

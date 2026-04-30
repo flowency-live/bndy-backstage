@@ -5,28 +5,42 @@ interface MemberVotesRevealProps {
   votes: Record<string, { value: number; updated_at: string }>;
   memberships: ArtistMembership[];
   votingScale: 3 | 5;
+  currentUserId?: string;
+  showPendingOnly?: boolean;
 }
 
-export default function MemberVotesReveal({ votes, memberships, votingScale }: MemberVotesRevealProps) {
+export default function MemberVotesReveal({
+  votes,
+  memberships,
+  votingScale,
+  currentUserId,
+  showPendingOnly = false
+}: MemberVotesRevealProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
-  // Create a map of user IDs to display names
-  const memberNameMap = memberships.reduce((acc, m) => {
+  // Build full member list with vote status
+  const memberVoteEntries = memberships.map(m => {
     const userId = m.user_id;
-    const displayName = m.resolved_display_name || m.display_name || m.displayName || 'Unknown';
-    acc[userId] = displayName;
-    return acc;
-  }, {} as Record<string, string>);
+    const displayName = m.resolved_display_name || m.display_name || (m as any).displayName || 'Unknown';
+    const vote = votes[userId];
+    const hasVoted = vote !== undefined;
 
-  const voteEntries = Object.entries(votes).map(([userId, vote]) => ({
-    userId,
-    displayName: memberNameMap[userId] || 'Unknown member',
-    value: vote.value,
-    updatedAt: vote.updated_at
-  }));
+    return {
+      userId,
+      displayName,
+      hasVoted,
+      value: hasVoted ? vote.value : null,
+      updatedAt: hasVoted ? vote.updated_at : null
+    };
+  });
 
-  // Sort by vote value descending (highest first)
-  voteEntries.sort((a, b) => b.value - a.value);
+  // Sort: voters first (by value desc), then non-voters
+  memberVoteEntries.sort((a, b) => {
+    if (a.hasVoted && !b.hasVoted) return -1;
+    if (!a.hasVoted && b.hasVoted) return 1;
+    if (a.hasVoted && b.hasVoted) return (b.value ?? 0) - (a.value ?? 0);
+    return 0;
+  });
 
   if (!isRevealed) {
     return (
@@ -53,14 +67,24 @@ export default function MemberVotesReveal({ votes, memberships, votingScale }: M
         </button>
       </div>
       <div className="space-y-1">
-        {voteEntries.map(({ userId, displayName, value }) => (
+        {memberVoteEntries.map(({ userId, displayName, hasVoted, value }) => (
           <div
             key={userId}
-            className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded"
+            className={`flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded ${!hasVoted ? 'opacity-50' : ''}`}
           >
             <span className="text-sm text-foreground">{displayName}</span>
             <div className="flex items-center gap-1">
-              {value === 0 ? (
+              {!hasVoted ? (
+                <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                  <i className="fas fa-clock"></i>
+                  Not yet voted
+                </span>
+              ) : showPendingOnly ? (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <i className="fas fa-check"></i>
+                  Voted
+                </span>
+              ) : value === 0 ? (
                 <span className="text-lg" title="Pass">💩</span>
               ) : (
                 <div className="flex gap-0.5">
@@ -68,7 +92,7 @@ export default function MemberVotesReveal({ votes, memberships, votingScale }: M
                     <i
                       key={star}
                       className={`fas fa-star ${
-                        star <= value ? 'text-yellow-500' : 'text-gray-300'
+                        star <= (value ?? 0) ? 'text-yellow-500' : 'text-gray-300'
                       }`}
                       style={{ fontSize: '12px' }}
                     ></i>

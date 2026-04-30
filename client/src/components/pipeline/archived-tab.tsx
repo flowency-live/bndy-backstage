@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { artistsService } from "@/lib/services/artists-service";
+import { membershipsService } from "@/lib/services/memberships-service";
 import type { ArtistMembership, Artist } from "@/types/api";
 
 interface ArchivedTabProps {
@@ -23,6 +24,19 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
       return await artistsService.getArchivedPipelineSongs(artistId);
     }
   });
+
+  // Query memberships for showing who shat on songs
+  const { data: membershipsData } = useQuery({
+    queryKey: ['artist-memberships', artistId],
+    queryFn: async () => {
+      const data = await membershipsService.getArtistMemberships(artistId);
+      return data.memberships?.filter((m: ArtistMembership) => m.status === 'active') || [];
+    },
+    refetchInterval: 60000
+  });
+
+  const memberships = membershipsData || [];
+  const showMemberVotes = membership.artist?.showMemberVotes || false;
 
   const parkedSongs = archivedSongs.filter((song: any) => song.status === 'parked');
   const discardedSongs = archivedSongs.filter((song: any) => song.status === 'discarded');
@@ -81,8 +95,22 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
     );
   }
 
+  // Helper to get names of people who shat on a song (voted 0)
+  const getShatOnNames = (votes: Record<string, { value: number }> | undefined): string[] => {
+    if (!votes) return [];
+    const pooVoterIds = Object.entries(votes)
+      .filter(([_, vote]) => vote.value === 0)
+      .map(([userId]) => userId);
+
+    return pooVoterIds.map(userId => {
+      const member = memberships.find((m: ArtistMembership) => m.user_id === userId) as any;
+      return member?.resolved_display_name || member?.display_name || member?.displayName || 'Unknown';
+    });
+  };
+
   const SongCard = ({ song, type }: { song: any; type: 'parked' | 'discarded' }) => {
     const isExpanded = expandedSongId === song.id;
+    const shatOnNames = type === 'discarded' ? getShatOnNames(song.votes) : [];
 
     return (
       <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -119,6 +147,21 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
                 <div className="flex items-start gap-2">
                   <i className="fas fa-sticky-note text-muted-foreground mt-0.5"></i>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{song.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Shat on this song message - only for discarded songs with poo votes */}
+            {type === 'discarded' && showMemberVotes && shatOnNames.length > 0 && (
+              <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                <div className="flex items-center gap-2 text-orange-500">
+                  <span className="text-xl">💩</span>
+                  <span className="text-sm font-medium">
+                    {shatOnNames.length === 1
+                      ? `${shatOnNames[0]} shat on this song!`
+                      : `${shatOnNames.slice(0, -1).join(', ')} and ${shatOnNames[shatOnNames.length - 1]} shat on this song!`
+                    }
+                  </span>
                 </div>
               </div>
             )}
