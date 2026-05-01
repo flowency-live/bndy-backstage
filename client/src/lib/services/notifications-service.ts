@@ -1,5 +1,7 @@
 // src/lib/services/notifications-service.ts
 
+import { API_BASE_URL } from '../../config/api';
+
 export type NotificationType =
   | 'song_added'
   | 'song_ready'
@@ -44,7 +46,7 @@ class NotificationsService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = endpoint;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     const defaultOptions: RequestInit = {
       credentials: 'include',
