@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
 import { format, isToday, isPast, isFuture, startOfYear, endOfYear, addYears, startOfMonth } from "date-fns";
@@ -12,7 +12,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Music, Plus, Map, List, Search, ChevronDown, ChevronRight, LayoutGrid, AlignJustify } from "lucide-react";
 import type { Event, ArtistMembership } from "@/types/api";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Import calendar components for modal
 import { CalendarProvider, useCalendarContext } from './calendar/CalendarContext';
@@ -55,6 +56,39 @@ function GigsContent({ artistId, membership }: GigsProps) {
     showEventDetails,
     setShowEventDetails,
   } = useCalendarContext();
+
+  const { toast } = useToast();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async ({ event, deleteAll }: { event: Event; deleteAll?: boolean }) => {
+      const targetArtistId = event.artistId || artistId;
+      if (!targetArtistId) {
+        throw new Error('No artist selected for deletion');
+      }
+      const url = deleteAll
+        ? `/api/artists/${targetArtistId}/events/${event.id}?deleteAll=true`
+        : `/api/artists/${targetArtistId}/events/${event.id}`;
+      return apiRequest('DELETE', url);
+    },
+    onSuccess: (_, { event }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/artists', artistId, 'calendar'] });
+      if (event.artistId && event.artistId !== artistId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/artists', event.artistId, 'calendar'] });
+      }
+      toast({
+        title: 'Event deleted',
+        description: 'Event has been removed',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete event',
+        variant: 'destructive',
+      });
+    },
+  });
 
   // Fetch all gigs (past and future)
   const { data: gigsData, isLoading } = useQuery<{
@@ -223,9 +257,10 @@ function GigsContent({ artistId, membership }: GigsProps) {
     setShowEventDetails(false);
   };
 
-  const handleDeleteEvent = async () => {
-    // EventDetails modal handles delete
+  const handleDeleteEvent = (event: Event, deleteAll?: boolean) => {
+    deleteMutation.mutate({ event, deleteAll });
     setShowEventDetails(false);
+    setSelectedEvent(null);
   };
 
   const canEditEvent = (event: Event) => {

@@ -90,7 +90,7 @@ export function usePermissions(): Permissions {
     canCreateGigs: ['owner', 'admin', 'member'].includes(role || ''),
     canCreateRehearsals: ['owner', 'admin', 'member'].includes(role || ''),
     canEditEvents: ['owner', 'admin'].includes(role || ''),
-    canDeleteEvents: role === 'owner',
+    canDeleteEvents: ['owner', 'admin', 'member'].includes(role || ''),
 
     canViewSongs: true,
     canCreateSongs: ['owner', 'admin', 'member'].includes(role || ''),
