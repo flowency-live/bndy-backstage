@@ -522,18 +522,26 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
     return false;
   };
 
-  // Check if user can delete (primary artist only for multi-artist events)
+  // Check if user can delete - any member of the artist can delete events
   const canDelete = (event: Event): boolean => {
-    // For unavailability events, same as canEdit
+    // For unavailability events, only the owner can delete their own
     if (event.type === 'unavailable') {
       return canEdit(event);
     }
 
-    // For artist events, only the primary artist (owner) can delete
+    // Any member of the current artist can delete events belonging to that artist
     if (effectiveArtistId && effectiveMembership) {
-      // Primary artist is event.artistId (or event.ownerArtistId if set)
-      const ownerArtistId = event.ownerArtistId || event.artistId;
-      return ownerArtistId === effectiveArtistId;
+      const eventArtistId = event.artistId || event.ownerArtistId;
+
+      // Allow delete if event belongs to current artist
+      if (eventArtistId === effectiveArtistId) {
+        return true;
+      }
+
+      // Also allow for multi-artist events where current artist is involved
+      if (event.artistIds?.includes(effectiveArtistId)) {
+        return true;
+      }
     }
 
     // For personal events without artist context, allow deleting
