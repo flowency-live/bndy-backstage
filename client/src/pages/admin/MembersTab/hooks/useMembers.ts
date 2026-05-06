@@ -24,6 +24,7 @@ export function useMembers(artistId: string) {
       return response;
     },
     enabled: !!artistId,
+    refetchOnMount: true,
   });
 
   // Remove member mutation using service layer
