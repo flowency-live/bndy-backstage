@@ -1,0 +1,290 @@
+/* AddExpenseModal - Slide-up sheet */
+
+.expense-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.expense-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  background: hsl(0, 0%, 8%);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  z-index: 101;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .expense-modal {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 24px;
+    animation: modal-enter 0.3s ease;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.expense-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid hsl(0, 0%, 15%);
+}
+
+.expense-modal-title {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  margin: 0;
+}
+
+.expense-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: hsl(0, 0%, 15%);
+  border: none;
+  border-radius: 50%;
+  color: hsl(0, 0%, 60%);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expense-modal-close:hover {
+  background: hsl(0, 0%, 20%);
+  color: hsl(0, 0%, 90%);
+}
+
+.expense-modal-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.expense-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expense-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(0, 0%, 60%);
+}
+
+.expense-label .required {
+  color: hsl(0, 72%, 55%);
+}
+
+/* Amount Input */
+.expense-amount-field {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.expense-amount-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.expense-input-icon {
+  width: 28px;
+  height: 28px;
+  color: hsl(147, 89%, 44%);
+}
+
+.expense-amount {
+  width: 180px;
+  background: transparent;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  text-align: center;
+  outline: none;
+}
+
+.expense-amount::placeholder {
+  color: hsl(0, 0%, 30%);
+}
+
+/* Date Button */
+.expense-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+  color: hsl(0, 0%, 90%);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expense-date-btn:hover {
+  border-color: hsl(147, 89%, 44%);
+}
+
+/* Category Grid */
+.expense-categories {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 400px) {
+  .expense-categories {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.expense-category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: hsl(0, 0%, 12%);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expense-category-btn:hover {
+  background: hsl(0, 0%, 15%);
+}
+
+.expense-category-btn.active {
+  background: hsla(147, 89%, 44%, 0.1);
+  border-color: hsl(147, 89%, 44%);
+}
+
+.expense-category-icon {
+  font-size: 1.5rem;
+}
+
+.expense-category-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: hsl(0, 0%, 60%);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.expense-category-btn.active .expense-category-label {
+  color: hsl(147, 89%, 44%);
+}
+
+/* Description Input */
+.expense-description-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.expense-description-input:focus-within {
+  border-color: hsl(147, 89%, 44%);
+}
+
+.expense-input-icon-small {
+  width: 18px;
+  height: 18px;
+  color: hsl(0, 0%, 50%);
+  flex-shrink: 0;
+}
+
+.expense-description {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: hsl(0, 0%, 90%);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.expense-description::placeholder {
+  color: hsl(0, 0%, 40%);
+}
+
+/* Submit Button */
+.expense-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, hsl(147, 89%, 44%) 0%, hsl(147, 70%, 35%) 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expense-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -5px hsla(147, 89%, 44%, 0.4);
+}
+
+.expense-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

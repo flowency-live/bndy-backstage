@@ -1,8 +1,9 @@
-// DetailsStep - Event details, title, description, tickets
+// DetailsStep - Event details, title, description, tickets, fees
 import { useState } from 'react';
-import { Sparkles, FileText, Ticket, PoundSterling, ChevronDown } from 'lucide-react';
+import { Sparkles, FileText, Ticket, PoundSterling, ChevronDown, Wallet, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import type { PublicGigFormData } from '@/components/public-gig-wizard';
 
 interface DetailsStepProps {
@@ -13,6 +14,9 @@ interface DetailsStepProps {
 
 export default function DetailsStep({ formData, onUpdate, artistName }: DetailsStepProps) {
   const [showTicketInfo, setShowTicketInfo] = useState(false);
+  const [showFeeInfo, setShowFeeInfo] = useState(
+    formData.agreedFee !== undefined || formData.actualFee !== undefined
+  );
 
   // Auto-generate title if not manually edited
   const defaultTitle = formData.venueName ? `${artistName} @ ${formData.venueName}` : '';
@@ -107,6 +111,97 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
                 />
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fee Information - Collapsible (Private - Backstage Only) */}
+      <div className="border border-border rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowFeeInfo(!showFeeInfo)}
+          className="w-full flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Wallet className="w-4 h-4" />
+            <span>Fee Tracking</span>
+            <span className="text-xs font-normal text-muted-foreground">(Private)</span>
+          </div>
+          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${showFeeInfo ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showFeeInfo && (
+          <div className="p-4 pt-0 space-y-4">
+            {/* Agreed Fee */}
+            <div>
+              <label className="block text-xs text-muted-foreground mb-2">
+                Agreed Fee
+              </label>
+              <div className="relative">
+                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.agreedFee ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                    onUpdate({
+                      agreedFee: value,
+                      // Auto-set actualFee to agreedFee if not already set
+                      ...(formData.actualFee === undefined && value !== undefined ? { actualFee: value } : {})
+                    });
+                  }}
+                  placeholder="0.00"
+                  className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px] focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* Actual Fee (only show if agreed fee is set) */}
+            {formData.agreedFee !== undefined && (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-2">
+                  Actual Fee (if different)
+                </label>
+                <div className="relative">
+                  <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.actualFee ?? formData.agreedFee ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                      onUpdate({ actualFee: value });
+                    }}
+                    placeholder={String(formData.agreedFee ?? '0.00')}
+                    className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px] focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Split Between Members Toggle */}
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Split between members</p>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-create member payment expenses when paid
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={formData.splitBetweenMembers ?? false}
+                onCheckedChange={(checked) => onUpdate({ splitBetweenMembers: checked })}
+              />
+            </div>
+
+            <p className="text-xs text-muted-foreground italic">
+              Fee details are only visible to band members in Backstage
+            </p>
           </div>
         )}
       </div>

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { EVENT_TYPE_CONFIG } from '@/types/api';
+import { EVENT_TYPE_CONFIG, PAYMENT_METHOD_CONFIG, type PaymentMethod } from '@/types/api';
 import { RecurringIndicator } from '../components/RecurringIndicator';
 import { formatRecurringPattern } from '../utils/recurringCalculations';
 import { AddToCalendarButton } from '@/components/ui/add-to-calendar-button';
@@ -246,6 +246,53 @@ export default function EventDetails({
             <div>
               <h4 className="text-sm font-semibold text-muted-foreground mb-1">Notes</h4>
               <p className="text-sm whitespace-pre-wrap">{event.notes}</p>
+            </div>
+          )}
+
+          {/* Fee Information - show for gigs with fee data */}
+          {(event.type === 'gig' || event.type === 'public_gig') && event.agreedFee !== undefined && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 -mx-6 px-6 py-4 space-y-2">
+              <h4 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                <i className="fas fa-pound-sign"></i>
+                Fee Details
+                {event.datePaid && (
+                  <Badge variant="outline" className="ml-auto bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-300">
+                    <i className="fas fa-check mr-1"></i>
+                    Paid
+                  </Badge>
+                )}
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Agreed:</span>
+                  <span className="ml-2 font-medium">£{event.agreedFee.toFixed(2)}</span>
+                </div>
+                {event.actualFee !== undefined && event.actualFee !== event.agreedFee && (
+                  <div>
+                    <span className="text-muted-foreground">Actual:</span>
+                    <span className="ml-2 font-medium">£{event.actualFee.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+              {event.datePaid && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Paid on:</span>
+                  <span className="ml-2">
+                    {format(parseISO(event.datePaid), 'dd MMM yyyy')}
+                    {event.paymentMethod && (
+                      <span className="text-muted-foreground ml-2">
+                        via {PAYMENT_METHOD_CONFIG[event.paymentMethod as PaymentMethod]?.label || event.paymentMethod}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+              {event.splitBetweenMembers && (
+                <div className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                  <i className="fas fa-users"></i>
+                  Split between all members
+                </div>
+              )}
             </div>
           )}
 

@@ -1,0 +1,268 @@
+/* MarkAsPaidModal - Celebratory payment confirmation */
+
+.paid-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+.paid-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  background: hsl(0, 0%, 8%);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  z-index: 101;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .paid-modal {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-width: 440px;
+    width: 100%;
+    border-radius: 24px;
+    animation: modal-enter 0.3s ease;
+  }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.paid-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  background: linear-gradient(135deg, hsla(147, 89%, 44%, 0.1) 0%, transparent 100%);
+  border-bottom: 1px solid hsl(0, 0%, 15%);
+}
+
+.paid-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.paid-modal-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: hsl(147, 89%, 44%);
+  border-radius: 50%;
+  color: white;
+  animation: check-pop 0.4s ease 0.1s both;
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.paid-modal-title {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  margin: 0;
+}
+
+.paid-modal-subtitle {
+  font-size: 0.875rem;
+  color: hsl(0, 0%, 60%);
+  margin: 4px 0 0;
+}
+
+.paid-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: hsl(0, 0%, 15%);
+  border: none;
+  border-radius: 50%;
+  color: hsl(0, 0%, 60%);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paid-modal-close:hover {
+  background: hsl(0, 0%, 20%);
+  color: hsl(0, 0%, 90%);
+}
+
+.paid-modal-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.paid-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paid-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(0, 0%, 60%);
+}
+
+/* Amount Input */
+.paid-amount-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+}
+
+.paid-input-icon {
+  width: 20px;
+  height: 20px;
+  color: hsl(147, 89%, 44%);
+}
+
+.paid-amount {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  outline: none;
+}
+
+.paid-amount-note {
+  font-size: 0.8rem;
+  color: hsl(45, 100%, 51%);
+}
+
+/* Date Button */
+.paid-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+  color: hsl(0, 0%, 90%);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paid-date-btn:hover {
+  border-color: hsl(147, 89%, 44%);
+}
+
+/* Payment Methods */
+.paid-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.paid-method-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 2px solid transparent;
+  border-radius: 20px;
+  color: hsl(0, 0%, 70%);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paid-method-btn:hover {
+  background: hsl(0, 0%, 15%);
+}
+
+.paid-method-btn.active {
+  background: hsla(147, 89%, 44%, 0.1);
+  border-color: hsl(147, 89%, 44%);
+  color: hsl(147, 89%, 44%);
+}
+
+/* Actions */
+.paid-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.paid-cancel-btn {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid hsl(0, 0%, 25%);
+  border-radius: 12px;
+  color: hsl(0, 0%, 70%);
+}
+
+.paid-confirm-btn {
+  flex: 2;
+  padding: 14px;
+  background: linear-gradient(135deg, hsl(147, 89%, 44%) 0%, hsl(147, 70%, 35%) 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+}
+
+.paid-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -5px hsla(147, 89%, 44%, 0.4);
+}
+
+.paid-confirm-btn:disabled {
+  opacity: 0.6;
+}

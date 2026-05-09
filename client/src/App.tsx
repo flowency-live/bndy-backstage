@@ -27,6 +27,7 @@ import SetlistEditor2 from "@/pages/setlist-editor";
 import SetlistPrint from "@/pages/setlist-print";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Gigs from "@/pages/gigs";
+import Finances from "@/pages/finances";
 import Admin from "@/pages/admin";
 import Members from "@/pages/members";
 import Issues from "@/pages/issues";
@@ -112,6 +113,20 @@ function Router() {
               <ProfileGate userProfile={userProfile}>
                 <AppLayout artistId={contextId} membership={membership}>
                   <Gigs artistId={contextId} />
+                </AppLayout>
+              </ProfileGate>
+            );
+          }}
+        </MemberGate>
+      </Route>
+      <Route path="/finances">
+        <MemberGate>
+          {({ contextId, membership, userProfile }) => {
+            if (!contextId || !membership) return null;
+            return (
+              <ProfileGate userProfile={userProfile}>
+                <AppLayout artistId={contextId} membership={membership}>
+                  <Finances artistId={contextId} membership={membership} />
                 </AppLayout>
               </ProfileGate>
             );

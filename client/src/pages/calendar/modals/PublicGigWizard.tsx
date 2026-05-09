@@ -42,6 +42,11 @@ export interface PublicGigFormData {
   ticketUrl?: string;
   ticketPrice?: string;
 
+  // Fee tracking (private - backstage only)
+  agreedFee?: number;
+  actualFee?: number;
+  splitBetweenMembers?: boolean;
+
   // Step 4: Visibility
   isPublic?: boolean; // Default true
 
@@ -213,6 +218,10 @@ export default function PublicGigWizard({
         ticketPrice: formData.ticketPrice,
         isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
         source: 'backstage_wizard',
+        // Fee tracking (private)
+        agreedFee: formData.agreedFee,
+        actualFee: formData.actualFee,
+        splitBetweenMembers: formData.splitBetweenMembers,
       };
 
       const savedEvent = isEditing

@@ -141,6 +141,17 @@ export interface Event {
   displayName?: string;
   /** Artist name for cross-artist events (single artist display) */
   artistName?: string;
+  // Fee tracking fields (backstage only - stripped from public endpoints)
+  /** Agreed fee in GBP */
+  agreedFee?: number;
+  /** Actual fee paid (defaults to agreedFee if not set) */
+  actualFee?: number;
+  /** Date payment was received (YYYY-MM-DD) */
+  datePaid?: string;
+  /** Payment method */
+  paymentMethod?: 'cash' | 'bank_transfer' | 'gig_realm' | 'events_uk' | 'other';
+  /** Whether fee is split equally between all artist members */
+  splitBetweenMembers?: boolean;
 }
 
 export interface Song {
@@ -191,6 +202,103 @@ export const EVENT_TYPE_CONFIG = {
     icon: '🚫'
   }
 } as const;
+
+// =============================================================================
+// Expense/Finances Types
+// =============================================================================
+
+export const EXPENSE_CATEGORIES = [
+  'equipment_purchase',
+  'equipment_hire',
+  'rehearsal_room',
+  'studio_hire',
+  'dep_fee',
+  'member_payment',
+  'marketing',
+  'other'
+] as const;
+
+export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
+
+export const EXPENSE_CATEGORY_CONFIG = {
+  equipment_purchase: { label: 'Equipment Purchase', icon: '🛒' },
+  equipment_hire: { label: 'Equipment Hire', icon: '🔧' },
+  rehearsal_room: { label: 'Rehearsal Room', icon: '🏠' },
+  studio_hire: { label: 'Studio Hire', icon: '🎙️' },
+  dep_fee: { label: 'Dep Fees', icon: '👤' },
+  member_payment: { label: 'Member Payments', icon: '💰' },
+  marketing: { label: 'Marketing', icon: '📣' },
+  other: { label: 'Other', icon: '📝' }
+} as const;
+
+export const PAYMENT_METHODS = [
+  'cash',
+  'bank_transfer',
+  'gig_realm',
+  'events_uk',
+  'other'
+] as const;
+
+export type PaymentMethod = typeof PAYMENT_METHODS[number];
+
+export const PAYMENT_METHOD_CONFIG = {
+  cash: { label: 'Cash' },
+  bank_transfer: { label: 'Bank Transfer' },
+  gig_realm: { label: 'Gig Realm' },
+  events_uk: { label: 'Events UK' },
+  other: { label: 'Other' }
+} as const;
+
+export interface Expense {
+  id: string;
+  artistId: string;
+  /** Date of expense (YYYY-MM-DD) */
+  date: string;
+  /** Amount in GBP */
+  amount: number;
+  /** Category of expense */
+  category: ExpenseCategory;
+  /** Description (required for 'other' category) */
+  description?: string;
+  /** Membership ID of who paid */
+  paidBy?: string;
+  /** Related event ID (for gig-related expenses like member payments) */
+  relatedEventId?: string;
+  /** Group ID for grouped expenses (e.g., member payment splits) */
+  groupId?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancesSummary {
+  totalIncome: number;
+  totalPaidIncome: number;
+  totalUnpaidIncome: number;
+  totalExpenses: number;
+  balance: number;
+}
+
+export interface FinancesResponse {
+  summary: FinancesSummary;
+  income: Array<{
+    id: string;
+    date: string;
+    title: string;
+    venueId?: string;
+    agreedFee?: number;
+    actualFee?: number;
+    datePaid?: string;
+    paymentMethod?: PaymentMethod;
+    splitBetweenMembers?: boolean;
+    isPaid: boolean;
+  }>;
+  expenses: Expense[];
+  dateRange: {
+    startDate: string;
+    endDate: string;
+  };
+}
 
 // Form types
 export interface InsertEvent {
