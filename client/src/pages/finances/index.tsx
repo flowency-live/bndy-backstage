@@ -233,11 +233,25 @@ export default function Finances({ artistId, membership }: FinancesProps) {
           </div>
         </div>
 
+        {/* Balance Hero Card */}
+        <div
+          className="finances-balance-hero"
+          style={{ '--delay': '0' } as React.CSSProperties}
+        >
+          <div className={`finances-balance-hero-inner ${summary.balance >= 0 ? 'positive' : 'negative'}`}>
+            <span className="finances-balance-label">Balance</span>
+            <span className="finances-balance-value">
+              <span className="finances-balance-currency">£</span>
+              {Math.abs(summary.balance).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+        </div>
+
         {/* Summary Cards */}
         <div className="finances-summary">
           <button
             className="finances-card finances-card-income clickable"
-            style={{ '--delay': '0' } as React.CSSProperties}
+            style={{ '--delay': '1' } as React.CSSProperties}
             onClick={() => setActiveTab('income')}
           >
             <div className="finances-card-icon income">
@@ -245,21 +259,30 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             </div>
             <div className="finances-card-content">
               <span className="finances-card-label">Income</span>
-              <span className="finances-card-value">
-                <span className="finances-currency">£</span>
-                {summary.totalIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              {summary.totalUnpaidIncome > 0 && (
-                <span className="finances-card-sublabel">
-                  £{summary.totalUnpaidIncome.toFixed(0)} pending
-                </span>
-              )}
+              <div className="finances-card-columns">
+                <div className="finances-card-column">
+                  <span className="finances-card-value">
+                    <span className="finances-currency">£</span>
+                    {summary.totalPaidIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="finances-card-column-label">received</span>
+                </div>
+                {summary.totalUnpaidIncome > 0 && (
+                  <div className="finances-card-column pending">
+                    <span className="finances-card-value pending">
+                      <span className="finances-currency">£</span>
+                      {summary.totalUnpaidIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="finances-card-column-label">pending</span>
+                  </div>
+                )}
+              </div>
             </div>
           </button>
 
           <button
             className="finances-card finances-card-expenses clickable"
-            style={{ '--delay': '1' } as React.CSSProperties}
+            style={{ '--delay': '2' } as React.CSSProperties}
             onClick={() => setActiveTab('outgoing')}
           >
             <div className="finances-card-icon expenses">
@@ -267,28 +290,17 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             </div>
             <div className="finances-card-content">
               <span className="finances-card-label">Expenses</span>
-              <span className="finances-card-value">
-                <span className="finances-currency">£</span>
-                {summary.totalExpenses.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
+              <div className="finances-card-columns">
+                <div className="finances-card-column">
+                  <span className="finances-card-value">
+                    <span className="finances-currency">£</span>
+                    {summary.totalExpenses.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="finances-card-column-label">paid</span>
+                </div>
+              </div>
             </div>
           </button>
-
-          <div
-            className="finances-card finances-card-balance"
-            style={{ '--delay': '2' } as React.CSSProperties}
-          >
-            <div className={`finances-card-icon balance ${summary.balance >= 0 ? 'positive' : 'negative'}`}>
-              <Wallet className="w-5 h-5" />
-            </div>
-            <div className="finances-card-content">
-              <span className="finances-card-label">Balance</span>
-              <span className={`finances-card-value ${summary.balance >= 0 ? 'positive' : 'negative'}`}>
-                <span className="finances-currency">£</span>
-                {Math.abs(summary.balance).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-          </div>
 
           <button
             className="finances-card finances-card-gig-income clickable"
