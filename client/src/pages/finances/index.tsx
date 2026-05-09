@@ -13,7 +13,7 @@ import { eventsService } from '@/lib/services/events-service';
 import { apiRequest } from '@/lib/queryClient';
 import type { ArtistMembership, FinancesResponse, Expense, ExpenseCategory, PaymentMethod } from '@/types/api';
 import { EXPENSE_CATEGORY_CONFIG, PAYMENT_METHOD_CONFIG } from '@/types/api';
-import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X, Mic } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X, Mic, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import AddExpenseModal from './components/AddExpenseModal';
 import AddIncomeModal from './components/AddIncomeModal';
 import MarkAsPaidModal from './components/MarkAsPaidModal';
@@ -68,6 +68,8 @@ export default function Finances({ artistId, membership }: FinancesProps) {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [selectedGigForPayment, setSelectedGigForPayment] = useState<FinancesResponse['income'][0] | null>(null);
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'expense' | 'gig'; id: string; title: string } | null>(null);
 
   const { startDate, endDate } = useMemo(() => getDateRange(dateRange), [dateRange]);
 
@@ -108,6 +110,26 @@ export default function Finances({ artistId, membership }: FinancesProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
       toast({ title: 'Expense deleted' });
+      setConfirmDelete(null);
+    },
+  });
+
+  // Clear payment from gig mutation (unpay)
+  const clearPaymentMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      return apiRequest('PUT', `/api/artists/${artistId}/events/${eventId}`, {
+        datePaid: null,
+        paymentMethod: null,
+        actualFee: null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
+      toast({ title: 'Payment cleared', description: 'Gig marked as unpaid' });
+      setConfirmDelete(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     },
   });
 
@@ -180,7 +202,11 @@ export default function Finances({ artistId, membership }: FinancesProps) {
 
         {/* Summary Cards */}
         <div className="finances-summary">
-          <div className="finances-card finances-card-income" style={{ '--delay': '0' } as React.CSSProperties}>
+          <button
+            className="finances-card finances-card-income clickable"
+            style={{ '--delay': '0' } as React.CSSProperties}
+            onClick={() => setActiveTab('income')}
+          >
             <div className="finances-card-icon income">
               <TrendingUp className="w-5 h-5" />
             </div>
@@ -196,9 +222,13 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                 </span>
               )}
             </div>
-          </div>
+          </button>
 
-          <div className="finances-card finances-card-expenses" style={{ '--delay': '1' } as React.CSSProperties}>
+          <button
+            className="finances-card finances-card-expenses clickable"
+            style={{ '--delay': '1' } as React.CSSProperties}
+            onClick={() => setActiveTab('outgoing')}
+          >
             <div className="finances-card-icon expenses">
               <TrendingDown className="w-5 h-5" />
             </div>
@@ -209,9 +239,13 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                 {summary.totalExpenses.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-          </div>
+          </button>
 
-          <div className="finances-card finances-card-balance" style={{ '--delay': '2' } as React.CSSProperties}>
+          <button
+            className="finances-card finances-card-balance clickable"
+            style={{ '--delay': '2' } as React.CSSProperties}
+            onClick={() => setActiveTab('income')}
+          >
             <div className={`finances-card-icon balance ${summary.balance >= 0 ? 'positive' : 'negative'}`}>
               <Wallet className="w-5 h-5" />
             </div>
@@ -222,9 +256,13 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                 {Math.abs(summary.balance).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-          </div>
+          </button>
 
-          <div className="finances-card finances-card-gig-income" style={{ '--delay': '3' } as React.CSSProperties}>
+          <button
+            className="finances-card finances-card-gig-income clickable"
+            style={{ '--delay': '3' } as React.CSSProperties}
+            onClick={() => setActiveTab('income')}
+          >
             <div className="finances-card-icon gig-income">
               <Mic className="w-5 h-5" />
             </div>
@@ -236,7 +274,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
               </span>
               <span className="finances-card-sublabel">Total revenue from gigs</span>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Tab Navigation */}
@@ -295,7 +333,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                       <span className="month">{format(parseISO(gig.date), 'MMM')}</span>
                     </div>
                     <div className="finances-item-details">
-                      <span className="finances-item-title">{gig.title || 'Untitled Gig'}</span>
+                      <span className="finances-item-title">{gig.venueName || gig.title || 'Untitled Gig'}</span>
                       {gig.datePaid && gig.paymentMethod && (
                         <span className="finances-item-meta">
                           {PAYMENT_METHOD_CONFIG[gig.paymentMethod]?.label}
@@ -322,6 +360,44 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                         >
                           Mark Paid
                         </button>
+                      )}
+                    </div>
+                    <div className="finances-item-actions">
+                      <button
+                        className="finances-action-btn"
+                        onClick={() => setOpenActionMenu(openActionMenu === gig.id ? null : gig.id)}
+                        aria-label="More options"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {openActionMenu === gig.id && (
+                        <>
+                          <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
+                          <div className="finances-action-menu">
+                            <button
+                              className="finances-action-menu-item"
+                              onClick={() => {
+                                setOpenActionMenu(null);
+                                setSelectedGigForPayment(gig);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4" />
+                              <span>Edit Payment</span>
+                            </button>
+                            {gig.isPaid && (
+                              <button
+                                className="finances-action-menu-item danger"
+                                onClick={() => {
+                                  setOpenActionMenu(null);
+                                  setConfirmDelete({ type: 'gig', id: gig.id, title: gig.venueName || gig.title || 'this gig' });
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span>Clear Payment</span>
+                              </button>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -368,6 +444,32 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                         </div>
                         <div className="finances-item-amount expense">
                           <span className="amount">-£{expense.amount.toFixed(2)}</span>
+                        </div>
+                        <div className="finances-item-actions">
+                          <button
+                            className="finances-action-btn"
+                            onClick={() => setOpenActionMenu(openActionMenu === expense.id ? null : expense.id)}
+                            aria-label="More options"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                          {openActionMenu === expense.id && (
+                            <>
+                              <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
+                              <div className="finances-action-menu">
+                                <button
+                                  className="finances-action-menu-item danger"
+                                  onClick={() => {
+                                    setOpenActionMenu(null);
+                                    setConfirmDelete({ type: 'expense', id: expense.id, title: expense.description || 'this expense' });
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Delete Expense</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -449,6 +551,42 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             })}
             isLoading={markAsPaidMutation.isPending}
           />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {confirmDelete && (
+          <>
+            <div className="finances-confirm-backdrop" onClick={() => setConfirmDelete(null)} />
+            <div className="finances-confirm-dialog">
+              <h3 className="finances-confirm-title">
+                {confirmDelete.type === 'gig' ? 'Clear Payment?' : 'Delete Expense?'}
+              </h3>
+              <p className="finances-confirm-text">
+                {confirmDelete.type === 'gig'
+                  ? `This will mark "${confirmDelete.title}" as unpaid. You can record the payment again later.`
+                  : `Are you sure you want to delete "${confirmDelete.title}"? This action cannot be undone.`
+                }
+              </p>
+              <div className="finances-confirm-actions">
+                <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirmDelete.type === 'gig') {
+                      clearPaymentMutation.mutate(confirmDelete.id);
+                    } else {
+                      deleteExpenseMutation.mutate(confirmDelete.id);
+                    }
+                  }}
+                  disabled={clearPaymentMutation.isPending || deleteExpenseMutation.isPending}
+                >
+                  {(clearPaymentMutation.isPending || deleteExpenseMutation.isPending) ? 'Processing...' : 'Confirm'}
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </PageContainer>

@@ -1,5 +1,5 @@
 // MarkAsPaidModal - Quick action to record gig payment
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { X, Check, PoundSterling, Calendar, CreditCard } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,17 @@ interface MarkAsPaidModalProps {
 export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoading }: MarkAsPaidModalProps) {
   const [datePaid, setDatePaid] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bank_transfer');
-  const [actualFee, setActualFee] = useState(String(gig.actualFee ?? gig.agreedFee ?? ''));
+  const [actualFee, setActualFee] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Reset form when gig changes to avoid stale state
+  useEffect(() => {
+    if (gig) {
+      setActualFee(String(gig.actualFee ?? gig.agreedFee ?? ''));
+      setDatePaid(format(new Date(), 'yyyy-MM-dd'));
+      setPaymentMethod('bank_transfer');
+    }
+  }, [gig?.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +55,7 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
             </div>
             <div>
               <h2 className="paid-modal-title">Mark as Paid</h2>
-              <p className="paid-modal-subtitle">{gig.title}</p>
+              <p className="paid-modal-subtitle">{gig.venueName || gig.title}</p>
             </div>
           </div>
           <button className="paid-modal-close" onClick={onClose} aria-label="Close">

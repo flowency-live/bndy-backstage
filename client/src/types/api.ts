@@ -329,6 +329,7 @@ export interface FinancesResponse {
     date: string;
     title: string;
     venueId?: string;
+    venueName?: string | null;
     agreedFee?: number;
     actualFee?: number;
     datePaid?: string;

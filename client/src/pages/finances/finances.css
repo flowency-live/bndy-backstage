@@ -156,6 +156,22 @@
   border-radius: 16px;
   overflow: hidden;
   animation: card-enter 0.5s ease calc(var(--delay) * 0.1s) both;
+  text-align: left;
+}
+
+.finances-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.finances-card.clickable:hover {
+  background: var(--fin-surface-hover);
+  border-color: var(--card-accent, var(--fin-income));
+  transform: translateY(-2px);
+}
+
+.finances-card.clickable:active {
+  transform: translateY(0);
 }
 
 @keyframes card-enter {
@@ -672,4 +688,144 @@
     bottom: 150px;
     right: 16px;
   }
+}
+
+/* Action Menu */
+.finances-item-actions {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.finances-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--fin-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.finances-action-btn:hover {
+  background: var(--fin-surface-hover);
+  color: var(--fin-text);
+}
+
+.finances-action-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.finances-action-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 160px;
+  margin-top: 4px;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 50;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
+  animation: dropdown-enter 0.15s ease;
+}
+
+.finances-action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--fin-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.finances-action-menu-item:hover {
+  background: var(--fin-surface-hover);
+}
+
+.finances-action-menu-item svg {
+  color: var(--fin-text-muted);
+  flex-shrink: 0;
+}
+
+.finances-action-menu-item.danger {
+  color: var(--fin-expense);
+}
+
+.finances-action-menu-item.danger svg {
+  color: var(--fin-expense);
+}
+
+.finances-action-menu-item.danger:hover {
+  background: var(--fin-expense-glow);
+}
+
+/* Confirmation Dialog */
+.finances-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+.finances-confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: 16px;
+  padding: 24px;
+  z-index: 101;
+  animation: modal-enter 0.25s ease;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.finances-confirm-title {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--fin-text);
+  margin: 0 0 12px 0;
+}
+
+.finances-confirm-text {
+  font-size: 0.95rem;
+  color: var(--fin-text-muted);
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.finances-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }

@@ -176,7 +176,7 @@ export default function AddIncomeModal({
                       <span className="month">{format(new Date(gig.date), 'MMM')}</span>
                     </div>
                     <div className="income-gig-details">
-                      <span className="income-gig-title">{gig.title || 'Untitled Gig'}</span>
+                      <span className="income-gig-title">{gig.venueName || gig.title || 'Untitled Gig'}</span>
                       {gig.noFee ? (
                         <span className="income-gig-fee no-fee">No guaranteed fee</span>
                       ) : (

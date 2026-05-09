@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin, Wallet } from "lucide-react";
+import { Plus, Calendar, Music, Users, Settings, Mic, List, GitBranch, Clock, ChevronRight, ChevronDown, ChevronUp, X, User as UserIcon, MapPin, PoundSterling } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import type { Song, ArtistMembership, Artist, User } from "@/types/api";
 import type { Event } from "@/lib/services/events-service";
@@ -971,7 +971,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
 
                   {/* Background Icon */}
                   <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[48rem] sm:text-[56rem] lg:text-[64rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-                    <Wallet />
+                    <PoundSterling />
                   </div>
 
                   {/* Content */}
