@@ -13,7 +13,7 @@ import { eventsService } from '@/lib/services/events-service';
 import { apiRequest } from '@/lib/queryClient';
 import type { ArtistMembership, FinancesResponse, Expense, ExpenseCategory, PaymentMethod } from '@/types/api';
 import { EXPENSE_CATEGORY_CONFIG, PAYMENT_METHOD_CONFIG } from '@/types/api';
-import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X, Mic } from 'lucide-react';
 import AddExpenseModal from './components/AddExpenseModal';
 import AddIncomeModal from './components/AddIncomeModal';
 import MarkAsPaidModal from './components/MarkAsPaidModal';
@@ -115,6 +115,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
     totalIncome: 0,
     totalPaidIncome: 0,
     totalUnpaidIncome: 0,
+    totalGigIncome: 0,
     totalExpenses: 0,
     balance: 0,
   };
@@ -220,6 +221,20 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                 <span className="finances-currency">£</span>
                 {Math.abs(summary.balance).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
+            </div>
+          </div>
+
+          <div className="finances-card finances-card-gig-income" style={{ '--delay': '3' } as React.CSSProperties}>
+            <div className="finances-card-icon gig-income">
+              <Mic className="w-5 h-5" />
+            </div>
+            <div className="finances-card-content">
+              <span className="finances-card-label">Gig Income</span>
+              <span className="finances-card-value gig-income">
+                <span className="finances-currency">£</span>
+                {summary.totalGigIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span className="finances-card-sublabel">Total revenue from gigs</span>
             </div>
           </div>
         </div>

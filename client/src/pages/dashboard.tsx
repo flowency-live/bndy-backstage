@@ -718,6 +718,20 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     enabled: !!session && !!artistId,
   });
 
+  // Get finances summary for dashboard tile
+  const { data: financesData = { balance: 0, gigIncome: 0 } } = useQuery({
+    queryKey: ['finances-summary', artistId],
+    queryFn: async () => {
+      const { expensesService } = await import("@/lib/services/expenses-service");
+      const finances = await expensesService.getFinances(artistId!);
+      return {
+        balance: finances.summary.balance,
+        gigIncome: finances.summary.totalGigIncome || 0,
+      };
+    },
+    enabled: !!session && !!artistId,
+  });
+
   // Check for vote reminders on dashboard load
   useEffect(() => {
     if (session?.user?.cognitoId && artistId) {
@@ -925,20 +939,63 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
             <DashboardTile
               title="Venues"
               icon={<MapPin />}
-              color="hsl(142, 76%, 36%)"
+              color="hsl(187, 85%, 43%)"
               count={venueCount}
               onClick={() => setLocation("/venues")}
               className="animate-stagger-1"
               data-testid="tile-venues"
             />
-            <DashboardTile
-              title="Finances"
-              icon={<Wallet />}
-              color="hsl(147, 89%, 30%)"
+            <Card
+              className="aspect-square w-full cursor-pointer hover-lift-subtle group border border-border animate-fade-in-up animate-stagger-2"
               onClick={() => setLocation("/finances")}
-              className="animate-stagger-2"
               data-testid="tile-finances"
-            />
+            >
+              <CardContent className="p-0 h-full">
+                <div
+                  className="h-full rounded-lg relative overflow-hidden transition-all duration-300 group-hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, hsl(0, 65%, 35%) 0%, color-mix(in hsl, hsl(0, 65%, 35%) 80%, transparent 20%) 50%, color-mix(in hsl, hsl(0, 65%, 35%) 90%, transparent 10%) 100%)',
+                    backgroundSize: '200% 200%',
+                    backgroundPosition: '0% 0%'
+                  }}
+                >
+                  {/* Animated background on hover */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, color-mix(in hsl, hsl(0, 65%, 35%) 90%, transparent 10%) 0%, hsl(0, 65%, 35%) 50%, color-mix(in hsl, hsl(0, 65%, 35%) 80%, transparent 20%) 100%)',
+                      backgroundSize: '200% 200%',
+                      backgroundPosition: '100% 100%'
+                    }}
+                  />
+
+                  {/* Background Icon */}
+                  <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[48rem] sm:text-[56rem] lg:text-[64rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+                    <Wallet />
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative p-2 sm:p-4 lg:p-6 h-full flex flex-col justify-between text-white">
+                    <div className="transform group-hover:translate-y-[-2px] transition-transform duration-300">
+                      <h3 className="font-serif text-base sm:text-lg lg:text-xl font-semibold mb-0.5 sm:mb-1 text-white drop-shadow-lg leading-tight">Finances</h3>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                        <span className="text-white/90">Balance</span>
+                        <span className={`font-bold ${financesData.balance >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                          £{Math.abs(financesData.balance).toFixed(0)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                        <span className="text-white/90">Gig Revenue</span>
+                        <span className="font-bold text-orange-300">£{financesData.gigIncome.toFixed(0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
         </div>
       </div>
 

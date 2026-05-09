@@ -317,6 +317,7 @@ export interface FinancesSummary {
   totalPaidIncome: number;
   totalUnpaidIncome: number;
   totalStandaloneIncome: number;
+  totalGigIncome: number; // Gig revenue (even if distributed to members)
   totalExpenses: number;
   balance: number;
 }

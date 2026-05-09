@@ -126,12 +126,19 @@
 /* Summary Cards */
 .finances-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 32px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
+  .finances-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
   .finances-summary {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -185,6 +192,10 @@
   --card-accent: var(--fin-gold);
 }
 
+.finances-card-gig-income {
+  --card-accent: hsl(24, 95%, 53%);
+}
+
 .finances-card-icon {
   display: flex;
   align-items: center;
@@ -220,6 +231,11 @@
   color: var(--fin-expense);
 }
 
+.finances-card-icon.gig-income {
+  background: hsla(24, 95%, 53%, 0.15);
+  color: hsl(24, 95%, 53%);
+}
+
 .finances-card-content {
   display: flex;
   flex-direction: column;
@@ -249,6 +265,10 @@
 
 .finances-card-value.negative {
   color: var(--fin-expense);
+}
+
+.finances-card-value.gig-income {
+  color: hsl(24, 95%, 53%);
 }
 
 .finances-currency {
