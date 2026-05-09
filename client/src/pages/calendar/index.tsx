@@ -896,6 +896,9 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
                   title: selectedEvent.title,
                   description: selectedEvent.description || undefined,
                   isPublic: selectedEvent.isPublic !== undefined ? selectedEvent.isPublic : true,
+                  agreedFee: selectedEvent.agreedFee,
+                  noFee: selectedEvent.noFee,
+                  paymentMethod: selectedEvent.paymentMethod,
                 }
               : selectedDate
                 ? { date: selectedDate }

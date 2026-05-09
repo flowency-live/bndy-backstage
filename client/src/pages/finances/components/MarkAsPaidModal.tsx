@@ -1,9 +1,10 @@
 // MarkAsPaidModal - Quick action to record gig payment
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { X, Check, PoundSterling, Calendar, CreditCard } from 'lucide-react';
+import { X, Check, PoundSterling, Calendar, CreditCard, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { PAYMENT_METHODS, PAYMENT_METHOD_CONFIG, type PaymentMethod, type FinancesResponse } from '@/types/api';
 import DatePickerModal from '@/components/date-picker-modal';
 import './MarkAsPaidModal.css';
@@ -12,14 +13,15 @@ interface MarkAsPaidModalProps {
   isOpen: boolean;
   onClose: () => void;
   gig: FinancesResponse['income'][0];
-  onConfirm: (data: { datePaid: string; paymentMethod: PaymentMethod; actualFee?: number }) => void;
+  onConfirm: (data: { datePaid: string; paymentMethod: PaymentMethod; actualFee?: number; distributed?: boolean }) => void;
   isLoading: boolean;
 }
 
 export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoading }: MarkAsPaidModalProps) {
   const [datePaid, setDatePaid] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bank_transfer');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [actualFee, setActualFee] = useState('');
+  const [distributed, setDistributed] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Reset form when gig changes to avoid stale state
@@ -27,7 +29,8 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
     if (gig) {
       setActualFee(String(gig.actualFee ?? gig.agreedFee ?? ''));
       setDatePaid(format(new Date(), 'yyyy-MM-dd'));
-      setPaymentMethod('bank_transfer');
+      setPaymentMethod('cash');
+      setDistributed(false);
     }
   }, [gig?.id]);
 
@@ -39,6 +42,7 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
       datePaid,
       paymentMethod,
       ...(fee !== originalFee && !isNaN(fee) ? { actualFee: fee } : {}),
+      ...(distributed ? { distributed: true } : {}),
     });
   };
 
@@ -113,6 +117,23 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
                   <span>{PAYMENT_METHOD_CONFIG[method].label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Distributed Toggle */}
+          <div className="paid-field">
+            <div className="paid-distributed">
+              <div className="paid-distributed-info">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <span className="paid-distributed-label">Distributed to Members</span>
+                  <span className="paid-distributed-hint">Money was handed out on the night</span>
+                </div>
+              </div>
+              <Switch
+                checked={distributed}
+                onCheckedChange={setDistributed}
+              />
             </div>
           </div>
 

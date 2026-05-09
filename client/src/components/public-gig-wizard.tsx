@@ -43,7 +43,7 @@ export interface PublicGigFormData {
   // Fee tracking (private - backstage only)
   agreedFee?: number;
   noFee?: boolean;
-  splitBetweenMembers?: boolean;
+  paymentMethod?: 'cash' | 'bank_transfer' | 'gig_realm' | 'events_uk' | 'other';
 
   // Step 4: Visibility
   isPublic?: boolean; // Default true
@@ -229,6 +229,10 @@ export default function PublicGigWizard({
           ticketPrice: formData.ticketPrice,
           isPublic: formData.isPublic !== undefined ? formData.isPublic : true,
           source: 'backstage_wizard',
+          // Fee tracking (backstage only)
+          agreedFee: formData.agreedFee,
+          noFee: formData.noFee,
+          paymentMethod: formData.paymentMethod,
         }),
       });
 

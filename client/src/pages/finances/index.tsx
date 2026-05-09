@@ -62,7 +62,7 @@ function getDateRange(preset: DateRangePreset): { startDate: string; endDate: st
 export default function Finances({ artistId, membership }: FinancesProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [dateRange, setDateRange] = useState<DateRangePreset>('this_month');
+  const [dateRange, setDateRange] = useState<DateRangePreset>('all_time');
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<TabView>('income');
   const [showFabMenu, setShowFabMenu] = useState(false);
@@ -84,16 +84,18 @@ export default function Finances({ artistId, membership }: FinancesProps) {
 
   // Mark gig as paid mutation
   const markAsPaidMutation = useMutation({
-    mutationFn: async ({ eventId, datePaid, paymentMethod, actualFee }: {
+    mutationFn: async ({ eventId, datePaid, paymentMethod, actualFee, distributed }: {
       eventId: string;
       datePaid: string;
       paymentMethod: PaymentMethod;
       actualFee?: number;
+      distributed?: boolean;
     }) => {
       return apiRequest('PUT', `/api/artists/${artistId}/events/${eventId}`, {
         datePaid,
         paymentMethod,
         ...(actualFee !== undefined && { actualFee }),
+        ...(distributed !== undefined && { distributed }),
       });
     },
     onSuccess: () => {
@@ -395,9 +397,9 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                           </span>
                         )}
                         {gig.isPaid ? (
-                          <Badge className="finances-badge paid">
+                          <Badge className={`finances-badge ${gig.distributed ? 'distributed' : 'paid'}`}>
                             <Check className="w-3 h-3 mr-1" />
-                            Paid
+                            {gig.distributed ? 'Distributed' : 'Paid'}
                           </Badge>
                         ) : (
                           <button

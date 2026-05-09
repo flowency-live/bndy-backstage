@@ -615,6 +615,12 @@
   border: none;
 }
 
+.finances-badge.distributed {
+  background: hsla(271, 70%, 55%, 0.15);
+  color: hsl(271, 70%, 55%);
+  border: none;
+}
+
 .finances-mark-paid-btn {
   padding: 6px 14px;
   background: transparent;

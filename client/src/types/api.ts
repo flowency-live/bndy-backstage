@@ -154,6 +154,8 @@ export interface Event {
   splitBetweenMembers?: boolean;
   /** Gig has no guaranteed fee (e.g., bar takings, exposure gig) */
   noFee?: boolean;
+  /** Whether the fee has been distributed to members (taken off balance) */
+  distributed?: boolean;
 }
 
 export interface Song {
@@ -336,6 +338,7 @@ export interface FinancesResponse {
     paymentMethod?: PaymentMethod;
     splitBetweenMembers?: boolean;
     noFee?: boolean;
+    distributed?: boolean;
     isPaid: boolean;
   }>;
   standaloneIncome: Income[];

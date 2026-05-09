@@ -232,6 +232,40 @@
   color: hsl(147, 89%, 44%);
 }
 
+/* Distributed Toggle */
+.paid-distributed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+}
+
+.paid-distributed-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paid-distributed-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paid-distributed-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: hsl(0, 0%, 90%);
+}
+
+.paid-distributed-hint {
+  font-size: 0.75rem;
+  color: hsl(0, 0%, 55%);
+}
+
 /* Actions */
 .paid-actions {
   display: flex;

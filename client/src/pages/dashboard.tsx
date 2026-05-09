@@ -718,12 +718,13 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
     enabled: !!session && !!artistId,
   });
 
-  // Get finances summary for dashboard tile
+  // Get finances summary for dashboard tile (all-time)
   const { data: financesData = { balance: 0, gigIncome: 0 } } = useQuery({
     queryKey: ['finances-summary', artistId],
     queryFn: async () => {
       const { expensesService } = await import("@/lib/services/expenses-service");
-      const finances = await expensesService.getFinances(artistId!);
+      // Use all-time date range for dashboard summary
+      const finances = await expensesService.getFinances(artistId!, '2020-01-01', '2099-12-31');
       return {
         balance: finances.summary.balance,
         gigIncome: finances.summary.totalGigIncome || 0,

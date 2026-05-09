@@ -1,10 +1,12 @@
 // DetailsStep - Event details, title, description, tickets, fees
 import { useState } from 'react';
-import { Sparkles, FileText, Ticket, PoundSterling, ChevronDown, Wallet, Users } from 'lucide-react';
+import { Sparkles, FileText, Ticket, PoundSterling, ChevronDown, Wallet, CreditCard } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PublicGigFormData } from '@/components/public-gig-wizard';
+import { PAYMENT_METHOD_CONFIG, type PaymentMethod, PAYMENT_METHODS } from '@/types/api';
 
 interface DetailsStepProps {
   formData: PublicGigFormData;
@@ -132,20 +134,14 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
 
         {showFeeInfo && (
           <div className="p-4 pt-0 space-y-4">
-            {/* No Guaranteed Fee Toggle */}
-            <div className="flex items-center justify-between py-2 border-b border-border pb-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">No guaranteed fee</p>
-                <p className="text-xs text-muted-foreground">
-                  E.g., bar takings, exposure gig, door split
-                </p>
-              </div>
+            {/* No Fee Toggle */}
+            <div className="flex items-center justify-between py-2">
+              <p className="text-sm font-medium text-foreground">No Fee</p>
               <Switch
                 checked={formData.noFee ?? false}
                 onCheckedChange={(checked) => {
                   onUpdate({
                     noFee: checked,
-                    // Clear agreedFee when switching to no fee
                     ...(checked ? { agreedFee: undefined } : {})
                   });
                 }}
@@ -176,27 +172,30 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
               </div>
             )}
 
-            {/* Split Between Members Toggle */}
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Split between members</p>
-                  <p className="text-xs text-muted-foreground">
-                    Auto-create member payment expenses when paid
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={formData.splitBetweenMembers ?? false}
-                onCheckedChange={(checked) => onUpdate({ splitBetweenMembers: checked })}
-              />
+            {/* Payment Method */}
+            <div>
+              <label className="block text-xs text-muted-foreground mb-2">
+                Payment Method
+              </label>
+              <Select
+                value={formData.paymentMethod || ''}
+                onValueChange={(value) => onUpdate({ paymentMethod: value as PaymentMethod })}
+              >
+                <SelectTrigger className="min-h-[56px] md:min-h-[44px] text-base">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select payment method" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {PAYMENT_METHOD_CONFIG[method].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            <p className="text-xs text-muted-foreground italic">
-              Fee details are only visible to band members in Backstage.
-              Actual fee received is recorded when marking gig as paid.
-            </p>
           </div>
         )}
       </div>
