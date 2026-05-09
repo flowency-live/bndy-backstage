@@ -810,7 +810,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
       {/* Calendar & Gigs Section */}
       <div className="mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Calendar"
               icon={<Calendar />}
@@ -837,15 +837,6 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               onClick={() => setLocation("/admin")}
               className="animate-stagger-3"
               data-testid="tile-admin"
-            />
-
-            <DashboardTile
-              title="Finances"
-              icon={<Wallet />}
-              color="hsl(147, 89%, 44%)"
-              onClick={() => setLocation("/finances")}
-              className="animate-stagger-4"
-              data-testid="tile-finances"
             />
         </div>
       </div>
@@ -942,6 +933,21 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               onClick={() => setLocation("/venues")}
               className="animate-stagger-1"
               data-testid="tile-venues"
+            />
+        </div>
+      </div>
+
+      {/* Finances Section */}
+      <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Finances</h2>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
+            <DashboardTile
+              title="Finances"
+              icon={<Wallet />}
+              color="hsl(147, 89%, 30%)"
+              onClick={() => setLocation("/finances")}
+              className="animate-stagger-1"
+              data-testid="tile-finances"
             />
         </div>
       </div>
