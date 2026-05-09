@@ -47,8 +47,8 @@ export default function DatePickerModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl max-w-sm w-full animate-slide-up">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[200] flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl max-w-sm w-full animate-slide-up z-[201]">
         <div className="bg-orange-500 text-white p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-serif">{title}</h3>

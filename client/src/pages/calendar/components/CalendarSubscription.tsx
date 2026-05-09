@@ -189,30 +189,61 @@ export function CalendarSubscriptionModal({ artistId, open, onClose }: CalendarS
 
           {/* Generated URL Display */}
           {generatedSubscription && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Your subscription URL</label>
-              <div className="flex gap-2">
-                <Input
-                  value={generatedSubscription.webcalUrl}
-                  readOnly
-                  className="font-mono text-xs"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyUrl}
-                  data-testid="copy-url-button"
-                >
-                  {copiedUrl ? (
-                    <Check className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </Button>
+            <div className="space-y-4">
+              {/* Quick Subscribe Buttons - Mobile Friendly */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Quick Subscribe (tap to open calendar app)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href={generatedSubscription.webcalUrl}
+                    className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    data-testid="apple-calendar-link"
+                  >
+                    <i className="fab fa-apple"></i>
+                    Apple Calendar
+                  </a>
+                  <a
+                    href={`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(generatedSubscription.webcalUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    data-testid="google-calendar-link"
+                  >
+                    <i className="fab fa-google"></i>
+                    Google Calendar
+                  </a>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  On mobile, tapping these will open your calendar app to subscribe.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                This URL auto-syncs. Your calendar app will check for updates periodically.
-              </p>
+
+              {/* Manual URL Copy */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Or copy URL manually</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={generatedSubscription.webcalUrl}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyUrl}
+                    data-testid="copy-url-button"
+                  >
+                    {copiedUrl ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This URL auto-syncs. Your calendar app will check for updates periodically.
+                </p>
+              </div>
             </div>
           )}
 
