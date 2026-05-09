@@ -543,6 +543,80 @@
   transform: scale(0.95);
 }
 
+.finances-fab.active {
+  background: hsl(0, 0%, 20%);
+  box-shadow: none;
+  transform: rotate(45deg);
+}
+
+/* FAB Menu */
+.finances-fab-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 25;
+  animation: fade-in 0.2s ease;
+}
+
+.finances-fab-menu {
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 28;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.finances-fab-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.finances-fab-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: 30px;
+  color: var(--fin-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.finances-fab-option:hover {
+  background: var(--fin-surface-hover);
+  border-color: var(--fin-income);
+}
+
+.finances-fab-option svg {
+  color: var(--fin-income);
+}
+
+.finances-fab-option.expense svg {
+  color: var(--fin-expense);
+}
+
+.finances-fab-option.expense:hover {
+  border-color: var(--fin-expense);
+}
+
+/* No fee amount style */
+.finances-item-amount .amount.no-fee {
+  color: var(--fin-gold);
+  font-size: 0.85rem;
+}
+
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .finances-title {
@@ -572,5 +646,10 @@
     right: 16px;
     width: 56px;
     height: 56px;
+  }
+
+  .finances-fab-menu {
+    bottom: 150px;
+    right: 16px;
   }
 }

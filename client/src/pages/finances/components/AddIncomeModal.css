@@ -1,0 +1,409 @@
+/* AddIncomeModal - Slide-up sheet for adding income */
+
+.income-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.income-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  background: hsl(0, 0%, 8%);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  z-index: 101;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .income-modal {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 24px;
+    animation: modal-enter 0.3s ease;
+  }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.income-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid hsl(0, 0%, 15%);
+}
+
+.income-modal-title {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  margin: 0;
+}
+
+.income-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: hsl(0, 0%, 15%);
+  border: none;
+  border-radius: 50%;
+  color: hsl(0, 0%, 60%);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.income-modal-close:hover {
+  background: hsl(0, 0%, 20%);
+  color: hsl(0, 0%, 90%);
+}
+
+/* Income Type Selection */
+.income-type-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.income-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  background: hsl(0, 0%, 12%);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.income-type-btn:hover {
+  background: hsl(0, 0%, 15%);
+  border-color: hsl(147, 89%, 44%);
+}
+
+.income-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: hsla(147, 89%, 44%, 0.15);
+  border-radius: 12px;
+  color: hsl(147, 89%, 44%);
+}
+
+.income-type-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.income-type-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(0, 0%, 98%);
+}
+
+.income-type-desc {
+  font-size: 0.8rem;
+  color: hsl(0, 0%, 60%);
+}
+
+/* Back Button */
+.income-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin: 16px 16px 0;
+  background: transparent;
+  border: none;
+  color: hsl(147, 89%, 44%);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.income-back-btn:hover {
+  opacity: 0.8;
+}
+
+/* Gig List */
+.income-gig-list {
+  padding-bottom: 24px;
+}
+
+.income-gig-hint {
+  padding: 8px 24px 16px;
+  font-size: 0.85rem;
+  color: hsl(0, 0%, 60%);
+}
+
+.income-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: hsl(0, 0%, 60%);
+}
+
+.income-empty p:first-of-type {
+  margin-top: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: hsl(0, 0%, 80%);
+}
+
+.income-gig-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: calc(100% - 32px);
+  margin: 0 16px 8px;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.income-gig-btn:hover {
+  background: hsl(0, 0%, 15%);
+  border-color: hsl(147, 89%, 44%);
+}
+
+.income-gig-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  padding: 8px;
+  background: hsl(0, 0%, 8%);
+  border-radius: 8px;
+}
+
+.income-gig-date .day {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  line-height: 1;
+}
+
+.income-gig-date .month {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: hsl(147, 89%, 44%);
+}
+
+.income-gig-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.income-gig-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: hsl(0, 0%, 98%);
+}
+
+.income-gig-fee {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: hsl(147, 89%, 44%);
+}
+
+.income-gig-fee.no-fee {
+  color: hsl(45, 100%, 51%);
+  font-weight: 500;
+}
+
+/* Form */
+.income-form {
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.income-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.income-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(0, 0%, 60%);
+}
+
+.income-label .required {
+  color: hsl(0, 72%, 55%);
+}
+
+/* Amount Input */
+.income-amount-field {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.income-amount-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.income-input-icon {
+  width: 28px;
+  height: 28px;
+  color: hsl(147, 89%, 44%);
+}
+
+.income-amount {
+  width: 180px;
+  background: transparent;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 98%);
+  text-align: center;
+  outline: none;
+}
+
+.income-amount::placeholder {
+  color: hsl(0, 0%, 30%);
+}
+
+/* Date Button */
+.income-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+  color: hsl(0, 0%, 90%);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.income-date-btn:hover {
+  border-color: hsl(147, 89%, 44%);
+}
+
+/* Description Input */
+.income-description-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: hsl(0, 0%, 12%);
+  border: 1px solid hsl(0, 0%, 18%);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.income-description-input:focus-within {
+  border-color: hsl(147, 89%, 44%);
+}
+
+.income-input-icon-small {
+  width: 18px;
+  height: 18px;
+  color: hsl(0, 0%, 50%);
+  flex-shrink: 0;
+}
+
+.income-description {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: hsl(0, 0%, 90%);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.income-description::placeholder {
+  color: hsl(0, 0%, 40%);
+}
+
+/* Submit Button */
+.income-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, hsl(147, 89%, 44%) 0%, hsl(147, 70%, 35%) 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.income-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -5px hsla(147, 89%, 44%, 0.4);
+}
+
+.income-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

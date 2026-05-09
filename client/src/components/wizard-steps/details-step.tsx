@@ -15,7 +15,7 @@ interface DetailsStepProps {
 export default function DetailsStep({ formData, onUpdate, artistName }: DetailsStepProps) {
   const [showTicketInfo, setShowTicketInfo] = useState(false);
   const [showFeeInfo, setShowFeeInfo] = useState(
-    formData.agreedFee !== undefined || formData.actualFee !== undefined
+    formData.agreedFee !== undefined || formData.noFee === true
   );
 
   // Auto-generate title if not manually edited
@@ -132,37 +132,31 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
 
         {showFeeInfo && (
           <div className="p-4 pt-0 space-y-4">
-            {/* Agreed Fee */}
-            <div>
-              <label className="block text-xs text-muted-foreground mb-2">
-                Agreed Fee
-              </label>
-              <div className="relative">
-                <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.agreedFee ?? ''}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                    onUpdate({
-                      agreedFee: value,
-                      // Auto-set actualFee to agreedFee if not already set
-                      ...(formData.actualFee === undefined && value !== undefined ? { actualFee: value } : {})
-                    });
-                  }}
-                  placeholder="0.00"
-                  className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px] focus:border-emerald-500 focus:ring-emerald-500"
-                />
+            {/* No Guaranteed Fee Toggle */}
+            <div className="flex items-center justify-between py-2 border-b border-border pb-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">No guaranteed fee</p>
+                <p className="text-xs text-muted-foreground">
+                  E.g., bar takings, exposure gig, door split
+                </p>
               </div>
+              <Switch
+                checked={formData.noFee ?? false}
+                onCheckedChange={(checked) => {
+                  onUpdate({
+                    noFee: checked,
+                    // Clear agreedFee when switching to no fee
+                    ...(checked ? { agreedFee: undefined } : {})
+                  });
+                }}
+              />
             </div>
 
-            {/* Actual Fee (only show if agreed fee is set) */}
-            {formData.agreedFee !== undefined && (
+            {/* Agreed Fee (only show if NOT noFee) */}
+            {!formData.noFee && (
               <div>
                 <label className="block text-xs text-muted-foreground mb-2">
-                  Actual Fee (if different)
+                  Agreed Fee
                 </label>
                 <div className="relative">
                   <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -170,12 +164,12 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.actualFee ?? formData.agreedFee ?? ''}
+                    value={formData.agreedFee ?? ''}
                     onChange={(e) => {
                       const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                      onUpdate({ actualFee: value });
+                      onUpdate({ agreedFee: value });
                     }}
-                    placeholder={String(formData.agreedFee ?? '0.00')}
+                    placeholder="0.00"
                     className="pl-10 pr-4 text-base min-h-[56px] md:min-h-[44px] focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
@@ -200,7 +194,8 @@ export default function DetailsStep({ formData, onUpdate, artistName }: DetailsS
             </div>
 
             <p className="text-xs text-muted-foreground italic">
-              Fee details are only visible to band members in Backstage
+              Fee details are only visible to band members in Backstage.
+              Actual fee received is recorded when marking gig as paid.
             </p>
           </div>
         )}

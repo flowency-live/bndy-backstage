@@ -152,6 +152,8 @@ export interface Event {
   paymentMethod?: 'cash' | 'bank_transfer' | 'gig_realm' | 'events_uk' | 'other';
   /** Whether fee is split equally between all artist members */
   splitBetweenMembers?: boolean;
+  /** Gig has no guaranteed fee (e.g., bar takings, exposure gig) */
+  noFee?: boolean;
 }
 
 export interface Song {
@@ -271,10 +273,50 @@ export interface Expense {
   updatedAt: string;
 }
 
+// Income categories for standalone income entries
+export const INCOME_CATEGORIES = [
+  'gig_payment',        // Linked to event (use Mark as Paid for this)
+  'member_contribution', // Member adds to shared pot
+  'tips',               // Tips/donations
+  'merch',              // Merchandise sales
+  'other'               // Other income
+] as const;
+
+export type IncomeCategory = typeof INCOME_CATEGORIES[number];
+
+export const INCOME_CATEGORY_CONFIG = {
+  gig_payment: { label: 'Gig Payment', icon: '🎵' },
+  member_contribution: { label: 'Member Contribution', icon: '👥' },
+  tips: { label: 'Tips', icon: '💵' },
+  merch: { label: 'Merchandise', icon: '👕' },
+  other: { label: 'Other', icon: '💰' }
+} as const;
+
+export interface Income {
+  id: string;
+  artistId: string;
+  /** Date of income (YYYY-MM-DD) */
+  date: string;
+  /** Amount in GBP */
+  amount: number;
+  /** Category of income */
+  category: IncomeCategory;
+  /** Description */
+  description?: string;
+  /** Related event ID (for gig-linked income) */
+  relatedEventId?: string;
+  /** Member ID (for member contributions) */
+  memberId?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface FinancesSummary {
   totalIncome: number;
   totalPaidIncome: number;
   totalUnpaidIncome: number;
+  totalStandaloneIncome: number;
   totalExpenses: number;
   balance: number;
 }
@@ -291,8 +333,10 @@ export interface FinancesResponse {
     datePaid?: string;
     paymentMethod?: PaymentMethod;
     splitBetweenMembers?: boolean;
+    noFee?: boolean;
     isPaid: boolean;
   }>;
+  standaloneIncome: Income[];
   expenses: Expense[];
   dateRange: {
     startDate: string;

@@ -1,6 +1,6 @@
 // src/lib/services/expenses-service.ts
 import { API_BASE_URL } from '../../config/api';
-import type { Expense, ExpenseCategory, FinancesResponse } from '@/types/api';
+import type { Expense, ExpenseCategory, Income, IncomeCategory, FinancesResponse } from '@/types/api';
 
 export interface CreateExpenseRequest {
   date: string;
@@ -24,6 +24,19 @@ export interface UpdateExpenseRequest {
 
 export interface ExpensesListResponse {
   expenses: Expense[];
+}
+
+export interface CreateIncomeRequest {
+  date: string;
+  amount: number;
+  category: IncomeCategory;
+  description?: string;
+  relatedEventId?: string;
+  memberId?: string;
+}
+
+export interface IncomeListResponse {
+  income: Income[];
 }
 
 class ExpensesService {
@@ -170,6 +183,50 @@ class ExpensesService {
     );
 
     return expenses;
+  }
+
+  // ==========================================================================
+  // Income Methods
+  // ==========================================================================
+
+  /**
+   * Get all standalone income entries for an artist with optional date range
+   */
+  async getIncome(
+    artistId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<IncomeListResponse> {
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.apiRequest<IncomeListResponse>(
+      `/api/artists/${artistId}/income${query}`
+    );
+  }
+
+  /**
+   * Create a new standalone income entry for an artist
+   */
+  async createIncome(
+    artistId: string,
+    income: CreateIncomeRequest
+  ): Promise<Income> {
+    return this.apiRequest<Income>(`/api/artists/${artistId}/income`, {
+      method: 'POST',
+      body: JSON.stringify(income),
+    });
+  }
+
+  /**
+   * Delete a standalone income entry
+   */
+  async deleteIncome(artistId: string, incomeId: string): Promise<void> {
+    await this.apiRequest<{ success: boolean }>(
+      `/api/artists/${artistId}/income/${incomeId}`,
+      { method: 'DELETE' }
+    );
   }
 }
 

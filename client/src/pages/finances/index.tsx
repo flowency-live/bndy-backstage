@@ -13,8 +13,9 @@ import { eventsService } from '@/lib/services/events-service';
 import { apiRequest } from '@/lib/queryClient';
 import type { ArtistMembership, FinancesResponse, Expense, ExpenseCategory, PaymentMethod } from '@/types/api';
 import { EXPENSE_CATEGORY_CONFIG, PAYMENT_METHOD_CONFIG } from '@/types/api';
-import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X } from 'lucide-react';
 import AddExpenseModal from './components/AddExpenseModal';
+import AddIncomeModal from './components/AddIncomeModal';
 import MarkAsPaidModal from './components/MarkAsPaidModal';
 import './finances.css';
 
@@ -63,7 +64,9 @@ export default function Finances({ artistId, membership }: FinancesProps) {
   const [dateRange, setDateRange] = useState<DateRangePreset>('this_month');
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<TabView>('income');
+  const [showFabMenu, setShowFabMenu] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showAddIncome, setShowAddIncome] = useState(false);
   const [selectedGigForPayment, setSelectedGigForPayment] = useState<FinancesResponse['income'][0] | null>(null);
 
   const { startDate, endDate } = useMemo(() => getDateRange(dateRange), [dateRange]);
@@ -118,6 +121,9 @@ export default function Finances({ artistId, membership }: FinancesProps) {
 
   const income = finances?.income || [];
   const expenses = finances?.expenses || [];
+
+  // Filter unpaid gigs for income modal
+  const unpaidGigs = useMemo(() => income.filter(gig => !gig.isPaid), [income]);
 
   // Group expenses by category
   const expensesByCategory = useMemo(() => {
@@ -282,9 +288,13 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                       )}
                     </div>
                     <div className="finances-item-amount">
-                      <span className="amount">
-                        £{(gig.actualFee ?? gig.agreedFee ?? 0).toFixed(2)}
-                      </span>
+                      {gig.noFee && !gig.isPaid ? (
+                        <span className="amount no-fee">No Fee</span>
+                      ) : (
+                        <span className="amount">
+                          £{(gig.actualFee ?? gig.agreedFee ?? 0).toFixed(2)}
+                        </span>
+                      )}
                       {gig.isPaid ? (
                         <Badge className="finances-badge paid">
                           <Check className="w-3 h-3 mr-1" />
@@ -353,13 +363,38 @@ export default function Finances({ artistId, membership }: FinancesProps) {
           )}
         </div>
 
-        {/* Floating Action Button */}
+        {/* Floating Action Button with Menu */}
+        {showFabMenu && (
+          <div className="finances-fab-backdrop" onClick={() => setShowFabMenu(false)} />
+        )}
+        <div className={`finances-fab-menu ${showFabMenu ? 'open' : ''}`}>
+          <button
+            className="finances-fab-option"
+            onClick={() => {
+              setShowFabMenu(false);
+              setShowAddIncome(true);
+            }}
+          >
+            <ArrowDownLeft className="w-5 h-5" />
+            <span>Add Income</span>
+          </button>
+          <button
+            className="finances-fab-option expense"
+            onClick={() => {
+              setShowFabMenu(false);
+              setShowAddExpense(true);
+            }}
+          >
+            <ArrowUpRight className="w-5 h-5" />
+            <span>Add Expense</span>
+          </button>
+        </div>
         <button
-          className="finances-fab"
-          onClick={() => setShowAddExpense(true)}
-          aria-label="Add expense"
+          className={`finances-fab ${showFabMenu ? 'active' : ''}`}
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          aria-label="Add transaction"
         >
-          <Plus className="w-6 h-6" />
+          {showFabMenu ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
         </button>
 
         {/* Modals */}
@@ -370,6 +405,21 @@ export default function Finances({ artistId, membership }: FinancesProps) {
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
             setShowAddExpense(false);
+          }}
+        />
+
+        <AddIncomeModal
+          isOpen={showAddIncome}
+          onClose={() => setShowAddIncome(false)}
+          artistId={artistId}
+          unpaidGigs={unpaidGigs}
+          onSelectGig={(gig) => {
+            setShowAddIncome(false);
+            setSelectedGigForPayment(gig);
+          }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
+            setShowAddIncome(false);
           }}
         />
 

@@ -44,7 +44,7 @@ export interface PublicGigFormData {
 
   // Fee tracking (private - backstage only)
   agreedFee?: number;
-  actualFee?: number;
+  noFee?: boolean;
   splitBetweenMembers?: boolean;
 
   // Step 4: Visibility
@@ -220,7 +220,7 @@ export default function PublicGigWizard({
         source: 'backstage_wizard',
         // Fee tracking (private)
         agreedFee: formData.agreedFee,
-        actualFee: formData.actualFee,
+        noFee: formData.noFee,
         splitBetweenMembers: formData.splitBetweenMembers,
       };
 

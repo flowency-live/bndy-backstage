@@ -40,6 +40,11 @@ export interface PublicGigFormData {
   ticketUrl?: string;
   ticketPrice?: string;
 
+  // Fee tracking (private - backstage only)
+  agreedFee?: number;
+  noFee?: boolean;
+  splitBetweenMembers?: boolean;
+
   // Step 4: Visibility
   isPublic?: boolean; // Default true
 
