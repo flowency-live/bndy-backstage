@@ -807,9 +807,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         className="mb-3 sm:mb-4"
       />
 
-      {/* Calendar & Gigs Section */}
+      {/* Calendar & Gigs */}
       <div className="mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Calendar & Gigs</h2>
         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Calendar"
@@ -841,9 +840,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         </div>
       </div>
 
-      {/* Song Lists Section */}
+      {/* Song Lists */}
       <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Song Lists</h2>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Playbook"
@@ -921,9 +919,8 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         </div>
       </div>
 
-      {/* Venues & Contacts Section */}
+      {/* Venues & Finances */}
       <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Venues & Contacts</h2>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Venues"
@@ -934,19 +931,12 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
               className="animate-stagger-1"
               data-testid="tile-venues"
             />
-        </div>
-      </div>
-
-      {/* Finances Section */}
-      <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-3 sm:mb-4">Finances</h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 w-full max-w-[900px]">
             <DashboardTile
               title="Finances"
               icon={<Wallet />}
               color="hsl(147, 89%, 30%)"
               onClick={() => setLocation("/finances")}
-              className="animate-stagger-1"
+              className="animate-stagger-2"
               data-testid="tile-finances"
             />
         </div>
