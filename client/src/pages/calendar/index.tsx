@@ -317,9 +317,20 @@ function CalendarContent({ artistId, membership }: CalendarProps) {
       if (!targetArtistId) {
         throw new Error('No artist selected for deletion');
       }
-      const url = deleteAll
-        ? `/api/artists/${targetArtistId}/events/${event.id}?deleteAll=true`
-        : `/api/artists/${targetArtistId}/events/${event.id}`;
+
+      // Build URL with query params for recurring event handling
+      const params = new URLSearchParams();
+      if (deleteAll) {
+        params.set('deleteAll', 'true');
+      }
+      // For recurring instances, pass the instanceDate so backend knows which occurrence to exclude
+      const instanceDate = (event as any).instanceDate;
+      if (instanceDate && !deleteAll) {
+        params.set('instanceDate', instanceDate);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/artists/${targetArtistId}/events/${event.id}${queryString ? `?${queryString}` : ''}`;
       return apiRequest('DELETE', url);
     },
     onSuccess: (_, { event }) => {

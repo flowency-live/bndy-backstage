@@ -13,6 +13,7 @@ export interface RecurringEvent extends Event {
   parentEventId?: string;
   instanceDate?: string;
   isRecurringInstance?: boolean;
+  excludeDates?: string[]; // Dates to skip (deleted single occurrences)
 }
 
 /**
@@ -36,10 +37,14 @@ export function generateOccurrences(
 
   const { type, interval, duration, count: maxCount, until } = event.recurring;
 
+  // Dates to exclude (deleted single occurrences)
+  const excludeDates = new Set(event.excludeDates || []);
+
   while (current <= end) {
     const currentDateStr = current.toISOString().split('T')[0];
 
-    if (currentDateStr >= rangeStart) {
+    // Skip excluded dates (deleted single occurrences)
+    if (currentDateStr >= rangeStart && !excludeDates.has(currentDateStr)) {
       occurrences.push({
         ...event,
         parentEventId: event.id,
