@@ -28,7 +28,7 @@ interface SongWithDetails {
   key?: string;
   tuning?: string;
   notes?: string;
-  additionalUrl?: string;
+  youtubeUrl?: string;
   guitarChordsUrl?: string;
   genre?: string;
   releaseDate?: string;
@@ -115,7 +115,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
           key: item.custom_key || item.globalSong?.metadata?.key || null,
           tuning: tuning,
           notes: item.notes || '',
-          additionalUrl: item.additional_url || '',
+          youtubeUrl: item.youtube_url || '',
           guitarChordsUrl: item.guitar_chords_url || '',
           genre: item.globalSong?.genre || null,
           releaseDate: item.globalSong?.releaseDate || null,
@@ -819,14 +819,31 @@ export default function Songs({ artistId, membership }: SongsProps) {
                         </div>
 
                         <div>
-                          <label className="text-xs font-medium text-muted-foreground block mb-1">Additional URL</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                              <i className="fab fa-youtube text-red-600"></i>
+                              YouTube URL
+                            </label>
+                            {(editedSongs[song.id]?.youtube_url || song.youtubeUrl) && (
+                              <a
+                                href={editedSongs[song.id]?.youtube_url || song.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-red-600 hover:text-red-700 transition-colors"
+                                title="Open in YouTube"
+                              >
+                                <i className="fas fa-external-link-alt text-xs"></i>
+                              </a>
+                            )}
+                          </div>
                           <input
                             type="url"
-                            placeholder="https://..."
-                            value={editedSongs[song.id]?.additional_url ?? song.additionalUrl ?? ''}
+                            placeholder="https://youtube.com/..."
+                            value={editedSongs[song.id]?.youtube_url ?? song.youtubeUrl ?? ''}
                             onChange={(e) => setEditedSongs(prev => ({
                               ...prev,
-                              [song.id]: { ...prev[song.id], additional_url: e.target.value }
+                              [song.id]: { ...prev[song.id], youtube_url: e.target.value }
                             }))}
                             className="w-full px-2 py-1 text-sm border rounded"
                           />

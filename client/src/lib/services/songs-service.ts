@@ -23,7 +23,7 @@ export interface ArtistSong {
   notes?: string;
   customDuration?: number;
   guitarChordsUrl?: string;
-  additionalUrl?: string;
+  youtubeUrl?: string;
   createdAt: string;
   globalSong?: GlobalSong;
   readiness: Array<{
@@ -47,7 +47,7 @@ export interface AddSongRequest {
   notes?: string;
   customDuration?: number;
   guitarChordsUrl?: string;
-  additionalUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface UpdateSongRequest {
@@ -55,7 +55,7 @@ export interface UpdateSongRequest {
   notes?: string;
   customDuration?: number;
   guitarChordsUrl?: string;
-  additionalUrl?: string;
+  youtubeUrl?: string;
 }
 
 class SongsService {
@@ -91,7 +91,17 @@ class SongsService {
         throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
       }
 
-      return await response.json();
+      // Handle 204 No Content or empty responses
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return undefined as T;
+      }
+
+      const text = await response.text();
+      if (!text) {
+        return undefined as T;
+      }
+
+      return JSON.parse(text);
     } catch (error) {
       throw error;
     }

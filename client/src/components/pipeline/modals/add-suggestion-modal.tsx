@@ -43,6 +43,7 @@ export default function AddSuggestionModal({
   const [selectedSong, setSelectedSong] = useState<SongSearchResult | null>(null);
   const [destination, setDestination] = useState<DestinationType | null>(null);
   const [comment, setComment] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [voteValue, setVoteValue] = useState<number | null>(null);
   const [existingSongIds, setExistingSongIds] = useState<Set<string>>(new Set());
   const [existingSongKeys, setExistingSongKeys] = useState<Set<string>>(new Set()); // title+artist combos
@@ -221,7 +222,8 @@ export default function AddSuggestionModal({
           song_id: songId,
           suggested_comment: comment.trim(),
           initial_vote: voteValue,
-          added_by_membership_id: membershipId
+          added_by_membership_id: membershipId,
+          youtube_url: youtubeUrl.trim() || undefined
         });
       } else {
         // Add directly to practice (status = "practice")
@@ -526,7 +528,7 @@ export default function AddSuggestionModal({
           </div>
 
           {/* Comment */}
-          <div className="p-4 sm:p-6">
+          <div className="p-4 sm:p-6 pb-2 sm:pb-3">
             <label className="block text-sm font-medium mb-2">
               Comment (optional)
             </label>
@@ -535,7 +537,22 @@ export default function AddSuggestionModal({
               onChange={(e) => setComment(e.target.value)}
               placeholder="Why should the band play this song?"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-              rows={3}
+              rows={2}
+            />
+          </div>
+
+          {/* YouTube URL */}
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <label className="text-sm font-medium mb-2 flex items-center gap-2">
+              <i className="fab fa-youtube text-red-600"></i>
+              YouTube URL (optional)
+            </label>
+            <input
+              type="url"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="https://youtube.com/..."
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 

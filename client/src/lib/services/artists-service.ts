@@ -260,6 +260,7 @@ class ArtistsService {
     initial_vote?: number;
     status?: string;
     added_by_membership_id?: string;
+    youtube_url?: string;
   }): Promise<any> {
     return this.apiRequest<any>(`/api/artists/${artistId}/pipeline/suggestions`, {
       method: 'POST',
