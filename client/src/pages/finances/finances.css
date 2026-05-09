@@ -334,6 +334,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .finances-card-label {
@@ -379,14 +381,20 @@
 /* Card Column Layout */
 .finances-card-columns {
   display: flex;
-  gap: 16px;
+  justify-content: space-between;
   align-items: flex-start;
+  width: 100%;
 }
 
 .finances-card-column {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.finances-card-column.pending {
+  text-align: right;
+  align-items: flex-end;
 }
 
 .finances-card-column.pending .finances-card-value {
