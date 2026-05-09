@@ -11,12 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { expensesService } from '@/lib/services/expenses-service';
 import { eventsService } from '@/lib/services/events-service';
 import { apiRequest } from '@/lib/queryClient';
-import type { ArtistMembership, FinancesResponse, Expense, ExpenseCategory, PaymentMethod } from '@/types/api';
-import { EXPENSE_CATEGORY_CONFIG, PAYMENT_METHOD_CONFIG } from '@/types/api';
+import type { ArtistMembership, FinancesResponse, Expense, ExpenseCategory, PaymentMethod, Income } from '@/types/api';
+import { EXPENSE_CATEGORY_CONFIG, PAYMENT_METHOD_CONFIG, INCOME_CATEGORY_CONFIG } from '@/types/api';
 import { TrendingUp, TrendingDown, Wallet, Plus, Check, ChevronDown, Calendar, ArrowUpRight, ArrowDownLeft, X, Mic, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import AddExpenseModal from './components/AddExpenseModal';
 import AddIncomeModal from './components/AddIncomeModal';
 import MarkAsPaidModal from './components/MarkAsPaidModal';
+import EditExpenseModal from './components/EditExpenseModal';
 import './finances.css';
 
 interface FinancesProps {
@@ -69,7 +70,8 @@ export default function Finances({ artistId, membership }: FinancesProps) {
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [selectedGigForPayment, setSelectedGigForPayment] = useState<FinancesResponse['income'][0] | null>(null);
   const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<{ type: 'expense' | 'gig'; id: string; title: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'expense' | 'gig' | 'income'; id: string; title: string } | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const { startDate, endDate } = useMemo(() => getDateRange(dateRange), [dateRange]);
 
@@ -133,6 +135,33 @@ export default function Finances({ artistId, membership }: FinancesProps) {
     },
   });
 
+  // Update expense mutation
+  const updateExpenseMutation = useMutation({
+    mutationFn: ({ expenseId, updates }: { expenseId: string; updates: { amount?: number; description?: string } }) =>
+      expensesService.updateExpense(artistId, expenseId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
+      toast({ title: 'Expense updated' });
+      setEditingExpense(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  // Delete standalone income mutation
+  const deleteIncomeMutation = useMutation({
+    mutationFn: (incomeId: string) => expensesService.deleteIncome(artistId, incomeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['finances', artistId] });
+      toast({ title: 'Income deleted' });
+      setConfirmDelete(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    },
+  });
+
   const summary = finances?.summary || {
     totalIncome: 0,
     totalPaidIncome: 0,
@@ -142,11 +171,15 @@ export default function Finances({ artistId, membership }: FinancesProps) {
     balance: 0,
   };
 
-  const income = finances?.income || [];
+  const gigIncome = finances?.income || [];
+  const standaloneIncome = finances?.standaloneIncome || [];
   const expenses = finances?.expenses || [];
 
   // Filter unpaid gigs for income modal
-  const unpaidGigs = useMemo(() => income.filter(gig => !gig.isPaid), [income]);
+  const unpaidGigs = useMemo(() => gigIncome.filter(gig => !gig.isPaid), [gigIncome]);
+
+  // Combined income count for badge
+  const totalIncomeCount = gigIncome.length + standaloneIncome.length;
 
   // Group expenses by category
   const expensesByCategory = useMemo(() => {
@@ -241,10 +274,9 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             </div>
           </button>
 
-          <button
-            className="finances-card finances-card-balance clickable"
+          <div
+            className="finances-card finances-card-balance"
             style={{ '--delay': '2' } as React.CSSProperties}
-            onClick={() => setActiveTab('income')}
           >
             <div className={`finances-card-icon balance ${summary.balance >= 0 ? 'positive' : 'negative'}`}>
               <Wallet className="w-5 h-5" />
@@ -256,7 +288,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                 {Math.abs(summary.balance).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-          </button>
+          </div>
 
           <button
             className="finances-card finances-card-gig-income clickable"
@@ -286,7 +318,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             <ArrowDownLeft className="w-4 h-4" />
             <span>Income</span>
             <Badge variant="secondary" className="finances-tab-badge">
-              {income.length}
+              {totalIncomeCount}
             </Badge>
           </button>
           <button
@@ -315,93 +347,151 @@ export default function Finances({ artistId, membership }: FinancesProps) {
           ) : activeTab === 'income' ? (
             /* Income List */
             <div className="finances-list">
-              {income.length === 0 ? (
+              {totalIncomeCount === 0 ? (
                 <div className="finances-empty">
                   <TrendingUp className="w-12 h-12 text-muted-foreground/30" />
-                  <p>No gigs with fees in this period</p>
-                  <p className="text-sm text-muted-foreground">Add a fee to a gig to track income</p>
+                  <p>No income in this period</p>
+                  <p className="text-sm text-muted-foreground">Add a fee to a gig or record other income</p>
                 </div>
               ) : (
-                income.map((gig, index) => (
-                  <div
-                    key={gig.id}
-                    className="finances-item income-item"
-                    style={{ '--index': index } as React.CSSProperties}
-                  >
-                    <div className="finances-item-date">
-                      <span className="day">{format(parseISO(gig.date), 'd')}</span>
-                      <span className="month">{format(parseISO(gig.date), 'MMM')}</span>
+                <>
+                  {/* Gig Income */}
+                  {gigIncome.map((gig, index) => (
+                    <div
+                      key={gig.id}
+                      className="finances-item income-item"
+                      style={{ '--index': index } as React.CSSProperties}
+                    >
+                      <div className="finances-item-date">
+                        <span className="day">{format(parseISO(gig.date), 'd')}</span>
+                        <span className="month">{format(parseISO(gig.date), 'MMM')}</span>
+                      </div>
+                      <div className="finances-item-details">
+                        <span className="finances-item-title">{gig.venueName || gig.title || 'Untitled Gig'}</span>
+                        {gig.datePaid && gig.paymentMethod && (
+                          <span className="finances-item-meta">
+                            {PAYMENT_METHOD_CONFIG[gig.paymentMethod]?.label}
+                          </span>
+                        )}
+                      </div>
+                      <div className="finances-item-amount">
+                        {gig.noFee && !gig.isPaid ? (
+                          <span className="amount no-fee">No Fee</span>
+                        ) : (
+                          <span className="amount">
+                            £{(gig.actualFee ?? gig.agreedFee ?? 0).toFixed(2)}
+                          </span>
+                        )}
+                        {gig.isPaid ? (
+                          <Badge className="finances-badge paid">
+                            <Check className="w-3 h-3 mr-1" />
+                            Paid
+                          </Badge>
+                        ) : (
+                          <button
+                            className="finances-mark-paid-btn"
+                            onClick={() => setSelectedGigForPayment(gig)}
+                          >
+                            Mark Paid
+                          </button>
+                        )}
+                      </div>
+                      <div className="finances-item-actions">
+                        <button
+                          className="finances-action-btn"
+                          onClick={() => setOpenActionMenu(openActionMenu === gig.id ? null : gig.id)}
+                          aria-label="More options"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openActionMenu === gig.id && (
+                          <>
+                            <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
+                            <div className="finances-action-menu">
+                              <button
+                                className="finances-action-menu-item"
+                                onClick={() => {
+                                  setOpenActionMenu(null);
+                                  setSelectedGigForPayment(gig);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4" />
+                                <span>Edit Payment</span>
+                              </button>
+                              {gig.isPaid && (
+                                <button
+                                  className="finances-action-menu-item danger"
+                                  onClick={() => {
+                                    setOpenActionMenu(null);
+                                    setConfirmDelete({ type: 'gig', id: gig.id, title: gig.venueName || gig.title || 'this gig' });
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Clear Payment</span>
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="finances-item-details">
-                      <span className="finances-item-title">{gig.venueName || gig.title || 'Untitled Gig'}</span>
-                      {gig.datePaid && gig.paymentMethod && (
-                        <span className="finances-item-meta">
-                          {PAYMENT_METHOD_CONFIG[gig.paymentMethod]?.label}
+                  ))}
+
+                  {/* Standalone Income (member contributions, tips, etc.) */}
+                  {standaloneIncome.map((income, index) => (
+                    <div
+                      key={income.id}
+                      className="finances-item income-item standalone"
+                      style={{ '--index': gigIncome.length + index } as React.CSSProperties}
+                    >
+                      <div className="finances-item-date">
+                        <span className="day">{format(parseISO(income.date), 'd')}</span>
+                        <span className="month">{format(parseISO(income.date), 'MMM')}</span>
+                      </div>
+                      <div className="finances-item-details">
+                        <span className="finances-item-title">
+                          {income.description || INCOME_CATEGORY_CONFIG[income.category]?.label || 'Other Income'}
                         </span>
-                      )}
-                    </div>
-                    <div className="finances-item-amount">
-                      {gig.noFee && !gig.isPaid ? (
-                        <span className="amount no-fee">No Fee</span>
-                      ) : (
-                        <span className="amount">
-                          £{(gig.actualFee ?? gig.agreedFee ?? 0).toFixed(2)}
+                        <span className="finances-item-meta standalone-category">
+                          {INCOME_CATEGORY_CONFIG[income.category]?.icon} {INCOME_CATEGORY_CONFIG[income.category]?.label}
                         </span>
-                      )}
-                      {gig.isPaid ? (
+                      </div>
+                      <div className="finances-item-amount">
+                        <span className="amount">£{income.amount.toFixed(2)}</span>
                         <Badge className="finances-badge paid">
                           <Check className="w-3 h-3 mr-1" />
-                          Paid
+                          Received
                         </Badge>
-                      ) : (
+                      </div>
+                      <div className="finances-item-actions">
                         <button
-                          className="finances-mark-paid-btn"
-                          onClick={() => setSelectedGigForPayment(gig)}
+                          className="finances-action-btn"
+                          onClick={() => setOpenActionMenu(openActionMenu === income.id ? null : income.id)}
+                          aria-label="More options"
                         >
-                          Mark Paid
+                          <MoreVertical className="w-4 h-4" />
                         </button>
-                      )}
-                    </div>
-                    <div className="finances-item-actions">
-                      <button
-                        className="finances-action-btn"
-                        onClick={() => setOpenActionMenu(openActionMenu === gig.id ? null : gig.id)}
-                        aria-label="More options"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                      {openActionMenu === gig.id && (
-                        <>
-                          <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
-                          <div className="finances-action-menu">
-                            <button
-                              className="finances-action-menu-item"
-                              onClick={() => {
-                                setOpenActionMenu(null);
-                                setSelectedGigForPayment(gig);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4" />
-                              <span>Edit Payment</span>
-                            </button>
-                            {gig.isPaid && (
+                        {openActionMenu === income.id && (
+                          <>
+                            <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
+                            <div className="finances-action-menu">
                               <button
                                 className="finances-action-menu-item danger"
                                 onClick={() => {
                                   setOpenActionMenu(null);
-                                  setConfirmDelete({ type: 'gig', id: gig.id, title: gig.venueName || gig.title || 'this gig' });
+                                  setConfirmDelete({ type: 'income', id: income.id, title: income.description || 'this income' });
                                 }}
                               >
                                 <Trash2 className="w-4 h-4" />
-                                <span>Clear Payment</span>
+                                <span>Delete Income</span>
                               </button>
-                            )}
-                          </div>
-                        </>
-                      )}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </div>
           ) : (
@@ -457,6 +547,16 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                             <>
                               <div className="finances-action-backdrop" onClick={() => setOpenActionMenu(null)} />
                               <div className="finances-action-menu">
+                                <button
+                                  className="finances-action-menu-item"
+                                  onClick={() => {
+                                    setOpenActionMenu(null);
+                                    setEditingExpense(expense);
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                  <span>Edit Expense</span>
+                                </button>
                                 <button
                                   className="finances-action-menu-item danger"
                                   onClick={() => {
@@ -559,7 +659,7 @@ export default function Finances({ artistId, membership }: FinancesProps) {
             <div className="finances-confirm-backdrop" onClick={() => setConfirmDelete(null)} />
             <div className="finances-confirm-dialog">
               <h3 className="finances-confirm-title">
-                {confirmDelete.type === 'gig' ? 'Clear Payment?' : 'Delete Expense?'}
+                {confirmDelete.type === 'gig' ? 'Clear Payment?' : confirmDelete.type === 'income' ? 'Delete Income?' : 'Delete Expense?'}
               </h3>
               <p className="finances-confirm-text">
                 {confirmDelete.type === 'gig'
@@ -576,17 +676,29 @@ export default function Finances({ artistId, membership }: FinancesProps) {
                   onClick={() => {
                     if (confirmDelete.type === 'gig') {
                       clearPaymentMutation.mutate(confirmDelete.id);
+                    } else if (confirmDelete.type === 'income') {
+                      deleteIncomeMutation.mutate(confirmDelete.id);
                     } else {
                       deleteExpenseMutation.mutate(confirmDelete.id);
                     }
                   }}
-                  disabled={clearPaymentMutation.isPending || deleteExpenseMutation.isPending}
+                  disabled={clearPaymentMutation.isPending || deleteExpenseMutation.isPending || deleteIncomeMutation.isPending}
                 >
-                  {(clearPaymentMutation.isPending || deleteExpenseMutation.isPending) ? 'Processing...' : 'Confirm'}
+                  {(clearPaymentMutation.isPending || deleteExpenseMutation.isPending || deleteIncomeMutation.isPending) ? 'Processing...' : 'Confirm'}
                 </Button>
               </div>
             </div>
           </>
+        )}
+
+        {/* Edit Expense Modal */}
+        {editingExpense && (
+          <EditExpenseModal
+            expense={editingExpense}
+            onClose={() => setEditingExpense(null)}
+            onSave={(updates) => updateExpenseMutation.mutate({ expenseId: editingExpense.id, updates })}
+            isLoading={updateExpenseMutation.isPending}
+          />
         )}
       </div>
     </PageContainer>

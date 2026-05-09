@@ -653,6 +653,23 @@
   font-size: 0.85rem;
 }
 
+/* Standalone income (member contributions, tips, etc.) */
+.income-item.standalone {
+  border-left: 3px solid var(--fin-gold);
+}
+
+.income-item.standalone:hover {
+  border-left-color: var(--fin-gold);
+}
+
+.standalone-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--fin-gold);
+}
+
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .finances-title {
