@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
-import ScoreProgressBar from "../features/score-progress-bar";
+import VoteProgressBadge from "../features/vote-progress-badge";
 import MemberVotesReveal from "../features/member-votes-reveal";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import { artistsService } from "@/lib/services/artists-service";
@@ -162,56 +162,56 @@ export default function VotingSongCard({
   const isSuggester = song.suggested_by_user_id === userId;
 
   return (
-    <div className="rounded-lg overflow-hidden transition-all border border-border">
-      {/* Collapsed Card */}
+    <div className="bg-card rounded-lg overflow-hidden transition-all border border-border">
+      {/* Collapsed Card - edge-to-edge layout like playbook */}
       <div
-        className="p-2 cursor-pointer hover:bg-accent/50 transition-colors"
+        className="cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={!isExpanded ? onToggleExpand : undefined}
       >
-        <div className="flex gap-2">
-          {/* Album Art */}
-          <div className="flex-shrink-0 relative group">
+        <div className="flex items-center">
+          {/* Album Art - flush to left edge */}
+          <div className="w-12 h-12 flex-shrink-0 relative group overflow-hidden">
             {song.globalSong.thumbnail_url ? (
               <>
                 <img
                   src={song.globalSong.thumbnail_url}
                   alt={song.globalSong.title}
-                  className="w-16 h-16 rounded object-cover"
+                  className="w-full h-full object-cover"
                 />
                 {/* Play icon overlay - always visible */}
                 {song.globalSong.spotify_url && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition-all">
                     <i className="fas fa-play text-white text-lg drop-shadow-lg"></i>
                   </div>
                 )}
               </>
             ) : (
-              <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
-                <i className="fas fa-music text-muted-foreground"></i>
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <i className="fas fa-music text-muted-foreground text-sm"></i>
               </div>
             )}
           </div>
 
           {/* Song Info */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-foreground truncate">
+          <div className="flex-1 min-w-0 px-2 py-1.5">
+            <h3 className="font-medium text-sm text-foreground truncate">
               {song.globalSong.title}
             </h3>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate">
               {song.globalSong.artist_name}
             </p>
           </div>
 
           {/* Vote Status - Compact Layout */}
           {!isExpanded && (
-            <div className="flex-shrink-0 flex items-center gap-2">
-              {/* Stars (user's vote or empty) */}
+            <div className="flex items-center gap-1.5 pr-1">
+              {/* User's vote stars (compact) */}
               {userHasVoted && userVote !== 0 && (
                 <div className="flex gap-0.5" title="Your vote">
                   {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
                     <i
                       key={star}
-                      className={`fas fa-star text-xs ${
+                      className={`fas fa-star text-[10px] ${
                         star <= userVote ? 'text-yellow-500' : 'text-gray-300'
                       }`}
                     ></i>
@@ -219,21 +219,19 @@ export default function VotingSongCard({
                 </div>
               )}
               {userHasVoted && userVote === 0 && (
-                <span className="text-base" title="You passed">💩</span>
+                <span className="text-sm" title="You passed">💩</span>
               )}
-              {hasZeroVote && voteCount >= memberCount && (
-                <span className="text-base" title="Someone passed">💩</span>
+              {hasZeroVote && voteCount >= memberCount && !userHasVoted && (
+                <span className="text-sm" title="Someone passed">💩</span>
               )}
 
-              {/* Vote progress badge */}
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {voteCount}/{memberCount}
-              </span>
-
-              {/* Score bar when complete */}
-              {voteCount >= memberCount && !hasZeroVote && (
-                <ScoreProgressBar scorePercentage={scorePercentage} />
-              )}
+              {/* Vote progress badge with score % and rocket/star icons */}
+              <VoteProgressBadge
+                voteCount={voteCount}
+                memberCount={memberCount}
+                userHasVoted={userHasVoted}
+                scorePercentage={voteCount >= memberCount && !hasZeroVote ? scorePercentage : undefined}
+              />
 
               {/* Action needed indicator */}
               {!userHasVoted && (
@@ -241,7 +239,7 @@ export default function VotingSongCard({
               )}
 
               {/* Expand chevron */}
-              <button className="p-1.5 hover:bg-muted rounded transition-colors">
+              <button className="p-1 hover:bg-muted rounded">
                 <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
               </button>
             </div>

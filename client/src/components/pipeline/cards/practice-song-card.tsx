@@ -93,13 +93,13 @@ export default function PracticeSongCard({
 
   return (
     <>
-      <div className="rounded-lg overflow-hidden transition-all border border-border">
-        {/* Collapsed Card */}
+      <div className="bg-card rounded-lg overflow-hidden transition-all border border-border">
+        {/* Collapsed Card - edge-to-edge layout */}
         <div
-          className="p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
           onClick={!isExpanded ? onToggleExpand : undefined}
         >
-          <div className="flex gap-3">
+          <div className="flex items-center">
             {/* RAG Strip */}
             <RagStrip
               ragStatus={song.rag_status || {}}
@@ -107,47 +107,47 @@ export default function PracticeSongCard({
               currentUserId={userId}
             />
 
-            {/* Album Art */}
-            <div className="flex-shrink-0">
+            {/* Album Art - flush after RAG strip */}
+            <div className="w-12 h-12 flex-shrink-0 overflow-hidden">
               {song.globalSong.thumbnail_url ? (
                 <img
                   src={song.globalSong.thumbnail_url}
                   alt={song.globalSong.title}
-                  className="w-12 h-12 rounded object-cover"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                  <i className="fas fa-music text-muted-foreground"></i>
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <i className="fas fa-music text-muted-foreground text-sm"></i>
                 </div>
               )}
             </div>
 
             {/* Song Info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-foreground truncate">
+            <div className="flex-1 min-w-0 px-2 py-1.5">
+              <h3 className="font-medium text-sm text-foreground truncate">
                 {song.globalSong.title}
               </h3>
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {song.globalSong.artist_name}
               </p>
               {userRagStatus && (
-                <span className={`text-xs font-medium ${
+                <span className={`text-[10px] font-medium ${
                   userRagStatus === 'RED' ? 'text-red-500' :
                   userRagStatus === 'AMBER' ? 'text-amber-500' :
                   'text-green-500'
                 }`}>
-                  Your status: {userRagStatus}
+                  {userRagStatus}
                 </span>
               )}
             </div>
 
             {/* Status & Expand */}
             {!isExpanded && (
-              <div className="flex-shrink-0 flex items-center gap-2">
+              <div className="flex items-center gap-1.5 pr-1">
                 {needsRagStatus && (
                   <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Set your status" />
                 )}
-                <button className="p-1.5 hover:bg-muted rounded transition-colors">
+                <button className="p-1 hover:bg-muted rounded">
                   <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
                 </button>
               </div>
