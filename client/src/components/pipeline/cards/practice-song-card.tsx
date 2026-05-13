@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -94,15 +93,7 @@ export default function PracticeSongCard({
 
   return (
     <>
-      <div
-        className={`
-          rounded-lg overflow-hidden transition-all
-          ${needsRagStatus
-            ? 'border-2 border-orange-500 shadow-lg shadow-orange-500/20'
-            : 'border border-border'
-          }
-        `}
-      >
+      <div className="rounded-lg overflow-hidden transition-all border border-border">
         {/* Collapsed Card */}
         <div
           className="p-3 cursor-pointer hover:bg-accent/50 transition-colors"
@@ -150,19 +141,14 @@ export default function PracticeSongCard({
               )}
             </div>
 
-            {/* Update Button */}
+            {/* Status & Expand */}
             {!isExpanded && (
-              <div className="flex-shrink-0 flex items-center">
-                <button
-                  className={`
-                    px-4 py-2 rounded-lg font-medium transition-all text-sm
-                    ${needsRagStatus
-                      ? 'bg-orange-500 text-white hover:bg-orange-600 animate-pulse'
-                      : 'bg-primary/20 text-primary hover:bg-primary/30'
-                    }
-                  `}
-                >
-                  {needsRagStatus ? 'SET STATUS' : 'Update'}
+              <div className="flex-shrink-0 flex items-center gap-2">
+                {needsRagStatus && (
+                  <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Set your status" />
+                )}
+                <button className="p-1.5 hover:bg-muted rounded transition-colors">
+                  <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
                 </button>
               </div>
             )}

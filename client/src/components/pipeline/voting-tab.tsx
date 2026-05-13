@@ -37,18 +37,21 @@ interface VotingTabProps {
   membership: ArtistMembership & { artist: Artist };
 }
 
+type GroupByOption = 'status' | 'artist' | 'alpha' | 'date';
+
 export default function VotingTab({ artistId, membership }: VotingTabProps) {
   const { session } = useServerAuth();
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<GroupByOption>('status');
 
   // Collapsible group state - "Please vote!" expanded by default (action needed)
-  const [collapsed, setCollapsed] = useState({
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     ready: true,
     pleaseVote: false,
     voted: true
   });
 
-  const toggleGroup = (group: 'ready' | 'pleaseVote' | 'voted') => {
+  const toggleGroup = (group: string) => {
     setCollapsed(prev => ({ ...prev, [group]: !prev[group] }));
   };
 
@@ -108,17 +111,50 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
   }, { ready: [], pleaseVote: [], voted: [] });
 
   // Sort "Ready" by score (highest first)
-  groupedSongs.ready.sort((a, b) => b.totalScore - a.totalScore);
+  groupedSongs.ready.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) => b.totalScore - a.totalScore);
 
   // Sort "Please vote!" by creation date (oldest first)
-  groupedSongs.pleaseVote.sort((a, b) =>
+  groupedSongs.pleaseVote.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) =>
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 
   // Sort "Voted" by creation date (oldest first)
-  groupedSongs.voted.sort((a, b) =>
+  groupedSongs.voted.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) =>
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
+
+  // Alternative grouping (artist, alpha, date)
+  const getAlternativeGroups = (): Record<string, PipelineSongWithScore[]> => {
+    const allSongs = [...groupedSongs.ready, ...groupedSongs.pleaseVote, ...groupedSongs.voted];
+
+    return allSongs.reduce((acc, song) => {
+      let groupKey: string;
+
+      if (groupBy === 'artist') {
+        groupKey = song.globalSong.artist_name || 'Unknown Artist';
+      } else if (groupBy === 'alpha') {
+        const firstLetter = song.globalSong.title.charAt(0).toUpperCase();
+        groupKey = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+      } else {
+        // date - group by month/year
+        const date = new Date(song.created_at);
+        groupKey = date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      }
+
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(song);
+      return acc;
+    }, {} as Record<string, PipelineSongWithScore[]>);
+  };
+
+  const alternativeGroups = groupBy !== 'status' ? getAlternativeGroups() : {};
+  const sortedGroupKeys = Object.keys(alternativeGroups).sort((a, b) => {
+    if (groupBy === 'date') {
+      // Sort dates newest first
+      return new Date(b).getTime() - new Date(a).getTime();
+    }
+    return a.localeCompare(b);
+  });
 
   const handleToggleExpand = (songId: string) => {
     setExpandedSongId(expandedSongId === songId ? null : songId);
@@ -147,10 +183,35 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     );
   }
 
+  const groupByOptions: { value: GroupByOption; label: string; icon: string }[] = [
+    { value: 'status', label: 'Status', icon: 'fa-tasks' },
+    { value: 'artist', label: 'Artist', icon: 'fa-user' },
+    { value: 'alpha', label: 'A-Z', icon: 'fa-sort-alpha-down' },
+    { value: 'date', label: 'Date', icon: 'fa-calendar' },
+  ];
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      {/* Ready Group */}
-      {groupedSongs.ready.length > 0 && (
+      {/* Grouping Controls */}
+      <div className="flex gap-1 p-1 bg-muted rounded-lg">
+        {groupByOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => setGroupBy(option.value)}
+            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              groupBy === option.value
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <i className={`fas ${option.icon} mr-1.5`}></i>
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Status-based grouping (default) */}
+      {groupBy === 'status' && groupedSongs.ready.length > 0 && (
         <div>
           <button
             onClick={() => toggleGroup('ready')}
@@ -184,7 +245,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
       )}
 
       {/* Please Vote Group */}
-      {groupedSongs.pleaseVote.length > 0 && (
+      {groupBy === 'status' && groupedSongs.pleaseVote.length > 0 && (
         <div>
           <button
             onClick={() => toggleGroup('pleaseVote')}
@@ -218,7 +279,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
       )}
 
       {/* Voted Group */}
-      {groupedSongs.voted.length > 0 && (
+      {groupBy === 'status' && groupedSongs.voted.length > 0 && (
         <div>
           <button
             onClick={() => toggleGroup('voted')}
@@ -250,6 +311,39 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
           )}
         </div>
       )}
+
+      {/* Alternative grouping (artist, alpha, date) */}
+      {groupBy !== 'status' && sortedGroupKeys.map((groupKey) => (
+        <div key={groupKey}>
+          <button
+            onClick={() => toggleGroup(groupKey)}
+            className="mb-3 w-full flex items-center gap-2 group cursor-pointer"
+          >
+            <div className="flex-1 h-px bg-border"></div>
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <i className={`fas fa-chevron-${collapsed[groupKey] ? 'right' : 'down'} text-xs transition-transform`}></i>
+              {groupKey} ({alternativeGroups[groupKey].length})
+            </h3>
+            <div className="flex-1 h-px bg-border"></div>
+          </button>
+          {!collapsed[groupKey] && (
+            <div className="space-y-3">
+              {alternativeGroups[groupKey].map((song: PipelineSongWithScore) => (
+                <VotingSongCard
+                  key={song.id}
+                  song={song}
+                  userId={session?.user?.cognitoId || ''}
+                  memberCount={memberCount}
+                  isExpanded={expandedSongId === song.id}
+                  onToggleExpand={() => handleToggleExpand(song.id)}
+                  memberships={memberships}
+                  showMemberVotes={showMemberVotes}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

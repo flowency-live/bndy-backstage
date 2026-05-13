@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
-import VoteProgressBadge from "../features/vote-progress-badge";
 import ScoreProgressBar from "../features/score-progress-bar";
 import MemberVotesReveal from "../features/member-votes-reveal";
 import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
@@ -160,19 +159,10 @@ export default function VotingSongCard({
     setShowDeleteConfirm(false);
   };
 
-  const needsUserVote = !userHasVoted;
   const isSuggester = song.suggested_by_user_id === userId;
 
   return (
-    <div
-      className={`
-        rounded-lg overflow-hidden transition-all
-        ${needsUserVote
-          ? 'border-2 border-orange-500 shadow-lg shadow-orange-500/20'
-          : 'border border-border'
-        }
-      `}
-    >
+    <div className="rounded-lg overflow-hidden transition-all border border-border">
       {/* Collapsed Card */}
       <div
         className="p-2 cursor-pointer hover:bg-accent/50 transition-colors"
@@ -212,61 +202,48 @@ export default function VotingSongCard({
             </p>
           </div>
 
-          {/* Vote Status & Button Column */}
+          {/* Vote Status - Compact Layout */}
           {!isExpanded && (
-            <div className="flex-shrink-0 flex flex-col items-end justify-center gap-1.5">
-              <VoteProgressBadge
-                voteCount={voteCount}
-                memberCount={memberCount}
-                userHasVoted={userHasVoted}
-                scorePercentage={scorePercentage}
-              />
-              {userHasVoted ? (
-                voteCount >= memberCount ? (
-                  hasZeroVote ? (
-                    // Anyone voted 0 - show poop emoji (veto)
-                    <div
-                      className="text-xl"
-                      title="Someone voted pass"
-                    >
-                      💩
-                    </div>
-                  ) : (
-                    // All votes received - show RAG progress bar
-                    <ScoreProgressBar scorePercentage={scorePercentage} />
-                  )
-                ) : userVote === 0 ? (
-                  // User voted 0 (pass) - show poop emoji
-                  <div
-                    className="cursor-pointer hover:scale-110 transition-transform text-xl"
-                    title="Change your vote"
-                  >
-                    💩
-                  </div>
-                ) : (
-                  // Still collecting votes - show user's star rating
-                  <div
-                    className="flex gap-0.5 cursor-pointer hover:scale-110 transition-transform"
-                    title="Change your vote"
-                  >
-                    {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
-                      <i
-                        key={star}
-                        className={`fas fa-star ${
-                          star <= userVote ? 'text-yellow-500' : 'text-gray-300'
-                        }`}
-                        style={{ fontSize: '14px' }}
-                      ></i>
-                    ))}
-                  </div>
-                )
-              ) : (
-                <button
-                  className="px-3 py-1.5 rounded-lg font-medium text-xs bg-orange-500 text-white hover:bg-orange-600 animate-pulse transition-all"
-                >
-                  VOTE NOW
-                </button>
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* Stars (user's vote or empty) */}
+              {userHasVoted && userVote !== 0 && (
+                <div className="flex gap-0.5" title="Your vote">
+                  {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
+                    <i
+                      key={star}
+                      className={`fas fa-star text-xs ${
+                        star <= userVote ? 'text-yellow-500' : 'text-gray-300'
+                      }`}
+                    ></i>
+                  ))}
+                </div>
               )}
+              {userHasVoted && userVote === 0 && (
+                <span className="text-base" title="You passed">💩</span>
+              )}
+              {hasZeroVote && voteCount >= memberCount && (
+                <span className="text-base" title="Someone passed">💩</span>
+              )}
+
+              {/* Vote progress badge */}
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {voteCount}/{memberCount}
+              </span>
+
+              {/* Score bar when complete */}
+              {voteCount >= memberCount && !hasZeroVote && (
+                <ScoreProgressBar scorePercentage={scorePercentage} />
+              )}
+
+              {/* Action needed indicator */}
+              {!userHasVoted && (
+                <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Vote needed" />
+              )}
+
+              {/* Expand chevron */}
+              <button className="p-1.5 hover:bg-muted rounded transition-colors">
+                <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
+              </button>
             </div>
           )}
         </div>

@@ -79,7 +79,7 @@ export default function Songs({ artistId, membership }: SongsProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [decadeFilter, setDecadeFilter] = useState<string>('all');
-  const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade'>('alpha');
+  const [groupBy, setGroupBy] = useState<'alpha' | 'genre' | 'decade' | 'artist'>('alpha');
   const [currentlyPlayingSong, setCurrentlyPlayingSong] = useState<{ id: string; spotifyUrl: string } | null>(null);
 
   // Check for Spotify settings from localStorage
@@ -245,6 +245,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
       group = song.genre || 'Unknown Genre';
     } else if (groupBy === 'decade') {
       group = getDecade(song.releaseDate);
+    } else if (groupBy === 'artist') {
+      group = song.artist || 'Unknown Artist';
     } else {
       // Alphabetical
       const firstLetter = song.title.charAt(0).toUpperCase();
@@ -267,6 +269,10 @@ export default function Songs({ artistId, membership }: SongsProps) {
     } else if (groupBy === 'decade') {
       if (a === 'Unknown') return 1;
       if (b === 'Unknown') return -1;
+      return a.localeCompare(b);
+    } else if (groupBy === 'artist') {
+      if (a === 'Unknown Artist') return 1;
+      if (b === 'Unknown Artist') return -1;
       return a.localeCompare(b);
     } else {
       // Genre
@@ -380,10 +386,11 @@ export default function Songs({ artistId, membership }: SongsProps) {
             <div className="flex-1 min-w-[140px]">
               <select
                 value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value as 'alpha' | 'genre' | 'decade')}
+                onChange={(e) => setGroupBy(e.target.value as 'alpha' | 'genre' | 'decade' | 'artist')}
                 className="w-full px-3 py-2 text-sm border border-border bg-background rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="alpha">Group: A-Z</option>
+                <option value="artist">Group: Artist</option>
                 <option value="genre">Group: Genre</option>
                 <option value="decade">Group: Decade</option>
               </select>
