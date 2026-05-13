@@ -128,11 +128,11 @@ export default function PracticeTab({ artistId, membership }: PracticeTabProps) 
 
   if (songs.length === 0) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-guitar text-4xl text-muted-foreground mb-4"></i>
-        <h3 className="text-lg font-medium mb-2">No songs in practice</h3>
-        <p className="text-muted-foreground mb-4">
-          Songs appear here when moved from Review
+      <div className="text-center py-16">
+        <div className="text-5xl mb-4 opacity-60">🎸</div>
+        <h3 className="text-lg font-semibold mb-2">No songs in practice</h3>
+        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+          Songs appear here when the band votes to practice them.
         </p>
       </div>
     );

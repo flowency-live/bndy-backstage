@@ -5,8 +5,8 @@ interface RagStatusControlsProps {
 
 export default function RagStatusControls({ currentStatus, onChange }: RagStatusControlsProps) {
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground text-center">
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground text-center">
         How ready are you to perform this?
       </p>
 
@@ -14,43 +14,43 @@ export default function RagStatusControls({ currentStatus, onChange }: RagStatus
         <button
           onClick={() => onChange('RED')}
           className={`
-            p-4 rounded-lg transition-all flex flex-col items-center gap-2
+            p-3 rounded-lg transition-all flex flex-col items-center gap-1.5
             ${currentStatus === 'RED'
               ? 'bg-red-500/30 ring-2 ring-red-500'
               : 'bg-red-500/10 hover:bg-red-500/20'
             }
           `}
         >
-          <i className="fas fa-ban text-red-500 text-2xl"></i>
-          <span className="text-xs font-medium text-red-500">Not Ready</span>
+          <i className="fas fa-ban text-red-500 text-lg"></i>
+          <span className="text-[10px] font-medium text-red-500">Not Ready</span>
         </button>
 
         <button
           onClick={() => onChange('AMBER')}
           className={`
-            p-4 rounded-lg transition-all flex flex-col items-center gap-2
+            p-3 rounded-lg transition-all flex flex-col items-center gap-1.5
             ${currentStatus === 'AMBER'
               ? 'bg-amber-500/30 ring-2 ring-amber-500'
               : 'bg-amber-500/10 hover:bg-amber-500/20'
             }
           `}
         >
-          <i className="fas fa-exclamation-triangle text-amber-500 text-2xl"></i>
-          <span className="text-xs font-medium text-amber-500">Getting There</span>
+          <i className="fas fa-exclamation-triangle text-amber-500 text-lg"></i>
+          <span className="text-[10px] font-medium text-amber-500">Getting There</span>
         </button>
 
         <button
           onClick={() => onChange('GREEN')}
           className={`
-            p-4 rounded-lg transition-all flex flex-col items-center gap-2
+            p-3 rounded-lg transition-all flex flex-col items-center gap-1.5
             ${currentStatus === 'GREEN'
               ? 'bg-green-500/30 ring-2 ring-green-500'
               : 'bg-green-500/10 hover:bg-green-500/20'
             }
           `}
         >
-          <i className="fas fa-check-circle text-green-500 text-2xl"></i>
-          <span className="text-xs font-medium text-green-500">Ready!</span>
+          <i className="fas fa-check-circle text-green-500 text-lg"></i>
+          <span className="text-[10px] font-medium text-green-500">Ready!</span>
         </button>
       </div>
     </div>

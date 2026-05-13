@@ -162,7 +162,7 @@ export default function VotingSongCard({
   const isSuggester = song.suggested_by_user_id === userId;
 
   return (
-    <div className="bg-card rounded-lg overflow-hidden transition-all border border-border">
+    <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
       {/* Collapsed Card - edge-to-edge layout like playbook */}
       <div
         className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -192,19 +192,19 @@ export default function VotingSongCard({
             )}
           </div>
 
-          {/* Song Info */}
-          <div className="flex-1 min-w-0 px-2 py-1.5">
-            <h3 className="font-medium text-sm text-foreground truncate">
+          {/* Song Info - ensure readable width */}
+          <div className="flex-1 min-w-0 px-3 py-2">
+            <h3 className="font-semibold text-sm text-foreground truncate tracking-tight">
               {song.globalSong.title}
             </h3>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground/80 truncate">
               {song.globalSong.artist_name}
             </p>
           </div>
 
-          {/* Vote Status - Compact Layout */}
+          {/* Vote Status - Constrained to prevent crushing title */}
           {!isExpanded && (
-            <div className="flex items-center gap-1.5 pr-1">
+            <div className="flex items-center gap-1 pr-2 flex-shrink-0">
               {/* User's vote stars (compact) */}
               {userHasVoted && userVote !== 0 && (
                 <div className="flex gap-0.5" title="Your vote">
@@ -240,7 +240,7 @@ export default function VotingSongCard({
 
               {/* Expand chevron */}
               <button className="p-1 hover:bg-muted rounded">
-                <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
+                <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
               </button>
             </div>
           )}
@@ -249,7 +249,8 @@ export default function VotingSongCard({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="p-4 border-t border-border bg-card space-y-4">
+        <div className="border-t border-border bg-muted/30 overflow-hidden animate-expand">
+          <div className="p-4 space-y-4 animate-fade-in-up">
           {/* Spotify Preview */}
           {song.globalSong.spotify_url && (
             <div className="rounded-lg overflow-hidden">
@@ -296,26 +297,29 @@ export default function VotingSongCard({
               )}
 
               <div className="grid grid-cols-3 gap-2">
+                {/* Practice = Primary action */}
                 <button
                   onClick={() => statusMutation.mutate('practice')}
                   disabled={statusMutation.isPending}
-                  className="px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 font-medium text-sm transition-colors disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg bg-amber-500 text-white font-medium text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
                 >
                   <i className="fas fa-guitar block mb-1"></i>
                   Practice
                 </button>
+                {/* Park = Secondary */}
                 <button
                   onClick={() => statusMutation.mutate('parked')}
                   disabled={statusMutation.isPending}
-                  className="px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-500 font-medium text-sm transition-colors disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-500 font-medium text-sm hover:bg-blue-500/30 transition-colors disabled:opacity-50"
                 >
                   <i className="fas fa-pause-circle block mb-1"></i>
                   Park
                 </button>
+                {/* Discard = Tertiary */}
                 <button
                   onClick={() => statusMutation.mutate('discarded')}
                   disabled={statusMutation.isPending}
-                  className="px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground font-medium text-sm transition-colors disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg bg-muted text-muted-foreground font-medium text-sm hover:bg-muted/80 transition-colors disabled:opacity-50"
                 >
                   <i className="fas fa-times-circle block mb-1"></i>
                   Discard
@@ -370,6 +374,7 @@ export default function VotingSongCard({
               </div>
             </>
           )}
+          </div>
         </div>
       )}
 

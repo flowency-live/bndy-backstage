@@ -93,7 +93,7 @@ export default function PracticeSongCard({
 
   return (
     <>
-      <div className="bg-card rounded-lg overflow-hidden transition-all border border-border">
+      <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
         {/* Collapsed Card - edge-to-edge layout */}
         <div
           className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -122,33 +122,33 @@ export default function PracticeSongCard({
               )}
             </div>
 
-            {/* Song Info */}
-            <div className="flex-1 min-w-0 px-2 py-1.5">
-              <h3 className="font-medium text-sm text-foreground truncate">
+            {/* Song Info - ensure readable width */}
+            <div className="flex-1 min-w-0 px-3 py-2">
+              <h3 className="font-semibold text-sm text-foreground truncate tracking-tight">
                 {song.globalSong.title}
               </h3>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground/80 truncate">
                 {song.globalSong.artist_name}
               </p>
-              {userRagStatus && (
-                <span className={`text-[10px] font-medium ${
-                  userRagStatus === 'RED' ? 'text-red-500' :
-                  userRagStatus === 'AMBER' ? 'text-amber-500' :
-                  'text-green-500'
-                }`}>
-                  {userRagStatus}
-                </span>
-              )}
             </div>
 
-            {/* Status & Expand */}
+            {/* Status & Expand - RAG badge on right */}
             {!isExpanded && (
-              <div className="flex items-center gap-1.5 pr-1">
+              <div className="flex items-center gap-1.5 pr-2 flex-shrink-0">
+                {userRagStatus && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    userRagStatus === 'RED' ? 'bg-red-500/20 text-red-500' :
+                    userRagStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-500' :
+                    'bg-green-500/20 text-green-500'
+                  }`}>
+                    {userRagStatus}
+                  </span>
+                )}
                 {needsRagStatus && (
                   <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Set your status" />
                 )}
                 <button className="p-1 hover:bg-muted rounded">
-                  <i className="fas fa-chevron-down text-muted-foreground text-xs"></i>
+                  <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
                 </button>
               </div>
             )}
@@ -157,7 +157,8 @@ export default function PracticeSongCard({
 
         {/* Expanded Content */}
         {isExpanded && (
-          <div className="p-4 border-t border-border bg-card space-y-4">
+          <div className="border-t border-border bg-muted/30 overflow-hidden animate-expand">
+            <div className="p-4 space-y-4 animate-fade-in-up">
             {/* RAG Status Controls */}
             <RagStatusControls
               currentStatus={userRagStatus}
@@ -204,6 +205,7 @@ export default function PracticeSongCard({
             >
               Cancel
             </button>
+            </div>
           </div>
         )}
       </div>

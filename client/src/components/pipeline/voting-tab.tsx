@@ -110,18 +110,10 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     return acc;
   }, { ready: [], pleaseVote: [], voted: [] });
 
-  // Sort "Ready" by score (highest first)
-  groupedSongs.ready.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) => b.totalScore - a.totalScore);
-
-  // Sort "Please vote!" by creation date (oldest first)
-  groupedSongs.pleaseVote.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) =>
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
-
-  // Sort "Voted" by creation date (oldest first)
-  groupedSongs.voted.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) =>
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  // Sort all groups by score (highest first) for status grouping
+  groupedSongs.ready.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) => b.scorePercentage - a.scorePercentage);
+  groupedSongs.pleaseVote.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) => b.scorePercentage - a.scorePercentage);
+  groupedSongs.voted.sort((a: PipelineSongWithScore, b: PipelineSongWithScore) => b.scorePercentage - a.scorePercentage);
 
   // Alternative grouping (artist, alpha, date)
   const getAlternativeGroups = (): Record<string, PipelineSongWithScore[]> => {
@@ -173,11 +165,11 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
 
   if (songs.length === 0) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-vote-yea text-4xl text-muted-foreground mb-4"></i>
-        <h3 className="text-lg font-medium mb-2">No songs to vote on</h3>
-        <p className="text-muted-foreground mb-4">
-          Suggest a song to get started!
+      <div className="text-center py-16">
+        <div className="text-5xl mb-4 opacity-60">🎵</div>
+        <h3 className="text-lg font-semibold mb-2">Nothing to vote on yet</h3>
+        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+          When someone suggests a cover, it'll appear here for the band to decide.
         </p>
       </div>
     );
