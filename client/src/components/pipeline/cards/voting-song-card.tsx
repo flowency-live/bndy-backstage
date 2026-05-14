@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
@@ -60,11 +60,14 @@ export default function VotingSongCard({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const userVote = song.votes?.[userId]?.value ?? null;
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
-  const votingScale = song.voting_scale || 5;  // Backwards compatible: existing songs use 5
+  const votingScale = song.voting_scale || 3;  // Default to 3-star scale
 
   // Check if anyone voted 0 (poop/pass)
   const hasZeroVote = Object.values(song.votes || {}).some((vote: any) => vote.value === 0);
@@ -161,8 +164,31 @@ export default function VotingSongCard({
 
   const isSuggester = song.suggested_by_user_id === userId;
 
+  // Long-press / right-click handlers for context menu
+  const handleTouchStart = (e: React.TouchEvent) => {
+    longPressTimer.current = setTimeout(() => {
+      setContextMenuPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      setShowContextMenu(true);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenuPos({ x: e.clientX, y: e.clientY });
+    setShowContextMenu(true);
+  };
+
   return (
-    <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <div
+      className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+      onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Collapsed Card - edge-to-edge layout like playbook */}
       <div
         className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -202,48 +228,54 @@ export default function VotingSongCard({
             </p>
           </div>
 
-          {/* Vote Status - Constrained to prevent crushing title */}
-          {!isExpanded && (
-            <div className="flex items-center gap-1 pr-2 flex-shrink-0">
-              {/* User's vote stars (compact) */}
-              {userHasVoted && userVote !== 0 && (
-                <div className="flex gap-0.5" title="Your vote">
-                  {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
-                    <i
-                      key={star}
-                      className={`fas fa-star text-[10px] ${
-                        star <= userVote ? 'text-yellow-500' : 'text-gray-300'
-                      }`}
-                    ></i>
-                  ))}
-                </div>
-              )}
-              {userHasVoted && userVote === 0 && (
-                <span className="text-sm" title="You passed">💩</span>
-              )}
-              {hasZeroVote && voteCount >= memberCount && !userHasVoted && (
-                <span className="text-sm" title="Someone passed">💩</span>
-              )}
+          {/* Vote Status & Chevron */}
+          <div className="flex items-center gap-1 pr-2 flex-shrink-0">
+            {/* Vote status badges - only when collapsed */}
+            {!isExpanded && (
+              <>
+                {/* User's vote stars (compact) */}
+                {userHasVoted && userVote !== 0 && (
+                  <div className="flex gap-0.5" title="Your vote">
+                    {Array.from({ length: votingScale }, (_, i) => i + 1).map((star) => (
+                      <i
+                        key={star}
+                        className={`fas fa-star text-[10px] ${
+                          star <= userVote ? 'text-yellow-500' : 'text-gray-300'
+                        }`}
+                      ></i>
+                    ))}
+                  </div>
+                )}
+                {userHasVoted && userVote === 0 && (
+                  <span className="text-sm" title="You passed">💩</span>
+                )}
+                {hasZeroVote && voteCount >= memberCount && !userHasVoted && (
+                  <span className="text-sm" title="Someone passed">💩</span>
+                )}
 
-              {/* Vote progress badge with score % and rocket/star icons */}
-              <VoteProgressBadge
-                voteCount={voteCount}
-                memberCount={memberCount}
-                userHasVoted={userHasVoted}
-                scorePercentage={voteCount >= memberCount && !hasZeroVote ? scorePercentage : undefined}
-              />
+                {/* Vote progress badge with score % and rocket/star icons */}
+                <VoteProgressBadge
+                  voteCount={voteCount}
+                  memberCount={memberCount}
+                  userHasVoted={userHasVoted}
+                  scorePercentage={voteCount >= memberCount && !hasZeroVote ? scorePercentage : undefined}
+                />
 
-              {/* Action needed indicator */}
-              {!userHasVoted && (
-                <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Vote needed" />
-              )}
+                {/* Action needed indicator */}
+                {!userHasVoted && (
+                  <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Vote needed" />
+                )}
+              </>
+            )}
 
-              {/* Expand chevron */}
-              <button className="p-1 hover:bg-muted rounded">
-                <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
-              </button>
-            </div>
-          )}
+            {/* Chevron - ALWAYS visible for expand/collapse */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+              className="p-1 hover:bg-muted rounded"
+            >
+              <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -394,6 +426,31 @@ export default function VotingSongCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Context menu for skip-to-practice */}
+      {showContextMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowContextMenu(false)}
+          />
+          <div
+            className="fixed z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
+            style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+          >
+            <button
+              onClick={() => {
+                statusMutation.mutate('practice');
+                setShowContextMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2"
+            >
+              <i className="fas fa-forward text-amber-500"></i>
+              Skip to Practice
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
