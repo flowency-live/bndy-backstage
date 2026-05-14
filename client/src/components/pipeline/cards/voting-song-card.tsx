@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import VotingControls from "../features/voting-controls";
 import VoteProgressBadge from "../features/vote-progress-badge";
 import MemberVotesReveal from "../features/member-votes-reveal";
-import SpotifyEmbedPlayer from "@/components/spotify-embed-player";
 import { artistsService } from "@/lib/services/artists-service";
 import type { ArtistMembership } from "@/types/api";
 import {
@@ -60,9 +59,6 @@ export default function VotingSongCard({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showContextMenu, setShowContextMenu] = useState(false);
-  const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const userVote = song.votes?.[userId]?.value ?? null;
   const voteCount = Object.keys(song.votes || {}).length;
@@ -164,43 +160,8 @@ export default function VotingSongCard({
 
   const isSuggester = song.suggested_by_user_id === userId;
 
-  // Long-press / right-click handlers for context menu
-  const handleTouchStart = (e: React.TouchEvent) => {
-    longPressTimer.current = setTimeout(() => {
-      setContextMenuPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      setShowContextMenu(true);
-    }, 600); // Longer delay to avoid accidental triggers
-  };
-
-  const handleTouchMove = () => {
-    // Cancel long-press if user starts scrolling
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setContextMenuPos({ x: e.clientX, y: e.clientY });
-    setShowContextMenu(true);
-  };
-
   return (
-    <div
-      className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-      onContextMenu={handleContextMenu}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
       {/* Collapsed Card - edge-to-edge layout like playbook */}
       <div
         className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -295,15 +256,17 @@ export default function VotingSongCard({
       {isExpanded && (
         <div className="border-t border-border bg-muted/30 overflow-hidden animate-expand">
           <div className="p-4 space-y-4 animate-fade-in-up">
-          {/* Spotify Preview */}
-          {song.globalSong.spotify_url && (
-            <div className="rounded-lg overflow-hidden">
-              <SpotifyEmbedPlayer
-                spotifyUrl={song.globalSong.spotify_url}
-                onClose={() => {}}
-              />
-            </div>
-          )}
+          {/* Skip to Practice button - top right */}
+          <div className="flex justify-end -mt-2 -mr-2">
+            <button
+              onClick={() => statusMutation.mutate('practice')}
+              disabled={statusMutation.isPending}
+              className="p-2 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-colors disabled:opacity-50"
+              title="Skip to Practice"
+            >
+              <i className="fas fa-forward"></i>
+            </button>
+          </div>
 
           {/* Full Comment */}
           {song.suggested_comment && (
@@ -438,31 +401,6 @@ export default function VotingSongCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Context menu for skip-to-practice */}
-      {showContextMenu && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowContextMenu(false)}
-          />
-          <div
-            className="fixed z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[160px]"
-            style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
-          >
-            <button
-              onClick={() => {
-                statusMutation.mutate('practice');
-                setShowContextMenu(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2"
-            >
-              <i className="fas fa-forward text-amber-500"></i>
-              Skip to Practice
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 }
