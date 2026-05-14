@@ -17,6 +17,7 @@ interface PipelineSong {
     artist_name: string;
     album: string;
     thumbnail_url?: string;
+    spotify_url?: string;
   };
 }
 
@@ -116,13 +117,28 @@ export default function PracticeSongCard({
             />
 
             {/* Album Art - flush after RAG strip */}
-            <div className="w-12 h-12 flex-shrink-0 overflow-hidden">
+            <div className="w-12 h-12 flex-shrink-0 relative group overflow-hidden">
               {song.globalSong.thumbnail_url ? (
-                <img
-                  src={song.globalSong.thumbnail_url}
-                  alt={song.globalSong.title}
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img
+                    src={song.globalSong.thumbnail_url}
+                    alt={song.globalSong.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Play icon overlay - always visible */}
+                  {song.globalSong.spotify_url && (
+                    <a
+                      href={song.globalSong.spotify_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition-all"
+                      title="Open in Spotify"
+                    >
+                      <i className="fas fa-play text-white text-lg drop-shadow-lg"></i>
+                    </a>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
                   <i className="fas fa-music text-muted-foreground text-sm"></i>

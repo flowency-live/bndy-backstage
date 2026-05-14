@@ -187,9 +187,16 @@ export default function VotingSongCard({
                 />
                 {/* Play icon overlay - always visible */}
                 {song.globalSong.spotify_url && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition-all">
+                  <a
+                    href={song.globalSong.spotify_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 transition-all"
+                    title="Open in Spotify"
+                  >
                     <i className="fas fa-play text-white text-lg drop-shadow-lg"></i>
-                  </div>
+                  </a>
                 )}
               </>
             ) : (
