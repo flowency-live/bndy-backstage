@@ -529,6 +529,8 @@ export default function Songs({ artistId, membership }: SongsProps) {
               const userReadiness = getUserReadiness(song);
               const userVeto = getUserVeto(song);
               const isExpanded = expandedSongs.has(song.id);
+              const hasAnyExpanded = expandedSongs.size > 0;
+              const dimmed = hasAnyExpanded && !isExpanded;
               const hasVetos = song.vetos?.length > 0;
               const isSelected = selectedSongs.includes(song.id);
               const selectionIndex = selectedSongs.indexOf(song.id);
@@ -538,7 +540,14 @@ export default function Songs({ artistId, membership }: SongsProps) {
                   key={song.id}
                   className={`bg-card rounded-lg shadow-sm border transition-all duration-200 ${
                     hasVetos ? 'opacity-60' : ''
-                  } ${isSelected ? 'border-orange-500 border-2' : 'border-border hover:bg-muted/50'}`}
+                  } ${isExpanded
+                      ? 'border-primary shadow-lg ring-2 ring-primary/20 relative z-10'
+                      : dimmed
+                        ? 'border-border opacity-40 blur-[1px] pointer-events-none'
+                        : isSelected
+                          ? 'border-orange-500 border-2'
+                          : 'border-border hover:bg-muted/50'
+                  }`}
                   data-testid={`song-card-${song.id}`}
                   style={{ overflow: 'visible' }}
                 >

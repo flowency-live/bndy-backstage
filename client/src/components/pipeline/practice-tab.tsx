@@ -192,6 +192,7 @@ export default function PracticeTab({ artistId, membership }: PracticeTabProps) 
                   memberCount={memberCount}
                   isExpanded={expandedSongId === song.id}
                   onToggleExpand={() => setExpandedSongId(expandedSongId === song.id ? null : song.id)}
+                  dimmed={expandedSongId !== null && expandedSongId !== song.id}
                 />
               ))}
             </div>

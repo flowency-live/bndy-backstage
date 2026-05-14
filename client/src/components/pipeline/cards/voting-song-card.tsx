@@ -45,6 +45,7 @@ interface VotingSongCardProps {
   onToggleExpand: () => void;
   memberships?: ArtistMembership[];
   showMemberVotes?: boolean;
+  dimmed?: boolean;
 }
 
 export default function VotingSongCard({
@@ -54,7 +55,8 @@ export default function VotingSongCard({
   isExpanded,
   onToggleExpand,
   memberships = [],
-  showMemberVotes = false
+  showMemberVotes = false,
+  dimmed = false
 }: VotingSongCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -161,7 +163,13 @@ export default function VotingSongCard({
   const isSuggester = song.suggested_by_user_id === userId;
 
   return (
-    <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <div className={`bg-card rounded-lg overflow-hidden border transition-all duration-200 ${
+      isExpanded
+        ? 'border-primary shadow-lg ring-2 ring-primary/20 relative z-10'
+        : dimmed
+          ? 'border-border opacity-40 blur-[1px] pointer-events-none'
+          : 'border-border hover:shadow-md hover:-translate-y-0.5'
+    }`}>
       {/* Collapsed Card - edge-to-edge layout like playbook */}
       <div
         className="cursor-pointer hover:bg-accent/50 transition-colors"

@@ -229,6 +229,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
                   onToggleExpand={() => handleToggleExpand(song.id)}
                   memberships={memberships}
                   showMemberVotes={showMemberVotes}
+                  dimmed={expandedSongId !== null && expandedSongId !== song.id}
                 />
               ))}
             </div>
@@ -263,6 +264,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
                   onToggleExpand={() => handleToggleExpand(song.id)}
                   memberships={memberships}
                   showMemberVotes={showMemberVotes}
+                  dimmed={expandedSongId !== null && expandedSongId !== song.id}
                 />
               ))}
             </div>
@@ -297,6 +299,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
                   onToggleExpand={() => handleToggleExpand(song.id)}
                   memberships={memberships}
                   showMemberVotes={showMemberVotes}
+                  dimmed={expandedSongId !== null && expandedSongId !== song.id}
                 />
               ))}
             </div>
@@ -330,6 +333,7 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
                   onToggleExpand={() => handleToggleExpand(song.id)}
                   memberships={memberships}
                   showMemberVotes={showMemberVotes}
+                  dimmed={expandedSongId !== null && expandedSongId !== song.id}
                 />
               ))}
             </div>

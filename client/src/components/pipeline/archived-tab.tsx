@@ -110,10 +110,17 @@ export default function ArchivedTab({ artistId, membership }: ArchivedTabProps) 
 
   const SongCard = ({ song, type }: { song: any; type: 'parked' | 'discarded' }) => {
     const isExpanded = expandedSongId === song.id;
+    const dimmed = expandedSongId !== null && expandedSongId !== song.id;
     const shatOnNames = type === 'discarded' ? getShatOnNames(song.votes) : [];
 
     return (
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <div className={`rounded-lg border bg-card overflow-hidden transition-all duration-200 ${
+        isExpanded
+          ? 'border-primary shadow-lg ring-2 ring-primary/20 relative z-10'
+          : dimmed
+            ? 'border-border opacity-40 blur-[1px] pointer-events-none'
+            : 'border-border hover:shadow-md'
+      }`}>
         {/* Collapsed View */}
         <button
           onClick={() => setExpandedSongId(isExpanded ? null : song.id)}

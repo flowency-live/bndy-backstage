@@ -26,6 +26,7 @@ interface PracticeSongCardProps {
   memberCount: number;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  dimmed?: boolean;
 }
 
 export default function PracticeSongCard({
@@ -33,7 +34,8 @@ export default function PracticeSongCard({
   userId,
   memberCount,
   isExpanded,
-  onToggleExpand
+  onToggleExpand,
+  dimmed = false
 }: PracticeSongCardProps) {
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
@@ -93,7 +95,13 @@ export default function PracticeSongCard({
 
   return (
     <>
-      <div className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+      <div className={`bg-card rounded-lg overflow-hidden border transition-all duration-200 ${
+        isExpanded
+          ? 'border-primary shadow-lg ring-2 ring-primary/20 relative z-10'
+          : dimmed
+            ? 'border-border opacity-40 blur-[1px] pointer-events-none'
+            : 'border-border hover:shadow-md hover:-translate-y-0.5'
+      }`}>
         {/* Collapsed Card - edge-to-edge layout */}
         <div
           className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -133,25 +141,32 @@ export default function PracticeSongCard({
             </div>
 
             {/* Status & Expand - RAG badge on right */}
-            {!isExpanded && (
-              <div className="flex items-center gap-1.5 pr-2 flex-shrink-0">
-                {userRagStatus && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    userRagStatus === 'RED' ? 'bg-red-500/20 text-red-500' :
-                    userRagStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-500' :
-                    'bg-green-500/20 text-green-500'
-                  }`}>
-                    {userRagStatus}
-                  </span>
-                )}
-                {needsRagStatus && (
-                  <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Set your status" />
-                )}
-                <button className="p-1 hover:bg-muted rounded">
-                  <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 pr-2 flex-shrink-0">
+              {/* Status badges - only when collapsed */}
+              {!isExpanded && (
+                <>
+                  {userRagStatus && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      userRagStatus === 'RED' ? 'bg-red-500/20 text-red-500' :
+                      userRagStatus === 'AMBER' ? 'bg-amber-500/20 text-amber-500' :
+                      'bg-green-500/20 text-green-500'
+                    }`}>
+                      {userRagStatus}
+                    </span>
+                  )}
+                  {needsRagStatus && (
+                    <span className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" title="Set your status" />
+                  )}
+                </>
+              )}
+              {/* Chevron - ALWAYS visible */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+                className="p-1 hover:bg-muted rounded"
+              >
+                <i className={`fas fa-chevron-down text-muted-foreground text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
+              </button>
+            </div>
           </div>
         </div>
 
