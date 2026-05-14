@@ -169,11 +169,22 @@ export default function VotingSongCard({
     longPressTimer.current = setTimeout(() => {
       setContextMenuPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
       setShowContextMenu(true);
-    }, 500);
+    }, 600); // Longer delay to avoid accidental triggers
+  };
+
+  const handleTouchMove = () => {
+    // Cancel long-press if user starts scrolling
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
 
   const handleTouchEnd = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -187,6 +198,7 @@ export default function VotingSongCard({
       className="bg-card rounded-lg overflow-hidden border border-border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Collapsed Card - edge-to-edge layout like playbook */}
