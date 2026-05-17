@@ -24,13 +24,13 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
   const [distributed, setDistributed] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Reset form when gig changes to avoid stale state
+  // Reset form when gig changes - preserve existing values for edits
   useEffect(() => {
     if (gig) {
       setActualFee(String(gig.actualFee ?? gig.agreedFee ?? ''));
-      setDatePaid(format(new Date(), 'yyyy-MM-dd'));
-      setPaymentMethod('cash');
-      setDistributed(false);
+      setDatePaid(gig.datePaid || format(new Date(), 'yyyy-MM-dd'));
+      setPaymentMethod(gig.paymentMethod || 'cash');
+      setDistributed(gig.distributed ?? false);
     }
   }, [gig?.id]);
 
@@ -42,7 +42,7 @@ export default function MarkAsPaidModal({ isOpen, onClose, gig, onConfirm, isLoa
       datePaid,
       paymentMethod,
       ...(fee !== originalFee && !isNaN(fee) ? { actualFee: fee } : {}),
-      ...(distributed ? { distributed: true } : {}),
+      distributed,
     });
   };
 
