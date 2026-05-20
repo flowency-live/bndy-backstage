@@ -84,7 +84,9 @@ export default function VotingTab({ artistId, membership }: VotingTabProps) {
     const voteCount = Object.keys(song.votes || {}).length;
     const cognitoId = session?.user?.cognitoId;
     const hasUserVote = cognitoId ? song.votes?.[cognitoId] : undefined;
-    const votingScale = song.voting_scale || 5;  // Backwards compatible: existing songs use 5
+    // Detect actual scale from vote values - if any vote > 3, song was voted with 5-star scale
+    const maxVoteValue = Math.max(...Object.values(song.votes || {}).map((v: any) => v.value || 0), 0);
+    const votingScale = song.voting_scale || (maxVoteValue > 3 ? 5 : 3);
 
     // Calculate total score for sorting
     const totalScore = Object.values(song.votes || {}).reduce(
