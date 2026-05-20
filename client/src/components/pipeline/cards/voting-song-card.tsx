@@ -66,7 +66,8 @@ export default function VotingSongCard({
   const voteCount = Object.keys(song.votes || {}).length;
   const userHasVoted = userVote !== null;
   // Detect actual scale from vote values - if any vote > 3, song was voted with 5-star scale
-  const maxVoteValue = Math.max(...Object.values(song.votes || {}).map((v: any) => v.value || 0), 0);
+  const voteValues = Object.values(song.votes || {}).map((v: any) => (v && typeof v.value === 'number') ? v.value : 0);
+  const maxVoteValue = voteValues.length > 0 ? Math.max(...voteValues) : 0;
   const votingScale = song.voting_scale || (maxVoteValue > 3 ? 5 : 3);
 
   // Check if anyone voted 0 (poop/pass)
