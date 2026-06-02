@@ -11,7 +11,7 @@ import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUser } from "@/lib/user-context";
 import { useBuilder } from "@/lib/builder-context";
-import { getNavigationItems } from "@/lib/navigation-config";
+import { getNavigationItems, navigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { useToast } from "@/hooks/use-toast";
 import { restartOnboardingTour } from "@/components/onboarding-tour";

@@ -71,7 +71,7 @@ describe('BuilderContext', () => {
 
     // Default MSW handlers for builders
     server.use(
-      http.get(`${API_BASE}/api/builders/me`, () => {
+      http.get(`${API_BASE}/api/builders`, () => {
         return HttpResponse.json({
           builders: [createTestBuilder()],
         });
@@ -98,7 +98,7 @@ describe('BuilderContext', () => {
 
     it('should return empty array for user with no builders', async () => {
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json({ builders: [] });
         })
       );
@@ -117,7 +117,7 @@ describe('BuilderContext', () => {
 
     it('should handle API errors gracefully', async () => {
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json(
             { error: 'Not authenticated' },
             { status: 401 }
@@ -157,7 +157,7 @@ describe('BuilderContext', () => {
 
     it('should allow manual builder selection', async () => {
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json({
             builders: [
               createTestBuilder({ id: 'builder-1', name: 'Builder One' }),
@@ -204,7 +204,7 @@ describe('BuilderContext', () => {
       localStorage.setItem('bndy-selected-builder-id', 'invalid-builder-id');
 
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json({
             builders: [
               createTestBuilder({ id: 'builder-1' }),
@@ -270,7 +270,7 @@ describe('BuilderContext', () => {
 
     it('should return null when no builder selected', async () => {
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json({
             builders: [
               createTestBuilder({ id: 'builder-1' }),
@@ -308,7 +308,7 @@ describe('BuilderContext', () => {
 
     it('should correctly identify users with multiple builders', async () => {
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           return HttpResponse.json({
             builders: [
               createTestBuilder({ id: 'builder-1' }),
@@ -334,7 +334,7 @@ describe('BuilderContext', () => {
     it('should refetch builders when refresh is called', async () => {
       let callCount = 0;
       server.use(
-        http.get(`${API_BASE}/api/builders/me`, () => {
+        http.get(`${API_BASE}/api/builders`, () => {
           callCount++;
           return HttpResponse.json({
             builders: callCount === 1

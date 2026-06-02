@@ -29,9 +29,9 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
 
   // Fetch builders for authenticated user
   const { data: buildersData, isLoading, error: queryError, refetch } = useQuery<{ builders: Builder[] }>({
-    queryKey: ["api-builders-me"],
+    queryKey: ["api-builders"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/builders/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/builders`, {
         credentials: "include",
       });
 
@@ -91,7 +91,7 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     // Invalidate and refetch to ensure fresh data
-    await queryClient.invalidateQueries({ queryKey: ["api-builders-me"] });
+    await queryClient.invalidateQueries({ queryKey: ["api-builders"] });
     await refetch();
   }, [queryClient, refetch]);
 
