@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import VenueCoverageMap, { type SelectionMode, type Venue } from '@/components/builder/VenueCoverageMap';
-
-const API_BASE_URL = 'https://api.bndy.co.uk';
+import { getAllVenues } from '@/lib/services/godmode-service';
+import { API_BASE_URL } from '@/config/api';
 
 interface BuilderVenue {
   id: string;
@@ -29,20 +29,24 @@ export default function VenueCoverage() {
   const [isSaving, setIsSaving] = useState(false);
   const [initialSelectedIds, setInitialSelectedIds] = useState<string[]>([]);
 
-  // Fetch all venues
+  // Fetch all venues and filter to those with valid coordinates
   const {
     data: venues = [],
     isLoading: venuesLoading,
     error: venuesError,
   } = useQuery<Venue[]>({
-    queryKey: ['all-venues'],
+    queryKey: ['all-venues-coverage'],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/venues`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch venues');
-      const data = await response.json();
-      return data.venues || [];
+      const allVenues = await getAllVenues();
+      // Filter to venues with valid lat/lng and map to expected format
+      return allVenues
+        .filter((v) => v.latitude != null && v.longitude != null && !isNaN(v.latitude) && !isNaN(v.longitude))
+        .map((v) => ({
+          id: v.id,
+          name: v.name,
+          latitude: v.latitude,
+          longitude: v.longitude,
+        }));
     },
     enabled: !!currentBuilder,
     staleTime: 5 * 60 * 1000,

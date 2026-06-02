@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Circle, Polygon, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ const createVenueIcon = (isSelected: boolean): L.DivIcon => {
   });
 };
 
-// Polygon drawing component
+// Polygon drawing component - disables drag when drawing
 function PolygonDrawer({
   onPointAdded,
   enabled,
@@ -66,13 +66,26 @@ function PolygonDrawer({
   onPointAdded: (point: [number, number]) => void;
   enabled: boolean;
 }) {
-  useMapEvents({
+  const map = useMapEvents({
     click(e) {
       if (enabled) {
         onPointAdded([e.latlng.lat, e.latlng.lng]);
       }
     },
   });
+
+  // Disable/enable dragging based on mode
+  useEffect(() => {
+    if (enabled) {
+      map.dragging.disable();
+    } else {
+      map.dragging.enable();
+    }
+    return () => {
+      map.dragging.enable();
+    };
+  }, [enabled, map]);
+
   return null;
 }
 
