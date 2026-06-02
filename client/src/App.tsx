@@ -44,6 +44,12 @@ import { HighPriorityNotificationHandler } from "@/components/notifications/high
 
 // Builder pages
 import BuilderDashboard from "@/pages/builder";
+import BuilderSettings from "@/pages/builder/settings";
+import BuilderBranding from "@/pages/builder/branding";
+import BuilderTheme from "@/pages/builder/theme";
+import BuilderCoverage from "@/pages/builder/coverage";
+import BuilderVenues from "@/pages/builder/venues";
+import BuilderEvents from "@/pages/builder/events";
 
 // Godmode pages
 import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
@@ -101,6 +107,36 @@ function Router() {
       <Route path="/builder">
         <AppLayout>
           <BuilderDashboard />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/settings">
+        <AppLayout>
+          <BuilderSettings />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/branding">
+        <AppLayout>
+          <BuilderBranding />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/theme">
+        <AppLayout>
+          <BuilderTheme />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/coverage">
+        <AppLayout>
+          <BuilderCoverage />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/venues">
+        <AppLayout>
+          <BuilderVenues />
+        </AppLayout>
+      </Route>
+      <Route path="/builder/events">
+        <AppLayout>
+          <BuilderEvents />
         </AppLayout>
       </Route>
       <Route path="/calendar">
