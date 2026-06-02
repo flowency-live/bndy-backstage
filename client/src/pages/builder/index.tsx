@@ -1,9 +1,38 @@
+import { useLocation } from 'wouter';
 import { useBuilder } from '@/lib/builder-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Globe, Palette, MapPin } from 'lucide-react';
+import { Building2, Globe, Palette, MapPin, Settings, Image, Calendar, MapPinned, ChevronRight } from 'lucide-react';
+
+interface DashboardCardProps {
+  title: string;
+  icon: React.ReactNode;
+  href: string;
+  children: React.ReactNode;
+}
+
+function DashboardCard({ title, icon, href, children }: DashboardCardProps) {
+  const [, setLocation] = useLocation();
+
+  return (
+    <Card
+      className="cursor-pointer hover:bg-muted/50 transition-colors group"
+      onClick={() => setLocation(href)}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <div className="flex items-center gap-2">
+          {icon}
+          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
 
 export default function BuilderDashboard() {
   const { currentBuilder, isLoading } = useBuilder();
+  const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
@@ -44,94 +73,82 @@ export default function BuilderDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subdomain</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currentBuilder.slug}.bndy.live</div>
-            <p className="text-xs text-muted-foreground">
-              Your white-label site URL
-            </p>
-          </CardContent>
-        </Card>
+        <DashboardCard
+          title="Subdomain"
+          icon={<Globe className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/settings"
+        >
+          <div className="text-2xl font-bold">{currentBuilder.slug}.bndy.live</div>
+          <p className="text-xs text-muted-foreground">
+            Your white-label site URL
+          </p>
+        </DashboardCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Theme</CardTitle>
-            <Palette className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <div
-                className="h-8 w-8 rounded-full border"
-                style={{ backgroundColor: currentBuilder.theme.primaryColor }}
-                title="Primary"
-              />
-              <div
-                className="h-8 w-8 rounded-full border"
-                style={{ backgroundColor: currentBuilder.theme.secondaryColor }}
-                title="Secondary"
-              />
-              <div
-                className="h-8 w-8 rounded-full border"
-                style={{ backgroundColor: currentBuilder.theme.backgroundColor }}
-                title="Background"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {currentBuilder.theme.defaultMode} mode
-            </p>
-          </CardContent>
-        </Card>
+        <DashboardCard
+          title="Theme"
+          icon={<Palette className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/theme"
+        >
+          <div className="flex gap-2">
+            <div
+              className="h-8 w-8 rounded-full border"
+              style={{ backgroundColor: currentBuilder.theme.primaryColor }}
+              title="Primary"
+            />
+            <div
+              className="h-8 w-8 rounded-full border"
+              style={{ backgroundColor: currentBuilder.theme.secondaryColor }}
+              title="Secondary"
+            />
+            <div
+              className="h-8 w-8 rounded-full border"
+              style={{ backgroundColor: currentBuilder.theme.backgroundColor }}
+              title="Background"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {currentBuilder.theme.defaultMode} mode
+          </p>
+        </DashboardCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Coverage</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {currentBuilder.coverage.postcode}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {currentBuilder.coverage.radius} mile radius
-            </p>
-          </CardContent>
-        </Card>
+        <DashboardCard
+          title="Coverage"
+          icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/coverage"
+        >
+          <div className="text-2xl font-bold">
+            {currentBuilder.coverage.postcode}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {currentBuilder.coverage.radius} mile radius
+          </p>
+        </DashboardCard>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Branding</CardTitle>
-          <CardDescription>Your builder's branding configuration</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {currentBuilder.branding.logoUrl && (
-            <div>
-              <p className="text-sm font-medium mb-2">Logo</p>
-              <img
-                src={currentBuilder.branding.logoUrl}
-                alt={`${currentBuilder.name} logo`}
-                className="h-16 object-contain"
-              />
-            </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardCard
+          title="Branding"
+          icon={<Image className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/branding"
+        >
+          {currentBuilder.branding?.logoUrl ? (
+            <img
+              src={currentBuilder.branding.logoUrl}
+              alt={`${currentBuilder.name} logo`}
+              className="h-12 object-contain"
+            />
+          ) : currentBuilder.branding?.tagline ? (
+            <p className="text-muted-foreground">{currentBuilder.branding.tagline}</p>
+          ) : (
+            <p className="text-muted-foreground text-sm">No branding configured</p>
           )}
-          {currentBuilder.branding.tagline && (
-            <div>
-              <p className="text-sm font-medium mb-1">Tagline</p>
-              <p className="text-muted-foreground">{currentBuilder.branding.tagline}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </DashboardCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Status</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <DashboardCard
+          title="Settings"
+          icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/settings"
+        >
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               currentBuilder.status === 'published'
@@ -143,8 +160,33 @@ export default function BuilderDashboard() {
           >
             {currentBuilder.status}
           </span>
-        </CardContent>
-      </Card>
+          <p className="text-xs text-muted-foreground mt-2">
+            Click to edit name, description, and status
+          </p>
+        </DashboardCard>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardCard
+          title="Venues"
+          icon={<MapPinned className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/venues"
+        >
+          <p className="text-muted-foreground text-sm">
+            Manage which venues appear on your site
+          </p>
+        </DashboardCard>
+
+        <DashboardCard
+          title="Events"
+          icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+          href="/builder/events"
+        >
+          <p className="text-muted-foreground text-sm">
+            View and manage events in your coverage area
+          </p>
+        </DashboardCard>
+      </div>
     </div>
   );
 }
