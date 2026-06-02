@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import { useUser } from "@/lib/user-context";
-import { navigationItems } from "@/lib/navigation-config";
+import { useBuilder } from "@/lib/builder-context";
+import { getNavigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
-import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle, Eye, Users } from "lucide-react";
+import { ChevronDown, Plus, Menu, X, User as UserIcon, LogOut, ChevronRight, Calendar, Bug, Shield, Zap, HelpCircle, Eye, Users, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,11 +47,21 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
     isUberAdmin,
     isStealthMode
   } = useUser();
+  const {
+    builders,
+    currentBuilder,
+    currentBuilderId,
+    hasBuilders,
+    selectBuilder,
+    clearBuilderSelection
+  } = useBuilder();
   const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isIssueFormOpen, setIsIssueFormOpen] = useState(false);
 
   const availableArtists = userProfile?.artists || [];
+  const isBuilderContext = location.startsWith('/builder');
+  const navItems = getNavigationItems({ hasBuilders, isBuilderContext });
 
   const handleExitArtist = () => {
     clearArtistSelection();
@@ -67,6 +78,14 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
 
   const handleCreateArtist = () => {
     setLocation('/dashboard'); // Dashboard now has wizard
+    onClose();
+  };
+
+  const handleBuilderSwitch = (builderId: string) => {
+    clearArtistSelection();
+    selectBuilder(builderId);
+    setLocation('/builder');
+    setIsBandDropdownOpen(false);
     onClose();
   };
 
@@ -141,7 +160,22 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   data-testid="button-context-switcher"
                 >
                   <div className="flex items-center gap-2">
-                    {currentMembership ? (
+                    {currentBuilder ? (
+                      <>
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: currentBuilder.theme.primaryColor }}
+                        >
+                          <Building2 className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="text-left min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate text-foreground flex items-center gap-2">
+                            {currentBuilder.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">Builder • {currentBuilder.slug}.bndy.live</div>
+                        </div>
+                      </>
+                    ) : currentMembership ? (
                       <>
                         {currentMembership.artist?.profileImageUrl ? (
                           <img
@@ -295,12 +329,45 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
                   )}
 
                   <DropdownMenuSeparator />
-                  
+
                   {/* Actions */}
                   <DropdownMenuItem onClick={handleCreateArtist} className="cursor-pointer" data-testid="button-create-new-artist">
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Artist
                   </DropdownMenuItem>
+
+                  {/* Builder Options */}
+                  {hasBuilders && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground bg-muted">
+                        Builders
+                      </div>
+                      {builders.map((builder) => (
+                        <DropdownMenuItem
+                          key={builder.id}
+                          onClick={() => handleBuilderSwitch(builder.id)}
+                          className="py-3 cursor-pointer"
+                          data-testid={`button-switch-to-builder-${builder.id}`}
+                        >
+                          <div className="flex items-center gap-3 w-full">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: builder.theme.primaryColor }}
+                            >
+                              <Building2 className="h-4 w-4 text-white" />
+                            </div>
+                            <div className="text-left min-w-0 flex-1">
+                              <div className="font-medium text-sm truncate">{builder.name}</div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {builder.slug}.bndy.live
+                              </div>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
           </div>
@@ -308,10 +375,10 @@ export default function SideNav({ isOpen, onClose }: SideNavProps) {
           {/* Navigation Items */}
           <nav className="flex-1 p-4">
             <div className="space-y-2">
-              {navigationItems.map((item) => {
-                // Hide "Song Lists" and "Manage Band" when no artist context
+              {navItems.map((item) => {
+                // Hide "Song Lists" and "Manage Band" when no artist context (unless in builder context)
                 const requiresArtistContext = item.href === '/songs' || item.href === '/admin';
-                if (requiresArtistContext && !currentMembership) {
+                if (requiresArtistContext && !currentMembership && !isBuilderContext) {
                   return null;
                 }
 

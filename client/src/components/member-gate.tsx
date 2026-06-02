@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useUser } from "@/lib/user-context";
+import { useBuilder } from "@/lib/builder-context";
 import { useServerAuth } from "@/hooks/useServerAuth";
 import BndyLogo from "@/components/ui/bndy-logo";
 import type { ArtistMembership, Artist } from "@/types/api";
@@ -38,6 +39,7 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
   const [, setLocation] = useLocation();
   const { loading: authLoading, isAuthenticated, checkAuth } = useServerAuth();
   const { currentArtistId, currentMembership, userProfile: contextUserProfile, isLoading: contextLoading, logout } = useUser();
+  const { builders, hasBuilders, isLoading: builderLoading, selectBuilder } = useBuilder();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Trigger auth check when MemberGate mounts (lazy auth check)
@@ -57,8 +59,30 @@ export default function MemberGate({ children, allowNoContextForDashboard = fals
     }
   }, [authLoading, isAuthenticated, setLocation, isRedirecting, contextLoading, userProfile]);
 
+  // Handle builder-only user redirect
+  // If user has no artists but has builders, redirect to /builder
+  useEffect(() => {
+    if (
+      !authLoading &&
+      !contextLoading &&
+      !builderLoading &&
+      isAuthenticated &&
+      userProfile &&
+      userProfile.artists.length === 0 &&
+      hasBuilders &&
+      allowNoContextForDashboard
+    ) {
+      // Auto-select single builder if only one
+      if (builders.length === 1) {
+        selectBuilder(builders[0].id);
+      }
+      setIsRedirecting(true);
+      setLocation('/builder');
+    }
+  }, [authLoading, contextLoading, builderLoading, isAuthenticated, userProfile, hasBuilders, builders, allowNoContextForDashboard, selectBuilder, setLocation]);
+
   // Show loading state
-  if (authLoading || contextLoading || isRedirecting) {
+  if (authLoading || contextLoading || builderLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary to-brand-primary-light p-4 flex items-center justify-center">
         <div className="text-center">

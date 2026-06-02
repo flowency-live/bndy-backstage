@@ -390,3 +390,37 @@ export const updateUserProfileSchema = insertUserProfileSchema.partial();
 
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
+
+// Builder Types (Multi-persona / White-label subdomains)
+export interface BuilderBranding {
+  logoUrl?: string;
+  tagline?: string;
+}
+
+export interface BuilderTheme {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  foregroundColor: string;
+  defaultMode: 'light' | 'dark';
+}
+
+export type BuilderCoverage =
+  | { type: 'postcode_radius'; postcode: string; radius: number }
+  | { type: 'postcode_areas'; areas: string[] }
+  | { type: 'bounding_box'; sw: { lat: number; lng: number }; ne: { lat: number; lng: number } }
+  | { type: 'manual' };
+
+export interface Builder {
+  id: string;
+  user_id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  branding: BuilderBranding;
+  theme: BuilderTheme;
+  coverage: BuilderCoverage;
+  status: 'draft' | 'published' | 'suspended';
+  created_at: string;
+  updated_at: string;
+}

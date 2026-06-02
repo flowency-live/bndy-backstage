@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServerAuthProvider } from "@/hooks/useServerAuth";
 import { UserProvider } from "@/lib/user-context";
+import { BuilderProvider } from "@/lib/builder-context";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { GoogleMapsProvider } from "@/components/providers/google-maps-provider";
 import MemberGate from "@/components/member-gate";
@@ -40,6 +41,9 @@ import OAuthResult from "@/pages/oauth-result";
 import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import { HighPriorityNotificationHandler } from "@/components/notifications/high-priority-notification-handler";
+
+// Builder pages
+import BuilderDashboard from "@/pages/builder";
 
 // Godmode pages
 import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
@@ -93,6 +97,11 @@ function Router() {
             </ProfileGate>
           )}
         </MemberGate>
+      </Route>
+      <Route path="/builder">
+        <AppLayout>
+          <BuilderDashboard />
+        </AppLayout>
       </Route>
       <Route path="/calendar">
         <MemberGate>
@@ -352,7 +361,8 @@ function App() {
         <ThemeProvider defaultTheme="dark" storageKey="bndy-ui-theme">
           <ServerAuthProvider>
             <UserProvider>
-              <GoogleMapsProvider>
+              <BuilderProvider>
+                <GoogleMapsProvider>
                 <ErrorBoundary>
                   <Layout>
                     <div className="min-h-screen flex flex-col max-w-full overflow-x-hidden">
@@ -365,8 +375,9 @@ function App() {
                   </Layout>
                 </ErrorBoundary>
               </GoogleMapsProvider>
+              </BuilderProvider>
             </UserProvider>
-        </ServerAuthProvider>
+          </ServerAuthProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>

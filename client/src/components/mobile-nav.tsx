@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -10,7 +10,8 @@ import IssueForm from "@/components/ui/issue-form";
 import { BndySpinner } from "@/components/ui/bndy-spinner";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUser } from "@/lib/user-context";
-import { navigationItems } from "@/lib/navigation-config";
+import { useBuilder } from "@/lib/builder-context";
+import { getNavigationItems } from "@/lib/navigation-config";
 import { formatDisplayName } from "@/lib/display-name-utils";
 import { useToast } from "@/hooks/use-toast";
 import { restartOnboardingTour } from "@/components/onboarding-tour";
@@ -25,7 +26,8 @@ import {
   Shield,
   HelpCircle,
   Eye,
-  Users
+  Users,
+  Building2
 } from "lucide-react";
 import type { ArtistMembership } from "@/types/api";
 
@@ -44,8 +46,18 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
   const { toast } = useToast();
   const { signOut, session } = useServerAuth();
   const { clearArtistSelection, userProfile, selectArtist, currentArtistId, isUberAdmin, isStealthMode } = useUser();
+  const {
+    builders,
+    currentBuilder,
+    currentBuilderId,
+    hasBuilders,
+    selectBuilder,
+    clearBuilderSelection
+  } = useBuilder();
 
   const availableArtists = userProfile?.artists || [];
+  const isBuilderContext = location.startsWith('/builder');
+  const navItems = getNavigationItems({ hasBuilders, isBuilderContext });
 
   const handleExitArtist = () => {
     clearArtistSelection();
@@ -64,6 +76,13 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
 
     // Call signOut (which handles redirect)
     await signOut();
+  };
+
+  const handleBuilderSwitch = (builderId: string) => {
+    clearArtistSelection();
+    selectBuilder(builderId);
+    setLocation('/builder');
+    setIsOpen(false);
   };
 
   // Don't show header on auth pages
@@ -86,7 +105,14 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                 data-testid="mobile-nav-trigger"
               >
                 <div className="relative w-12 h-12 flex-shrink-0">
-                  {currentMembership ? (
+                  {currentBuilder ? (
+                    <div
+                      className="w-full h-full rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: currentBuilder.theme.primaryColor }}
+                    >
+                      <Building2 className="h-6 w-6 text-white" />
+                    </div>
+                  ) : currentMembership ? (
                     currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url ? (
                       <img
                         src={currentMembership.artist?.profileImageUrl || currentMembership.resolved_avatar_url || ''}
@@ -107,7 +133,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                     </div>
                   )}
                   {/* Dropdown Indicator */}
-                  {currentMembership && (
+                  {(currentMembership || currentBuilder) && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
                       <ChevronDown className="h-3 w-3 text-primary-foreground" />
                     </div>
@@ -129,8 +155,111 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                     <BndyLogo className="h-8 w-auto" color="hsl(var(--primary))" />
                   </div>
 
+                  {/* Builder Info - when in builder context */}
+                  {currentBuilder && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="bg-muted rounded-lg p-3 cursor-pointer hover:bg-muted/80 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{ backgroundColor: currentBuilder.theme.primaryColor }}
+                            >
+                              <Building2 className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-foreground truncate">
+                                {currentBuilder.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground truncate">
+                                Builder • {currentBuilder.slug}.bndy.live
+                              </div>
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="bottom" className="w-56">
+                        {/* Switch to Artists */}
+                        {availableArtists?.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                              Switch to Artist
+                            </div>
+                            {availableArtists.map((membership) => (
+                              <DropdownMenuItem
+                                key={membership.artist_id}
+                                onClick={() => {
+                                  clearBuilderSelection();
+                                  selectArtist(membership.artist_id);
+                                  setLocation('/dashboard');
+                                  setIsOpen(false);
+                                }}
+                                className="flex items-center gap-3 p-3"
+                              >
+                                {membership.artist?.profileImageUrl || membership.resolved_avatar_url ? (
+                                  <img
+                                    src={membership.artist?.profileImageUrl || membership.resolved_avatar_url || ''}
+                                    alt={`${membership.artist?.name || membership.name} avatar`}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                                    style={{ backgroundColor: membership.color }}
+                                  >
+                                    <i className={`fas ${membership.icon} text-white text-sm`}></i>
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-foreground truncate">
+                                    {membership.artist?.name || membership.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground truncate">
+                                    {formatDisplayName(membership.resolved_display_name || membership.display_name)} • {membership.role}
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            ))}
+                          </>
+                        )}
+                        {/* Other Builders */}
+                        {builders.filter(b => b.id !== currentBuilderId).length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                              Other Builders
+                            </div>
+                            {builders.filter(b => b.id !== currentBuilderId).map((builder) => (
+                              <DropdownMenuItem
+                                key={builder.id}
+                                onClick={() => handleBuilderSwitch(builder.id)}
+                                className="flex items-center gap-3 p-3"
+                              >
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                                  style={{ backgroundColor: builder.theme.primaryColor }}
+                                >
+                                  <Building2 className="h-4 w-4 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-foreground truncate">
+                                    {builder.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground truncate">
+                                    {builder.slug}.bndy.live
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            ))}
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
                   {/* Artist Info - Clickable for switching */}
-                  {currentMembership && (
+                  {currentMembership && !currentBuilder && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <div className="bg-muted rounded-lg p-3 cursor-pointer hover:bg-muted/80 transition-colors">
@@ -223,6 +352,38 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                               </div>
                             </DropdownMenuItem>
                           )) || []}
+
+                        {/* Builder Options */}
+                        {hasBuilders && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                              Builders
+                            </div>
+                            {builders.map((builder) => (
+                              <DropdownMenuItem
+                                key={builder.id}
+                                onClick={() => handleBuilderSwitch(builder.id)}
+                                className="flex items-center gap-3 p-3"
+                              >
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                                  style={{ backgroundColor: builder.theme.primaryColor }}
+                                >
+                                  <Building2 className="h-4 w-4 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-foreground truncate">
+                                    {builder.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground truncate">
+                                    {builder.slug}.bndy.live
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            ))}
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -230,7 +391,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
 
                 {/* Navigation Items */}
                 <nav className="flex-1 p-6 space-y-2">
-                  {navigationItems.map((item) => {
+                  {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.startsWith(item.href);
 
@@ -238,7 +399,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                       setLocation(item.href);
                       setIsOpen(false);
                     };
-                    
+
                     return (
                       <button
                         key={item.href}
@@ -250,9 +411,9 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                             : 'hover:bg-muted text-foreground'
                           }
                         `}
-                        data-testid={`nav-${item.label.toLowerCase()}`}
+                        data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                       >
-                        <div 
+                        <div
                           className={`
                             w-10 h-10 rounded-lg flex items-center justify-center transition-colors
                             ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted'}
@@ -376,10 +537,10 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
       {/* Bottom Navigation - Alternative mobile nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card backdrop-blur-sm border-t border-border">
         <div className="flex items-center justify-around py-2">
-          {navigationItems.slice(0, 4).map((item) => {
+          {navItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = location.startsWith(item.href);
-            
+
             return (
               <button
                 key={item.href}
@@ -388,7 +549,7 @@ export function MobileNavHeader({ currentMembership, isLoading }: MobileNavProps
                   flex flex-col items-center gap-1 p-3 rounded-lg min-w-0 flex-1
                   ${isActive ? 'text-orange-500' : 'text-muted-foreground'}
                 `}
-                data-testid={`bottom-nav-${item.label.toLowerCase()}`}
+                data-testid={`bottom-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-xs font-medium truncate">{item.label}</span>
