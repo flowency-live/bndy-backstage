@@ -112,9 +112,9 @@ export default function BuilderDashboard() {
         </DashboardCard>
 
         <DashboardCard
-          title="Coverage"
+          title="Venue Coverage"
           icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
-          href="/builder/coverage"
+          href="/builder/venue-coverage"
         >
           <div className="text-2xl font-bold">
             {currentBuilder.coverage.postcode}
@@ -168,12 +168,12 @@ export default function BuilderDashboard() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <DashboardCard
-          title="Venues"
+          title="Venue Management"
           icon={<MapPinned className="h-4 w-4 text-muted-foreground" />}
-          href="/builder/venues"
+          href="/builder/venue-management"
         >
           <p className="text-muted-foreground text-sm">
-            Manage which venues appear on your site
+            Manage venue relationships, fees, and contacts
           </p>
         </DashboardCard>
 
