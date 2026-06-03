@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Circle, Polygon, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Circle, Polygon, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -33,32 +36,84 @@ export interface VenueCoverageMapProps {
 // Convert miles to meters for Leaflet
 const milesToMeters = (miles: number): number => miles * 1609.344;
 
-// Postcode lookup
+// Postcode lookup with caching
+const postcodeCache = new Map<string, { lat: number; lng: number } | null>();
 async function getPostcodeCoordinates(postcode: string): Promise<{ lat: number; lng: number } | null> {
+  const normalized = postcode.toUpperCase().replace(/\s/g, '');
+  if (postcodeCache.has(normalized)) {
+    return postcodeCache.get(normalized) || null;
+  }
   try {
     const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
     const data = await response.json();
     if (data.status === 200) {
-      return { lat: data.result.latitude, lng: data.result.longitude };
+      const result = { lat: data.result.latitude, lng: data.result.longitude };
+      postcodeCache.set(normalized, result);
+      return result;
     }
+    postcodeCache.set(normalized, null);
     return null;
   } catch {
     return null;
   }
 }
 
-// Create marker icons
+// Create marker icons - CYAN for selected, gray for unselected
 const createVenueIcon = (isSelected: boolean): L.DivIcon => {
-  const color = isSelected ? '#22c55e' : '#9ca3af';
+  const color = isSelected ? '#06B6D4' : '#9ca3af';
+  const size = isSelected ? 14 : 10;
   return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
+    className: 'venue-marker',
+    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [size + 4, size + 4],
+    iconAnchor: [(size + 4) / 2, (size + 4) / 2],
   });
 };
 
-// Polygon drawing component - disables drag when drawing
+// Create cluster icon
+const createClusterIcon = (count: number, hasSelected: boolean): L.DivIcon => {
+  const color = hasSelected ? '#06B6D4' : '#FF1493';
+  const size = count < 10 ? 30 : count < 50 ? 36 : 42;
+  return L.divIcon({
+    html: `<div style="
+      background-color: ${color};
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    ">${count}</div>`,
+    className: 'custom-cluster-icon',
+    iconSize: L.point(size, size),
+  });
+};
+
+// Map drag controller
+function MapDragController({ enabled }: { enabled: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (enabled) {
+      map.dragging.disable();
+      map.getContainer().style.cursor = 'crosshair';
+    } else {
+      map.dragging.enable();
+      map.getContainer().style.cursor = '';
+    }
+    return () => {
+      map.dragging.enable();
+      map.getContainer().style.cursor = '';
+    };
+  }, [enabled, map]);
+  return null;
+}
+
+// Polygon drawing component
 function PolygonDrawer({
   onPointAdded,
   enabled,
@@ -66,25 +121,131 @@ function PolygonDrawer({
   onPointAdded: (point: [number, number]) => void;
   enabled: boolean;
 }) {
-  const map = useMapEvents({
+  useMapEvents({
     click(e) {
       if (enabled) {
+        e.originalEvent.stopPropagation();
         onPointAdded([e.latlng.lat, e.latlng.lng]);
       }
     },
   });
+  return null;
+}
 
-  // Disable/enable dragging based on mode
+// Center map on coordinates
+function MapCenterer({ center }: { center: [number, number] | null }) {
+  const map = useMap();
   useEffect(() => {
-    if (enabled) {
-      map.dragging.disable();
-    } else {
-      map.dragging.enable();
+    if (center) {
+      map.setView(center, map.getZoom());
     }
+  }, [center, map]);
+  return null;
+}
+
+// Venue marker layer with native leaflet.markercluster
+function VenueMarkerLayer({
+  venues,
+  selectedVenueIds,
+  mode,
+  onVenueClick,
+}: {
+  venues: Venue[];
+  selectedVenueIds: string[];
+  mode: SelectionMode;
+  onVenueClick: (venueId: string) => void;
+}) {
+  const map = useMap();
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const selectedSetRef = useRef(new Set(selectedVenueIds));
+  const onVenueClickRef = useRef(onVenueClick);
+
+  // Keep refs updated
+  useEffect(() => {
+    selectedSetRef.current = new Set(selectedVenueIds);
+  }, [selectedVenueIds]);
+
+  useEffect(() => {
+    onVenueClickRef.current = onVenueClick;
+  }, [onVenueClick]);
+
+  // Create/update cluster group
+  useEffect(() => {
+    // Clean up existing
+    if (clusterRef.current) {
+      map.removeLayer(clusterRef.current);
+      clusterRef.current = null;
+    }
+
+    if (venues.length === 0) return;
+
+    const clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 40,
+      iconCreateFunction: (cluster) => {
+        const count = cluster.getChildCount();
+        const childMarkers = cluster.getAllChildMarkers();
+        const hasSelected = childMarkers.some((m) => {
+          // @ts-expect-error - custom property
+          const vid = m.venueId as string | undefined;
+          return vid && selectedSetRef.current.has(vid);
+        });
+        return createClusterIcon(count, hasSelected);
+      },
+      disableClusteringAtZoom: 13,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      chunkedLoading: true,
+    });
+
+    venues.forEach((venue) => {
+      const isSelected = selectedSetRef.current.has(venue.id);
+      const marker = L.marker([venue.latitude, venue.longitude], {
+        icon: createVenueIcon(isSelected),
+      });
+
+      // Store venue ID on marker
+      // @ts-expect-error - custom property
+      marker.venueId = venue.id;
+
+      // Tooltip with venue name
+      marker.bindTooltip(venue.name, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -10],
+      });
+
+      marker.on('click', () => onVenueClickRef.current(venue.id));
+      clusterGroup.addLayer(marker);
+    });
+
+    map.addLayer(clusterGroup);
+    clusterRef.current = clusterGroup;
+
     return () => {
-      map.dragging.enable();
+      if (clusterRef.current) {
+        map.removeLayer(clusterRef.current);
+        clusterRef.current = null;
+      }
     };
-  }, [enabled, map]);
+  }, [venues, map]);
+
+  // Update marker icons when selection changes
+  useEffect(() => {
+    if (!clusterRef.current) return;
+
+    clusterRef.current.eachLayer((layer) => {
+      const marker = layer as L.Marker;
+      // @ts-expect-error - custom property
+      const venueId = marker.venueId as string | undefined;
+      if (venueId) {
+        const isSelected = selectedVenueIds.includes(venueId);
+        marker.setIcon(createVenueIcon(isSelected));
+      }
+    });
+
+    // Refresh clusters
+    clusterRef.current.refreshClusters();
+  }, [selectedVenueIds]);
 
   return null;
 }
@@ -106,23 +267,36 @@ export default function VenueCoverageMap({
   const [postcodeError, setPostcodeError] = useState<string | null>(null);
   const [localPostcode, setLocalPostcode] = useState(postcode);
   const [localRadius, setLocalRadius] = useState(radiusMiles);
+  const postcodeTimeoutRef = useRef<number | null>(null);
 
-  // Resolve postcode to coordinates
+  // Sync postcode from props
   useEffect(() => {
-    if (mode === 'radius' && postcode) {
-      setPostcodeError(null);
-      getPostcodeCoordinates(postcode).then((coords) => {
-        if (coords) {
-          setCenter(coords);
-        } else {
-          setCenter(null);
-          setPostcodeError('Invalid postcode');
-        }
-      });
-    } else if (mode !== 'radius') {
-      setCenter(null);
+    setLocalPostcode(postcode);
+  }, [postcode]);
+
+  // Debounced postcode lookup
+  useEffect(() => {
+    if (mode === 'radius' && localPostcode && localPostcode.length >= 5) {
+      if (postcodeTimeoutRef.current) {
+        clearTimeout(postcodeTimeoutRef.current);
+      }
+      postcodeTimeoutRef.current = window.setTimeout(() => {
+        setPostcodeError(null);
+        getPostcodeCoordinates(localPostcode).then((coords) => {
+          if (coords) {
+            setCenter(coords);
+          } else {
+            setPostcodeError('Invalid postcode');
+          }
+        });
+      }, 300);
     }
-  }, [postcode, mode]);
+    return () => {
+      if (postcodeTimeoutRef.current) {
+        clearTimeout(postcodeTimeoutRef.current);
+      }
+    };
+  }, [localPostcode, mode]);
 
   // Calculate selected venues based on mode
   useEffect(() => {
@@ -182,7 +356,7 @@ export default function VenueCoverageMap({
     }
   }, [onPolygonChange]);
 
-  // Map center defaults to UK
+  // Map center
   const mapCenter: [number, number] = useMemo(() => {
     if (center) return [center.lat, center.lng];
     if (venues.length > 0) {
@@ -190,7 +364,7 @@ export default function VenueCoverageMap({
       const avgLng = venues.reduce((sum, v) => sum + v.longitude, 0) / venues.length;
       return [avgLat, avgLng];
     }
-    return [54.5, -4.0]; // UK center
+    return [53.5, -2.5]; // Northern England
   }, [center, venues]);
 
   const selectedCount = selectedVenueIds.length;
@@ -199,7 +373,6 @@ export default function VenueCoverageMap({
     <div className="flex flex-col h-full">
       {/* Controls bar */}
       <div className="flex items-center gap-4 p-4 bg-background border-b">
-        {/* Mode selector */}
         <div className="flex gap-2">
           <Button
             variant={mode === 'radius' ? 'default' : 'outline'}
@@ -227,7 +400,6 @@ export default function VenueCoverageMap({
           </Button>
         </div>
 
-        {/* Radius controls */}
         {mode === 'radius' && (
           <div className="flex items-center gap-4 flex-1">
             <Input
@@ -258,11 +430,10 @@ export default function VenueCoverageMap({
           </div>
         )}
 
-        {/* Polygon controls */}
         {mode === 'polygon' && (
           <div className="flex items-center gap-4 flex-1">
             <span className="text-sm text-muted-foreground">
-              Click on the map to draw a coverage area
+              Click to add points ({polygon.length} points)
             </span>
             {polygon.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleClearPolygon}>
@@ -272,26 +443,21 @@ export default function VenueCoverageMap({
           </div>
         )}
 
-        {/* Selected count */}
         <div className="text-sm text-muted-foreground">
-          {selectedCount === 1
-            ? '1 venue selected'
-            : `${selectedCount} venues selected`}
+          {selectedCount} venues selected
         </div>
       </div>
 
-      {/* Error display */}
       {postcodeError && (
         <div className="px-4 py-2 text-sm text-destructive bg-destructive/10">
           {postcodeError}
         </div>
       )}
 
-      {/* Map */}
       <div className="flex-1 min-h-[400px]">
         <MapContainer
           center={mapCenter}
-          zoom={8}
+          zoom={9}
           style={{ width: '100%', height: '100%' }}
           data-testid="map-container"
         >
@@ -300,51 +466,40 @@ export default function VenueCoverageMap({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
 
-          {/* Polygon drawer */}
-          <PolygonDrawer
-            onPointAdded={handlePolygonPointAdded}
-            enabled={mode === 'polygon'}
-          />
+          <MapDragController enabled={mode === 'polygon'} />
+          <MapCenterer center={center ? [center.lat, center.lng] : null} />
+          <PolygonDrawer onPointAdded={handlePolygonPointAdded} enabled={mode === 'polygon'} />
 
-          {/* Coverage circle */}
           {mode === 'radius' && center && (
             <Circle
               center={[center.lat, center.lng]}
               radius={milesToMeters(radiusMiles)}
-              pathOptions={{
-                color: '#3b82f6',
-                fillColor: '#3b82f6',
-                fillOpacity: 0.1,
-              }}
+              pathOptions={{ color: '#06B6D4', fillColor: '#06B6D4', fillOpacity: 0.1, weight: 2 }}
             />
           )}
 
-          {/* Coverage polygon */}
           {mode === 'polygon' && polygon.length >= 3 && (
             <Polygon
               positions={polygon}
-              pathOptions={{
-                color: '#3b82f6',
-                fillColor: '#3b82f6',
-                fillOpacity: 0.1,
-              }}
+              pathOptions={{ color: '#06B6D4', fillColor: '#06B6D4', fillOpacity: 0.1, weight: 2 }}
             />
           )}
 
-          {/* Venue markers */}
-          {venues.map((venue) => {
-            const isSelected = selectedVenueIds.includes(venue.id);
-            return (
-              <Marker
-                key={venue.id}
-                position={[venue.latitude, venue.longitude]}
-                icon={createVenueIcon(isSelected)}
-                eventHandlers={{
-                  click: () => handleVenueClick(venue.id),
-                }}
-              />
-            );
-          })}
+          {mode === 'polygon' && polygon.map((point, idx) => (
+            <Circle
+              key={idx}
+              center={point}
+              radius={100}
+              pathOptions={{ color: '#06B6D4', fillColor: '#06B6D4', fillOpacity: 0.8, weight: 2 }}
+            />
+          ))}
+
+          <VenueMarkerLayer
+            venues={venues}
+            selectedVenueIds={selectedVenueIds}
+            mode={mode}
+            onVenueClick={handleVenueClick}
+          />
         </MapContainer>
       </div>
     </div>
