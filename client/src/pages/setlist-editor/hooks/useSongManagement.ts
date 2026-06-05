@@ -128,7 +128,8 @@ export function useSongManagement({
    */
   const handleQuickAdd = (songId: string, e: React.MouseEvent) => {
     // Only handle click on mobile OR when explicitly clicking (not dragging)
-    const isDrag = e.type === 'click' && (e as any).detail === 0;
+    // detail === 0 indicates a synthetic click (from keyboard or drag end), not a real click
+    const isDrag = e.type === 'click' && e.detail === 0;
     if (isDrag) return;
 
     if (!workingSetlist || !activeSetId) return;
@@ -140,7 +141,7 @@ export function useSongManagement({
     if (!activeSet) return;
 
     const newSong: SetlistSong = {
-      id: `${Date.now()}-${Math.random()}`,
+      id: crypto.randomUUID(),
       song_id: playbookSong.id,
       title: playbookSong.title,
       artist: playbookSong.artist,

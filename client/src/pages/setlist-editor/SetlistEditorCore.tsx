@@ -14,6 +14,7 @@ import {
   usePlaybookFilter,
   useDragAndDrop,
   useSongManagement,
+  useKeyboardShortcuts,
 } from './hooks';
 import {
   SetlistHeader,
@@ -35,6 +36,10 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
   const {
     workingSetlist,
     hasUnsavedChanges,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
     editingName,
     setEditingName,
     tempName,
@@ -53,6 +58,9 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
     editingSongTitle,
     tempSongTitle,
   } = useSetlistEditor();
+
+  // Keyboard shortcuts for undo/redo
+  useKeyboardShortcuts({ onUndo: undo, onRedo: redo, canUndo, canRedo });
 
   // Data fetching
   const { setlist, playbookSongs, isLoading } = useSetlistData({
@@ -183,10 +191,14 @@ export function SetlistEditorCore({ artistId, setlistId }: SetlistEditorCoreProp
                 drawerOpen={drawerOpen}
                 hasUnsavedChanges={hasUnsavedChanges}
                 isSaving={isSaving}
+                canUndo={canUndo}
+                canRedo={canRedo}
                 onBack={handleBack}
                 onEditName={handleEditName}
                 onSave={handleSave}
                 onCancel={handleCancel}
+                onUndo={undo}
+                onRedo={redo}
               />
             )}
           </div>

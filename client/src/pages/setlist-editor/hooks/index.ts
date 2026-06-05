@@ -4,3 +4,4 @@ export * from './useSetlistMutations';
 export * from './usePlaybookFilter';
 export * from './useDragAndDrop';
 export * from './useSongManagement';
+export * from './useKeyboardShortcuts';

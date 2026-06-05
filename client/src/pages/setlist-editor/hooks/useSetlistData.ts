@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import type { Setlist, PlaybookSong } from '../types';
+import type { ArtistSong } from '@/lib/services/songs-service';
 import { useSetlistEditor } from '../context/SetlistEditorContext';
 
 interface UseSetlistDataProps {
@@ -59,7 +60,7 @@ export function useSetlistData({
 
       const validItems = data.filter(item => item && item.globalSong);
 
-      const mappedItems = validItems.map((item: any) => {
+      const mappedItems = validItems.map((item: ArtistSong) => {
         const tuning = item.tuning || 'standard';
 
         return {
@@ -69,9 +70,9 @@ export function useSetlistData({
           artist: item.globalSong?.artistName || 'Unknown',
           album: item.globalSong?.album || '',
           spotifyUrl: item.globalSong?.spotifyUrl || '',
-          imageUrl: item.globalSong?.albumImageUrl || null,
+          imageUrl: item.globalSong?.albumImageUrl || undefined,
           duration: item.globalSong?.duration || 0,
-          key: item.globalSong?.metadata?.key || null,
+          key: item.globalSong?.key || undefined,
           tuning: tuning,
         };
       });
@@ -91,14 +92,16 @@ export function useSetlistData({
     if (setlist) {
       // Initialize workingSetlist if it doesn't exist
       if (!workingSetlist) {
-        setWorkingSetlist(setlist);
+        // skipHistory = true: don't add server data to undo history
+        setWorkingSetlist(setlist, true);
         if (setlist.sets.length > 0 && !activeSetId) {
           setActiveSetId(setlist.sets[0].id);
         }
       }
       // Update workingSetlist with fresh data if no unsaved changes
       else if (!hasUnsavedChanges) {
-        setWorkingSetlist(setlist);
+        // skipHistory = true: don't add server refresh to undo history
+        setWorkingSetlist(setlist, true);
       }
     }
   }, [setlist, workingSetlist, activeSetId, hasUnsavedChanges, setWorkingSetlist, setActiveSetId]);

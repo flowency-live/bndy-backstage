@@ -1,5 +1,6 @@
 /**
  * SetlistHeader - Header component with navigation, title, and action buttons
+ * Includes undo/redo functionality
  */
 
 interface SetlistHeaderProps {
@@ -7,10 +8,14 @@ interface SetlistHeaderProps {
   drawerOpen: boolean;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
   onBack: () => void;
   onEditName: () => void;
   onSave: () => void;
   onCancel: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export function SetlistHeader({
@@ -18,10 +23,14 @@ export function SetlistHeader({
   drawerOpen,
   hasUnsavedChanges,
   isSaving,
+  canUndo,
+  canRedo,
   onBack,
   onEditName,
   onSave,
   onCancel,
+  onUndo,
+  onRedo,
 }: SetlistHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -45,6 +54,25 @@ export function SetlistHeader({
         </button>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">
+        {/* Undo/Redo buttons */}
+        <div className="flex items-center gap-0.5 mr-1 sm:mr-2">
+          <button
+            onClick={onUndo}
+            className="text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded text-xs sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Undo (Ctrl+Z)"
+            disabled={!canUndo}
+          >
+            <i className="fas fa-undo"></i>
+          </button>
+          <button
+            onClick={onRedo}
+            className="text-muted-foreground hover:text-foreground px-1.5 sm:px-2 py-1 rounded text-xs sm:text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Redo (Ctrl+Shift+Z)"
+            disabled={!canRedo}
+          >
+            <i className="fas fa-redo"></i>
+          </button>
+        </div>
         <button
           onClick={onSave}
           className="bg-green-500 hover:bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"

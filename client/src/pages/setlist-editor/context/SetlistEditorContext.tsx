@@ -1,16 +1,25 @@
 /**
  * SetlistEditorContext - Centralized state management for setlist editor
+ * Includes undo/redo history tracking
  */
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import type { Setlist } from '../types';
+
+const MAX_HISTORY_SIZE = 50;
 
 interface SetlistEditorContextValue {
   // Working copy state
   workingSetlist: Setlist | null;
-  setWorkingSetlist: (setlist: Setlist | null) => void;
+  setWorkingSetlist: (setlist: Setlist | null, skipHistory?: boolean) => void;
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (hasChanges: boolean) => void;
+
+  // Undo/Redo
+  canUndo: boolean;
+  canRedo: boolean;
+  undo: () => void;
+  redo: () => void;
 
   // UI state - editing
   editingName: boolean;
@@ -57,8 +66,51 @@ interface SetlistEditorProviderProps {
 
 export function SetlistEditorProvider({ children }: SetlistEditorProviderProps) {
   // Working copy state
-  const [workingSetlist, setWorkingSetlist] = useState<Setlist | null>(null);
+  const [workingSetlist, setWorkingSetlistInternal] = useState<Setlist | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // History for undo/redo
+  const historyRef = useRef<Setlist[]>([]);
+  const futureRef = useRef<Setlist[]>([]);
+  const [historyVersion, setHistoryVersion] = useState(0); // Force re-render on history change
+
+  // Wrapped setWorkingSetlist that tracks history
+  const setWorkingSetlist = useCallback((setlist: Setlist | null, skipHistory = false) => {
+    if (!skipHistory && workingSetlist && setlist) {
+      // Push current state to history before changing
+      historyRef.current = [...historyRef.current, workingSetlist].slice(-MAX_HISTORY_SIZE);
+      // Clear future on new change
+      futureRef.current = [];
+      setHistoryVersion(v => v + 1);
+    }
+    setWorkingSetlistInternal(setlist);
+  }, [workingSetlist]);
+
+  // Undo function
+  const undo = useCallback(() => {
+    if (historyRef.current.length === 0 || !workingSetlist) return;
+
+    const previousState = historyRef.current[historyRef.current.length - 1];
+    historyRef.current = historyRef.current.slice(0, -1);
+    futureRef.current = [...futureRef.current, workingSetlist];
+    setWorkingSetlistInternal(previousState);
+    setHasUnsavedChanges(true);
+    setHistoryVersion(v => v + 1);
+  }, [workingSetlist]);
+
+  // Redo function
+  const redo = useCallback(() => {
+    if (futureRef.current.length === 0) return;
+
+    const nextState = futureRef.current[futureRef.current.length - 1];
+    futureRef.current = futureRef.current.slice(0, -1);
+    if (workingSetlist) {
+      historyRef.current = [...historyRef.current, workingSetlist];
+    }
+    setWorkingSetlistInternal(nextState);
+    setHasUnsavedChanges(true);
+    setHistoryVersion(v => v + 1);
+  }, [workingSetlist]);
 
   // UI state - editing
   const [editingName, setEditingName] = useState(false);
@@ -81,11 +133,19 @@ export function SetlistEditorProvider({ children }: SetlistEditorProviderProps) 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
+  // Compute canUndo/canRedo based on historyVersion to trigger re-renders
+  const canUndo = historyVersion >= 0 && historyRef.current.length > 0;
+  const canRedo = historyVersion >= 0 && futureRef.current.length > 0;
+
   const value: SetlistEditorContextValue = {
     workingSetlist,
     setWorkingSetlist,
     hasUnsavedChanges,
     setHasUnsavedChanges,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
     editingName,
     setEditingName,
     tempName,

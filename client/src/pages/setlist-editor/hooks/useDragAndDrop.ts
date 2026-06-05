@@ -129,7 +129,7 @@ export function useDragAndDrop({
     }
 
     const newSong: SetlistSong = {
-      id: `${Date.now()}-${Math.random()}`,
+      id: crypto.randomUUID(),
       song_id: playbookSong.id,
       title: playbookSong.title,
       artist: playbookSong.artist,

@@ -1,7 +1,10 @@
 /**
- * PlaybookDrawer - Playbook sidebar with search, filters, and song list
+ * PlaybookDrawer - Virtualized playbook sidebar with search, filters, and song list
+ * Uses @tanstack/react-virtual for efficient rendering of large song lists
  */
 
+import { useRef, useMemo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import type { PlaybookSong } from '../types';
 import { DraggablePlaybookSong } from './DraggablePlaybookSong';
 
@@ -19,6 +22,10 @@ export interface PlaybookDrawerProps {
   onQuickAdd: (songId: string, e: React.MouseEvent) => void;
 }
 
+type VirtualItem =
+  | { type: 'header'; letter: string }
+  | { type: 'song'; song: PlaybookSong };
+
 export function PlaybookDrawer({
   drawerOpen,
   searchQuery,
@@ -32,6 +39,31 @@ export function PlaybookDrawer({
   onShowAllChange,
   onQuickAdd,
 }: PlaybookDrawerProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  // Flatten grouped songs into a single list for virtualization
+  const flattenedItems = useMemo<VirtualItem[]>(() => {
+    const items: VirtualItem[] = [];
+    for (const letter of sortedLetters) {
+      items.push({ type: 'header', letter });
+      for (const song of groupedSongs[letter]) {
+        items.push({ type: 'song', song });
+      }
+    }
+    return items;
+  }, [sortedLetters, groupedSongs]);
+
+  const virtualizer = useVirtualizer({
+    count: flattenedItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: (index) => {
+      const item = flattenedItems[index];
+      // Headers are smaller than song cards
+      return item.type === 'header' ? 28 : 44;
+    },
+    overscan: 10,
+  });
+
   return (
     <div className={`transition-all duration-300 ${
       drawerOpen ? 'w-1/2 lg:w-80' : 'w-0 lg:w-80'
@@ -80,34 +112,72 @@ export function PlaybookDrawer({
         </label>
       </div>
 
-      <div className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto">
+      <div
+        ref={parentRef}
+        className="p-2 h-[calc(100vh-220px)] lg:max-h-[600px] overflow-y-auto"
+      >
         {sortedLetters.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8">
             {searchQuery ? 'No songs found' : 'No songs available'}
           </div>
         )}
-        {sortedLetters.map((letter) => (
-          <div key={letter} className="mb-3">
-            {/* Letter header - sticky */}
-            <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 mb-1 rounded text-xs font-bold text-foreground z-10 pointer-events-none">
-              {letter}
-            </div>
-            {/* Songs in this letter group */}
-            <div className="space-y-1">
-              {groupedSongs[letter].map((song) => {
-                const isInSetlist = songsInSetlist.has(song.id);
+        {sortedLetters.length > 0 && (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const item = flattenedItems[virtualRow.index];
+
+              if (item.type === 'header') {
                 return (
+                  <div
+                    key={`header-${item.letter}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="sticky top-0 bg-muted/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-foreground z-10 pointer-events-none">
+                      {item.letter}
+                    </div>
+                  </div>
+                );
+              }
+
+              const song = item.song;
+              const isInSetlist = songsInSetlist.has(song.id);
+
+              return (
+                <div
+                  key={song.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                    padding: '2px 0',
+                  }}
+                >
                   <DraggablePlaybookSong
-                    key={song.id}
                     song={song}
                     isInSetlist={isInSetlist}
                     onQuickAdd={onQuickAdd}
                   />
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
