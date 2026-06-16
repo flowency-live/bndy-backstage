@@ -210,7 +210,7 @@ function SourceCard({ summary, onViewRun }: SourceCardProps) {
       </div>
 
       {/* Recent Runs Strip */}
-      {summary.recentRuns.length > 1 && (
+      {summary.recentRuns && summary.recentRuns.length > 1 && (
         <div className="mt-4 pt-4 border-t">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Recent:</span>

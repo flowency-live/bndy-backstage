@@ -250,7 +250,7 @@ function ReviewItemRow({ item }: ReviewItemRowProps) {
 
         {/* Item ID */}
         <code className="text-xs text-muted-foreground bg-muted px-1 rounded">
-          {item.itemId.slice(0, 8)}
+          {(item.itemId || '').slice(0, 8)}
         </code>
       </div>
     </div>
