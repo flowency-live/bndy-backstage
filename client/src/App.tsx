@@ -54,6 +54,8 @@ import VenueManagement from "@/pages/builder/venue-management";
 // Godmode pages
 import GodmodeLayout from "@/pages/godmode/GodmodeLayout";
 import GodmodeDashboard from "@/pages/godmode/Dashboard";
+import SourcesPage from "@/pages/godmode/sources";
+import ReviewQueuePage from "@/pages/godmode/sources/review-queue";
 import VenuesPage from "@/pages/godmode/venues";
 import EnrichmentQueuePage from "@/pages/godmode/venues/enrichment";
 import ArtistsPage from "@/pages/godmode/artists";
@@ -352,6 +354,16 @@ function Router() {
       <Route path="/godmode">
         <GodmodeLayout>
           <GodmodeDashboard />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/sources">
+        <GodmodeLayout>
+          <SourcesPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/sources/review">
+        <GodmodeLayout>
+          <ReviewQueuePage />
         </GodmodeLayout>
       </Route>
       <Route path="/godmode/venues">

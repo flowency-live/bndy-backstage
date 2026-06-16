@@ -6,12 +6,16 @@ import {
   Music,
   Users,
   Sparkles,
-  Calendar
+  Calendar,
+  Activity,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/godmode', icon: LayoutDashboard, exact: true },
+  { name: 'Sources', href: '/godmode/sources', icon: Activity },
+  { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, indent: true },
   { name: 'Venues', href: '/godmode/venues', icon: MapPin },
   { name: 'Enrichment Queue', href: '/godmode/venues/enrichment', icon: Sparkles, indent: true },
   { name: 'Artists', href: '/godmode/artists', icon: User },
