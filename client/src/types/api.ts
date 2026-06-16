@@ -19,6 +19,17 @@ export interface User {
   updatedAt: string;
 }
 
+/**
+ * Act - A named performance configuration of an artist (#60 Acts Model)
+ * Examples: "Acoustic Duo", "Full Band", "DJ Set"
+ */
+export interface Act {
+  id: string;
+  name: string;
+  description?: string | null;
+  isDefault?: boolean;
+}
+
 export interface Artist {
   id: string;
   name: string;
@@ -36,6 +47,9 @@ export interface Artist {
   publishAvailability?: boolean;  // NEW: Control whether availability is public on frontstage (default: false)
   showMemberVotes?: boolean;  // NEW: Show individual member votes when all votes are collected
   autoDiscardThreshold?: number | null;  // NEW: Auto-discard songs scoring below this % (null = disabled)
+  // Acts model (#60) - named performance configurations
+  actsEnabled?: boolean;  // Toggle to enable acts for this artist (default: false)
+  acts?: Act[];  // Array of acts (empty until acts are added)
   profileImageUrl?: string | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;

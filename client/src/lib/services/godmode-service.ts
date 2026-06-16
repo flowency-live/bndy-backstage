@@ -3,6 +3,13 @@
 
 import { API_BASE_URL } from '../../config/api';
 
+export interface Act {
+  id: string;
+  name: string;
+  description?: string | null;
+  isDefault?: boolean;
+}
+
 export interface Artist {
   id: string;
   name: string;
@@ -15,6 +22,9 @@ export interface Artist {
   artistType?: string;
   actType?: string[];
   acoustic?: boolean;
+  // Acts model (#60)
+  actsEnabled?: boolean;
+  acts?: Act[];
   facebookUrl: string;
   instagramUrl: string;
   websiteUrl: string;

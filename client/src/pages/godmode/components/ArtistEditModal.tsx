@@ -16,6 +16,8 @@ import { searchLocationAutocomplete } from '@/lib/services/places-service';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
 import { useGoogleMaps } from '@/components/providers/google-maps-provider';
 import ImageUpload from '@/components/ui/image-upload';
+import ActsManager from './ActsManager';
+import type { Act } from '@/types/api';
 
 interface ArtistEditModalProps {
   open: boolean;
@@ -434,6 +436,21 @@ export default function ArtistEditModal({
               Acoustic performances
             </Label>
           </div>
+
+          {/* Acts Manager (#60) */}
+          <ActsManager
+            artistId={editForm.id}
+            actsEnabled={editForm.actsEnabled || false}
+            acts={(editForm.acts || []) as Act[]}
+            onActsEnabledChange={(enabled) => {
+              setEditForm({ ...editForm, actsEnabled: enabled });
+              setHasChanges(true);
+            }}
+            onActsChange={(acts) => {
+              setEditForm({ ...editForm, acts });
+              setHasChanges(true);
+            }}
+          />
 
           {/* Social Media URLs */}
           <div className="space-y-3">
