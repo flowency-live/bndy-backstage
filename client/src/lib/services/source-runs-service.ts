@@ -173,15 +173,12 @@ class SourceRunsService {
    * Falls back to computing from recent runs if no dedicated endpoint
    */
   async getSourceSummaries(): Promise<SourceSummary[]> {
-    try {
-      const data = await this.apiRequest<SourceSummariesResponse>(
-        '/api/source-runs/summaries'
-      );
-      return data.sources || [];
-    } catch {
-      // Fallback: compute summaries from recent runs
-      return this.computeSummariesFromRuns();
-    }
+    // Compute from recent runs (correct SourceSummary shape) rather than calling
+    // /api/source-runs/summaries. The backend /summaries route returns a different
+    // shape ({summaries:[{runCount,lastRunDate,...}]}) than this client expects
+    // ({sources: SourceSummary[]}), so relying on it left the overview empty.
+    // computeSummariesFromRuns builds the right shape from /api/source-runs + /api/review-items.
+    return this.computeSummariesFromRuns();
   }
 
   /**
