@@ -40,6 +40,7 @@ export interface SourceRun {
   runDate: string;
   startedAt: string;
   finishedAt?: string;
+  completedAt?: string; // runner persists completedAt; finishedAt kept for back-compat
   status: SourceRunStatus;
   errors: SourceRunError[];
   counts: SourceRunCounts;
@@ -83,6 +84,19 @@ interface ReviewItemsResponse {
 
 interface SourceSummariesResponse {
   sources: SourceSummary[];
+}
+
+export interface SourceCoverage {
+  sourceId: string;
+  sourceName: string;
+  events: number;
+  venues: number;
+  artists: number;
+}
+
+interface SourceCoverageResponse {
+  sources: SourceCoverage[];
+  computedAt: string;
 }
 
 // ===== Service Class =====
@@ -166,6 +180,17 @@ class SourceRunsService {
       `/api/review-items?${params.toString()}`
     );
     return data.items || [];
+  }
+
+  /**
+   * Get coverage stats (footprint) per source - how many events/venues/artists
+   * in bndy have external_ids from each source. Cached on backend for 10 mins.
+   */
+  async getSourceCoverage(): Promise<SourceCoverage[]> {
+    const data = await this.apiRequest<SourceCoverageResponse>(
+      '/api/source-runs/coverage'
+    );
+    return data.sources || [];
   }
 
   /**
@@ -324,5 +349,6 @@ export const getRunDetail = (sourceId: string, runId: string) =>
 export const getReviewItems = (status?: ReviewItemStatus, sourceId?: string) =>
   sourceRunsService.getReviewItems(status, sourceId);
 export const getSourceSummaries = () => sourceRunsService.getSourceSummaries();
+export const getSourceCoverage = () => sourceRunsService.getSourceCoverage();
 
 export default sourceRunsService;

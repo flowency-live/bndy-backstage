@@ -4,16 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   getSourceSummaries,
+  getSourceCoverage,
   formatRelativeTime,
   formatDuration,
   getStatusColor,
   type SourceSummary,
   type SourceRun,
+  type SourceCoverage,
 } from '@/lib/services/source-runs-service';
 import RunDetailModal from './RunDetailModal';
 
 export default function SourcesPage() {
   const [summaries, setSummaries] = useState<SourceSummary[]>([]);
+  const [coverage, setCoverage] = useState<Map<string, SourceCoverage>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRun, setSelectedRun] = useState<{ sourceId: string; runId: string } | null>(null);
@@ -22,8 +25,17 @@ export default function SourcesPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSourceSummaries();
-      setSummaries(data);
+      const [summaryData, coverageData] = await Promise.all([
+        getSourceSummaries(),
+        getSourceCoverage()
+      ]);
+      setSummaries(summaryData);
+      // Index coverage by sourceId for quick lookup
+      const coverageMap = new Map<string, SourceCoverage>();
+      for (const c of coverageData) {
+        coverageMap.set(c.sourceId, c);
+      }
+      setCoverage(coverageMap);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load source data');
     } finally {
@@ -82,6 +94,7 @@ export default function SourcesPage() {
             <SourceCard
               key={summary.sourceId}
               summary={summary}
+              coverage={coverage.get(summary.sourceId)}
               onViewRun={handleViewRun}
             />
           ))}
@@ -123,10 +136,11 @@ function Header({ onRefresh, sourceCount }: { onRefresh: () => void; sourceCount
 
 interface SourceCardProps {
   summary: SourceSummary;
+  coverage?: SourceCoverage;
   onViewRun: (sourceId: string, runId: string) => void;
 }
 
-function SourceCard({ summary, onViewRun }: SourceCardProps) {
+function SourceCard({ summary, coverage, onViewRun }: SourceCardProps) {
   const { lastRun } = summary;
 
   return (
@@ -154,7 +168,7 @@ function SourceCard({ summary, onViewRun }: SourceCardProps) {
                 {formatRelativeTime(lastRun.startedAt)}
               </span>
               <span>
-                Duration: {formatDuration(lastRun.startedAt, lastRun.finishedAt)}
+                Duration: {formatDuration(lastRun.startedAt, lastRun.finishedAt ?? lastRun.completedAt)}
               </span>
             </div>
           ) : (
@@ -179,13 +193,28 @@ function SourceCard({ summary, onViewRun }: SourceCardProps) {
           {/* Headline Counts from last run */}
           {lastRun && (
             <>
-              <Stat label="Events" value={lastRun.counts.eventsCreated} />
-              <Stat label="Venues" value={lastRun.counts.venuesCreated} positive />
-              <Stat label="Artists" value={lastRun.counts.artistsCreated} positive />
+              <Stat
+                label="Parsed"
+                value={lastRun.counts.validEvents}
+                hint="Valid gigs found on the source this run (before de-duping against the previous run)"
+              />
+              <Stat
+                label="New"
+                value={lastRun.counts.added}
+                positive
+                hint="New since the last run — only these get written; the rest already existed"
+              />
+              <Stat
+                label="Events"
+                value={lastRun.counts.eventsCreated}
+                positive
+                hint="Events actually created in bndy this run"
+              />
               <Stat
                 label="Review"
                 value={summary.openReviewItems}
                 warning={summary.openReviewItems > 0}
+                hint="Rows awaiting human / intelligence resolution"
               />
               <Stat
                 label="Errors"
@@ -193,6 +222,18 @@ function SourceCard({ summary, onViewRun }: SourceCardProps) {
                 warning={lastRun.errors.length > 0}
               />
             </>
+          )}
+
+          {/* Footprint - entities in bndy from this source */}
+          {coverage && (coverage.events > 0 || coverage.venues > 0 || coverage.artists > 0) && (
+            <div className="border-l pl-4 ml-2">
+              <div className="text-xs text-muted-foreground mb-1">Footprint</div>
+              <div className="flex gap-3 text-sm">
+                <span title="Events in bndy from this source">{coverage.events} E</span>
+                <span title="Venues in bndy from this source">{coverage.venues} V</span>
+                <span title="Artists in bndy from this source">{coverage.artists} A</span>
+              </div>
+            </div>
           )}
 
           {/* View button */}
@@ -243,11 +284,12 @@ interface StatProps {
   value: number;
   positive?: boolean;
   warning?: boolean;
+  hint?: string;
 }
 
-function Stat({ label, value, positive, warning }: StatProps) {
+function Stat({ label, value, positive, warning, hint }: StatProps) {
   return (
-    <div className="text-center min-w-[48px]">
+    <div className="text-center min-w-[48px]" title={hint}>
       <div className={cn(
         'text-lg font-semibold',
         warning && value > 0 ? 'text-orange-600' :
