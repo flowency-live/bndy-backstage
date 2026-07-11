@@ -96,28 +96,22 @@ export default function ArtistsPage() {
 
   const fetchEvents = async () => {
     try {
-      // Fetch all future events (from today onwards)
       const today = new Date().toISOString().split('T')[0];
-      console.log('[Godmode] Fetching events from:', today);
       const data = await getAllEvents(today);
-      console.log('[Godmode] Fetched events:', data.length, 'events');
-      console.log('[Godmode] Sample event:', data[0]);
       setEvents(data);
     } catch (err) {
-      console.error('[Godmode] Error fetching events:', err);
+      console.error('Error fetching events:', err);
     }
   };
 
   // Calculate future event counts per artist
   const futureEventCounts = useMemo(() => {
-    console.log('[Godmode] Calculating counts from', events.length, 'events');
     const counts: Record<string, number> = {};
     for (const event of events) {
       if (event.artistId) {
         counts[event.artistId] = (counts[event.artistId] || 0) + 1;
       }
     }
-    console.log('[Godmode] Calculated counts for', Object.keys(counts).length, 'artists');
     return counts;
   }, [events]);
 
