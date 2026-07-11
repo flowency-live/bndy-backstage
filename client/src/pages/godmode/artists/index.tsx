@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, Lock, LockOpen, UserPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,13 +7,15 @@ import {
   getAllArtists,
   getAllUsers,
   getAllMemberships,
+  getAllEvents,
   createArtist,
   updateArtist,
   deleteArtist,
   markArtistAsReviewed,
   type Artist,
   type User as UserType,
-  type Membership
+  type Membership,
+  type Event
 } from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
 import { useToast } from '@/hooks/use-toast';
@@ -43,6 +45,9 @@ export default function ArtistsPage() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
+
+  // Events State (for calculating future event counts)
+  const [events, setEvents] = useState<Event[]>([]);
 
   // Batch Edit Modal State
   const [artistEditModalOpen, setArtistEditModalOpen] = useState(false);
@@ -89,10 +94,38 @@ export default function ArtistsPage() {
     }
   };
 
+  const fetchEvents = async () => {
+    try {
+      // Fetch all future events (from today onwards)
+      const today = new Date().toISOString().split('T')[0];
+      console.log('[Godmode] Fetching events from:', today);
+      const data = await getAllEvents(today);
+      console.log('[Godmode] Fetched events:', data.length, 'events');
+      console.log('[Godmode] Sample event:', data[0]);
+      setEvents(data);
+    } catch (err) {
+      console.error('[Godmode] Error fetching events:', err);
+    }
+  };
+
+  // Calculate future event counts per artist
+  const futureEventCounts = useMemo(() => {
+    console.log('[Godmode] Calculating counts from', events.length, 'events');
+    const counts: Record<string, number> = {};
+    for (const event of events) {
+      if (event.artistId) {
+        counts[event.artistId] = (counts[event.artistId] || 0) + 1;
+      }
+    }
+    console.log('[Godmode] Calculated counts for', Object.keys(counts).length, 'artists');
+    return counts;
+  }, [events]);
+
   useEffect(() => {
     fetchArtists();
     fetchUsers();
     fetchMemberships();
+    fetchEvents();
   }, []);
 
   // Reset page when search or filters change
@@ -446,7 +479,7 @@ export default function ArtistsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">{artist.location}</td>
                     <td className="px-4 py-3 text-sm">{Array.isArray(artist.genres) ? artist.genres.slice(0, 2).join(', ') : (artist.genres || '-')}</td>
-                    <td className="px-4 py-3 text-sm">{artist.eventCount || 0}</td>
+                    <td className="px-4 py-3 text-sm">{futureEventCounts[artist.id] || 0}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         {artist.websiteUrl && (

@@ -37,7 +37,6 @@ export interface Artist {
   source?: 'frontstage' | 'community' | 'backstage' | null;
   needs_review?: boolean | null;
   validated?: boolean;
-  eventCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
