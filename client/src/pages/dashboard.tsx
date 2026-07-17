@@ -785,7 +785,7 @@ export default function Dashboard({ artistId, membership, userProfile }: Dashboa
         <PageContainer>
           <h2 className="text-2xl font-serif font-bold text-foreground mb-6 text-center">Select Your Artist</h2>
           <div className="space-y-3">
-            {userProfile.artists.map((membership) => (
+            {userProfile.artists.filter(m => m.artist).map((membership) => (
               <ArtistTile
                 key={membership.artist_id}
                 artist={membership.artist!}
