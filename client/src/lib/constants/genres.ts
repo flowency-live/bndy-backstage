@@ -17,6 +17,7 @@ export const GENRES = [
   'Pop',
   'Indie',
   'Britpop',
+  'Mod',
 
   // Blues & Country
   'Blues',
