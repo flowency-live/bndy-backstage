@@ -18,6 +18,10 @@ interface ArtistSettings {
   actType?: ActType[];
   acoustic?: boolean;
   publishAvailability?: boolean;
+  availabilityMode?: 'selected_dates_only' | 'free_weekends';
+  contactMethod?: 'phone' | 'whatsapp';
+  phoneNumber?: string | null;
+  whatsappNumber?: string | null;
   showMemberVotes?: boolean;
   autoDiscardThreshold?: number | null;
   facebookUrl: string;
@@ -45,6 +49,10 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
     actType: [],
     acoustic: false,
     publishAvailability: false,
+    availabilityMode: 'selected_dates_only',
+    contactMethod: 'phone',
+    phoneNumber: null,
+    whatsappNumber: null,
     showMemberVotes: false,
     autoDiscardThreshold: null,
     facebookUrl: '',
@@ -74,6 +82,10 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         actType: (artistData.actType || []) as ActType[],
         acoustic: artistData.acoustic || false,
         publishAvailability: artistData.publishAvailability || false,
+        availabilityMode: (artistData.availabilityMode as 'selected_dates_only' | 'free_weekends') || 'selected_dates_only',
+        contactMethod: (artistData.contactMethod as 'phone' | 'whatsapp') || 'phone',
+        phoneNumber: artistData.phoneNumber || null,
+        whatsappNumber: artistData.whatsappNumber || null,
         showMemberVotes: artistData.showMemberVotes || false,
         autoDiscardThreshold: artistData.autoDiscardThreshold ?? null,
         facebookUrl: artistData.facebookUrl || '',
@@ -110,6 +122,10 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         actType: settings.actType || null,
         acoustic: settings.acoustic || false,
         publishAvailability: settings.publishAvailability || false,
+        availabilityMode: settings.availabilityMode || 'selected_dates_only',
+        contactMethod: settings.contactMethod || 'phone',
+        phoneNumber: settings.phoneNumber || null,
+        whatsappNumber: settings.whatsappNumber || null,
         showMemberVotes: settings.showMemberVotes || false,
         autoDiscardThreshold: settings.autoDiscardThreshold,
         facebookUrl: settings.facebookUrl || null,

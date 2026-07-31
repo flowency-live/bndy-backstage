@@ -45,6 +45,10 @@ export interface Artist {
   acoustic?: boolean;  // NEW: Indicates acoustic performance capability
   actType?: string[];  // NEW: Type of act (multiselect: originals, covers, tribute)
   publishAvailability?: boolean;  // NEW: Control whether availability is public on frontstage (default: false)
+  availabilityMode?: 'selected_dates_only' | 'free_weekends';  // NEW: How availability is displayed (default: selected_dates_only)
+  contactMethod?: 'phone' | 'whatsapp';  // NEW: Preferred contact method for bookings (default: phone)
+  phoneNumber?: string | null;  // NEW: Contact phone number
+  whatsappNumber?: string | null;  // NEW: WhatsApp number for bookings
   showMemberVotes?: boolean;  // NEW: Show individual member votes when all votes are collected
   autoDiscardThreshold?: number | null;  // NEW: Auto-discard songs scoring below this % (null = disabled)
   // Acts model (#60) - named performance configurations
