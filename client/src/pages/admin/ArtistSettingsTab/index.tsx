@@ -15,6 +15,7 @@ import LocationSection from './components/LocationSection';
 import ColorPickerSection from './components/ColorPickerSection';
 import GenresSection from './components/GenresSection';
 import SocialLinksSection from './components/SocialLinksSection';
+import AvailabilitySection from './components/AvailabilitySection';
 
 export default function ArtistSettingsTab() {
   const { artistData, isLoading: contextLoading } = useAdminContext();
@@ -137,6 +138,19 @@ export default function ArtistSettingsTab() {
               Publish availability on public profile
             </Label>
           </div>
+
+          {/* Availability Settings */}
+          <AvailabilitySection
+            availabilityMode={(settings.availabilityMode as 'selected_dates_only' | 'free_weekends') || 'selected_dates_only'}
+            contactMethod={(settings.contactMethod as 'phone' | 'whatsapp') || 'phone'}
+            phoneNumber={settings.phoneNumber || null}
+            whatsappNumber={settings.whatsappNumber || null}
+            publishAvailability={settings.publishAvailability || false}
+            onAvailabilityModeChange={(mode) => updateField('availabilityMode', mode)}
+            onContactMethodChange={(method) => updateField('contactMethod', method)}
+            onPhoneNumberChange={(number) => updateField('phoneNumber', number)}
+            onWhatsappNumberChange={(number) => updateField('whatsappNumber', number)}
+          />
 
           {/* Voting Settings Section */}
           <div className="border-t pt-6 mt-6">

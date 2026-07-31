@@ -97,7 +97,7 @@ export default function RunDetailModal({
                 <Clock className="h-4 w-4" />
                 {formatRelativeTime(run.startedAt)}
                 {' · '}
-                {formatDuration(run.startedAt, run.finishedAt)}
+                {formatDuration(run.startedAt, run.finishedAt ?? run.completedAt)}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Hash className="h-4 w-4" />
@@ -167,7 +167,7 @@ function CountsTable({ counts }: CountsTableProps) {
       title: 'Input Processing',
       rows: [
         { label: 'Raw Rows', value: counts.rawRows },
-        { label: 'Valid Events', value: counts.validEvents },
+        { label: 'Parsed (valid)', value: counts.validEvents },
         { label: 'Metadata Rows', value: counts.metadataRows },
         { label: 'Parked Rows', value: counts.parkedRows },
       ],
