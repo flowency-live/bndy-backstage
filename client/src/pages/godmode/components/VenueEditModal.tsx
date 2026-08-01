@@ -472,9 +472,9 @@ export default function VenueEditModal({
               <input
                 type="checkbox"
                 id="venue-ticketed"
-                checked={editForm.isTicketed || false}
+                checked={editForm.isTicketed || editForm.standardTicketed || false}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, isTicketed: e.target.checked });
+                  setEditForm({ ...editForm, isTicketed: e.target.checked, standardTicketed: e.target.checked });
                   setHasChanges(true);
                 }}
                 className="rounded border-gray-300"
@@ -491,9 +491,9 @@ export default function VenueEditModal({
               <Input
                 id="venue-ticket-url"
                 type="url"
-                value={editForm.ticketUrl || ''}
+                value={editForm.ticketUrl || editForm.standardTicketUrl || ''}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, ticketUrl: e.target.value });
+                  setEditForm({ ...editForm, ticketUrl: e.target.value, standardTicketUrl: e.target.value });
                   setHasChanges(true);
                 }}
                 placeholder="https://tickets.example.com"
@@ -506,9 +506,9 @@ export default function VenueEditModal({
               </Label>
               <Input
                 id="venue-ticket-info"
-                value={editForm.ticketInformation || ''}
+                value={editForm.ticketInformation || editForm.standardTicketInformation || ''}
                 onChange={(e) => {
-                  setEditForm({ ...editForm, ticketInformation: e.target.value });
+                  setEditForm({ ...editForm, ticketInformation: e.target.value, standardTicketInformation: e.target.value });
                   setHasChanges(true);
                 }}
                 placeholder="e.g., Available at the door or online"

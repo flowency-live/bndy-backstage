@@ -75,9 +75,12 @@ export interface Venue {
   facilities: string[];
   socialMediaUrls: Array<string | { platform: string; url: string }>;
   profileImageUrl: string | null;
-  isTicketed: boolean;
-  ticketInformation: string;
-  ticketUrl: string;
+  isTicketed?: boolean;
+  standardTicketed?: boolean;  // API response name
+  ticketInformation?: string;
+  standardTicketInformation?: string;  // API response name
+  ticketUrl?: string;
+  standardTicketUrl?: string;  // API response name
   defaultTicketPrice?: number | null;
   defaultStartTime?: string | null;
   defaultEndTime?: string | null;
