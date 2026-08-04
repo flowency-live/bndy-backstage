@@ -174,7 +174,18 @@ class GodmodeService {
       const response = await fetch(url, defaultOptions);
 
       if (!response.ok) {
-        throw new Error(`Failed request: ${response.status}`);
+        // Try to parse error body for conflict/validation errors
+        let errorBody: any = null;
+        try {
+          errorBody = await response.json();
+        } catch {
+          // Body not JSON, ignore
+        }
+
+        const error = new Error(`Failed request: ${response.status}`) as any;
+        error.status = response.status;
+        error.body = errorBody;
+        throw error;
       }
 
       // Handle empty responses (DELETE, etc.)
@@ -221,8 +232,9 @@ class GodmodeService {
     });
   }
 
-  async deleteArtist(artistId: string): Promise<void> {
-    return this.apiRequest<void>(`/api/artists/${artistId}`, {
+  async deleteArtist(artistId: string, force: boolean = false): Promise<void> {
+    const url = force ? `/api/artists/${artistId}?force=true` : `/api/artists/${artistId}`;
+    return this.apiRequest<void>(url, {
       method: 'DELETE',
     });
   }
@@ -379,7 +391,7 @@ export const getAllArtists = () => godmodeService.getAllArtists();
 export const getArtistById = (artistId: string) => godmodeService.getArtistById(artistId);
 export const createArtist = (artistData: Omit<Artist, 'id' | 'createdAt' | 'updatedAt'>) => godmodeService.createArtist(artistData);
 export const updateArtist = (artistId: string, artistData: Partial<Artist>) => godmodeService.updateArtist(artistId, artistData);
-export const deleteArtist = (artistId: string) => godmodeService.deleteArtist(artistId);
+export const deleteArtist = (artistId: string, force?: boolean) => godmodeService.deleteArtist(artistId, force);
 export const markArtistAsReviewed = (artistId: string) => godmodeService.markArtistAsReviewed(artistId);
 
 export const getAllSongs = () => godmodeService.getAllSongs();

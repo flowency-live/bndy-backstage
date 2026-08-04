@@ -150,8 +150,36 @@ export default function ArtistsPage() {
     try {
       await deleteArtist(artistId);
       setArtists(artists.filter(a => a.id !== artistId));
-    } catch (err) {
-      setArtistsError(err instanceof Error ? err.message : 'Failed to delete');
+      toast({
+        title: "Artist deleted",
+        description: "The artist has been removed.",
+      });
+    } catch (err: any) {
+      // Handle 409 Conflict - artist has events
+      if (err.status === 409 && err.body?.requiresConfirmation) {
+        const eventCount = err.body.eventCount || 0;
+        const forceConfirmed = await confirm({
+          title: 'Artist Has Events',
+          description: `This artist has ${eventCount} event(s) associated with it. Delete the artist AND all ${eventCount} event(s)?`,
+          confirmText: `Delete All (${eventCount + 1} items)`,
+          variant: 'destructive',
+        });
+
+        if (forceConfirmed) {
+          try {
+            await deleteArtist(artistId, true); // Force delete
+            setArtists(artists.filter(a => a.id !== artistId));
+            toast({
+              title: "Artist and events deleted",
+              description: `Deleted artist and ${eventCount} associated event(s).`,
+            });
+          } catch (forceErr) {
+            setArtistsError(forceErr instanceof Error ? forceErr.message : 'Failed to force delete');
+          }
+        }
+      } else {
+        setArtistsError(err instanceof Error ? err.message : 'Failed to delete');
+      }
     } finally {
       setDeletingArtist(null);
     }
