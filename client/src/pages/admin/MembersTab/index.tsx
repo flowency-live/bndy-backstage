@@ -9,7 +9,7 @@ import { useInvites } from './hooks/useInvites';
 import { usePermissions } from '@/hooks/usePermissions';
 
 export default function MembersTab() {
-  const { artistId } = useAdminContext();
+  const { artistId, membership } = useAdminContext();
   const { canManageMembers, canGenerateInvites } = usePermissions();
 
   // Use custom hooks for data and mutations
