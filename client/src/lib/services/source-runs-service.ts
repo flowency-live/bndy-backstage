@@ -70,6 +70,45 @@ export interface SourceSummary {
   openReviewItems: number;
 }
 
+
+// ===== Agent activity timeseries =====
+
+/**
+ * A day with no run and a day whose run wrote nothing are different facts.
+ * 'quiet' is drawn as part of the trend line; everything else is a mark on it.
+ */
+export type ActivityState = 'ok' | 'quiet' | 'empty' | 'failed' | 'nofire';
+
+export interface ActivityPoint {
+  date: string;          // YYYY-MM-DD
+  state: ActivityState;
+  added: number;         // gigs + artists + venues written to bndy
+  gigs: number;
+  artists: number;
+  venues: number;
+  removed: number;       // deleted / hidden / cancelled / dropped — matters for rolling windows
+  offered: number;       // rows the source put in front of us
+  runs: number;
+}
+
+export interface SourceActivity {
+  sourceId: string;
+  sourceName: string;
+  points: ActivityPoint[];
+  totals: {
+    added: number; gigs: number; artists: number;
+    venues: number; removed: number; offered: number;
+  };
+  yieldPct: number | null; // null when the source never reported what it offered
+}
+
+export interface ActivityResponse {
+  days: number;
+  from: string;
+  to: string;
+  sources: SourceActivity[];
+}
+
 // ===== API Response Types =====
 
 interface SourceRunsResponse {
@@ -186,6 +225,13 @@ class SourceRunsService {
    * Get coverage stats (footprint) per source - how many events/venues/artists
    * in bndy have external_ids from each source. Cached on backend for 10 mins.
    */
+  /**
+   * Daily activity per source. Powers the agent-work trends.
+   */
+  async getSourceActivity(days = 30): Promise<ActivityResponse> {
+    return this.apiRequest<ActivityResponse>(`/api/source-runs/timeseries?days=${days}`);
+  }
+
   async getSourceCoverage(): Promise<SourceCoverage[]> {
     const data = await this.apiRequest<SourceCoverageResponse>(
       '/api/source-runs/coverage'
@@ -350,5 +396,6 @@ export const getReviewItems = (status?: ReviewItemStatus, sourceId?: string) =>
   sourceRunsService.getReviewItems(status, sourceId);
 export const getSourceSummaries = () => sourceRunsService.getSourceSummaries();
 export const getSourceCoverage = () => sourceRunsService.getSourceCoverage();
+export const getSourceActivity = (days?: number) => sourceRunsService.getSourceActivity(days);
 
 export default sourceRunsService;

@@ -9,6 +9,7 @@ import {
   Calendar,
   Activity,
   ClipboardList,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PlatformAdminGate from '@/components/platform-admin-gate';
@@ -16,6 +17,7 @@ import PlatformAdminGate from '@/components/platform-admin-gate';
 const navigation = [
   { name: 'Dashboard', href: '/godmode', icon: LayoutDashboard, exact: true },
   { name: 'Sources', href: '/godmode/sources', icon: Activity },
+  { name: 'Agent Work', href: '/godmode/sources/activity', icon: TrendingUp, indent: true },
   { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, indent: true },
   { name: 'Venues', href: '/godmode/venues', icon: MapPin },
   { name: 'Enrichment Queue', href: '/godmode/venues/enrichment', icon: Sparkles, indent: true },
