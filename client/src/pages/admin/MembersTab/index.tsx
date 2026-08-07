@@ -6,9 +6,11 @@ import InviteSection from './components/InviteSection';
 import ActiveInvitesList from './components/ActiveInvitesList';
 import { useMembers } from './hooks/useMembers';
 import { useInvites } from './hooks/useInvites';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function MembersTab() {
-  const { artistId, membership } = useAdminContext();
+  const { artistId } = useAdminContext();
+  const { canManageMembers, canGenerateInvites } = usePermissions();
 
   // Use custom hooks for data and mutations
   const { members, isLoading: membersLoading, removeMember, isRemoving } = useMembers(artistId);
@@ -22,8 +24,6 @@ export default function MembersTab() {
     isGenerating,
     isSending
   } = useInvites(artistId);
-
-  const canManageMembers = membership.role === 'owner' || membership.role === 'admin';
 
   if (membersLoading) {
     return (

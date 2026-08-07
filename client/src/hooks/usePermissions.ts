@@ -70,7 +70,7 @@ export function usePermissions(): Permissions {
       canEditSetlists: false,
 
       canViewMembers: true,
-      canManageMembers: false,
+      canManageMembers: true,  // Platform admin can manage any artist's members
 
       canViewPipeline: true,
       canManagePipeline: false,
