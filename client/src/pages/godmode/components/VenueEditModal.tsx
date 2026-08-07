@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight, Save, X, Plus, CheckCircle, Trash2 } from 'lucide-react';
 import VenueAutocomplete from '@/components/ui/venue-autocomplete';
 import { useToast } from '@/hooks/use-toast';
-import type { Venue } from '@/types/api';
+import type { Venue } from '@/lib/services/godmode-service';
 
 interface VenueEditModalProps {
   open: boolean;

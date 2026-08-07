@@ -1,227 +1,270 @@
-import { useEffect, useState } from 'react';
+// Godmode › Dashboard — queue-centric landing.
+//
+// The old dashboard fetched four full tables to show four count cards.
+// This one is organised around "what needs my attention": open review items,
+// stalled sources, and data-quality gaps that deep-link into pre-filtered
+// catalogue pages. Every section renders as soon as its own query lands.
+
 import { Link } from 'wouter';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
-  MapPin,
-  User,
-  Music,
-  Users,
-  Sparkles,
+  Activity,
+  AlertTriangle,
   ArrowRight,
-  RefreshCw
+  Calendar,
+  ClipboardList,
+  MapPin,
+  Music,
+  Sparkles,
+  User,
+  Users,
 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { formatSourceName } from '@/lib/services/source-runs-service';
 import {
-  getAllVenues,
-  getAllArtists,
-  getAllSongs,
-  getAllUsers,
-  type Venue,
-  type Artist,
-  type Song,
-  type User as UserType
-} from '@/lib/services/godmode-service';
+  useGodmodeArtists,
+  useGodmodeEvents,
+  useGodmodeUsers,
+  useGodmodeVenues,
+  useReviewItems,
+  useSourceActivity,
+} from './lib/queries';
 
-export default function GodmodeDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [users, setUsers] = useState<UserType[]>([]);
-
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      const [venuesData, artistsData, songsData, usersData] = await Promise.all([
-        getAllVenues(),
-        getAllArtists(),
-        getAllSongs(),
-        getAllUsers()
-      ]);
-      setVenues(venuesData);
-      setArtists(artistsData);
-      setSongs(songsData);
-      setUsers(usersData);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  // Calculate stats
-  const venueStats = {
-    total: venues.length,
-    noPlaceId: venues.filter(v => !v.googlePlaceId).length,
-    noSocials: venues.filter(v => {
-      const hasSocials = v.website ||
-        (v.socialMediaUrls && Array.isArray(v.socialMediaUrls) &&
-          v.socialMediaUrls.some((url: string) => url && typeof url === 'string' &&
-            (url.includes('facebook.com') || url.includes('instagram.com'))));
-      return !hasSocials;
-    }).length,
-    validated: venues.filter(v => v.validated).length
-  };
-
-  const artistStats = {
-    total: artists.length,
-    noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
-    noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
-    verified: artists.filter(a => a.isVerified).length
-  };
-
-  const songStats = {
-    total: songs.length,
-    featured: songs.filter(s => s.isFeatured).length,
-    hasStreaming: songs.filter(s => s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl).length,
-    hasAudio: songs.filter(s => s.audioFileUrl).length
-  };
-
-  const userStats = {
-    total: users.length,
-    completed: users.filter(u => u.profileCompleted).length,
-    withBands: users.filter(u => u.membershipCount > 0).length
-  };
-
-  const statCards = [
-    {
-      title: 'Venues',
-      icon: MapPin,
-      total: venueStats.total,
-      stats: [
-        { label: 'Validated', value: venueStats.validated },
-        { label: 'No Place ID', value: venueStats.noPlaceId, warning: true },
-        { label: 'No Socials', value: venueStats.noSocials, warning: true }
-      ],
-      link: '/godmode/venues',
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Artists',
-      icon: User,
-      total: artistStats.total,
-      stats: [
-        { label: 'Verified', value: artistStats.verified },
-        { label: 'No Genres', value: artistStats.noGenres, warning: true },
-        { label: 'No Socials', value: artistStats.noSocials, warning: true }
-      ],
-      link: '/godmode/artists',
-      color: 'text-purple-600'
-    },
-    {
-      title: 'Songs',
-      icon: Music,
-      total: songStats.total,
-      stats: [
-        { label: 'Featured', value: songStats.featured },
-        { label: 'Has Streaming', value: songStats.hasStreaming },
-        { label: 'Has Audio', value: songStats.hasAudio }
-      ],
-      link: '/godmode/songs',
-      color: 'text-green-600'
-    },
-    {
-      title: 'Users',
-      icon: Users,
-      total: userStats.total,
-      stats: [
-        { label: 'Complete Profile', value: userStats.completed },
-        { label: 'With Artists', value: userStats.withBands },
-        { label: 'Incomplete', value: userStats.total - userStats.completed, warning: true }
-      ],
-      link: '/godmode/users',
-      color: 'text-orange-600'
-    }
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Platform overview and statistics</p>
+function KpiCard({
+  label,
+  value,
+  href,
+  tone,
+  loading,
+}: {
+  label: string;
+  value: number | string | undefined;
+  href?: string;
+  tone?: 'warn' | 'ok';
+  loading?: boolean;
+}) {
+  const body = (
+    <Card className={cn('p-4 transition-colors', href && 'hover:bg-muted/50 cursor-pointer')}>
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      {loading ? (
+        <Skeleton className="mt-2 h-8 w-16" />
+      ) : (
+        <div
+          className={cn(
+            'mt-1 text-3xl font-bold tabular-nums',
+            tone === 'warn' && typeof value === 'number' && value > 0 && 'text-orange-500',
+            tone === 'ok' && 'text-green-600',
+          )}
+        >
+          {typeof value === 'number' ? value.toLocaleString() : value ?? '—'}
         </div>
-        <Button onClick={fetchStats} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+      )}
+    </Card>
+  );
+  return href ? <Link href={href}>{body}</Link> : body;
+}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <Sparkles className="h-5 w-5 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold">Enrichment Queue</h3>
-              <p className="text-sm text-muted-foreground">Review AI-suggested venue data</p>
-            </div>
-            <Link to="/godmode/venues/enrichment">
-              <Button variant="outline" size="sm">
-                Review <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </Card>
-
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Card key={card.title} className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn('p-2 rounded-lg bg-muted', card.color)}>
-                  <Icon className="h-6 w-6" />
-                </div>
-                <Link to={card.link}>
-                  <Button variant="ghost" size="sm">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <div className="text-3xl font-bold">{card.total.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">{card.title}</div>
-                </div>
-
-                <div className="space-y-2 pt-3 border-t">
-                  {card.stats.map((stat, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <span className={stat.warning ? 'text-orange-600' : 'text-muted-foreground'}>
-                        {stat.label}
-                      </span>
-                      <span className="font-medium">{stat.value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
+function GapRow({ label, count, href, icon: Icon }: { label: string; count: number; href: string; icon: typeof User }) {
+  if (count === 0) return null;
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+    >
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <span className="flex-1">{label}</span>
+      <span className="font-semibold tabular-nums text-orange-500">{count.toLocaleString()}</span>
+      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+    </Link>
   );
 }
 
-function cn(...classes: (string | undefined | boolean)[]) {
-  return classes.filter(Boolean).join(' ');
+export default function GodmodeDashboard() {
+  const reviewQuery = useReviewItems('open');
+  const activityQuery = useSourceActivity(7);
+  const artistsQuery = useGodmodeArtists();
+  const venuesQuery = useGodmodeVenues();
+  const eventsQuery = useGodmodeEvents();
+  const usersQuery = useGodmodeUsers();
+
+  const openItems = reviewQuery.data ?? [];
+  const artists = artistsQuery.data;
+  const venues = venuesQuery.data;
+
+  const sources = activityQuery.data?.sources ?? [];
+  const addedToday = sources.reduce((n, s) => n + (s.points[s.points.length - 1]?.added ?? 0), 0);
+  const added7d = sources.reduce((n, s) => n + s.totals.added, 0);
+  const stalled = sources.filter((s) => s.totals.added === 0 && s.points.some((p) => p.state !== 'nofire'));
+  const failedToday = sources.filter((s) => s.points[s.points.length - 1]?.state === 'failed');
+
+  // Review items grouped by source for the attention panel.
+  const reviewBySource = new Map<string, number>();
+  for (const item of openItems) {
+    reviewBySource.set(item.sourceId, (reviewBySource.get(item.sourceId) ?? 0) + 1);
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl font-bold">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">What needs attention, then the catalogue.</p>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard
+          label="Open reviews"
+          value={reviewQuery.data?.length}
+          href="/godmode/sources/review"
+          tone="warn"
+          loading={reviewQuery.isLoading}
+        />
+        <KpiCard label="Added today" value={activityQuery.data ? addedToday : undefined} href="/godmode/sources/activity" loading={activityQuery.isLoading} />
+        <KpiCard label="Added · 7d" value={activityQuery.data ? added7d : undefined} href="/godmode/sources/activity" loading={activityQuery.isLoading} />
+        <KpiCard
+          label="Sources stalled"
+          value={activityQuery.data ? stalled.length : undefined}
+          href="/godmode/sources/activity"
+          tone="warn"
+          loading={activityQuery.isLoading}
+        />
+      </div>
+
+      {/* Faults surface immediately — a failed run must never look like a quiet day. */}
+      {failedToday.length > 0 && (
+        <Card className="border-l-4 border-l-red-500 p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <span className="font-semibold">{failedToday.length} source run(s) failed today:</span>
+            <span className="text-muted-foreground">
+              {failedToday.map((s) => s.sourceName).join(', ')}
+            </span>
+            <Link href="/godmode/sources" className="ml-auto text-primary hover:underline">
+              Inspect
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Review queue preview */}
+        <Card className="p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              Review queue
+            </h2>
+            <Link href="/godmode/sources/review" className="text-xs text-primary hover:underline">
+              Open queue →
+            </Link>
+          </div>
+          {reviewQuery.isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-2/3" />
+            </div>
+          ) : openItems.length === 0 ? (
+            <p className="py-4 text-sm text-muted-foreground">Nothing waiting. 🎉</p>
+          ) : (
+            <div className="space-y-1">
+              {Array.from(reviewBySource.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([sourceId, count]) => (
+                  <div key={sourceId} className="flex items-center justify-between py-1 text-sm">
+                    <span>{formatSourceName(sourceId)}</span>
+                    <span className="font-semibold tabular-nums text-orange-500">{count}</span>
+                  </div>
+                ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Data-quality gaps → deep-linked, pre-filtered pages */}
+        <Card className="p-4">
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+            Data gaps
+          </h2>
+          {!artists || !venues ? (
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-3/4" />
+            </div>
+          ) : (
+            <div className="-mx-2">
+              <GapRow
+                label="Artists needing review"
+                count={artists.filter((a) => a.needs_review === true).length}
+                href="/godmode/artists?filter=needs-review"
+                icon={User}
+              />
+              <GapRow
+                label="Artists with no location"
+                count={artists.filter((a) => !a.location).length}
+                href="/godmode/artists?filter=no-location"
+                icon={User}
+              />
+              <GapRow
+                label="Artists with no genres"
+                count={artists.filter((a) => !a.genres || a.genres.length === 0).length}
+                href="/godmode/artists?filter=no-genres"
+                icon={User}
+              />
+              <GapRow
+                label="Artists with no socials"
+                count={artists.filter((a) => !a.facebookUrl && !a.instagramUrl).length}
+                href="/godmode/artists?filter=no-socials"
+                icon={User}
+              />
+              <GapRow
+                label="Venues with no place ID"
+                count={venues.filter((v) => !v.googlePlaceId).length}
+                href="/godmode/venues?filter=no-place-id"
+                icon={MapPin}
+              />
+              <GapRow
+                label="Venues with no socials"
+                count={
+                  venues.filter(
+                    (v) =>
+                      !v.website &&
+                      !(Array.isArray(v.socialMediaUrls) && v.socialMediaUrls.length > 0),
+                  ).length
+                }
+                href="/godmode/venues?filter=no-socials"
+                icon={MapPin}
+              />
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Catalogue counts */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard label="Artists" value={artistsQuery.data?.length} href="/godmode/artists" loading={artistsQuery.isLoading} />
+        <KpiCard label="Venues" value={venuesQuery.data?.length} href="/godmode/venues" loading={venuesQuery.isLoading} />
+        <KpiCard label="Events (upcoming)" value={eventsQuery.data?.length} href="/godmode/events" loading={eventsQuery.isLoading} />
+        <KpiCard label="Users" value={usersQuery.data?.length} href="/godmode/users" loading={usersQuery.isLoading} />
+      </div>
+
+      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <Link href="/godmode/sources" className="flex items-center gap-1 hover:text-foreground">
+          <Activity className="h-3.5 w-3.5" /> Sources
+        </Link>
+        <Link href="/godmode/venues/enrichment" className="flex items-center gap-1 hover:text-foreground">
+          <Sparkles className="h-3.5 w-3.5" /> Enrichment queue
+        </Link>
+        <Link href="/godmode/songs" className="flex items-center gap-1 hover:text-foreground">
+          <Music className="h-3.5 w-3.5" /> Songs
+        </Link>
+        <Link href="/godmode/events" className="flex items-center gap-1 hover:text-foreground">
+          <Calendar className="h-3.5 w-3.5" /> Events
+        </Link>
+        <Link href="/godmode/users" className="flex items-center gap-1 hover:text-foreground">
+          <Users className="h-3.5 w-3.5" /> Users
+        </Link>
+      </div>
+    </div>
+  );
 }

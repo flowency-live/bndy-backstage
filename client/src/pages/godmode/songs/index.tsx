@@ -1,464 +1,367 @@
-import { useState, useEffect } from 'react';
-import { Music, RefreshCw, Edit, Trash2, Save, X, Search, CheckCircle, Clock, Calendar } from 'lucide-react';
+// Godmode › Songs — dense table with a compact edit dialog.
+
+import { useMemo, useState } from 'react';
+import { Edit, Music, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  getAllSongs,
-  updateSong,
-  deleteSong,
-  formatDuration,
-  type Song,
-} from '@/lib/services/godmode-service';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useConfirm } from '@/hooks/use-confirm';
+import { useToast } from '@/hooks/use-toast';
+import { formatDuration, type Song } from '@/lib/services/godmode-service';
+import DataTable, { type Column } from '../components/DataTable';
+import {
+  BoolMark,
+  FacetChips,
+  GodmodePageHeader,
+  TableSearch,
+  useInitialUrlFilter,
+} from '../components/godmode-ui';
+import { useDeleteSong, useGodmodeSongs, useUpdateSong } from '../lib/queries';
+
+function getYear(releaseDate: string | null): number | null {
+  if (!releaseDate) return null;
+  const year = new Date(releaseDate).getFullYear();
+  return Number.isNaN(year) ? null : year;
+}
 
 export default function SongsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
+  const { toast } = useToast();
 
-  // Songs State
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [songsLoading, setSongsLoading] = useState(false);
-  const [songsError, setSongsError] = useState<string | null>(null);
-  const [songFilter, setSongFilter] = useState<'all' | 'featured' | 'has-streaming' | 'has-audio' | 'has-genre'>('all');
-  const [songSearch, setSongSearch] = useState('');
-  const [genreFilter, setGenreFilter] = useState<string>('all');
-  const [decadeFilter, setDecadeFilter] = useState<string>('all');
-  const [editingSong, setEditingSong] = useState<string | null>(null);
-  const [songEditForm, setSongEditForm] = useState<Song | null>(null);
-  const [deletingSong, setDeletingSong] = useState<string | null>(null);
-  const [songPage, setSongPage] = useState(1);
-  const songsPerPage = 25;
+  const songsQuery = useGodmodeSongs();
+  const updateSong = useUpdateSong();
+  const deleteSong = useDeleteSong();
+  const songs = songsQuery.data ?? [];
 
-  // Fetch Songs
-  const fetchSongs = async () => {
-    setSongsLoading(true);
-    setSongsError(null);
-    try {
-      const data = await getAllSongs();
-      setSongs(data);
-    } catch (err) {
-      setSongsError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setSongsLoading(false);
-    }
-  };
+  const [facet, setFacet] = useInitialUrlFilter('all');
+  const [search, setSearch] = useState('');
+  const [genreFilter, setGenreFilter] = useState('all');
+  const [editForm, setEditForm] = useState<Song | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchSongs();
-  }, []);
+  const uniqueGenres = useMemo(
+    () => Array.from(new Set(songs.map((s) => s.genre).filter(Boolean))).sort(),
+    [songs],
+  );
 
-  // Reset page when search/filters change
-  useEffect(() => {
-    setSongPage(1);
-  }, [songSearch, songFilter, genreFilter, decadeFilter]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return songs.filter((s) => {
+      if (q) {
+        const hit =
+          (s.title && String(s.title).toLowerCase().includes(q)) ||
+          (s.artistName && String(s.artistName).toLowerCase().includes(q)) ||
+          (s.genre && String(s.genre).toLowerCase().includes(q)) ||
+          (s.album && String(s.album).toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      switch (facet) {
+        case 'featured': if (!s.isFeatured) return false; break;
+        case 'has-streaming': if (!(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl)) return false; break;
+        case 'has-audio': if (!s.audioFileUrl) return false; break;
+        case 'no-genre': if (s.genre) return false; break;
+      }
+      if (genreFilter !== 'all' && s.genre !== genreFilter) return false;
+      return true;
+    });
+  }, [songs, search, facet, genreFilter]);
 
-  // Extract unique genres and decades from songs
-  const uniqueGenres = Array.from(new Set(songs.map(s => s.genre).filter(Boolean))).sort();
-  const uniqueDecades = Array.from(new Set(
-    songs
-      .filter(s => s.releaseDate)
-      .map(s => {
-        const year = new Date(s.releaseDate!).getFullYear();
-        return `${Math.floor(year / 10) * 10}s`;
-      })
-  )).sort();
+  const facets = useMemo(
+    () => [
+      { value: 'all', label: 'All', count: songs.length },
+      { value: 'featured', label: 'Featured', count: songs.filter((s) => s.isFeatured).length },
+      {
+        value: 'has-streaming',
+        label: 'Has streaming',
+        count: songs.filter((s) => s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl).length,
+      },
+      { value: 'has-audio', label: 'Has audio', count: songs.filter((s) => s.audioFileUrl).length },
+      { value: 'no-genre', label: 'No genre', count: songs.filter((s) => !s.genre).length, warn: true },
+    ],
+    [songs],
+  );
 
-  // Helper function to get decade from releaseDate
-  const getDecade = (releaseDate: string | null): string => {
-    if (!releaseDate) return '';
-    const year = new Date(releaseDate).getFullYear();
-    return `${Math.floor(year / 10) * 10}s`;
-  };
-
-  // Helper function to get year from releaseDate
-  const getYear = (releaseDate: string | null): number | null => {
-    if (!releaseDate) return null;
-    return new Date(releaseDate).getFullYear();
-  };
-
-  // Song Handlers
-  const handleSongEditStart = (song: Song) => {
-    setEditingSong(song.id);
-    setSongEditForm({ ...song });
-  };
-
-  const handleSongEditSave = async () => {
-    if (!songEditForm) return;
-    try {
-      const updated = await updateSong(songEditForm.id, songEditForm);
-      setSongs(songs.map(s => s.id === updated.id ? updated : s));
-      setEditingSong(null);
-      setSongEditForm(null);
-    } catch (err) {
-      setSongsError(err instanceof Error ? err.message : 'Failed to save');
-    }
-  };
-
-  const handleSongDelete = async (songId: string) => {
+  const handleDelete = async (song: Song) => {
     const confirmed = await confirm({
       title: 'Delete Song',
-      description: 'Are you sure you want to delete this song? This action cannot be undone.',
+      description: `Delete "${song.title}"? This cannot be undone.`,
       confirmText: 'Delete',
       variant: 'destructive',
     });
     if (!confirmed) return;
-
-    setDeletingSong(songId);
     try {
-      await deleteSong(songId);
-      setSongs(songs.filter(s => s.id !== songId));
+      await deleteSong.mutateAsync(song.id);
+      toast({ title: 'Song deleted' });
     } catch (err) {
-      setSongsError(err instanceof Error ? err.message : 'Failed to delete');
-    } finally {
-      setDeletingSong(null);
+      toast({
+        title: 'Delete failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Filtered Data
-  const filteredSongs = songs.filter(s => {
-    const matchesSearch = (s.title && String(s.title).toLowerCase().includes(songSearch.toLowerCase())) ||
-                         (s.artistName && String(s.artistName).toLowerCase().includes(songSearch.toLowerCase())) ||
-                         (s.genre && String(s.genre).toLowerCase().includes(songSearch.toLowerCase())) ||
-                         (s.album && String(s.album).toLowerCase().includes(songSearch.toLowerCase()));
-    if (!matchesSearch) return false;
-
-    // Apply standard filter
-    if (songFilter === 'featured' && !s.isFeatured) return false;
-    if (songFilter === 'has-streaming' && !(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl)) return false;
-    if (songFilter === 'has-audio' && !s.audioFileUrl) return false;
-    if (songFilter === 'has-genre' && !s.genre) return false;
-
-    // Apply genre filter
-    if (genreFilter !== 'all' && s.genre !== genreFilter) return false;
-
-    // Apply decade filter
-    if (decadeFilter !== 'all' && getDecade(s.releaseDate) !== decadeFilter) return false;
-
-    return true;
-  });
-
-  // Pagination
-  const songTotalPages = Math.ceil(filteredSongs.length / songsPerPage);
-  const songStartIndex = (songPage - 1) * songsPerPage;
-  const paginatedSongs = filteredSongs.slice(songStartIndex, songStartIndex + songsPerPage);
-
-  // Stats
-  const songStats = {
-    total: songs.length,
-    featured: songs.filter(s => s.isFeatured).length,
-    hasStreaming: songs.filter(s => s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl).length,
-    hasAudio: songs.filter(s => s.audioFileUrl).length,
-    hasGenre: songs.filter(s => s.genre).length,
-    hasDuration: songs.filter(s => s.duration).length,
+  const toggleFeatured = async (song: Song) => {
+    try {
+      await updateSong.mutateAsync({ id: song.id, data: { isFeatured: !song.isFeatured } });
+    } catch (err) {
+      toast({
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
   };
 
+  const handleEditSave = async () => {
+    if (!editForm) return;
+    setSaving(true);
+    try {
+      await updateSong.mutateAsync({ id: editForm.id, data: editForm });
+      toast({ title: 'Song saved' });
+      setEditForm(null);
+    } catch (err) {
+      toast({
+        title: 'Save failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const columns: Column<Song>[] = [
+    {
+      key: 'title',
+      header: 'Title',
+      sortValue: (s) => s.title,
+      render: (s) => (
+        <span className="flex items-center gap-1.5 font-medium">
+          {s.isFeatured && <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />}
+          <span className="truncate">{s.title}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'artist',
+      header: 'Artist',
+      sortValue: (s) => s.artistName,
+      render: (s) => <span className="text-muted-foreground truncate">{s.artistName || '—'}</span>,
+    },
+    {
+      key: 'genre',
+      header: 'Genre',
+      widthClass: 'w-28',
+      sortValue: (s) => s.genre,
+      render: (s) => s.genre || <span className="text-orange-500">—</span>,
+    },
+    {
+      key: 'year',
+      header: 'Year',
+      widthClass: 'w-16',
+      align: 'right',
+      className: 'hidden lg:table-cell',
+      sortValue: (s) => getYear(s.releaseDate),
+      render: (s) => getYear(s.releaseDate) ?? <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'duration',
+      header: 'Length',
+      widthClass: 'w-20',
+      align: 'right',
+      className: 'hidden lg:table-cell',
+      sortValue: (s) => s.duration,
+      render: (s) => <span className="tabular-nums text-muted-foreground">{formatDuration(s.duration)}</span>,
+    },
+    {
+      key: 'streaming',
+      header: 'Streaming',
+      widthClass: 'w-24',
+      sortValue: (s) => (s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl ? 1 : 0),
+      render: (s) => <BoolMark value={Boolean(s.spotifyUrl || s.appleMusicUrl || s.youtubeUrl)} />,
+    },
+    {
+      key: 'audio',
+      header: 'Audio',
+      widthClass: 'w-16',
+      className: 'hidden xl:table-cell',
+      sortValue: (s) => (s.audioFileUrl ? 1 : 0),
+      render: (s) => <BoolMark value={Boolean(s.audioFileUrl)} />,
+    },
+    {
+      key: 'actions',
+      header: '',
+      widthClass: 'w-24',
+      render: (s) => (
+        <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title={s.isFeatured ? 'Unfeature' : 'Feature'}
+            onClick={() => toggleFeatured(s)}
+          >
+            <Star className={`h-3.5 w-3.5 ${s.isFeatured ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title="Edit"
+            onClick={() => setEditForm({ ...s })}
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            title="Delete"
+            onClick={() => handleDelete(s)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Music className="h-8 w-8" />
-            Songs
-          </h1>
-          <p className="text-muted-foreground mt-1">Manage songs across the platform</p>
-        </div>
+    <div className="space-y-4">
+      <GodmodePageHeader
+        icon={Music}
+        title="Songs"
+        count={`${filtered.length.toLocaleString()} of ${songs.length.toLocaleString()}`}
+        isFetching={songsQuery.isFetching}
+        onRefresh={() => songsQuery.refetch()}
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <TableSearch value={search} onChange={setSearch} placeholder="Search title, artist, genre, album…" />
+        <select
+          value={genreFilter}
+          onChange={(e) => setGenreFilter(e.target.value)}
+          className="h-8 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="all">Any genre</option>
+          {uniqueGenres.map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
+        </select>
+        <FacetChips facets={facets} active={facet} onChange={setFacet} />
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search songs by title, artist, genre, or album..."
-              value={songSearch}
-              onChange={(e) => setSongSearch(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Button onClick={fetchSongs} size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+      {songsQuery.isError ? (
+        <div className="py-12 text-center text-destructive">{(songsQuery.error as Error).message}</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(s) => s.id}
+          onRowClick={(s) => setEditForm({ ...s })}
+          defaultSort={{ key: 'title', dir: 'asc' }}
+          emptyMessage={songsQuery.isLoading ? 'Loading songs…' : 'No songs match the current filters.'}
+        />
+      )}
 
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={songFilter === 'all' ? 'default' : 'outline'}
-            onClick={() => setSongFilter('all')}
-            size="sm"
-          >
-            All ({songStats.total})
-          </Button>
-          <Button
-            variant={songFilter === 'featured' ? 'default' : 'outline'}
-            onClick={() => setSongFilter('featured')}
-            size="sm"
-          >
-            Featured ({songStats.featured})
-          </Button>
-          <Button
-            variant={songFilter === 'has-streaming' ? 'default' : 'outline'}
-            onClick={() => setSongFilter('has-streaming')}
-            size="sm"
-          >
-            Streaming ({songStats.hasStreaming})
-          </Button>
-          <Button
-            variant={songFilter === 'has-audio' ? 'default' : 'outline'}
-            onClick={() => setSongFilter('has-audio')}
-            size="sm"
-          >
-            Audio ({songStats.hasAudio})
-          </Button>
-          <Button
-            variant={songFilter === 'has-genre' ? 'default' : 'outline'}
-            onClick={() => setSongFilter('has-genre')}
-            size="sm"
-          >
-            Genre ({songStats.hasGenre})
-          </Button>
-        </div>
+      <ConfirmDialog />
 
-        <div className="flex gap-3 items-center flex-wrap">
-          <div className="flex items-center gap-2">
-            <Music className="h-4 w-4 text-muted-foreground" />
-            <Select value={genreFilter} onValueChange={setGenreFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by genre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Genres</SelectItem>
-                {uniqueGenres.map(genre => (
-                  <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Select value={decadeFilter} onValueChange={setDecadeFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filter by decade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Decades</SelectItem>
-                {uniqueDecades.map(decade => (
-                  <SelectItem key={decade} value={decade}>{decade}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {(genreFilter !== 'all' || decadeFilter !== 'all') && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setGenreFilter('all');
-                setDecadeFilter('all');
-              }}
-            >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {songsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
-      {songsError && <div className="text-destructive text-center py-12">{songsError}</div>}
-
-      {!songsLoading && !songsError && (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Title</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artist</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Album</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genre</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Year</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Duration</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Featured</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginatedSongs.map(song => (
-                  <tr key={song.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3">
-                      {editingSong === song.id ? (
-                        <Input
-                          value={songEditForm?.title || ''}
-                          onChange={(e) => setSongEditForm(prev => prev ? {...prev, title: e.target.value} : null)}
-                          className="h-8"
-                        />
-                      ) : (
-                        <div className="font-medium">{song.title}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingSong === song.id ? (
-                        <Input
-                          value={songEditForm?.artistName || ''}
-                          onChange={(e) => setSongEditForm(prev => prev ? {...prev, artistName: e.target.value} : null)}
-                          className="h-8 text-sm"
-                        />
-                      ) : (
-                        <div className="text-sm">{song.artistName}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingSong === song.id ? (
-                        <Input
-                          value={songEditForm?.album || ''}
-                          onChange={(e) => setSongEditForm(prev => prev ? {...prev, album: e.target.value} : null)}
-                          className="h-8 text-sm"
-                          placeholder="Album"
-                        />
-                      ) : (
-                        <div className="text-sm text-muted-foreground">{song.album || '-'}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingSong === song.id ? (
-                        <Select
-                          value={songEditForm?.genre || ''}
-                          onValueChange={(value) => setSongEditForm(prev => prev ? {...prev, genre: value} : null)}
-                        >
-                          <SelectTrigger className="h-8 w-[140px]">
-                            <SelectValue placeholder="Genre" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Rock">Rock</SelectItem>
-                            <SelectItem value="Alternative Rock">Alternative Rock</SelectItem>
-                            <SelectItem value="Pop">Pop</SelectItem>
-                            <SelectItem value="Punk">Punk</SelectItem>
-                            <SelectItem value="Pop Punk">Pop Punk</SelectItem>
-                            <SelectItem value="Indie Rock">Indie Rock</SelectItem>
-                            <SelectItem value="Metal">Metal</SelectItem>
-                            <SelectItem value="Grunge">Grunge</SelectItem>
-                            <SelectItem value="Britpop">Britpop</SelectItem>
-                            <SelectItem value="Post-Punk">Post-Punk</SelectItem>
-                            <SelectItem value="Electronic">Electronic</SelectItem>
-                            <SelectItem value="Synth-pop">Synth-pop</SelectItem>
-                            <SelectItem value="Disco">Disco</SelectItem>
-                            <SelectItem value="Reggae">Reggae</SelectItem>
-                            <SelectItem value="Soul">Soul</SelectItem>
-                            <SelectItem value="Country">Country</SelectItem>
-                            <SelectItem value="Indie Pop">Indie Pop</SelectItem>
-                            <SelectItem value="Psychedelic Rock">Psychedelic Rock</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="text-sm">
-                          {song.genre ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">
-                              {song.genre}
-                            </span>
-                          ) : (
-                            '-'
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingSong === song.id ? (
-                        <Input
-                          type="number"
-                          min="1960"
-                          max="2030"
-                          value={getYear(songEditForm?.releaseDate || null) || ''}
-                          onChange={(e) => {
-                            const year = parseInt(e.target.value);
-                            if (year >= 1960 && year <= 2030) {
-                              setSongEditForm(prev => prev ? {...prev, releaseDate: `${year}-01-01`} : null);
-                            }
-                          }}
-                          className="h-8 w-[80px] text-sm"
-                          placeholder="Year"
-                        />
-                      ) : (
-                        <div className="text-sm flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          {getYear(song.releaseDate) || '-'}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm">{formatDuration(song.duration)}</td>
-                    <td className="px-4 py-3">
-                      {song.isFeatured && <CheckCircle className="h-4 w-4 text-green-500" />}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        {editingSong === song.id ? (
-                          <>
-                            <Button size="sm" variant="default" onClick={handleSongEditSave}>
-                              <Save className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingSong(null)}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => handleSongEditStart(song)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleSongDelete(song.id)}
-                              disabled={deletingSong === song.id}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Songs Pagination */}
-          {songTotalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {songStartIndex + 1}-{Math.min(songStartIndex + songsPerPage, filteredSongs.length)} of {filteredSongs.length} songs
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSongPage(p => Math.max(1, p - 1))}
-                  disabled={songPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2 px-3">
-                  <span className="text-sm">Page {songPage} of {songTotalPages}</span>
+      {/* Compact edit dialog */}
+      <Dialog open={editForm !== null} onOpenChange={(open) => !open && setEditForm(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit song</DialogTitle>
+          </DialogHeader>
+          {editForm && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label htmlFor="song-title">Title</Label>
+                  <Input
+                    id="song-title"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSongPage(p => Math.min(songTotalPages, p + 1))}
-                  disabled={songPage === songTotalPages}
-                >
-                  Next
+                <div>
+                  <Label htmlFor="song-artist">Artist</Label>
+                  <Input
+                    id="song-artist"
+                    value={editForm.artistName ?? ''}
+                    onChange={(e) => setEditForm({ ...editForm, artistName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="song-genre">Genre</Label>
+                  <Input
+                    id="song-genre"
+                    value={editForm.genre ?? ''}
+                    onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="song-album">Album</Label>
+                  <Input
+                    id="song-album"
+                    value={editForm.album ?? ''}
+                    onChange={(e) => setEditForm({ ...editForm, album: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="song-release">Release date</Label>
+                  <Input
+                    id="song-release"
+                    type="date"
+                    value={editForm.releaseDate ? editForm.releaseDate.split('T')[0] : ''}
+                    onChange={(e) => setEditForm({ ...editForm, releaseDate: e.target.value || null })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="song-spotify">Spotify URL</Label>
+                  <Input
+                    id="song-spotify"
+                    value={editForm.spotifyUrl ?? ''}
+                    onChange={(e) => setEditForm({ ...editForm, spotifyUrl: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="song-youtube">YouTube URL</Label>
+                  <Input
+                    id="song-youtube"
+                    value={editForm.youtubeUrl ?? ''}
+                    onChange={(e) => setEditForm({ ...editForm, youtubeUrl: e.target.value })}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={editForm.isFeatured}
+                  onCheckedChange={(checked) => setEditForm({ ...editForm, isFeatured: checked === true })}
+                />
+                Featured
+              </label>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditForm(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEditSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
                 </Button>
               </div>
             </div>
           )}
-        </Card>
-      )}
-
-      {/* Confirmation Dialog */}
-      <ConfirmDialog />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

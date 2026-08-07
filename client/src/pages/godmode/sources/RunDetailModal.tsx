@@ -162,7 +162,10 @@ interface CountsTableProps {
 }
 
 function CountsTable({ counts }: CountsTableProps) {
-  const sections = [
+  const sections: Array<{
+    title: string;
+    rows: Array<{ label: string; value: number; highlight?: boolean; warning?: boolean }>;
+  }> = [
     {
       title: 'Input Processing',
       rows: [

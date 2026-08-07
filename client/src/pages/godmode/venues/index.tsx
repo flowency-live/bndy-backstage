@@ -1,403 +1,317 @@
-import { useState, useEffect } from 'react';
-import { MapPin, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+// Godmode › Venues — dense curation table on the shared DataTable.
+
+import { useMemo, useState } from 'react';
+import { Edit, Facebook, Globe, MapPin, Plus, Ticket, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  getAllVenues,
-  createVenue,
-  updateVenue,
-  deleteVenue,
-  type Venue,
-} from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
+import { useToast } from '@/hooks/use-toast';
+import type { Venue } from '@/lib/services/godmode-service';
+import DataTable, { type Column } from '../components/DataTable';
+import {
+  BoolMark,
+  BulkActionBar,
+  FacetChips,
+  GodmodePageHeader,
+  TableSearch,
+  useInitialUrlFilter,
+} from '../components/godmode-ui';
+import {
+  useCreateVenue,
+  useDeleteVenue,
+  useGodmodeVenues,
+  useUpdateVenue,
+} from '../lib/queries';
 import VenueEditModal from '../components/VenueEditModal';
 import VenueAddModal from '../components/VenueAddModal';
 
+const venueHasSocials = (v: Venue): boolean =>
+  Boolean(
+    v.website ||
+      (Array.isArray(v.socialMediaUrls) &&
+        v.socialMediaUrls.some((item) => {
+          const url = typeof item === 'string' ? item : item?.url;
+          return Boolean(url);
+        })),
+  );
+
 export default function VenuesPage() {
   const { confirm, ConfirmDialog } = useConfirm();
+  const { toast } = useToast();
 
-  // Venues State
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [venuesLoading, setVenuesLoading] = useState(false);
-  const [venuesError, setVenuesError] = useState<string | null>(null);
-  const [venueFilter, setVenueFilter] = useState<'all' | 'validated' | 'unvalidated' | 'no-place-id' | 'no-socials'>('all');
-  const [venueSearch, setVenueSearch] = useState('');
-  const [deletingVenue, setDeletingVenue] = useState<string | null>(null);
-  const [venuePage, setVenuePage] = useState(1);
-  const venuesPerPage = 25;
+  const venuesQuery = useGodmodeVenues();
+  const updateVenue = useUpdateVenue();
+  const createVenue = useCreateVenue();
+  const deleteVenue = useDeleteVenue();
 
-  // Batch Edit Modal State
-  const [venueEditModalOpen, setVenueEditModalOpen] = useState(false);
-  const [venueEditIndex, setVenueEditIndex] = useState(0);
+  const venues = venuesQuery.data ?? [];
 
-  // Add Venue Modal State
-  const [venueAddModalOpen, setVenueAddModalOpen] = useState(false);
+  const [facet, setFacet] = useInitialUrlFilter('all');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
-  // Fetch Venues
-  const fetchVenues = async () => {
-    setVenuesLoading(true);
-    setVenuesError(null);
-    try {
-      const data = await getAllVenues();
-      setVenues(data);
-    } catch (err) {
-      setVenuesError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setVenuesLoading(false);
-    }
-  };
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return venues.filter((v) => {
+      if (q) {
+        const hit =
+          (v.name && String(v.name).toLowerCase().includes(q)) ||
+          (v.address && String(v.address).toLowerCase().includes(q)) ||
+          (v.postcode && String(v.postcode).toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      switch (facet) {
+        case 'validated': return v.validated === true;
+        case 'unvalidated': return v.validated !== true;
+        case 'no-place-id': return !v.googlePlaceId;
+        case 'no-socials': return !venueHasSocials(v);
+        case 'ticketed': return v.isTicketed === true || v.standardTicketed === true;
+        default: return true;
+      }
+    });
+  }, [venues, search, facet]);
 
-  useEffect(() => {
-    fetchVenues();
-  }, []);
+  const facets = useMemo(
+    () => [
+      { value: 'all', label: 'All', count: venues.length },
+      { value: 'unvalidated', label: 'Unvalidated', count: venues.filter((v) => v.validated !== true).length },
+      { value: 'validated', label: 'Validated', count: venues.filter((v) => v.validated === true).length },
+      { value: 'no-place-id', label: 'No place ID', count: venues.filter((v) => !v.googlePlaceId).length, warn: true },
+      { value: 'no-socials', label: 'No socials', count: venues.filter((v) => !venueHasSocials(v)).length, warn: true },
+      {
+        value: 'ticketed',
+        label: 'Ticketed',
+        count: venues.filter((v) => v.isTicketed === true || v.standardTicketed === true).length,
+      },
+    ],
+    [venues],
+  );
 
-  // Reset page when search changes
-  useEffect(() => {
-    setVenuePage(1);
-  }, [venueSearch, venueFilter]);
-
-  // Venue Handlers
-  const handleVenueEditStart = (venue: Venue) => {
-    // Find the index of this venue in the venues array
-    const venueIndex = venues.findIndex(v => v.id === venue.id);
-    if (venueIndex >= 0) {
-      setVenueEditIndex(venueIndex);
-      setVenueEditModalOpen(true);
-    }
-  };
-
-  const handleVenueDelete = async (venueId: string) => {
+  const handleDelete = async (venueId: string) => {
+    const venue = venues.find((v) => v.id === venueId);
     const confirmed = await confirm({
       title: 'Delete Venue',
-      description: 'Are you sure you want to delete this venue? This action cannot be undone.',
+      description: `Delete "${venue?.name ?? 'this venue'}"? This cannot be undone.`,
       confirmText: 'Delete',
       variant: 'destructive',
     });
     if (!confirmed) return;
-
-    setDeletingVenue(venueId);
     try {
-      await deleteVenue(venueId);
-      setVenues(venues.filter(v => v.id !== venueId));
+      await deleteVenue.mutateAsync(venueId);
+      toast({ title: 'Venue deleted' });
     } catch (err) {
-      setVenuesError(err instanceof Error ? err.message : 'Failed to delete');
-    } finally {
-      setDeletingVenue(null);
+      toast({
+        title: 'Delete failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Batch Edit Modal Handlers
-  const handleOpenVenueBatchEdit = () => {
-    if (filteredVenues.length === 0) return;
-    setVenueEditIndex(0);
-    setVenueEditModalOpen(true);
-  };
+  const selectedVenues = filtered.filter((v) => selected.has(v.id));
 
-  const handleVenueBatchSave = async (venue: Venue) => {
-    const updated = await updateVenue(venue.id, venue);
-    setVenues(venues.map(v => v.id === updated.id ? updated : v));
-  };
-
-  // Add Venue Handler
-  const handleVenueCreate = async (venueData: any) => {
-    const newVenue = await createVenue(venueData);
-    setVenues([...venues, newVenue]);
-  };
-
-  // Filtered Data
-  const filteredVenues = venues.filter(v => {
-    const matchesSearch = (v.name && String(v.name).toLowerCase().includes(venueSearch.toLowerCase())) ||
-                         (v.address && String(v.address).toLowerCase().includes(venueSearch.toLowerCase())) ||
-                         (v.postcode && String(v.postcode).toLowerCase().includes(venueSearch.toLowerCase()));
-    if (!matchesSearch) return false;
-    if (venueFilter === 'validated') return v.validated === true;
-    if (venueFilter === 'unvalidated') return v.validated !== true;
-    if (venueFilter === 'no-place-id') return !v.googlePlaceId;
-    if (venueFilter === 'no-socials') {
-      const hasSocials = v.website ||
-                        ((v as any).social_media_urls && Array.isArray((v as any).social_media_urls) &&
-                         (v as any).social_media_urls.length > 0);
-      return !hasSocials;
+  const bulkDelete = async () => {
+    const confirmed = await confirm({
+      title: `Delete ${selectedVenues.length} venues`,
+      description: 'This cannot be undone. Venues that fail to delete (e.g. still referenced) are skipped.',
+      confirmText: `Delete ${selectedVenues.length}`,
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    let deleted = 0;
+    let skipped = 0;
+    for (const venue of selectedVenues) {
+      try {
+        await deleteVenue.mutateAsync(venue.id);
+        deleted++;
+      } catch {
+        skipped++;
+      }
     }
-    return true;
-  });
-
-  // Pagination
-  const venueTotalPages = Math.ceil(filteredVenues.length / venuesPerPage);
-  const venueStartIndex = (venuePage - 1) * venuesPerPage;
-  const paginatedVenues = filteredVenues.slice(venueStartIndex, venueStartIndex + venuesPerPage);
-
-  // Stats
-  const venueStats = {
-    total: venues.length,
-    validated: venues.filter(v => v.validated === true).length,
-    unvalidated: venues.filter(v => v.validated !== true).length,
-    noPlaceId: venues.filter(v => !v.googlePlaceId).length,
-    noSocials: venues.filter(v => {
-      const hasSocials = v.website ||
-                        ((v as any).social_media_urls && Array.isArray((v as any).social_media_urls) &&
-                         (v as any).social_media_urls.length > 0);
-      return !hasSocials;
-    }).length,
+    toast({
+      title: `Deleted ${deleted} venue(s)`,
+      description: skipped > 0 ? `${skipped} skipped (delete failed).` : undefined,
+    });
+    setSelected(new Set());
   };
+
+  const columns: Column<Venue>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      sortValue: (v) => v.name,
+      render: (v) => (
+        <span className="flex items-center gap-1.5 font-medium">
+          <span className="truncate">{v.name}</span>
+          {(v.isTicketed === true || v.standardTicketed === true) && (
+            <Ticket className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="Ticketed venue" />
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'address',
+      header: 'Address',
+      sortValue: (v) => v.address,
+      render: (v) => <span className="text-muted-foreground">{v.address || '—'}</span>,
+    },
+    {
+      key: 'postcode',
+      header: 'Postcode',
+      widthClass: 'w-24',
+      className: 'hidden lg:table-cell',
+      sortValue: (v) => v.postcode,
+      render: (v) => v.postcode || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'placeId',
+      header: 'Place ID',
+      widthClass: 'w-20',
+      sortValue: (v) => (v.googlePlaceId ? 1 : 0),
+      render: (v) => <BoolMark value={Boolean(v.googlePlaceId)} warnWhenMissing />,
+    },
+    {
+      key: 'socials',
+      header: 'Socials',
+      widthClass: 'w-20',
+      sortValue: (v) => (venueHasSocials(v) ? 1 : 0),
+      render: (v) => (
+        <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {v.website && (
+            <a href={v.website} target="_blank" rel="noopener noreferrer" title={v.website}>
+              <Globe className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
+            </a>
+          )}
+          {Array.isArray(v.socialMediaUrls) &&
+            (() => {
+              const fb = v.socialMediaUrls
+                .map((item) => (typeof item === 'string' ? item : item?.url))
+                .find((url) => url && url.includes('facebook.com'));
+              return fb ? (
+                <a href={fb} target="_blank" rel="noopener noreferrer" title="Facebook">
+                  <Facebook className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
+                </a>
+              ) : null;
+            })()}
+          {!venueHasSocials(v) && <span className="text-orange-500">—</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'events',
+      header: 'Events',
+      align: 'right',
+      widthClass: 'w-20',
+      className: 'hidden xl:table-cell',
+      sortValue: (v) => v.eventCount ?? 0,
+      render: (v) =>
+        v.eventCount !== undefined ? v.eventCount : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'validated',
+      header: 'Valid',
+      widthClass: 'w-16',
+      sortValue: (v) => (v.validated ? 1 : 0),
+      render: (v) => <BoolMark value={v.validated === true} />,
+    },
+    {
+      key: 'actions',
+      header: '',
+      widthClass: 'w-20',
+      render: (v) => (
+        <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title="Edit"
+            onClick={() => setEditIndex(filtered.findIndex((x) => x.id === v.id))}
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            title="Delete"
+            onClick={() => handleDelete(v.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <MapPin className="h-8 w-8" />
-            Venues
-          </h1>
-          <p className="text-muted-foreground mt-1">Manage venues across the platform</p>
-        </div>
+    <div className="space-y-4">
+      <GodmodePageHeader
+        icon={MapPin}
+        title="Venues"
+        count={`${filtered.length.toLocaleString()} of ${venues.length.toLocaleString()}`}
+        isFetching={venuesQuery.isFetching}
+        onRefresh={() => venuesQuery.refetch()}
+      >
+        <Button onClick={() => setAddOpen(true)} size="sm">
+          <Plus className="mr-1.5 h-4 w-4" />
+          Add venue
+        </Button>
+      </GodmodePageHeader>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <TableSearch
+          value={search}
+          onChange={(v) => { setSearch(v); setSelected(new Set()); }}
+          placeholder="Search name, address, postcode…"
+        />
+        <FacetChips facets={facets} active={facet} onChange={(v) => { setFacet(v); setSelected(new Set()); }} />
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Input
-            placeholder="Search venues by name, address, or postcode..."
-            value={venueSearch}
-            onChange={(e) => setVenueSearch(e.target.value)}
-            className="max-w-md"
-          />
-          <div className="flex gap-2">
-            <Button onClick={() => setVenueAddModalOpen(true)} size="sm" variant="default">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Venue
-            </Button>
-            <Button onClick={fetchVenues} size="sm" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={venueFilter === 'all' ? 'default' : 'outline'}
-              onClick={() => setVenueFilter('all')}
-              size="sm"
-            >
-              All ({venueStats.total})
-            </Button>
-            <Button
-              variant={venueFilter === 'validated' ? 'default' : 'outline'}
-              onClick={() => setVenueFilter('validated')}
-              size="sm"
-            >
-              Validated ({venueStats.validated})
-            </Button>
-            <Button
-              variant={venueFilter === 'unvalidated' ? 'default' : 'outline'}
-              onClick={() => setVenueFilter('unvalidated')}
-              size="sm"
-            >
-              Unvalidated ({venueStats.unvalidated})
-            </Button>
-            <Button
-              variant={venueFilter === 'no-place-id' ? 'default' : 'outline'}
-              onClick={() => setVenueFilter('no-place-id')}
-              size="sm"
-            >
-              No Place ID ({venueStats.noPlaceId})
-            </Button>
-            <Button
-              variant={venueFilter === 'no-socials' ? 'default' : 'outline'}
-              onClick={() => setVenueFilter('no-socials')}
-              size="sm"
-            >
-              No Socials ({venueStats.noSocials})
-            </Button>
-          </div>
-          {filteredVenues.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenVenueBatchEdit}
-            >
-              <List className="h-4 w-4 mr-2" />
-              Batch Edit ({filteredVenues.length})
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {venuesLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
-      {venuesError && <div className="text-destructive text-center py-12">{venuesError}</div>}
-
-      {!venuesLoading && !venuesError && (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Address</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Events</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Coordinates</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginatedVenues.map(venue => (
-                  <tr key={venue.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3">
-                      {venue.validated ?
-                        <CheckCircle className="h-5 w-5 text-green-500" /> :
-                        <AlertCircle className="h-5 w-5 text-yellow-500" />
-                      }
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{venue.name}</span>
-                        {venue.name && venues.filter(v => v.name && String(v.name).toLowerCase() === String(venue.name).toLowerCase()).length > 1 && (
-                          <span title="Duplicate name detected">
-                            <AlertCircle className="h-4 w-4 text-orange-500" />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm max-w-xs truncate">{venue.address}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{venue.eventCount || 0}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        {venue.website && (
-                          <a
-                            href={venue.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title={venue.website}
-                          >
-                            <Globe className="h-4 w-4" />
-                          </a>
-                        )}
-                        {(() => {
-                          const socialUrls = venue.socialMediaUrls || [];
-                          const facebookUrl = socialUrls.find((s: any) => {
-                            if (typeof s === 'string') return s.includes('facebook.com');
-                            return s?.platform === 'facebook';
-                          });
-                          const url = typeof facebookUrl === 'string' ? facebookUrl : facebookUrl?.url;
-                          return url && (
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800"
-                              title="Facebook"
-                            >
-                              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                              </svg>
-                            </a>
-                          );
-                        })()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-xs text-muted-foreground">
-                        {venue.location && typeof venue.location.lat === 'number' && typeof venue.location.lng === 'number' ? (
-                          <>
-                            <div>{venue.location.lat.toFixed(6)}</div>
-                            <div>{venue.location.lng.toFixed(6)}</div>
-                          </>
-                        ) : venue.latitude && venue.longitude ? (
-                          <>
-                            <div>{venue.latitude.toFixed(6)}</div>
-                            <div>{venue.longitude.toFixed(6)}</div>
-                          </>
-                        ) : (
-                          <span className="italic">No coords</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVenueEditStart(venue)}
-                          title="Edit venue details"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleVenueDelete(venue.id)}
-                          disabled={deletingVenue === venue.id}
-                          title="Delete venue"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Venues Pagination */}
-          {venueTotalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {venueStartIndex + 1}-{Math.min(venueStartIndex + venuesPerPage, filteredVenues.length)} of {filteredVenues.length} venues
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVenuePage(p => Math.max(1, p - 1))}
-                  disabled={venuePage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2 px-3">
-                  <span className="text-sm">Page {venuePage} of {venueTotalPages}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVenuePage(p => Math.min(venueTotalPages, p + 1))}
-                  disabled={venuePage === venueTotalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Confirmation Dialog */}
-      <ConfirmDialog />
-
-      {/* Edit Modal */}
-      {venueEditModalOpen && venues.length > 0 && (
-        <VenueEditModal
-          open={venueEditModalOpen}
-          onClose={() => setVenueEditModalOpen(false)}
-          venues={venues}
-          currentIndex={venueEditIndex}
-          onSave={handleVenueBatchSave}
-          onNavigate={setVenueEditIndex}
-          onDelete={handleVenueDelete}
+      {venuesQuery.isError ? (
+        <div className="py-12 text-center text-destructive">{(venuesQuery.error as Error).message}</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(v) => v.id}
+          selected={selected}
+          onSelectedChange={setSelected}
+          onRowClick={(v) => setEditIndex(filtered.findIndex((x) => x.id === v.id))}
+          defaultSort={{ key: 'name', dir: 'asc' }}
+          emptyMessage={venuesQuery.isLoading ? 'Loading venues…' : 'No venues match the current filters.'}
         />
       )}
 
-      {/* Add Venue Modal */}
+      <BulkActionBar count={selectedVenues.length} onClear={() => setSelected(new Set())}>
+        <Button size="sm" variant="destructive" onClick={bulkDelete}>
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          Delete
+        </Button>
+      </BulkActionBar>
+
+      <ConfirmDialog />
+
+      {editIndex !== null && filtered.length > 0 && (
+        <VenueEditModal
+          open={editIndex !== null}
+          onClose={() => setEditIndex(null)}
+          venues={filtered}
+          currentIndex={Math.min(editIndex, filtered.length - 1)}
+          onSave={async (venue) => {
+            await updateVenue.mutateAsync({ id: venue.id, data: venue });
+          }}
+          onNavigate={setEditIndex}
+          onDelete={handleDelete}
+        />
+      )}
+
       <VenueAddModal
-        open={venueAddModalOpen}
-        onClose={() => setVenueAddModalOpen(false)}
-        onSave={handleVenueCreate}
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSave={async (venueData) => {
+          await createVenue.mutateAsync(venueData as any);
+        }}
       />
     </div>
   );

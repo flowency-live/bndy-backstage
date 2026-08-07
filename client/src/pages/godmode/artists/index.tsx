@@ -1,675 +1,514 @@
-import { useState, useEffect, useMemo } from 'react';
-import { User, RefreshCw, Edit, Trash2, Globe, List, CheckCircle, Lock, LockOpen, UserPlus, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+// Godmode › Artists — dense curation table.
+// Full filtered set virtualized in one scroll (no pagination), facet chips with
+// live counts, shift-click multi-select with bulk actions, row click opens the
+// existing edit modal navigable across the filtered set.
+
+import { useMemo, useState } from 'react';
 import {
-  getAllArtists,
-  getAllUsers,
-  getAllMemberships,
-  getAllEvents,
-  createArtist,
-  updateArtist,
-  deleteArtist,
-  markArtistAsReviewed,
-  type Artist,
-  type User as UserType,
-  type Membership,
-  type Event
-} from '@/lib/services/godmode-service';
+  CheckCircle,
+  Edit,
+  Facebook,
+  Globe,
+  Lock,
+  LockOpen,
+  Plus,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/hooks/use-confirm';
 import { useToast } from '@/hooks/use-toast';
+import type { Artist } from '@/lib/services/godmode-service';
+import DataTable, { type Column } from '../components/DataTable';
+import {
+  BulkActionBar,
+  FacetChips,
+  GodmodePageHeader,
+  SourceBadge,
+  TableSearch,
+  useInitialUrlFilter,
+} from '../components/godmode-ui';
+import {
+  useDeleteArtist,
+  useGodmodeArtists,
+  useGodmodeEvents,
+  useGodmodeMemberships,
+  useGodmodeUsers,
+  useMarkArtistReviewed,
+  useUpdateArtist,
+  useCreateArtist,
+} from '../lib/queries';
 import ArtistEditModal from '../components/ArtistEditModal';
 import ArtistCreateModal from '../components/ArtistCreateModal';
+
+type ArtistFacet =
+  | 'all'
+  | 'needs-review'
+  | 'unvalidated'
+  | 'validated'
+  | 'no-genres'
+  | 'no-socials'
+  | 'no-location'
+  | 'frontstage'
+  | 'backstage';
+
+const hasSocials = (a: Artist) => Boolean(a.facebookUrl || a.instagramUrl);
+const hasGenres = (a: Artist) => Array.isArray(a.genres) && a.genres.length > 0;
 
 export default function ArtistsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
   const { toast } = useToast();
 
-  // Artists State
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [artistsLoading, setArtistsLoading] = useState(false);
-  const [artistsError, setArtistsError] = useState<string | null>(null);
-  const [artistFilter, setArtistFilter] = useState<'all' | 'validated' | 'unvalidated' | 'no-genres' | 'no-socials' | 'no-location' | 'needs-review' | 'frontstage' | 'backstage'>('all');
-  const [artistSearch, setArtistSearch] = useState('');
-  const [artistTypeFilter, setArtistTypeFilter] = useState<string>('');
-  const [acousticFilter, setAcousticFilter] = useState<string>('all');
-  const [actTypeFilter, setActTypeFilter] = useState<string>('');
-  const [deletingArtist, setDeletingArtist] = useState<string | null>(null);
-  const [reviewingArtist, setReviewingArtist] = useState<string | null>(null);
-  const [artistPage, setArtistPage] = useState(1);
-  const artistsPerPage = 25;
+  const artistsQuery = useGodmodeArtists();
+  const eventsQuery = useGodmodeEvents();
+  const usersQuery = useGodmodeUsers();
+  const membershipsQuery = useGodmodeMemberships();
 
-  // Users & Memberships State
-  const [users, setUsers] = useState<UserType[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [membershipsLoading, setMembershipsLoading] = useState(false);
+  const updateArtist = useUpdateArtist();
+  const createArtist = useCreateArtist();
+  const deleteArtist = useDeleteArtist();
+  const markReviewed = useMarkArtistReviewed();
 
-  // Events State (for calculating future event counts)
-  const [events, setEvents] = useState<Event[]>([]);
+  const artists = artistsQuery.data ?? [];
 
-  // Batch Edit Modal State
-  const [artistEditModalOpen, setArtistEditModalOpen] = useState(false);
-  const [artistEditIndex, setArtistEditIndex] = useState(0);
+  // Filters
+  const [facet, setFacet] = useInitialUrlFilter('all');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [acousticFilter, setAcousticFilter] = useState('all');
+  const [actTypeFilter, setActTypeFilter] = useState('');
 
-  // Create Modal State
-  const [artistCreateModalOpen, setArtistCreateModalOpen] = useState(false);
+  // Selection + modals
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  // Fetch Functions
-  const fetchArtists = async () => {
-    setArtistsLoading(true);
-    setArtistsError(null);
-    try {
-      const data = await getAllArtists();
-      setArtists(data);
-    } catch (err) {
-      setArtistsError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setArtistsLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const data = await getAllUsers();
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  const fetchMemberships = async () => {
-    setMembershipsLoading(true);
-    try {
-      const data = await getAllMemberships();
-      setMemberships(data);
-    } catch (err) {
-      console.error('Error fetching memberships:', err);
-    } finally {
-      setMembershipsLoading(false);
-    }
-  };
-
-  const fetchEvents = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const data = await getAllEvents(today);
-      setEvents(data);
-    } catch (err) {
-      console.error('Error fetching events:', err);
-    }
-  };
-
-  // Calculate future event counts per artist
+  // Derived lookups
   const futureEventCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const event of events) {
-      if (event.artistId) {
-        counts[event.artistId] = (counts[event.artistId] || 0) + 1;
-      }
+    for (const event of eventsQuery.data ?? []) {
+      if (event.artistId) counts[event.artistId] = (counts[event.artistId] || 0) + 1;
     }
     return counts;
-  }, [events]);
+  }, [eventsQuery.data]);
 
-  useEffect(() => {
-    fetchArtists();
-    fetchUsers();
-    fetchMemberships();
-    fetchEvents();
-  }, []);
+  const ownerByArtist = useMemo(() => {
+    const users = usersQuery.data ?? [];
+    const byCognito = new Map(users.map((u) => [u.cognitoId, u]));
+    const owners: Record<string, string> = {};
+    for (const m of membershipsQuery.data ?? []) {
+      if (m.role === 'owner') {
+        const user = byCognito.get(m.user_id);
+        owners[m.artist_id] = user ? user.displayName || user.username : '(user not found)';
+      }
+    }
+    return owners;
+  }, [usersQuery.data, membershipsQuery.data]);
 
-  // Reset page when search or filters change
-  useEffect(() => {
-    setArtistPage(1);
-  }, [artistSearch, artistFilter, artistTypeFilter, acousticFilter, actTypeFilter]);
-
-  // Artist Handlers
-  const handleArtistEditStart = (artist: Artist) => {
-    // Find the index of this artist in the artists array
-    const artistIndex = artists.findIndex(a => a.id === artist.id);
-    if (artistIndex >= 0) {
-      setArtistEditIndex(artistIndex);
-      setArtistEditModalOpen(true);
+  const matchesFacet = (a: Artist, f: ArtistFacet): boolean => {
+    switch (f) {
+      case 'needs-review': return a.needs_review === true;
+      case 'validated': return a.validated === true;
+      case 'unvalidated': return a.validated !== true;
+      case 'no-genres': return !hasGenres(a);
+      case 'no-socials': return !hasSocials(a);
+      case 'no-location': return !a.location;
+      case 'frontstage': return a.source === 'frontstage';
+      case 'backstage': return a.source === 'backstage';
+      default: return true;
     }
   };
 
-  const handleArtistDelete = async (artistId: string) => {
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return artists.filter((a) => {
+      if (q) {
+        const hit =
+          (a.name && String(a.name).toLowerCase().includes(q)) ||
+          (a.location && String(a.location).toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      if (!matchesFacet(a, facet as ArtistFacet)) return false;
+      if (typeFilter && a.artistType !== typeFilter) return false;
+      if (acousticFilter === 'acoustic' && a.acoustic !== true) return false;
+      if (acousticFilter === 'non-acoustic' && a.acoustic === true) return false;
+      if (actTypeFilter && (!a.actType || !a.actType.includes(actTypeFilter))) return false;
+      return true;
+    });
+  }, [artists, search, facet, typeFilter, acousticFilter, actTypeFilter]);
+
+  const facets = useMemo(
+    () => [
+      { value: 'all', label: 'All', count: artists.length },
+      { value: 'needs-review', label: 'Needs review', count: artists.filter((a) => a.needs_review === true).length, warn: true },
+      { value: 'unvalidated', label: 'Unvalidated', count: artists.filter((a) => a.validated !== true).length },
+      { value: 'validated', label: 'Validated', count: artists.filter((a) => a.validated === true).length },
+      { value: 'no-genres', label: 'No genres', count: artists.filter((a) => !hasGenres(a)).length, warn: true },
+      { value: 'no-socials', label: 'No socials', count: artists.filter((a) => !hasSocials(a)).length, warn: true },
+      { value: 'no-location', label: 'No location', count: artists.filter((a) => !a.location).length, warn: true },
+      { value: 'frontstage', label: 'Frontstage', count: artists.filter((a) => a.source === 'frontstage').length },
+      { value: 'backstage', label: 'Backstage', count: artists.filter((a) => a.source === 'backstage').length },
+    ],
+    [artists],
+  );
+
+  // ===== Row + bulk actions =====
+
+  const handleDelete = async (artistId: string) => {
+    const artist = artists.find((a) => a.id === artistId);
     const confirmed = await confirm({
       title: 'Delete Artist',
-      description: 'Are you sure you want to delete this artist? This action cannot be undone.',
+      description: `Delete "${artist?.name ?? 'this artist'}"? This cannot be undone.`,
       confirmText: 'Delete',
       variant: 'destructive',
     });
     if (!confirmed) return;
 
-    setDeletingArtist(artistId);
     try {
-      await deleteArtist(artistId);
-      setArtists(artists.filter(a => a.id !== artistId));
-      toast({
-        title: "Artist deleted",
-        description: "The artist has been removed.",
-      });
+      await deleteArtist.mutateAsync({ id: artistId });
+      toast({ title: 'Artist deleted' });
     } catch (err: any) {
-      // Handle 409 Conflict - artist has events
       if (err.status === 409 && err.body?.requiresConfirmation) {
         const eventCount = err.body.eventCount || 0;
-        const forceConfirmed = await confirm({
+        const force = await confirm({
           title: 'Artist Has Events',
-          description: `This artist has ${eventCount} event(s) associated with it. Delete the artist AND all ${eventCount} event(s)?`,
+          description: `This artist has ${eventCount} event(s). Delete the artist AND all ${eventCount} event(s)?`,
           confirmText: `Delete All (${eventCount + 1} items)`,
           variant: 'destructive',
         });
-
-        if (forceConfirmed) {
-          try {
-            await deleteArtist(artistId, true); // Force delete
-            setArtists(artists.filter(a => a.id !== artistId));
-            toast({
-              title: "Artist and events deleted",
-              description: `Deleted artist and ${eventCount} associated event(s).`,
-            });
-          } catch (forceErr) {
-            setArtistsError(forceErr instanceof Error ? forceErr.message : 'Failed to force delete');
-          }
+        if (force) {
+          await deleteArtist.mutateAsync({ id: artistId, force: true });
+          toast({ title: 'Artist and events deleted', description: `Removed ${eventCount} associated event(s).` });
         }
       } else {
-        setArtistsError(err instanceof Error ? err.message : 'Failed to delete');
+        toast({ title: 'Delete failed', description: err?.message ?? 'Unknown error', variant: 'destructive' });
       }
-    } finally {
-      setDeletingArtist(null);
     }
   };
 
-  const handleMarkAsReviewed = async (artistId: string) => {
-    setReviewingArtist(artistId);
-    try {
-      const updated = await markArtistAsReviewed(artistId);
-      setArtists(artists.map(a => a.id === updated.id ? updated : a));
-    } catch (err) {
-      setArtistsError(err instanceof Error ? err.message : 'Failed to mark as reviewed');
-    } finally {
-      setReviewingArtist(null);
+  const selectedArtists = filtered.filter((a) => selected.has(a.id));
+  const selectedNeedingReview = selectedArtists.filter((a) => a.needs_review === true);
+
+  const bulkMarkReviewed = async () => {
+    let done = 0;
+    for (const artist of selectedNeedingReview) {
+      try {
+        await markReviewed.mutateAsync(artist.id);
+        done++;
+      } catch {
+        // keep going; report at the end
+      }
     }
+    toast({ title: `Marked ${done} artist(s) as reviewed` });
+    setSelected(new Set());
   };
 
-  const handleToggleBackstage = async (artist: Artist) => {
-    const newSource = artist.source === 'backstage' ? 'community' : 'backstage';
-    const actionText = newSource === 'backstage' ? 'enable in Backstage' : 'revert to Community';
-
+  const bulkDelete = async () => {
     const confirmed = await confirm({
-      title: `${newSource === 'backstage' ? 'Enable' : 'Disable'} Backstage Access`,
-      description: `Are you sure you want to ${actionText} for "${artist.name}"? ${newSource === 'backstage' ? 'This will allow artist owners to manage their profile and create gigs.' : 'This will remove Backstage access.'}`,
-      confirmText: newSource === 'backstage' ? 'Enable Backstage' : 'Revert to Community',
+      title: `Delete ${selectedArtists.length} artists`,
+      description:
+        'Artists with events will be SKIPPED (delete those individually so the cascade is a deliberate choice). This cannot be undone.',
+      confirmText: `Delete ${selectedArtists.length}`,
+      variant: 'destructive',
     });
-
     if (!confirmed) return;
 
+    let deleted = 0;
+    let skipped = 0;
+    for (const artist of selectedArtists) {
+      try {
+        await deleteArtist.mutateAsync({ id: artist.id });
+        deleted++;
+      } catch (err: any) {
+        skipped++;
+        void err;
+      }
+    }
+    toast({
+      title: `Deleted ${deleted} artist(s)`,
+      description: skipped > 0 ? `${skipped} skipped (has events or delete failed).` : undefined,
+    });
+    setSelected(new Set());
+  };
+
+  const toggleBackstage = async (artist: Artist) => {
+    const newSource = artist.source === 'backstage' ? 'community' : 'backstage';
+    const confirmed = await confirm({
+      title: `${newSource === 'backstage' ? 'Enable' : 'Disable'} Backstage Access`,
+      description:
+        newSource === 'backstage'
+          ? `Enable Backstage for "${artist.name}"? Owners will be able to manage their profile and create gigs.`
+          : `Revert "${artist.name}" to Community? This removes Backstage access.`,
+      confirmText: newSource === 'backstage' ? 'Enable Backstage' : 'Revert to Community',
+    });
+    if (!confirmed) return;
     try {
-      const updated = await updateArtist(artist.id, { source: newSource });
-      setArtists(artists.map(a => a.id === updated.id ? updated : a));
-      toast({
-        title: "Success",
-        description: `Artist ${newSource === 'backstage' ? 'enabled in Backstage' : 'reverted to Community'}.`,
-      });
+      await updateArtist.mutateAsync({ id: artist.id, data: { source: newSource } });
+      toast({ title: newSource === 'backstage' ? 'Backstage enabled' : 'Reverted to community' });
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : 'Failed to update artist',
-        variant: "destructive",
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleGenerateInvite = async (artist: Artist) => {
-    // TODO: Implement invite generation endpoint
-    toast({
-      title: "Coming Soon",
-      description: "Invite generation will be implemented next.",
-    });
-  };
+  // ===== Columns =====
 
-  // Batch Edit Modal Handlers
-  const handleOpenArtistBatchEdit = () => {
-    if (filteredArtists.length === 0) return;
-    setArtistEditIndex(0);
-    setArtistEditModalOpen(true);
-  };
-
-  const handleArtistBatchSave = async (artist: Artist) => {
-    const updated = await updateArtist(artist.id, artist);
-    setArtists(artists.map(a => a.id === updated.id ? updated : a));
-  };
-
-  const handleArtistCreate = async (artistData: any) => {
-    const newArtist = await createArtist(artistData);
-    setArtists([newArtist, ...artists]);
-  };
-
-  // Filtered Data
-  const filteredArtists = artists.filter(a => {
-    const matchesSearch = (a.name && String(a.name).toLowerCase().includes(artistSearch.toLowerCase())) ||
-                         (a.location && String(a.location).toLowerCase().includes(artistSearch.toLowerCase()));
-    if (!matchesSearch) return false;
-
-    // Apply category filter
-    if (artistFilter === 'validated') {
-      if (a.validated !== true) return false;
-    }
-    if (artistFilter === 'unvalidated') {
-      if (a.validated === true) return false;
-    }
-    if (artistFilter === 'no-genres') {
-      if (a.genres && Array.isArray(a.genres) && a.genres.length > 0) return false;
-    }
-    if (artistFilter === 'no-socials') {
-      const hasSocials = a.facebookUrl || a.instagramUrl;
-      if (hasSocials) return false;
-    }
-    if (artistFilter === 'no-location') {
-      if (a.location) return false;
-    }
-    if (artistFilter === 'needs-review') {
-      if (a.needs_review !== true) return false;
-    }
-    if (artistFilter === 'frontstage') {
-      if (a.source !== 'frontstage') return false;
-    }
-    if (artistFilter === 'backstage') {
-      if (a.source !== 'backstage') return false;
-    }
-
-    // Apply artist type filter
-    if (artistTypeFilter && a.artistType !== artistTypeFilter) return false;
-
-    // Apply acoustic filter
-    if (acousticFilter === 'acoustic' && a.acoustic !== true) return false;
-    if (acousticFilter === 'non-acoustic' && a.acoustic === true) return false;
-
-    // Apply act type filter
-    if (actTypeFilter && (!a.actType || !a.actType.includes(actTypeFilter))) return false;
-
-    return true;
-  });
-
-  // Pagination
-  const artistTotalPages = Math.ceil(filteredArtists.length / artistsPerPage);
-  const artistStartIndex = (artistPage - 1) * artistsPerPage;
-  const paginatedArtists = filteredArtists.slice(artistStartIndex, artistStartIndex + artistsPerPage);
-
-  // Stats
-  const artistStats = {
-    total: artists.length,
-    validated: artists.filter(a => a.validated === true).length,
-    unvalidated: artists.filter(a => a.validated !== true).length,
-    noGenres: artists.filter(a => !a.genres || (Array.isArray(a.genres) && a.genres.length === 0)).length,
-    noSocials: artists.filter(a => !a.facebookUrl && !a.instagramUrl).length,
-    noLocation: artists.filter(a => !a.location).length,
-    needsReview: artists.filter(a => a.needs_review === true).length,
-    frontstage: artists.filter(a => a.source === 'frontstage').length,
-    backstage: artists.filter(a => a.source === 'backstage').length,
-  };
+  const columns: Column<Artist>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      sortValue: (a) => a.name,
+      render: (a) => (
+        <span className="flex items-center gap-1.5 font-medium">
+          {a.needs_review && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" title="Needs review" />}
+          <span className="truncate">{a.name}</span>
+          {a.isVerified && <CheckCircle className="h-3.5 w-3.5 shrink-0 text-green-500" aria-label="Verified" />}
+        </span>
+      ),
+    },
+    {
+      key: 'location',
+      header: 'Location',
+      sortValue: (a) => a.location,
+      render: (a) => a.location || <span className="text-orange-500">—</span>,
+    },
+    {
+      key: 'genres',
+      header: 'Genres',
+      className: 'hidden lg:table-cell',
+      sortValue: (a) => (hasGenres(a) ? a.genres.length : 0),
+      render: (a) =>
+        hasGenres(a) ? (
+          <span className="text-muted-foreground">
+            {a.genres.slice(0, 2).join(', ')}
+            {a.genres.length > 2 && ` +${a.genres.length - 2}`}
+          </span>
+        ) : (
+          <span className="text-orange-500">—</span>
+        ),
+    },
+    {
+      key: 'events',
+      header: 'Gigs',
+      align: 'right',
+      widthClass: 'w-16',
+      sortValue: (a) => futureEventCounts[a.id] || 0,
+      render: (a) => {
+        const n = futureEventCounts[a.id] || 0;
+        return n > 0 ? n : <span className="text-muted-foreground">0</span>;
+      },
+    },
+    {
+      key: 'links',
+      header: 'Links',
+      widthClass: 'w-20',
+      render: (a) => (
+        <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {a.websiteUrl && (
+            <a href={a.websiteUrl} target="_blank" rel="noopener noreferrer" title={a.websiteUrl}>
+              <Globe className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
+            </a>
+          )}
+          {a.facebookUrl && (
+            <a href={a.facebookUrl} target="_blank" rel="noopener noreferrer" title="Facebook">
+              <Facebook className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
+            </a>
+          )}
+          {!a.websiteUrl && !a.facebookUrl && <span className="text-orange-500">—</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'owner',
+      header: 'Owner',
+      className: 'hidden xl:table-cell',
+      sortValue: (a) => ownerByArtist[a.id],
+      render: (a) =>
+        ownerByArtist[a.id] ? (
+          <span className="text-muted-foreground">{ownerByArtist[a.id]}</span>
+        ) : (
+          <span className="text-muted-foreground/50 italic">unclaimed</span>
+        ),
+    },
+    {
+      key: 'source',
+      header: 'Source',
+      widthClass: 'w-24',
+      sortValue: (a) => a.source ?? '',
+      render: (a) => <SourceBadge source={a.source} />,
+    },
+    {
+      key: 'actions',
+      header: '',
+      widthClass: 'w-28',
+      render: (a) => (
+        <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          {a.needs_review && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0"
+              title="Mark as reviewed"
+              onClick={() =>
+                markReviewed
+                  .mutateAsync(a.id)
+                  .then(() => toast({ title: 'Marked as reviewed' }))
+                  .catch((err: unknown) =>
+                    toast({
+                      title: 'Failed to mark reviewed',
+                      description: err instanceof Error ? err.message : 'Unknown error',
+                      variant: 'destructive',
+                    }),
+                  )
+              }
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {(a.source === 'community' || a.source === 'backstage') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0"
+              title={a.source === 'backstage' ? 'Disable Backstage access' : 'Enable in Backstage'}
+              onClick={() => toggleBackstage(a)}
+            >
+              {a.source === 'backstage' ? <Lock className="h-3.5 w-3.5" /> : <LockOpen className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title="Edit"
+            onClick={() => setEditIndex(filtered.findIndex((x) => x.id === a.id))}
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            title="Delete"
+            onClick={() => handleDelete(a.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <User className="h-8 w-8" />
-            Artists
-          </h1>
-          <p className="text-muted-foreground mt-1">Manage artists across the platform</p>
-        </div>
-        <Button onClick={() => setArtistCreateModalOpen(true)} size="default">
-          <Plus className="h-4 w-4 mr-2" />
-          Create New Artist
+    <div className="space-y-4">
+      <GodmodePageHeader
+        icon={User}
+        title="Artists"
+        count={`${filtered.length.toLocaleString()} of ${artists.length.toLocaleString()}`}
+        isFetching={artistsQuery.isFetching}
+        onRefresh={() => artistsQuery.refetch()}
+      >
+        <Button onClick={() => setCreateOpen(true)} size="sm">
+          <Plus className="mr-1.5 h-4 w-4" />
+          New artist
         </Button>
+      </GodmodePageHeader>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <TableSearch
+          value={search}
+          onChange={(v) => { setSearch(v); setSelected(new Set()); }}
+          placeholder="Search name or location…"
+        />
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-8 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="">Any type</option>
+          <option value="band">Band</option>
+          <option value="solo">Solo</option>
+          <option value="duo">Duo</option>
+          <option value="group">Group</option>
+          <option value="dj">DJ</option>
+          <option value="collective">Collective</option>
+        </select>
+        <select
+          value={acousticFilter}
+          onChange={(e) => setAcousticFilter(e.target.value)}
+          className="h-8 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="all">Acoustic + full</option>
+          <option value="acoustic">Acoustic only</option>
+          <option value="non-acoustic">Non-acoustic</option>
+        </select>
+        <select
+          value={actTypeFilter}
+          onChange={(e) => setActTypeFilter(e.target.value)}
+          className="h-8 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="">Any act type</option>
+          <option value="originals">Originals</option>
+          <option value="covers">Covers</option>
+          <option value="tribute">Tribute</option>
+        </select>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center gap-4">
-          <Input
-            placeholder="Search artists by name or location..."
-            value={artistSearch}
-            onChange={(e) => setArtistSearch(e.target.value)}
-            className="max-w-md"
-          />
-          <Button onClick={fetchArtists} size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+      <FacetChips facets={facets} active={facet} onChange={(v) => { setFacet(v); setSelected(new Set()); }} />
 
-        {/* New Filters Row */}
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={artistTypeFilter}
-            onChange={(e) => setArtistTypeFilter(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-md bg-background"
-          >
-            <option value="">All Artist Types</option>
-            <option value="band">Band</option>
-            <option value="solo">Solo Act</option>
-            <option value="duo">Duo</option>
-            <option value="group">Group</option>
-            <option value="dj">DJ</option>
-            <option value="collective">Collective</option>
-          </select>
-
-          <select
-            value={acousticFilter}
-            onChange={(e) => setAcousticFilter(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-md bg-background"
-          >
-            <option value="all">All Acts</option>
-            <option value="acoustic">Acoustic Only</option>
-            <option value="non-acoustic">Non-Acoustic</option>
-          </select>
-
-          <select
-            value={actTypeFilter}
-            onChange={(e) => setActTypeFilter(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-md bg-background"
-          >
-            <option value="">All Act Types</option>
-            <option value="originals">Originals</option>
-            <option value="covers">Covers</option>
-            <option value="tribute">Tribute</option>
-          </select>
-
-          {(artistTypeFilter || acousticFilter !== 'all' || actTypeFilter) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setArtistTypeFilter('');
-                setAcousticFilter('all');
-                setActTypeFilter('');
-              }}
-            >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={artistFilter === 'all' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('all')}
-              size="sm"
-            >
-              All ({artistStats.total})
-            </Button>
-            <Button
-              variant={artistFilter === 'validated' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('validated')}
-              size="sm"
-            >
-              Validated ({artistStats.validated})
-            </Button>
-            <Button
-              variant={artistFilter === 'unvalidated' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('unvalidated')}
-              size="sm"
-            >
-              Unvalidated ({artistStats.unvalidated})
-            </Button>
-            <Button
-              variant={artistFilter === 'no-genres' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('no-genres')}
-              size="sm"
-            >
-              No Genres ({artistStats.noGenres})
-            </Button>
-            <Button
-              variant={artistFilter === 'no-socials' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('no-socials')}
-              size="sm"
-            >
-              No Socials ({artistStats.noSocials})
-            </Button>
-            <Button
-              variant={artistFilter === 'no-location' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('no-location')}
-              size="sm"
-            >
-              No Location / Place ID ({artistStats.noLocation})
-            </Button>
-            <Button
-              variant={artistFilter === 'needs-review' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('needs-review')}
-              size="sm"
-            >
-              Needs Review ({artistStats.needsReview})
-            </Button>
-            <Button
-              variant={artistFilter === 'frontstage' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('frontstage')}
-              size="sm"
-            >
-              Frontstage ({artistStats.frontstage})
-            </Button>
-            <Button
-              variant={artistFilter === 'backstage' ? 'default' : 'outline'}
-              onClick={() => setArtistFilter('backstage')}
-              size="sm"
-            >
-              Backstage ({artistStats.backstage})
-            </Button>
-          </div>
-          {filteredArtists.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenArtistBatchEdit}
-            >
-              <List className="h-4 w-4 mr-2" />
-              Batch Edit ({filteredArtists.length})
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {artistsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
-      {artistsError && <div className="text-destructive text-center py-12">{artistsError}</div>}
-
-      {!artistsLoading && !artistsError && (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Location</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Genres</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Events</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Links</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Owner</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginatedArtists.map(artist => (
-                  <tr key={artist.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{artist.name}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{artist.location}</td>
-                    <td className="px-4 py-3 text-sm">{Array.isArray(artist.genres) ? artist.genres.slice(0, 2).join(', ') : (artist.genres || '-')}</td>
-                    <td className="px-4 py-3 text-sm">{futureEventCounts[artist.id] || 0}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        {artist.websiteUrl && (
-                          <a
-                            href={artist.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title={artist.websiteUrl}
-                          >
-                            <Globe className="h-4 w-4" />
-                          </a>
-                        )}
-                        {artist.facebookUrl && (
-                          <a
-                            href={artist.facebookUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Facebook"
-                          >
-                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {(() => {
-                        const ownerMembership = memberships.find(
-                          m => m.artist_id === artist.id && m.role === 'owner'
-                        );
-
-                        if (ownerMembership) {
-                          const ownerUser = users.find(u => u.cognitoId === ownerMembership.user_id);
-
-                          if (ownerUser) {
-                            return (
-                              <div className="text-sm font-medium">
-                                {ownerUser.displayName || ownerUser.username}
-                              </div>
-                            );
-                          }
-
-                          return <span className="text-yellow-600 text-sm">Owner (user not found)</span>;
-                        }
-
-                        return <span className="text-muted-foreground italic text-sm">No owner</span>;
-                      })()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        {artist.isVerified && <CheckCircle className="h-4 w-4 text-green-500" />}
-                        {artist.claimedByUserId && <User className="h-4 w-4 text-blue-500" />}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1 flex-wrap">
-                        {artist.needs_review && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleMarkAsReviewed(artist.id)}
-                            disabled={reviewingArtist === artist.id}
-                            title="Mark as reviewed"
-                          >
-                            <CheckCircle className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {(artist.source === 'community' || artist.source === 'backstage') && (
-                          <Button
-                            size="sm"
-                            variant={artist.source === 'backstage' ? 'secondary' : 'default'}
-                            onClick={() => handleToggleBackstage(artist)}
-                            title={artist.source === 'backstage' ? 'Disable Backstage access' : 'Enable in Backstage'}
-                          >
-                            {artist.source === 'backstage' ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
-                          </Button>
-                        )}
-                        {artist.source === 'backstage' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleGenerateInvite(artist)}
-                            title="Generate invite link"
-                          >
-                            <UserPlus className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleArtistEditStart(artist)}
-                          title="Edit artist details"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleArtistDelete(artist.id)}
-                          disabled={deletingArtist === artist.id}
-                          title="Delete artist"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Artists Pagination */}
-          {artistTotalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {artistStartIndex + 1}-{Math.min(artistStartIndex + artistsPerPage, filteredArtists.length)} of {filteredArtists.length} artists
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setArtistPage(p => Math.max(1, p - 1))}
-                  disabled={artistPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2 px-3">
-                  <span className="text-sm">Page {artistPage} of {artistTotalPages}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setArtistPage(p => Math.min(artistTotalPages, p + 1))}
-                  disabled={artistPage === artistTotalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Confirmation Dialog */}
-      <ConfirmDialog />
-
-      {/* Edit Modal */}
-      {artistEditModalOpen && artists.length > 0 && (
-        <ArtistEditModal
-          open={artistEditModalOpen}
-          onClose={() => setArtistEditModalOpen(false)}
-          artists={artists}
-          currentIndex={artistEditIndex}
-          onSave={handleArtistBatchSave}
-          onNavigate={setArtistEditIndex}
-          onDelete={handleArtistDelete}
+      {artistsQuery.isError ? (
+        <div className="py-12 text-center text-destructive">{(artistsQuery.error as Error).message}</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(a) => a.id}
+          selected={selected}
+          onSelectedChange={setSelected}
+          onRowClick={(a) => setEditIndex(filtered.findIndex((x) => x.id === a.id))}
+          defaultSort={{ key: 'name', dir: 'asc' }}
+          emptyMessage={artistsQuery.isLoading ? 'Loading artists…' : 'No artists match the current filters.'}
         />
       )}
 
-      {/* Create Modal */}
+      <BulkActionBar count={selectedArtists.length} onClear={() => setSelected(new Set())}>
+        {selectedNeedingReview.length > 0 && (
+          <Button size="sm" variant="secondary" onClick={bulkMarkReviewed}>
+            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+            Mark reviewed ({selectedNeedingReview.length})
+          </Button>
+        )}
+        <Button size="sm" variant="destructive" onClick={bulkDelete}>
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          Delete
+        </Button>
+      </BulkActionBar>
+
+      <ConfirmDialog />
+
+      {editIndex !== null && filtered.length > 0 && (
+        <ArtistEditModal
+          open={editIndex !== null}
+          onClose={() => setEditIndex(null)}
+          artists={filtered}
+          currentIndex={Math.min(editIndex, filtered.length - 1)}
+          onSave={async (artist) => {
+            await updateArtist.mutateAsync({ id: artist.id, data: artist });
+          }}
+          onNavigate={setEditIndex}
+          onDelete={handleDelete}
+        />
+      )}
+
       <ArtistCreateModal
-        open={artistCreateModalOpen}
-        onClose={() => setArtistCreateModalOpen(false)}
-        onCreate={handleArtistCreate}
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={async (artistData) => {
+          await createArtist.mutateAsync(artistData);
+        }}
       />
     </div>
   );

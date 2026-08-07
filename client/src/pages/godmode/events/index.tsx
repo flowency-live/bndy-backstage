@@ -1,351 +1,336 @@
-import { useState, useEffect } from 'react';
-import { Calendar, RefreshCw, Edit, Trash2, MapPin, User, Clock, Eye, EyeOff } from 'lucide-react';
+// Godmode › Events — dense curation table over the public events feed.
+
+import { useMemo, useState } from 'react';
+import { Calendar, Edit, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  getAllEvents,
-  updateEvent,
-  deleteEvent,
-  type Event,
-} from '@/lib/services/godmode-service';
 import { useConfirm } from '@/hooks/use-confirm';
+import { useToast } from '@/hooks/use-toast';
+import type { Event } from '@/lib/services/godmode-service';
+import DataTable, { type Column } from '../components/DataTable';
+import {
+  BulkActionBar,
+  FacetChips,
+  GodmodePageHeader,
+  TableSearch,
+  useInitialUrlFilter,
+} from '../components/godmode-ui';
+import { useDeleteEvent, useGodmodeEvents, useUpdateEvent } from '../lib/queries';
 import EventEditModal from '../components/EventEditModal';
 
-type EventFilter = 'all' | 'gig' | 'upcoming' | 'past';
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export default function EventsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
+  const { toast } = useToast();
 
-  const [events, setEvents] = useState<Event[]>([]);
-  const [eventsLoading, setEventsLoading] = useState(false);
-  const [eventsError, setEventsError] = useState<string | null>(null);
-  const [eventFilter, setEventFilter] = useState<EventFilter>('all');
-  const [eventSearch, setEventSearch] = useState('');
-  const [deletingEvent, setDeletingEvent] = useState<string | null>(null);
-  const [eventPage, setEventPage] = useState(1);
-  const eventsPerPage = 25;
+  const eventsQuery = useGodmodeEvents();
+  const updateEvent = useUpdateEvent();
+  const deleteEvent = useDeleteEvent();
 
-  const [eventEditModalOpen, setEventEditModalOpen] = useState(false);
-  const [eventEditIndex, setEventEditIndex] = useState(0);
+  const events = eventsQuery.data ?? [];
 
-  const fetchEvents = async () => {
-    setEventsLoading(true);
-    setEventsError(null);
-    try {
-      const data = await getAllEvents();
-      const sorted = [...data].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-      setEvents(sorted);
-    } catch (err) {
-      setEventsError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setEventsLoading(false);
-    }
-  };
+  const [facet, setFacet] = useInitialUrlFilter('all');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  // Local calendar date, not UTC — during BST the ISO date flips an hour early.
+  const today = new Date().toLocaleDateString('en-CA');
 
-  useEffect(() => {
-    setEventPage(1);
-  }, [eventSearch, eventFilter]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return events.filter((e) => {
+      if (q) {
+        const hit =
+          (e.title && e.title.toLowerCase().includes(q)) ||
+          (e.artistName && e.artistName.toLowerCase().includes(q)) ||
+          (e.venueName && e.venueName.toLowerCase().includes(q)) ||
+          (e.location && e.location.toLowerCase().includes(q));
+        if (!hit) return false;
+      }
+      switch (facet) {
+        case 'gig': return e.type === 'gig';
+        case 'upcoming': return e.date >= today;
+        case 'past': return e.date < today;
+        case 'private': return e.isPublic === false;
+        default: return true;
+      }
+    });
+  }, [events, search, facet, today]);
 
-  const handleEventEditStart = (event: Event) => {
-    const eventIndex = filteredEvents.findIndex(e => e.id === event.id);
-    if (eventIndex >= 0) {
-      setEventEditIndex(eventIndex);
-      setEventEditModalOpen(true);
-    }
-  };
+  const facets = useMemo(
+    () => [
+      { value: 'all', label: 'All', count: events.length },
+      { value: 'upcoming', label: 'Upcoming', count: events.filter((e) => e.date >= today).length },
+      { value: 'past', label: 'Past', count: events.filter((e) => e.date < today).length },
+      { value: 'gig', label: 'Gigs', count: events.filter((e) => e.type === 'gig').length },
+      { value: 'private', label: 'Not public', count: events.filter((e) => e.isPublic === false).length, warn: true },
+    ],
+    [events, today],
+  );
 
-  const handleEventDelete = async (event: Event) => {
+  const handleDelete = async (event: Event) => {
     if (!event.artistId) {
-      setEventsError('Cannot delete event without artistId');
+      toast({ title: 'Cannot delete', description: 'Event has no artistId.', variant: 'destructive' });
       return;
     }
-
     const confirmed = await confirm({
       title: 'Delete Event',
-      description: `Are you sure you want to delete "${event.title || 'this event'}"? This action cannot be undone.`,
+      description: `Delete "${event.title || `${event.artistName ?? 'event'} @ ${event.venueName ?? '?'}`}"? This cannot be undone.`,
       confirmText: 'Delete',
       variant: 'destructive',
     });
     if (!confirmed) return;
-
-    setDeletingEvent(event.id);
     try {
-      await deleteEvent(event.artistId, event.id);
-      setEvents(events.filter(e => e.id !== event.id));
+      await deleteEvent.mutateAsync({ artistId: event.artistId, eventId: event.id });
+      toast({ title: 'Event deleted' });
     } catch (err) {
-      setEventsError(err instanceof Error ? err.message : 'Failed to delete');
-    } finally {
-      setDeletingEvent(null);
+      toast({
+        title: 'Delete failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleEventBatchSave = async (event: Event) => {
+  const togglePublic = async (event: Event) => {
     if (!event.artistId) {
-      throw new Error('Cannot update event without artistId');
+      toast({ title: 'Cannot update', description: 'Event has no artistId.', variant: 'destructive' });
+      return;
     }
-    const updated = await updateEvent(event.artistId, event.id, event);
-    setEvents(events.map(e => e.id === updated.id ? updated : e));
+    try {
+      await updateEvent.mutateAsync({
+        artistId: event.artistId,
+        eventId: event.id,
+        data: { isPublic: !(event.isPublic !== false) },
+      });
+    } catch (err) {
+      toast({
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const selectedEvents = filtered.filter((e) => selected.has(e.id));
 
-  const filteredEvents = events.filter(e => {
-    const matchesSearch =
-      (e.title && e.title.toLowerCase().includes(eventSearch.toLowerCase())) ||
-      (e.artistName && e.artistName.toLowerCase().includes(eventSearch.toLowerCase())) ||
-      (e.venueName && e.venueName.toLowerCase().includes(eventSearch.toLowerCase())) ||
-      (e.location && e.location.toLowerCase().includes(eventSearch.toLowerCase()));
-    if (!matchesSearch) return false;
-
-    if (eventFilter === 'gig') return e.type === 'gig';
-    if (eventFilter === 'upcoming') return e.date >= today;
-    if (eventFilter === 'past') return e.date < today;
-    return true;
-  });
-
-  const eventTotalPages = Math.ceil(filteredEvents.length / eventsPerPage);
-  const eventStartIndex = (eventPage - 1) * eventsPerPage;
-  const paginatedEvents = filteredEvents.slice(eventStartIndex, eventStartIndex + eventsPerPage);
-
-  const eventStats = {
-    total: events.length,
-    gigs: events.filter(e => e.type === 'gig').length,
-    upcoming: events.filter(e => e.date >= today).length,
-    past: events.filter(e => e.date < today).length,
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+  const bulkDelete = async () => {
+    const deletable = selectedEvents.filter((e) => e.artistId);
+    const confirmed = await confirm({
+      title: `Delete ${deletable.length} events`,
+      description:
+        selectedEvents.length !== deletable.length
+          ? `${selectedEvents.length - deletable.length} selected event(s) have no artistId and will be skipped. This cannot be undone.`
+          : 'This cannot be undone.',
+      confirmText: `Delete ${deletable.length}`,
+      variant: 'destructive',
     });
+    if (!confirmed) return;
+    let deleted = 0;
+    let failed = 0;
+    for (const event of deletable) {
+      try {
+        await deleteEvent.mutateAsync({ artistId: event.artistId!, eventId: event.id });
+        deleted++;
+      } catch {
+        failed++;
+      }
+    }
+    toast({
+      title: `Deleted ${deleted} event(s)`,
+      description: failed > 0 ? `${failed} failed.` : undefined,
+    });
+    setSelected(new Set());
   };
 
-  const formatTime = (startTime?: string, endTime?: string) => {
-    if (!startTime) return null;
-    if (endTime) return `${startTime} - ${endTime}`;
-    return startTime;
+  const bulkSetPublic = async (isPublic: boolean) => {
+    const updatable = selectedEvents.filter((e) => e.artistId && (e.isPublic !== false) !== isPublic);
+    let updated = 0;
+    for (const event of updatable) {
+      try {
+        await updateEvent.mutateAsync({ artistId: event.artistId!, eventId: event.id, data: { isPublic } });
+        updated++;
+      } catch {
+        // reported in summary
+      }
+    }
+    toast({ title: `${isPublic ? 'Published' : 'Unpublished'} ${updated} event(s)` });
+    setSelected(new Set());
   };
+
+  const columns: Column<Event>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      widthClass: 'w-40',
+      sortValue: (e) => e.date,
+      render: (e) => (
+        <span className={e.date < today ? 'text-muted-foreground' : ''}>
+          {formatDate(e.date)}
+        </span>
+      ),
+    },
+    {
+      key: 'time',
+      header: 'Time',
+      widthClass: 'w-24',
+      className: 'hidden lg:table-cell',
+      sortValue: (e) => e.startTime,
+      render: (e) =>
+        e.startTime ? (
+          <span className="text-muted-foreground tabular-nums">
+            {e.startTime}
+            {e.endTime && `–${e.endTime}`}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: 'artist',
+      header: 'Artist',
+      sortValue: (e) => e.artistName,
+      render: (e) => <span className="font-medium truncate">{e.artistName || '—'}</span>,
+    },
+    {
+      key: 'venue',
+      header: 'Venue',
+      sortValue: (e) => e.venueName,
+      render: (e) => (
+        <span className="text-muted-foreground truncate">
+          {e.venueName || e.location || '—'}
+          {e.venue?.city ? `, ${e.venue.city}` : ''}
+        </span>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      widthClass: 'w-24',
+      className: 'hidden xl:table-cell',
+      sortValue: (e) => e.type,
+      render: (e) => <span className="text-muted-foreground">{e.type}</span>,
+    },
+    {
+      key: 'public',
+      header: 'Public',
+      widthClass: 'w-16',
+      sortValue: (e) => (e.isPublic !== false ? 1 : 0),
+      render: (e) => (
+        <span onClick={(ev) => ev.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title={e.isPublic !== false ? 'Public — click to hide' : 'Hidden — click to publish'}
+            onClick={() => togglePublic(e)}
+          >
+            {e.isPublic !== false ? (
+              <Eye className="h-3.5 w-3.5 text-green-600" />
+            ) : (
+              <EyeOff className="h-3.5 w-3.5 text-orange-500" />
+            )}
+          </Button>
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      widthClass: 'w-20',
+      render: (e) => (
+        <span className="flex items-center justify-end gap-1" onClick={(ev) => ev.stopPropagation()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            title="Edit"
+            onClick={() => setEditIndex(filtered.findIndex((x) => x.id === e.id))}
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            title="Delete"
+            onClick={() => handleDelete(e)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
-            Events
-          </h1>
-          <p className="text-muted-foreground mt-1">View and manage public events across the platform</p>
-        </div>
+    <div className="space-y-4">
+      <GodmodePageHeader
+        icon={Calendar}
+        title="Events"
+        count={`${filtered.length.toLocaleString()} of ${events.length.toLocaleString()}`}
+        isFetching={eventsQuery.isFetching}
+        onRefresh={() => eventsQuery.refetch()}
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <TableSearch
+          value={search}
+          onChange={(v) => { setSearch(v); setSelected(new Set()); }}
+          placeholder="Search title, artist, venue…"
+        />
+        <FacetChips facets={facets} active={facet} onChange={(v) => { setFacet(v); setSelected(new Set()); }} />
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Input
-            placeholder="Search events by title, artist, venue..."
-            value={eventSearch}
-            onChange={(e) => setEventSearch(e.target.value)}
-            className="max-w-md"
-          />
-          <Button onClick={fetchEvents} size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={eventFilter === 'all' ? 'default' : 'outline'}
-            onClick={() => setEventFilter('all')}
-            size="sm"
-          >
-            All ({eventStats.total})
-          </Button>
-          <Button
-            variant={eventFilter === 'gig' ? 'default' : 'outline'}
-            onClick={() => setEventFilter('gig')}
-            size="sm"
-          >
-            Gigs ({eventStats.gigs})
-          </Button>
-          <Button
-            variant={eventFilter === 'upcoming' ? 'default' : 'outline'}
-            onClick={() => setEventFilter('upcoming')}
-            size="sm"
-          >
-            Upcoming ({eventStats.upcoming})
-          </Button>
-          <Button
-            variant={eventFilter === 'past' ? 'default' : 'outline'}
-            onClick={() => setEventFilter('past')}
-            size="sm"
-          >
-            Past ({eventStats.past})
-          </Button>
-        </div>
-      </div>
-
-      {eventsLoading && <div className="text-center py-12"><RefreshCw className="h-8 w-8 animate-spin mx-auto" /></div>}
-      {eventsError && <div className="text-destructive text-center py-12">{eventsError}</div>}
-
-      {!eventsLoading && !eventsError && (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Title</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Artist</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Venue</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Time</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Public</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginatedEvents.map(event => (
-                  <tr key={event.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium">{formatDate(event.date)}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium max-w-xs truncate">{event.title || '(No title)'}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        event.type === 'gig' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        event.type === 'practice' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                        event.type === 'open-mic' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                        event.type === 'festival' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                      }`}>
-                        {event.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-sm">
-                        <User className="h-3 w-3 text-muted-foreground" />
-                        <span className="max-w-[150px] truncate">{event.artistName || '(Unknown)'}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-sm">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <span className="max-w-[150px] truncate">
-                          {event.venueName || event.location || '(No venue)'}
-                        </span>
-                      </div>
-                      {event.venue?.city && (
-                        <div className="text-xs text-muted-foreground ml-4">{event.venue.city}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {formatTime(event.startTime, event.endTime) ? (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          {formatTime(event.startTime, event.endTime)}
-                        </div>
-                      ) : event.isAllDay ? (
-                        <span className="text-xs text-muted-foreground">All day</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {event.isPublic ? (
-                        <Eye className="h-4 w-4 text-green-500" title="Public" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" title="Private" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEventEditStart(event)}
-                          title="Edit event details"
-                          disabled={!event.artistId}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleEventDelete(event)}
-                          disabled={deletingEvent === event.id || !event.artistId}
-                          title="Delete event"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {paginatedEvents.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                      No events found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {eventTotalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {eventStartIndex + 1}-{Math.min(eventStartIndex + eventsPerPage, filteredEvents.length)} of {filteredEvents.length} events
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEventPage(p => Math.max(1, p - 1))}
-                  disabled={eventPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2 px-3">
-                  <span className="text-sm">Page {eventPage} of {eventTotalPages}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEventPage(p => Math.min(eventTotalPages, p + 1))}
-                  disabled={eventPage === eventTotalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
+      {eventsQuery.isError ? (
+        <div className="py-12 text-center text-destructive">{(eventsQuery.error as Error).message}</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(e) => e.id}
+          selected={selected}
+          onSelectedChange={setSelected}
+          onRowClick={(e) => setEditIndex(filtered.findIndex((x) => x.id === e.id))}
+          defaultSort={{ key: 'date', dir: 'asc' }}
+          emptyMessage={eventsQuery.isLoading ? 'Loading events…' : 'No events match the current filters.'}
+        />
       )}
+
+      <BulkActionBar count={selectedEvents.length} onClear={() => setSelected(new Set())}>
+        <Button size="sm" variant="secondary" onClick={() => bulkSetPublic(true)}>
+          <Eye className="mr-1.5 h-3.5 w-3.5" />
+          Publish
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => bulkSetPublic(false)}>
+          <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+          Unpublish
+        </Button>
+        <Button size="sm" variant="destructive" onClick={bulkDelete}>
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          Delete
+        </Button>
+      </BulkActionBar>
 
       <ConfirmDialog />
 
-      {eventEditModalOpen && filteredEvents.length > 0 && (
+      {editIndex !== null && filtered.length > 0 && (
         <EventEditModal
-          open={eventEditModalOpen}
-          onClose={() => setEventEditModalOpen(false)}
-          events={filteredEvents}
-          currentIndex={eventEditIndex}
-          onSave={handleEventBatchSave}
-          onNavigate={setEventEditIndex}
-          onDelete={handleEventDelete}
+          open={editIndex !== null}
+          onClose={() => setEditIndex(null)}
+          events={filtered}
+          currentIndex={Math.min(editIndex, filtered.length - 1)}
+          onSave={async (event) => {
+            if (!event.artistId) throw new Error('Cannot update event without artistId');
+            await updateEvent.mutateAsync({ artistId: event.artistId, eventId: event.id, data: event });
+          }}
+          onNavigate={setEditIndex}
+          onDelete={handleDelete}
         />
       )}
     </div>

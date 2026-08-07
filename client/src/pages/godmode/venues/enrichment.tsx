@@ -62,7 +62,7 @@ export default function EnrichmentQueuePage() {
       // Add Facebook to socialMediaUrls if suggested
       if (enrichmentData.suggested_facebook) {
         const socialMediaUrls = venue.socialMediaUrls || [];
-        const hasFacebook = socialMediaUrls.some((url: string) =>
+        const hasFacebook = socialMediaUrls.some((url) =>
           url && typeof url === 'string' && url.includes('facebook.com')
         );
 
@@ -118,7 +118,7 @@ export default function EnrichmentQueuePage() {
       // Add edited Facebook
       if (editForm.facebook) {
         const socialMediaUrls = venue.socialMediaUrls || [];
-        const hasFacebook = socialMediaUrls.some((url: string) =>
+        const hasFacebook = socialMediaUrls.some((url) =>
           url && typeof url === 'string' && url.includes('facebook.com')
         );
 
@@ -129,7 +129,7 @@ export default function EnrichmentQueuePage() {
           ];
         } else {
           // Replace existing Facebook URL
-          updates.socialMediaUrls = socialMediaUrls.map((url: string) =>
+          updates.socialMediaUrls = socialMediaUrls.map((url) =>
             url && typeof url === 'string' && url.includes('facebook.com')
               ? editForm.facebook!
               : url

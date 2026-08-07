@@ -276,13 +276,13 @@ class SourceRunsService {
 
     // Build summaries
     const summaries: SourceSummary[] = [];
-    for (const [sourceId, sourceRuns] of runsBySource) {
+    for (const [sourceId, sourceRuns] of Array.from(runsBySource.entries())) {
       // Sort by startedAt descending
       const sorted = sourceRuns.sort(
-        (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+        (a: SourceRun, b: SourceRun) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
       );
 
-      const completedRuns = sorted.filter(r => r.status === 'completed').length;
+      const completedRuns = sorted.filter((r: SourceRun) => r.status === 'completed').length;
       const successRate = sorted.length > 0 ? (completedRuns / sorted.length) * 100 : 0;
 
       summaries.push({

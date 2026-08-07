@@ -73,6 +73,7 @@ export default function Welcome() {
           </button>
         </div>
       </div>
+      </div>
     </PageContainer>
   );
 }

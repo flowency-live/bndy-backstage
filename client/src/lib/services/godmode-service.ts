@@ -37,6 +37,7 @@ export interface Artist {
   source?: 'frontstage' | 'community' | 'backstage' | null;
   needs_review?: boolean | null;
   validated?: boolean;
+  eventCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -68,6 +69,8 @@ export interface Venue {
   location: { lat: number; lng: number };
   googlePlaceId: string;
   website?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
   validated: boolean;
   nameVariants: string[];
   phone: string;
@@ -91,7 +94,7 @@ export interface Venue {
     confidence: 'HIGH' | 'MEDIUM' | 'LOW';
     notes: string;
     date: string;
-  };
+  } | null;
   enrichment_date?: string;
   eventCount?: number;
   createdAt: string;
