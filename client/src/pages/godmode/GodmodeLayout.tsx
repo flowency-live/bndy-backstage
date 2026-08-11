@@ -4,16 +4,20 @@ import {
   Calendar,
   ClipboardList,
   LayoutDashboard,
+  LogOut,
   MapPin,
   Music,
   Sparkles,
   TrendingUp,
   User,
   Users,
+  ArrowLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import PlatformAdminGate from '@/components/platform-admin-gate';
 import { useOpenReviewCount } from './lib/queries';
+import { useServerAuth } from '@/hooks/useServerAuth';
 
 interface NavItem {
   name: string;
@@ -110,6 +114,20 @@ function GodmodeNav() {
 }
 
 export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
+  const [, setLocation] = useLocation();
+  const { signOut } = useServerAuth();
+
+  const handleSignOut = async () => {
+    localStorage.removeItem('bndy-selected-artist-id');
+    localStorage.removeItem('bndy-selected-band-id');
+    localStorage.removeItem('bndy-current-user');
+    await signOut();
+  };
+
+  const handleBackToBackstage = () => {
+    setLocation('/dashboard');
+  };
+
   return (
     <PlatformAdminGate>
       <div className="flex h-screen bg-background">
@@ -120,7 +138,27 @@ export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
             <p className="text-xs text-muted-foreground">Platform admin</p>
           </div>
           <GodmodeNav />
-          <div className="border-t px-4 py-3 text-[11px] text-muted-foreground">bndy platform · godmode v3</div>
+          <div className="border-t px-3 py-3 space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToBackstage}
+              className="w-full justify-start text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Backstage
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="w-full justify-start text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+            <div className="px-2 text-[11px] text-muted-foreground">bndy platform · godmode v3</div>
+          </div>
         </div>
 
         {/* Main content — full width; the tables want the room. */}
