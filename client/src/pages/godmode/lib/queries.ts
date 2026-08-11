@@ -377,7 +377,7 @@ export function useEnrichmentQueue() {
 export function useAcceptEnrichment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ type, id, fields }: { type: 'artist' | 'venue'; id: string; fields?: string[] }) =>
+    mutationFn: async ({ type, id, fields }: { type: 'artist' | 'venue'; id: string; fields?: string[] }): Promise<Artist | Venue> =>
       type === 'artist'
         ? godmodeService.acceptArtistEnrichment(id, fields)
         : godmodeService.acceptVenueEnrichment(id, fields),
@@ -388,7 +388,7 @@ export function useAcceptEnrichment() {
         );
       } else {
         queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) =>
-          replaceInList(list, updated as Venue),
+          replaceInList(list, updated as unknown as Venue),
         );
       }
     },
@@ -398,7 +398,7 @@ export function useAcceptEnrichment() {
 export function useRejectEnrichment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ type, id }: { type: 'artist' | 'venue'; id: string }) =>
+    mutationFn: async ({ type, id }: { type: 'artist' | 'venue'; id: string }): Promise<Artist | Venue> =>
       type === 'artist'
         ? godmodeService.rejectArtistEnrichment(id)
         : godmodeService.rejectVenueEnrichment(id),
@@ -409,7 +409,7 @@ export function useRejectEnrichment() {
         );
       } else {
         queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) =>
-          replaceInList(list, updated as Venue),
+          replaceInList(list, updated as unknown as Venue),
         );
       }
     },
