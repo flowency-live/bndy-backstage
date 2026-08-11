@@ -39,6 +39,8 @@ export default function UsersPage() {
         if (!hit) return false;
       }
       switch (facet) {
+        case 'map': return u.userSource === 'map';
+        case 'backstage': return u.userSource === 'backstage';
         case 'completed': return u.profileCompleted;
         case 'incomplete': return !u.profileCompleted;
         case 'with-artists': return u.membershipCount > 0;
@@ -51,6 +53,8 @@ export default function UsersPage() {
   const facets = useMemo(
     () => [
       { value: 'all', label: 'All', count: users.length },
+      { value: 'map', label: 'Map users', count: users.filter((u) => u.userSource === 'map').length },
+      { value: 'backstage', label: 'Backstage', count: users.filter((u) => u.userSource === 'backstage').length },
       { value: 'completed', label: 'Complete profile', count: users.filter((u) => u.profileCompleted).length },
       { value: 'incomplete', label: 'Incomplete', count: users.filter((u) => !u.profileCompleted).length, warn: true },
       { value: 'with-artists', label: 'With artists', count: users.filter((u) => u.membershipCount > 0).length },
@@ -111,6 +115,26 @@ export default function UsersPage() {
       render: (u) => (
         <span className="inline-flex rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">{u.authType}</span>
       ),
+    },
+    {
+      key: 'source',
+      header: 'Source',
+      widthClass: 'w-24',
+      className: 'hidden md:table-cell',
+      sortValue: (u) => u.userSource || '',
+      render: (u) => {
+        if (!u.userSource) return <span className="text-muted-foreground">—</span>;
+        const colors: Record<string, string> = {
+          map: 'bg-blue-500/20 text-blue-400',
+          backstage: 'bg-orange-500/20 text-orange-400',
+          frontstage: 'bg-green-500/20 text-green-400',
+        };
+        return (
+          <span className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${colors[u.userSource] || 'bg-muted'}`}>
+            {u.userSource.charAt(0).toUpperCase() + u.userSource.slice(1)}
+          </span>
+        );
+      },
     },
     {
       key: 'profile',

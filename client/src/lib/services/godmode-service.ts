@@ -113,6 +113,7 @@ export interface User {
   profileCompleted: boolean;
   membershipCount: number;
   authType: 'Phone' | 'Google' | 'Facebook' | 'Email';
+  userSource: 'map' | 'backstage' | 'frontstage' | null;
   createdAt: string;
 }
 
