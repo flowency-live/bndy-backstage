@@ -38,6 +38,18 @@ export interface Artist {
   needs_review?: boolean | null;
   validated?: boolean;
   eventCount?: number;
+  // Enrichment fields (2026-08-11)
+  enrichmentStatus?: 'needs_review' | 'high_confidence' | 'reviewed' | 'rejected' | null;
+  enrichmentDate?: string | null;
+  enrichmentData?: {
+    suggested_facebookUrl?: string | null;
+    suggested_websiteUrl?: string | null;
+    suggested_bio?: string | null;
+    confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+    notes: string;
+    evidenceUrls?: string[];
+    date: string;
+  } | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -444,6 +456,35 @@ class GodmodeService {
       method: 'DELETE',
     });
   }
+
+  // Enrichment action methods (2026-08-11)
+  async acceptArtistEnrichment(artistId: string, fields?: string[]): Promise<Artist> {
+    return this.apiRequest<Artist>(`/api/artists/${artistId}/enrichment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action: 'accept', fields }),
+    });
+  }
+
+  async rejectArtistEnrichment(artistId: string): Promise<Artist> {
+    return this.apiRequest<Artist>(`/api/artists/${artistId}/enrichment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action: 'reject' }),
+    });
+  }
+
+  async acceptVenueEnrichment(venueId: string, fields?: string[]): Promise<Venue> {
+    return this.apiRequest<Venue>(`/api/venues/${venueId}/enrichment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action: 'accept', fields }),
+    });
+  }
+
+  async rejectVenueEnrichment(venueId: string): Promise<Venue> {
+    return this.apiRequest<Venue>(`/api/venues/${venueId}/enrichment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ action: 'reject' }),
+    });
+  }
 }
 
 // Export singleton instance
@@ -478,6 +519,11 @@ export const getAllEvents = (startDate?: string, endDate?: string) => godmodeSer
 export const getEventById = (artistId: string, eventId: string) => godmodeService.getEventById(artistId, eventId);
 export const updateEvent = (artistId: string, eventId: string, eventData: Partial<Event>) => godmodeService.updateEvent(artistId, eventId, eventData);
 export const deleteEvent = (artistId: string, eventId: string) => godmodeService.deleteEvent(artistId, eventId);
+
+export const acceptArtistEnrichment = (artistId: string, fields?: string[]) => godmodeService.acceptArtistEnrichment(artistId, fields);
+export const rejectArtistEnrichment = (artistId: string) => godmodeService.rejectArtistEnrichment(artistId);
+export const acceptVenueEnrichment = (venueId: string, fields?: string[]) => godmodeService.acceptVenueEnrichment(venueId, fields);
+export const rejectVenueEnrichment = (venueId: string) => godmodeService.rejectVenueEnrichment(venueId);
 
 // Helper Functions
 export function formatGenres(genres: string[]): string {

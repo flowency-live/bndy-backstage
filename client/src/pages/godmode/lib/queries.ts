@@ -6,6 +6,7 @@
 // a table is fetched once, kept fresh for a minute, and every mutation patches
 // the cache in place instead of refetching the world.
 
+import { useMemo } from 'react';
 import {
   useMutation,
   useQuery,
@@ -41,6 +42,7 @@ export const godmodeKeys = {
   reviewItems: (status: ReviewItemStatus) => ['godmode', 'review-items', status] as const,
   sourceSummaries: ['godmode', 'source-summaries'] as const,
   activity: (days: number) => ['godmode', 'activity', days] as const,
+  enrichmentQueue: ['godmode', 'enrichment-queue'] as const,
 };
 
 // ===== Reads =====
@@ -331,6 +333,85 @@ export function useDeleteSong() {
     mutationFn: (id: string) => godmodeService.deleteSong(id),
     onSuccess: (_void, id) => {
       queryClient.setQueryData<Song[]>(godmodeKeys.songs, (list) => removeFromList(list, id));
+    },
+  });
+}
+
+// ===== Enrichment Queue =====
+
+export type EnrichmentQueueItem =
+  | (Artist & { type: 'artist' })
+  | (Venue & { type: 'venue' });
+
+/**
+ * Unified enrichment queue combining artists and venues pending enrichment review.
+ * Sorted by enrichment date (newest first).
+ */
+export function useEnrichmentQueue() {
+  const artists = useGodmodeArtists();
+  const venues = useGodmodeVenues();
+
+  const data = useMemo(() => {
+    const artistItems: EnrichmentQueueItem[] = (artists.data ?? [])
+      .filter((a) => a.enrichmentStatus === 'needs_review' && a.enrichmentData)
+      .map((a) => ({ ...a, type: 'artist' as const }));
+
+    const venueItems: EnrichmentQueueItem[] = (venues.data ?? [])
+      .filter((v) => v.enrichment_status === 'needs_review' && v.enrichment_data)
+      .map((v) => ({ ...v, type: 'venue' as const }));
+
+    return [...artistItems, ...venueItems].sort((a, b) => {
+      const dateA = a.type === 'artist' ? a.enrichmentDate : a.enrichment_date;
+      const dateB = b.type === 'artist' ? b.enrichmentDate : b.enrichment_date;
+      return (dateB ?? '').localeCompare(dateA ?? '');
+    });
+  }, [artists.data, venues.data]);
+
+  return {
+    data,
+    isLoading: artists.isLoading || venues.isLoading,
+    isError: artists.isError || venues.isError,
+  };
+}
+
+export function useAcceptEnrichment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ type, id, fields }: { type: 'artist' | 'venue'; id: string; fields?: string[] }) =>
+      type === 'artist'
+        ? godmodeService.acceptArtistEnrichment(id, fields)
+        : godmodeService.acceptVenueEnrichment(id, fields),
+    onSuccess: (updated, { type }) => {
+      if (type === 'artist') {
+        queryClient.setQueryData<Artist[]>(godmodeKeys.artists, (list) =>
+          replaceInList(list, updated as Artist),
+        );
+      } else {
+        queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) =>
+          replaceInList(list, updated as Venue),
+        );
+      }
+    },
+  });
+}
+
+export function useRejectEnrichment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ type, id }: { type: 'artist' | 'venue'; id: string }) =>
+      type === 'artist'
+        ? godmodeService.rejectArtistEnrichment(id)
+        : godmodeService.rejectVenueEnrichment(id),
+    onSuccess: (updated, { type }) => {
+      if (type === 'artist') {
+        queryClient.setQueryData<Artist[]>(godmodeKeys.artists, (list) =>
+          replaceInList(list, updated as Artist),
+        );
+      } else {
+        queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) =>
+          replaceInList(list, updated as Venue),
+        );
+      }
     },
   });
 }

@@ -44,7 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
       { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, reviewBadge: true },
       { name: 'Sources', href: '/godmode/sources', icon: Activity, exact: true },
       { name: 'Agent Work', href: '/godmode/sources/activity', icon: TrendingUp },
-      { name: 'Enrichment', href: '/godmode/venues/enrichment', icon: Sparkles },
+      { name: 'Enrichment', href: '/godmode/enrichment', icon: Sparkles },
     ],
   },
   {
