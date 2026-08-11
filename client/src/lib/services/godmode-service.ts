@@ -114,7 +114,35 @@ export interface User {
   membershipCount: number;
   authType: 'Phone' | 'Google' | 'Facebook' | 'Email';
   userSource: 'map' | 'backstage' | 'frontstage' | null;
+  role: 'user' | 'curator' | 'owner' | 'staff';
+  platformAdmin: boolean;
   createdAt: string;
+}
+
+export type UserRole = User['role'];
+
+export interface FlagEntry {
+  id: string;
+  entityType: 'artist' | 'venue' | 'event';
+  entityId: string;
+  entityName: string | null;
+  reason: string;
+  reporterUserId: string | null;
+  reporterName: string | null;
+  status: 'open' | 'resolved';
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface ActivityEntry {
+  at: string;
+  actorName: string | null;
+  actorId: string;
+  action: 'edit' | 'hide' | 'restore' | 'set-role' | string;
+  entityType: 'artist' | 'venue' | 'event' | 'user' | string;
+  entityId: string;
+  entityName: string | null;
+  detail: string | null;
 }
 
 export interface Membership {
@@ -339,6 +367,37 @@ class GodmodeService {
     return this.apiRequest<void>(`/users/${userId}`, {
       method: 'DELETE',
     });
+  }
+
+  /** Feature 4: set the platform role on a user record. */
+  async setUserRole(userId: string, role: UserRole): Promise<void> {
+    await this.apiRequest(`/users/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  /** Feature 4: recent curator/admin activity across all users. */
+  async getAllActivity(action?: string): Promise<ActivityEntry[]> {
+    const q = action ? `?action=${encodeURIComponent(action)}` : '';
+    const data = await this.apiRequest<{ entries: ActivityEntry[] }>(`/users/activity/all${q}`);
+    return data.entries || [];
+  }
+
+  /** Feature 6: open flags for the godmode queue. */
+  async getFlags(status: 'open' | 'resolved' = 'open'): Promise<FlagEntry[]> {
+    const data = await this.apiRequest<{ flags: FlagEntry[] }>(`/users/flags?status=${status}`);
+    return data.flags || [];
+  }
+
+  /** Feature 6: close a flag. */
+  async resolveFlag(flagId: string): Promise<void> {
+    await this.apiRequest(`/users/flags/${flagId}/resolve`, { method: 'PUT' });
+  }
+
+  /** Feature 4: bring a hidden record back (staff gate server-side). */
+  async restoreHidden(entityType: 'artist' | 'venue' | 'event', id: string): Promise<void> {
+    await this.apiRequest(`/api/curator/${entityType}s/${id}/restore`, { method: 'POST' });
   }
 
   // ===== Membership Operations =====

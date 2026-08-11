@@ -63,6 +63,7 @@ import ArtistsPage from "@/pages/godmode/artists";
 import EventsPage from "@/pages/godmode/events";
 import SongsPageGodmode from "@/pages/godmode/songs";
 import UsersPage from "@/pages/godmode/users";
+import CuratorsPage from "@/pages/godmode/curators";
 
 function Router() {
   return (
@@ -400,6 +401,11 @@ function Router() {
       <Route path="/godmode/users">
         <GodmodeLayout>
           <UsersPage />
+        </GodmodeLayout>
+      </Route>
+      <Route path="/godmode/curators">
+        <GodmodeLayout>
+          <CuratorsPage />
         </GodmodeLayout>
       </Route>
 

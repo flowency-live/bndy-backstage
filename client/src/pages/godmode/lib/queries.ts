@@ -18,6 +18,7 @@ import {
   type Membership,
   type Song,
   type User,
+  type UserRole,
   type Venue,
 } from '@/lib/services/godmode-service';
 import {
@@ -245,6 +246,60 @@ export function useDeleteEvent() {
 }
 
 // ===== User mutations =====
+
+export function useSetUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, role }: { id: string; role: UserRole }) =>
+      godmodeService.setUserRole(id, role),
+    onSuccess: (_void, { id, role }) => {
+      queryClient.setQueryData<User[]>(godmodeKeys.users, (list) =>
+        list?.map((u) => (u.id === id ? { ...u, role } : u)),
+      );
+      queryClient.invalidateQueries({ queryKey: ['godmode', 'curator-activity'] });
+    },
+  });
+}
+
+export function useGodmodeActivity(action?: string) {
+  return useQuery({
+    queryKey: ['godmode', 'curator-activity', action ?? 'all'],
+    queryFn: () => godmodeService.getAllActivity(action),
+    staleTime: 30_000,
+  });
+}
+
+export function useGodmodeFlags(status: 'open' | 'resolved' = 'open') {
+  return useQuery({
+    queryKey: ['godmode', 'flags', status],
+    queryFn: () => godmodeService.getFlags(status),
+    staleTime: 30_000,
+  });
+}
+
+export function useResolveFlag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (flagId: string) => godmodeService.resolveFlag(flagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['godmode', 'flags'] });
+    },
+  });
+}
+
+export function useRestoreHidden() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entityType, id }: { entityType: 'artist' | 'venue' | 'event'; id: string }) =>
+      godmodeService.restoreHidden(entityType, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['godmode', 'curator-activity'] });
+      queryClient.invalidateQueries({ queryKey: godmodeKeys.artists });
+      queryClient.invalidateQueries({ queryKey: godmodeKeys.venues });
+      queryClient.invalidateQueries({ queryKey: godmodeKeys.events });
+    },
+  });
+}
 
 export function useDeleteUser() {
   const queryClient = useQueryClient();
