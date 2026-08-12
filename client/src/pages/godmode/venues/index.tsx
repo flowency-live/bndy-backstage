@@ -66,6 +66,7 @@ export default function VenuesPage() {
         case 'unvalidated': return v.validated !== true;
         case 'no-place-id': return !v.googlePlaceId;
         case 'no-socials': return !venueHasSocials(v);
+        case 'no-gigs': return !v.eventCount || v.eventCount === 0;
         case 'ticketed': return v.isTicketed === true || v.standardTicketed === true;
         default: return true;
       }
@@ -79,6 +80,7 @@ export default function VenuesPage() {
       { value: 'validated', label: 'Validated', count: venues.filter((v) => v.validated === true).length },
       { value: 'no-place-id', label: 'No place ID', count: venues.filter((v) => !v.googlePlaceId).length, warn: true },
       { value: 'no-socials', label: 'No socials', count: venues.filter((v) => !venueHasSocials(v)).length, warn: true },
+      { value: 'no-gigs', label: 'No gigs', count: venues.filter((v) => !v.eventCount || v.eventCount === 0).length },
       {
         value: 'ticketed',
         label: 'Ticketed',
