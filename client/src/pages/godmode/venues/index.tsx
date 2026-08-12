@@ -18,6 +18,7 @@ import {
 import {
   useCreateVenue,
   useDeleteVenue,
+  useGodmodeEvents,
   useGodmodeVenues,
   useUpdateVenue,
 } from '../lib/queries';
@@ -39,11 +40,21 @@ export default function VenuesPage() {
   const { toast } = useToast();
 
   const venuesQuery = useGodmodeVenues();
+  const eventsQuery = useGodmodeEvents();
   const updateVenue = useUpdateVenue();
   const createVenue = useCreateVenue();
   const deleteVenue = useDeleteVenue();
 
   const venues = venuesQuery.data ?? [];
+
+  // Build Set of venue IDs that have at least one event
+  const venueIdsWithGigs = useMemo(() => {
+    const ids = new Set<string>();
+    for (const event of eventsQuery.data ?? []) {
+      if (event.venueId) ids.add(event.venueId);
+    }
+    return ids;
+  }, [eventsQuery.data]);
 
   const [facet, setFacet] = useInitialUrlFilter('all');
   const [search, setSearch] = useState('');
@@ -66,12 +77,12 @@ export default function VenuesPage() {
         case 'unvalidated': return v.validated !== true;
         case 'no-place-id': return !v.googlePlaceId;
         case 'no-socials': return !venueHasSocials(v);
-        case 'no-gigs': return !v.eventCount || v.eventCount === 0;
+        case 'no-gigs': return !venueIdsWithGigs.has(v.id);
         case 'ticketed': return v.isTicketed === true || v.standardTicketed === true;
         default: return true;
       }
     });
-  }, [venues, search, facet]);
+  }, [venues, search, facet, venueIdsWithGigs]);
 
   const facets = useMemo(
     () => [
@@ -80,14 +91,14 @@ export default function VenuesPage() {
       { value: 'validated', label: 'Validated', count: venues.filter((v) => v.validated === true).length },
       { value: 'no-place-id', label: 'No place ID', count: venues.filter((v) => !v.googlePlaceId).length, warn: true },
       { value: 'no-socials', label: 'No socials', count: venues.filter((v) => !venueHasSocials(v)).length, warn: true },
-      { value: 'no-gigs', label: 'No gigs', count: venues.filter((v) => !v.eventCount || v.eventCount === 0).length },
+      { value: 'no-gigs', label: 'No gigs', count: venues.filter((v) => !venueIdsWithGigs.has(v.id)).length },
       {
         value: 'ticketed',
         label: 'Ticketed',
         count: venues.filter((v) => v.isTicketed === true || v.standardTicketed === true).length,
       },
     ],
-    [venues],
+    [venues, venueIdsWithGigs],
   );
 
   const handleDelete = async (venueId: string) => {
