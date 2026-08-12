@@ -22,11 +22,9 @@ import type { Artist } from '@/lib/services/godmode-service';
 import DataTable, { type Column } from '../components/DataTable';
 import {
   BulkActionBar,
-  FacetChips,
   GodmodePageHeader,
   SourceBadge,
   TableSearch,
-  useInitialUrlFilter,
 } from '../components/godmode-ui';
 import {
   useDeleteArtist,
@@ -48,12 +46,14 @@ type ArtistFacet =
   | 'validated'
   | 'no-genres'
   | 'no-socials'
+  | 'no-gigs'
   | 'no-location'
   | 'frontstage'
   | 'backstage';
 
 const hasSocials = (a: Artist) => Boolean(a.facebookUrl || a.instagramUrl);
 const hasGenres = (a: Artist) => Array.isArray(a.genres) && a.genres.length > 0;
+const hasGigs = (a: Artist, counts: Record<string, number>) => (counts[a.id] ?? 0) > 0;
 
 export default function ArtistsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
@@ -71,12 +71,25 @@ export default function ArtistsPage() {
 
   const artists = artistsQuery.data ?? [];
 
-  // Filters
-  const [facet, setFacet] = useInitialUrlFilter('all');
+  // Filters - facets is a Set for multi-select (AND logic)
+  const [activeFacets, setActiveFacets] = useState<Set<ArtistFacet>>(new Set());
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [acousticFilter, setAcousticFilter] = useState('all');
   const [actTypeFilter, setActTypeFilter] = useState('');
+
+  const toggleFacet = (f: ArtistFacet) => {
+    setActiveFacets((prev) => {
+      const next = new Set(prev);
+      if (next.has(f)) {
+        next.delete(f);
+      } else {
+        next.add(f);
+      }
+      return next;
+    });
+    setSelected(new Set());
+  };
 
   // Selection + modals
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -112,6 +125,7 @@ export default function ArtistsPage() {
       case 'unvalidated': return a.validated !== true;
       case 'no-genres': return !hasGenres(a);
       case 'no-socials': return !hasSocials(a);
+      case 'no-gigs': return !hasGigs(a, futureEventCounts);
       case 'no-location': return !a.location;
       case 'frontstage': return a.source === 'frontstage';
       case 'backstage': return a.source === 'backstage';
@@ -128,28 +142,31 @@ export default function ArtistsPage() {
           (a.location && String(a.location).toLowerCase().includes(q));
         if (!hit) return false;
       }
-      if (!matchesFacet(a, facet as ArtistFacet)) return false;
+      // Apply ALL active facets (AND logic)
+      for (const f of activeFacets) {
+        if (!matchesFacet(a, f)) return false;
+      }
       if (typeFilter && a.artistType !== typeFilter) return false;
       if (acousticFilter === 'acoustic' && a.acoustic !== true) return false;
       if (acousticFilter === 'non-acoustic' && a.acoustic === true) return false;
       if (actTypeFilter && (!a.actType || !a.actType.includes(actTypeFilter))) return false;
       return true;
     });
-  }, [artists, search, facet, typeFilter, acousticFilter, actTypeFilter]);
+  }, [artists, search, activeFacets, typeFilter, acousticFilter, actTypeFilter, futureEventCounts]);
 
   const facets = useMemo(
     () => [
-      { value: 'all', label: 'All', count: artists.length },
       { value: 'needs-review', label: 'Needs review', count: artists.filter((a) => a.needs_review === true).length, warn: true },
       { value: 'unvalidated', label: 'Unvalidated', count: artists.filter((a) => a.validated !== true).length },
       { value: 'validated', label: 'Validated', count: artists.filter((a) => a.validated === true).length },
       { value: 'no-genres', label: 'No genres', count: artists.filter((a) => !hasGenres(a)).length, warn: true },
       { value: 'no-socials', label: 'No socials', count: artists.filter((a) => !hasSocials(a)).length, warn: true },
+      { value: 'no-gigs', label: 'No gigs', count: artists.filter((a) => !hasGigs(a, futureEventCounts)).length, warn: true },
       { value: 'no-location', label: 'No location', count: artists.filter((a) => !a.location).length, warn: true },
       { value: 'frontstage', label: 'Frontstage', count: artists.filter((a) => a.source === 'frontstage').length },
       { value: 'backstage', label: 'Backstage', count: artists.filter((a) => a.source === 'backstage').length },
     ],
-    [artists],
+    [artists, futureEventCounts],
   );
 
   // ===== Row + bulk actions =====
@@ -457,7 +474,40 @@ export default function ArtistsPage() {
         </select>
       </div>
 
-      <FacetChips facets={facets} active={facet} onChange={(v) => { setFacet(v); setSelected(new Set()); }} />
+      {/* Multi-select facet chips (AND logic) */}
+      <div className="flex gap-1.5 flex-wrap">
+        {activeFacets.size > 0 && (
+          <button
+            type="button"
+            onClick={() => { setActiveFacets(new Set()); setSelected(new Set()); }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            Clear filters
+          </button>
+        )}
+        {facets.map((facet) => {
+          const isActive = activeFacets.has(facet.value as ArtistFacet);
+          return (
+            <button
+              key={facet.value}
+              type="button"
+              onClick={() => toggleFacet(facet.value as ArtistFacet)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                isActive
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {facet.label}
+              {facet.count !== undefined && (
+                <span className={`tabular-nums ${!isActive && facet.warn && facet.count > 0 ? 'text-orange-500 font-semibold' : 'opacity-70'}`}>
+                  {facet.count.toLocaleString()}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
       {artistsQuery.isError ? (
         <div className="py-12 text-center text-destructive">{(artistsQuery.error as Error).message}</div>
