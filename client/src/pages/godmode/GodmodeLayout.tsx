@@ -12,6 +12,7 @@ import {
   User,
   Users,
   ArrowLeft,
+  Building2,
   ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -52,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { name: 'Artists', href: '/godmode/artists', icon: User },
       { name: 'Venues', href: '/godmode/venues', icon: MapPin, exact: true },
+      { name: 'Venue groups', href: '/godmode/venue-groups', icon: Building2 },
       { name: 'Events', href: '/godmode/events', icon: Calendar },
       { name: 'Songs', href: '/godmode/songs', icon: Music },
       { name: 'Users', href: '/godmode/users', icon: Users },

@@ -1,11 +1,11 @@
 // Godmode › Venues — dense curation table on the shared DataTable.
 
 import { useMemo, useState } from 'react';
-import { Edit, Facebook, Globe, MapPin, Plus, Ticket, Trash2 } from 'lucide-react';
+import { Building2, Edit, Facebook, Globe, MapPin, Plus, Ticket, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/hooks/use-confirm';
 import { useToast } from '@/hooks/use-toast';
-import type { Venue } from '@/lib/services/godmode-service';
+import type { Venue, VenueGroup } from '@/lib/services/godmode-service';
 import DataTable, { type Column } from '../components/DataTable';
 import {
   BoolMark,
@@ -20,7 +20,9 @@ import {
   useDeleteVenue,
   useGodmodeEvents,
   useGodmodeVenues,
+  useSetVenueGroup,
   useUpdateVenue,
+  useVenueGroups,
 } from '../lib/queries';
 import VenueEditModal from '../components/VenueEditModal';
 import VenueAddModal from '../components/VenueAddModal';
@@ -40,6 +42,8 @@ export default function VenuesPage() {
   const { toast } = useToast();
 
   const venuesQuery = useGodmodeVenues();
+  const groupsQuery = useVenueGroups();
+  const setVenueGroup = useSetVenueGroup();
   const eventsQuery = useGodmodeEvents();
   const updateVenue = useUpdateVenue();
   const createVenue = useCreateVenue();
@@ -60,6 +64,14 @@ export default function VenuesPage() {
 
   const [facet, setFacet] = useInitialUrlFilter('all');
   const [search, setSearch] = useState('');
+  // Feature 19: the venue groups page links here with ?ownerGroup=<id>, so an
+  // estate opens in the table that already has search, facets and bulk select
+  // rather than in a second half-built table of its own.
+  const [ownerGroup, setOwnerGroup] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('ownerGroup');
+  });
+  const [assignOpen, setAssignOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -67,6 +79,7 @@ export default function VenuesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return venues.filter((v) => {
+      if (ownerGroup && v.ownerGroupId !== ownerGroup) return false;
       if (q) {
         const hit =
           (v.name && String(v.name).toLowerCase().includes(q)) ||
@@ -80,11 +93,12 @@ export default function VenuesPage() {
         case 'no-place-id': return !v.googlePlaceId;
         case 'no-socials': return !venueHasSocials(v);
         case 'no-gigs': return !venueEventCounts.has(v.id);
+        case 'no-owner': return !v.ownerGroupId;
         case 'ticketed': return v.isTicketed === true || v.standardTicketed === true;
         default: return true;
       }
     });
-  }, [venues, search, facet, venueEventCounts]);
+  }, [venues, search, facet, venueEventCounts, ownerGroup]);
 
   const facets = useMemo(
     () => [
@@ -99,6 +113,7 @@ export default function VenuesPage() {
         label: 'Ticketed',
         count: venues.filter((v) => v.isTicketed === true || v.standardTicketed === true).length,
       },
+      { value: 'no-owner', label: 'No owner group', count: venues.filter((v) => !v.ownerGroupId).length },
     ],
     [venues, venueEventCounts],
   );
@@ -147,6 +162,32 @@ export default function VenuesPage() {
     toast({
       title: `Deleted ${deleted} venue(s)`,
       description: skipped > 0 ? `${skipped} skipped (delete failed).` : undefined,
+    });
+    setSelected(new Set());
+  };
+
+  /**
+   * Assign every selected venue to one group, or clear it. One call per venue:
+   * an estate is hundreds of rows, not thousands, and a per-row result is what
+   * lets the toast say how many actually landed rather than claiming success.
+   */
+  const assignGroup = async (groupId: string | null) => {
+    setAssignOpen(false);
+    let done = 0;
+    let failed = 0;
+    for (const venue of selectedVenues) {
+      try {
+        await setVenueGroup.mutateAsync({ venueId: venue.id, ownerGroupId: groupId });
+        done++;
+      } catch {
+        failed++;
+      }
+    }
+    const groupName = (groupsQuery.data ?? []).find((g) => g.id === groupId)?.name;
+    toast({
+      title: groupId ? `${done} venue(s) set to ${groupName}` : `${done} venue(s) cleared`,
+      description: failed > 0 ? `${failed} failed and were skipped.` : undefined,
+      variant: failed > 0 ? 'destructive' : undefined,
     });
     setSelected(new Set());
   };
@@ -226,6 +267,21 @@ export default function VenuesPage() {
       },
     },
     {
+      key: 'owner',
+      header: 'Owner',
+      widthClass: 'w-36',
+      className: 'hidden lg:table-cell',
+      sortValue: (v) => v.ownerGroupName ?? '',
+      render: (v) =>
+        v.ownerGroupName ? (
+          <span className="truncate text-muted-foreground">{v.ownerGroupName}</span>
+        ) : (
+          // Blank, not "Independent". No owner group recorded does not mean free
+          // house. It usually means nobody has checked yet.
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
       key: 'validated',
       header: 'Valid',
       widthClass: 'w-16',
@@ -283,6 +339,12 @@ export default function VenuesPage() {
           placeholder="Search name, address, postcode…"
         />
         <FacetChips facets={facets} active={facet} onChange={(v) => { setFacet(v); setSelected(new Set()); }} />
+        {ownerGroup && (
+          <Button size="sm" variant="secondary" onClick={() => { setOwnerGroup(null); setSelected(new Set()); }}>
+            <Building2 className="mr-1.5 h-3.5 w-3.5" />
+            {venues.find((v) => v.ownerGroupId === ownerGroup)?.ownerGroupName ?? 'Owner group'} · clear
+          </Button>
+        )}
       </div>
 
       {venuesQuery.isError ? (
@@ -301,11 +363,54 @@ export default function VenuesPage() {
       )}
 
       <BulkActionBar count={selectedVenues.length} onClear={() => setSelected(new Set())}>
+        <Button size="sm" variant="secondary" onClick={() => setAssignOpen(true)}>
+          <Building2 className="mr-1.5 h-3.5 w-3.5" />
+          Set owner group
+        </Button>
         <Button size="sm" variant="destructive" onClick={bulkDelete}>
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />
           Delete
         </Button>
       </BulkActionBar>
+
+      {assignOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md space-y-3 rounded-lg border bg-card p-5 shadow-lg">
+            <h2 className="text-lg font-semibold">
+              Set owner group for {selectedVenues.length} venue{selectedVenues.length === 1 ? '' : 's'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              A venue has one owner group. This does not change the venue name, address, postcode or place ID.
+            </p>
+            <div className="max-h-64 space-y-1 overflow-y-auto">
+              {(groupsQuery.data ?? []).map((g: VenueGroup) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => assignGroup(g.id)}
+                  className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                >
+                  <span className="font-medium">{g.name}</span>
+                  <span className="text-xs text-muted-foreground">{g.venueCount ?? 0} venues</span>
+                </button>
+              ))}
+              {(groupsQuery.data ?? []).length === 0 && (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No groups yet. Create one on the Venue groups page first.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-between gap-2 pt-1">
+              <Button variant="ghost" onClick={() => assignGroup(null)}>
+                Clear owner group
+              </Button>
+              <Button variant="ghost" onClick={() => setAssignOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog />
 

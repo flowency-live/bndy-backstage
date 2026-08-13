@@ -21,6 +21,8 @@ import {
   type User,
   type UserRole,
   type Venue,
+  type VenueGroup,
+  type VenueTenure,
 } from '@/lib/services/godmode-service';
 import {
   sourceRunsService,
@@ -43,6 +45,7 @@ export const godmodeKeys = {
   sourceSummaries: ['godmode', 'source-summaries'] as const,
   activity: (days: number) => ['godmode', 'activity', days] as const,
   enrichmentQueue: ['godmode', 'enrichment-queue'] as const,
+  venueGroups: ['godmode', 'venue-groups'] as const,
 };
 
 // ===== Reads =====
@@ -194,6 +197,68 @@ export function useUpdateVenue() {
       godmodeService.updateVenue(id, data),
     onSuccess: (updated) => {
       queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) => replaceInList(list, updated));
+    },
+  });
+}
+
+/* ---------------- venue ownership groups (feature 19) ---------------- */
+
+export function useVenueGroups() {
+  return useQuery<VenueGroup[]>({
+    queryKey: godmodeKeys.venueGroups,
+    queryFn: () => godmodeService.getVenueGroups(),
+    staleTime: STALE_MS,
+  });
+}
+
+export function useCreateVenueGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<VenueGroup>) => godmodeService.createVenueGroup(data),
+    onSuccess: (created) => {
+      queryClient.setQueryData<VenueGroup[]>(godmodeKeys.venueGroups, (list) =>
+        list ? [...list, created].sort((a, b) => a.name.localeCompare(b.name)) : [created],
+      );
+    },
+  });
+}
+
+export function useUpdateVenueGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<VenueGroup> }) =>
+      godmodeService.updateVenueGroup(id, data),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<VenueGroup[]>(godmodeKeys.venueGroups, (list) =>
+        (list ?? []).map((g) => (g.id === updated.id ? updated : g)),
+      );
+      // A rename sweeps ownerGroupName across the estate server-side, so the
+      // cached venue rows are now stale. Refetch rather than guess.
+      queryClient.invalidateQueries({ queryKey: godmodeKeys.venues });
+    },
+  });
+}
+
+/**
+ * Assign or clear one venue's owner group, patching the venue cache in place.
+ * The bulk action on the venues page calls this once per venue: the estate is
+ * hundreds of rows, not thousands, and a per-row result is what lets the toast
+ * report how many actually landed.
+ */
+export function useSetVenueGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ venueId, ownerGroupId, tenure }: { venueId: string; ownerGroupId: string | null; tenure?: VenueTenure }) =>
+      godmodeService.setVenueGroup(venueId, ownerGroupId, tenure),
+    onSuccess: (res) => {
+      queryClient.setQueryData<Venue[]>(godmodeKeys.venues, (list) =>
+        (list ?? []).map((v) =>
+          v.id === res.venueId
+            ? { ...v, ownerGroupId: res.ownerGroupId ?? undefined, ownerGroupName: res.ownerGroupName, tenure: res.tenure }
+            : v,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: godmodeKeys.venueGroups });
     },
   });
 }

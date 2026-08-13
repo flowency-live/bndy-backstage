@@ -72,6 +72,29 @@ export interface Song {
   updatedAt?: string;
 }
 
+/** Feature 19 — a venue ownership group. Robinsons is a brewery, Amber Taverns
+ *  is a pubco, so this cannot be a boolean called isBrewery. */
+export type VenueGroupType = 'brewery' | 'pubco' | 'chain' | 'operator';
+
+/** Who owns the bricks is not who runs the pub. `unknown` is the default and is
+ *  a real value, not an absence: blank beats wrong. The managed vs tenanted
+ *  split arrives when claiming needs it. */
+export type VenueTenure = 'unknown' | 'independent' | 'owned';
+
+export interface VenueGroup {
+  id: string;
+  slug: string;
+  name: string;
+  groupType: VenueGroupType;
+  website?: string;
+  facebookUrl?: string;
+  logoUrl?: string;
+  bio?: string;
+  venueCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Venue {
   id: string;
   name: string;
@@ -99,6 +122,12 @@ export interface Venue {
   defaultTicketPrice?: number | null;
   defaultStartTime?: string | null;
   defaultEndTime?: string | null;
+  /** Feature 19: the owner group. ONE per venue. Scope (many per venue) is
+   *  Editions, and is not this field. */
+  ownerGroupId?: string;
+  ownerGroupName?: string;
+  tenure?: VenueTenure;
+  tenureCheckedAt?: string;
   enrichment_status?: 'high_confidence' | 'needs_review' | 'reviewed' | 'rejected';
   enrichment_data?: {
     suggested_website: string | null;
@@ -365,6 +394,51 @@ class GodmodeService {
   async deleteVenue(venueId: string): Promise<void> {
     return this.apiRequest<void>(`/api/venues/${venueId}`, {
       method: 'DELETE',
+    });
+  }
+
+  // ===== Venue group operations (feature 19) =====
+  //
+  // Reads are public. Writes are staff only and the lambda checks the role from
+  // the bndy_session cookie, so `credentials: include` carries the gate.
+
+  async getVenueGroups(): Promise<VenueGroup[]> {
+    const data = await this.apiRequest<{ groups: VenueGroup[] }>('/api/venue-groups');
+    return data.groups || [];
+  }
+
+  async getVenueGroup(slug: string): Promise<{ group: VenueGroup; venues: Venue[]; venueCount: number }> {
+    return this.apiRequest(`/api/venue-groups/${encodeURIComponent(slug)}`);
+  }
+
+  async createVenueGroup(data: Partial<VenueGroup>): Promise<VenueGroup> {
+    const res = await this.apiRequest<{ group: VenueGroup }>('/api/venue-groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.group;
+  }
+
+  async updateVenueGroup(id: string, data: Partial<VenueGroup>): Promise<VenueGroup> {
+    const res = await this.apiRequest<{ group: VenueGroup }>(`/api/venue-groups/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return res.group;
+  }
+
+  /**
+   * Set or clear a venue's owner group. Pass ownerGroupId: null to clear.
+   * This route writes four fields only and can never reach venue identity.
+   */
+  async setVenueGroup(
+    venueId: string,
+    ownerGroupId: string | null,
+    tenure?: VenueTenure,
+  ): Promise<{ venueId: string; ownerGroupId: string | null; ownerGroupName?: string; tenure: VenueTenure }> {
+    return this.apiRequest(`/api/venues/${venueId}/group`, {
+      method: 'PUT',
+      body: JSON.stringify({ ownerGroupId, ...(tenure ? { tenure } : {}) }),
     });
   }
 
