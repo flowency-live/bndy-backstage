@@ -6,21 +6,27 @@
 // venue set from postcode areas, a polygon, an owner group and an explicit
 // list. This page only does ownership.
 //
-// ASSIGNMENT LIVES ON THE VENUES PAGE, NOT HERE. That table already has search,
-// facets and bulk select. Rebuilding a second searchable venue table here would
-// be the worse half of the same screen. Assigning 235 Robinsons pubs is:
-// Venues, search, select all, "Set owner group".
+// BULK ASSIGNMENT LIVES ON THE VENUES PAGE. That table has search, facets and
+// bulk select. Assigning 235 Robinsons pubs is: Venues, search, select all,
+// "Set owner group". The expander here is for ONE venue at a time: check the
+// estate, drop a pub that closed, add the one that was missed.
+//
+// NO DataTable ON THIS PAGE. DataTable is virtualised on a fixed 44px row, so a
+// variable-height expanded row breaks its scroll maths. Groups number in the
+// tens, not the thousands, so this page uses a plain sortable table instead of
+// widening a component four other screens depend on.
 
-import { useMemo, useState } from 'react';
-import { Building2, Edit, ExternalLink, Plus } from 'lucide-react';
+import { Fragment, useMemo, useState } from 'react';
+import { Building2, ChevronDown, ChevronRight, Edit, ExternalLink, Plus } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { VenueGroup, VenueGroupType } from '@/lib/services/godmode-service';
-import DataTable, { type Column } from '../components/DataTable';
 import { GodmodePageHeader, TableSearch } from '../components/godmode-ui';
 import { useCreateVenueGroup, useUpdateVenueGroup, useVenueGroups } from '../lib/queries';
+import GroupEstate from './GroupEstate';
 
 const GROUP_TYPES: { value: VenueGroupType; label: string; help: string }[] = [
   { value: 'brewery', label: 'Brewery', help: 'Brews beer and owns pubs. Robinsons.' },
@@ -42,6 +48,10 @@ interface DraftGroup {
 
 const EMPTY: DraftGroup = { name: '', groupType: 'brewery', website: '', facebookUrl: '', bio: '' };
 
+type SortKey = 'name' | 'type' | 'venues';
+
+const TH = 'px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground';
+
 export default function VenueGroupsPage() {
   const { toast } = useToast();
   const groupsQuery = useVenueGroups();
@@ -51,12 +61,29 @@ export default function VenueGroupsPage() {
   const groups = groupsQuery.data ?? [];
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState<DraftGroup | null>(null);
+  // One open at a time. Two open estates on screen is two lists of pub names
+  // that look alike, and that is how a venue gets removed from the wrong group.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'name', dir: 'asc' });
+
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }));
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return groups;
     return groups.filter((g) => g.name.toLowerCase().includes(q) || g.slug.includes(q));
   }, [groups, search]);
+
+  const sorted = useMemo(() => {
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      if (sort.key === 'venues') return ((a.venueCount ?? 0) - (b.venueCount ?? 0)) * dir;
+      const av = sort.key === 'name' ? a.name : a.groupType;
+      const bv = sort.key === 'name' ? b.name : b.groupType;
+      return av.localeCompare(bv, undefined, { sensitivity: 'base' }) * dir;
+    });
+  }, [filtered, sort]);
 
   const save = async () => {
     if (!draft) return;
@@ -92,87 +119,6 @@ export default function VenueGroupsPage() {
     }
   };
 
-  const columns: Column<VenueGroup>[] = [
-    {
-      key: 'name',
-      header: 'Group',
-      sortValue: (g) => g.name,
-      render: (g) => (
-        <span className="flex items-center gap-2 font-medium">
-          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate">{g.name}</span>
-        </span>
-      ),
-    },
-    {
-      key: 'type',
-      header: 'Type',
-      widthClass: 'w-32',
-      sortValue: (g) => g.groupType,
-      render: (g) => <span className="text-muted-foreground">{TYPE_LABEL[g.groupType] ?? g.groupType}</span>,
-    },
-    {
-      key: 'venues',
-      header: 'Venues',
-      align: 'right',
-      widthClass: 'w-24',
-      sortValue: (g) => g.venueCount ?? 0,
-      render: (g) =>
-        g.venueCount ? (
-          // The count is a convenience, never the source of truth. The estate
-          // itself comes from the ownerGroupId index.
-          <Link href={`/godmode/venues?ownerGroup=${g.id}`} className="text-primary hover:underline">
-            {g.venueCount}
-          </Link>
-        ) : (
-          <span className="text-muted-foreground">0</span>
-        ),
-    },
-    {
-      key: 'links',
-      header: 'Links',
-      widthClass: 'w-20',
-      render: (g) => (
-        <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-          {g.website ? (
-            <a href={g.website} target="_blank" rel="noopener noreferrer" title={g.website}>
-              <ExternalLink className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
-            </a>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      widthClass: 'w-12',
-      render: (g) => (
-        <span className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 w-7 p-0"
-            title="Edit"
-            onClick={() =>
-              setDraft({
-                id: g.id,
-                name: g.name,
-                groupType: g.groupType,
-                website: g.website ?? '',
-                facebookUrl: g.facebookUrl ?? '',
-                bio: g.bio ?? '',
-              })
-            }
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
-        </span>
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-4">
       <GodmodePageHeader
@@ -189,7 +135,7 @@ export default function VenueGroupsPage() {
       </GodmodePageHeader>
 
       <p className="text-sm text-muted-foreground">
-        Who owns a venue. One group per venue. To assign venues, go to{' '}
+        Who owns a venue. One group per venue. Open a row to see and edit its estate. For a bulk change, go to{' '}
         <Link href="/godmode/venues" className="text-primary hover:underline">
           Venues
         </Link>
@@ -201,13 +147,124 @@ export default function VenueGroupsPage() {
       {groupsQuery.isError ? (
         <div className="py-12 text-center text-destructive">{(groupsQuery.error as Error).message}</div>
       ) : (
-        <DataTable
-          columns={columns}
-          rows={filtered}
-          rowKey={(g) => g.id}
-          defaultSort={{ key: 'name', dir: 'asc' }}
-          emptyMessage={groupsQuery.isLoading ? 'Loading groups…' : 'No groups yet. Add one to get started.'}
-        />
+        <div className="overflow-hidden rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/40">
+              <tr>
+                <th className="w-9" />
+                <th className={TH}>
+                  <button type="button" onClick={() => toggleSort('name')} className="uppercase tracking-wider">
+                    Group{sort.key === 'name' ? (sort.dir === 'asc' ? ' \u2191' : ' \u2193') : ''}
+                  </button>
+                </th>
+                <th className={cn(TH, 'w-36')}>
+                  <button type="button" onClick={() => toggleSort('type')} className="uppercase tracking-wider">
+                    Type{sort.key === 'type' ? (sort.dir === 'asc' ? ' \u2191' : ' \u2193') : ''}
+                  </button>
+                </th>
+                <th className={cn(TH, 'w-24 text-right')}>
+                  <button type="button" onClick={() => toggleSort('venues')} className="uppercase tracking-wider">
+                    Venues{sort.key === 'venues' ? (sort.dir === 'asc' ? ' \u2191' : ' \u2193') : ''}
+                  </button>
+                </th>
+                <th className={cn(TH, 'w-20')}>Links</th>
+                <th className="w-12" />
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-3 py-16 text-center text-muted-foreground">
+                    {groupsQuery.isLoading ? 'Loading groups…' : 'No groups yet. Add one to get started.'}
+                  </td>
+                </tr>
+              )}
+              {sorted.map((g) => {
+                const open = openId === g.id;
+                return (
+                  <Fragment key={g.id}>
+                    <tr
+                      className={cn('cursor-pointer border-b transition-colors', open ? 'bg-muted/40' : 'hover:bg-muted/50')}
+                      onClick={() => setOpenId(open ? null : g.id)}
+                    >
+                      <td className="w-9 pl-3 text-muted-foreground">
+                        <button
+                          type="button"
+                          aria-expanded={open}
+                          aria-label={open ? `Collapse ${g.name}` : `Expand ${g.name}`}
+                          className="flex h-7 w-7 items-center justify-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenId(open ? null : g.id);
+                          }}
+                        >
+                          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                      </td>
+                      <td className="max-w-0 truncate px-3 py-2">
+                        <span className="flex items-center gap-2 font-medium">
+                          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="truncate">{g.name}</span>
+                        </span>
+                      </td>
+                      <td className="w-36 px-3 py-2 text-muted-foreground">{TYPE_LABEL[g.groupType] ?? g.groupType}</td>
+                      <td className="w-24 px-3 py-2 text-right tabular-nums">
+                        {/* The count is derived from the ownerGroupId index, never a stored field. */}
+                        {g.venueCount ? (
+                          <Link
+                            href={`/godmode/venues?ownerGroup=${g.id}`}
+                            className="text-primary hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {g.venueCount.toLocaleString()}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">{g.venueCount === null ? 'n/a' : 0}</span>
+                        )}
+                      </td>
+                      <td className="w-20 px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                        {g.website ? (
+                          <a href={g.website} target="_blank" rel="noopener noreferrer" title={g.website}>
+                            <ExternalLink className="h-3.5 w-3.5 text-blue-500 hover:text-blue-400" />
+                          </a>
+                        ) : (
+                          <span className="sr-only">No website</span>
+                        )}
+                      </td>
+                      <td className="w-12 px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0"
+                          title="Edit"
+                          onClick={() =>
+                            setDraft({
+                              id: g.id,
+                              name: g.name,
+                              groupType: g.groupType,
+                              website: g.website ?? '',
+                              facebookUrl: g.facebookUrl ?? '',
+                              bio: g.bio ?? '',
+                            })
+                          }
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr>
+                        <td colSpan={6} className="p-0">
+                          <GroupEstate group={g} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {draft && (

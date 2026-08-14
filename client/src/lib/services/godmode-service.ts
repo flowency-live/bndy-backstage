@@ -90,7 +90,9 @@ export interface VenueGroup {
   facebookUrl?: string;
   logoUrl?: string;
   bio?: string;
-  venueCount?: number;
+  /** DERIVED from the ownerGroupId index on every read, never a stored field.
+   *  `null` means the index was unavailable, which is not the same as zero. */
+  venueCount?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }

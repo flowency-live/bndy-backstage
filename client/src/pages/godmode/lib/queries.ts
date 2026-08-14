@@ -46,6 +46,7 @@ export const godmodeKeys = {
   activity: (days: number) => ['godmode', 'activity', days] as const,
   enrichmentQueue: ['godmode', 'enrichment-queue'] as const,
   venueGroups: ['godmode', 'venue-groups'] as const,
+  venueGroupEstate: (slug: string) => ['godmode', 'venue-group-estate', slug] as const,
 };
 
 // ===== Reads =====
@@ -211,6 +212,25 @@ export function useVenueGroups() {
   });
 }
 
+/**
+ * One group's estate, read on demand when a row is expanded.
+ *
+ * WHY NOT FILTER THE VENUE CACHE. The venues page loads every venue, so the
+ * estate could be derived client-side. It is not, for two reasons. The route
+ * reads the `ownerGroupId` GSI, so it stays correct at 25,000 venues where a
+ * client-side filter over a cached list gets slower and staler. And a member
+ * list that disagrees with the estate the API reports is the exact defect the
+ * derived `venueCount` was built to stop.
+ */
+export function useVenueGroupEstate(slug: string | null) {
+  return useQuery({
+    queryKey: godmodeKeys.venueGroupEstate(slug ?? ''),
+    queryFn: () => godmodeService.getVenueGroup(slug!),
+    enabled: Boolean(slug),
+    staleTime: STALE_MS,
+  });
+}
+
 export function useCreateVenueGroup() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -259,6 +279,10 @@ export function useSetVenueGroup() {
         ),
       );
       queryClient.invalidateQueries({ queryKey: godmodeKeys.venueGroups });
+      // Both estates move on a transfer: the one that lost the venue and the
+      // one that gained it. The old group id is not in the response, so drop
+      // every estate rather than guess which two to keep.
+      queryClient.invalidateQueries({ queryKey: ['godmode', 'venue-group-estate'] });
     },
   });
 }
