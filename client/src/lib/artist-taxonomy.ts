@@ -95,3 +95,34 @@ export function artistTypeLabel(value?: string | null, taxonomy: ArtistTaxonomy 
   const key = value.trim().toLowerCase();
   return taxonomy.artistTypes.find((option) => option.value.toLowerCase() === key || option.label.toLowerCase() === key)?.label ?? value;
 }
+
+export function canonicalArtistType(value?: string | null, taxonomy: ArtistTaxonomy = FALLBACK_ARTIST_TAXONOMY): string | undefined {
+  if (!value) return undefined;
+  const key = value.trim().toLowerCase();
+  return taxonomy.artistTypes.find((option) => option.value.toLowerCase() === key || option.label.toLowerCase() === key)?.value;
+}
+
+export function canonicalActTypes(
+  values?: string[] | null,
+  taxonomy: ArtistTaxonomy = FALLBACK_ARTIST_TAXONOMY,
+): { actTypes: string[]; acousticFromLegacy: boolean } {
+  const actTypes: string[] = [];
+  let acousticFromLegacy = false;
+  const seen = new Set<string>();
+
+  for (const raw of values ?? []) {
+    const key = String(raw).trim().toLowerCase();
+    if (!key) continue;
+    if (key === 'acoustic') {
+      acousticFromLegacy = true;
+      continue;
+    }
+    const option = taxonomy.actTypes.find((item) => item.value.toLowerCase() === key || item.label.toLowerCase() === key);
+    if (option && !seen.has(option.value)) {
+      seen.add(option.value);
+      actTypes.push(option.value);
+    }
+  }
+
+  return { actTypes, acousticFromLegacy };
+}
