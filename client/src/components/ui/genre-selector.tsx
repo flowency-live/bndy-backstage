@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
-import { GENRES, type Genre } from '@/lib/constants/genres';
+import { useArtistTaxonomy } from '@/lib/artist-taxonomy';
 
 interface GenreSelectorProps {
   selectedGenres: string[];
@@ -12,8 +12,10 @@ interface GenreSelectorProps {
 
 export function GenreSelector({ selectedGenres, onChange, className = '' }: GenreSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { data: taxonomy } = useArtistTaxonomy();
+  const genres = taxonomy.genres;
 
-  const toggleGenre = (genre: Genre) => {
+  const toggleGenre = (genre: string) => {
     const newGenres = selectedGenres.includes(genre)
       ? selectedGenres.filter(g => g !== genre)
       : [...selectedGenres, genre];
@@ -26,7 +28,9 @@ export function GenreSelector({ selectedGenres, onChange, className = '' }: Genr
 
   return (
     <div className={className}>
-      {/* Selected Genres Display */}
+      {/* Selected values are always shown, including legacy values already on
+          an artist. Legacy values are preservable/removable but are no longer
+          offered as choices for new classification. */}
       {selectedGenres.length > 0 && (
         <div className="mb-3">
           <div className="text-sm font-medium mb-2">Selected Genres ({selectedGenres.length})</div>
@@ -46,7 +50,6 @@ export function GenreSelector({ selectedGenres, onChange, className = '' }: Genr
         </div>
       )}
 
-      {/* Expand/Collapse Button */}
       <Button
         type="button"
         variant="outline"
@@ -67,11 +70,10 @@ export function GenreSelector({ selectedGenres, onChange, className = '' }: Genr
         )}
       </Button>
 
-      {/* Genre Grid - Collapsible */}
       {isExpanded && (
         <div className="border rounded-md max-h-64 overflow-y-auto p-3 mb-3">
           <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-            {GENRES.map((genre) => {
+            {genres.map((genre) => {
               const isSelected = selectedGenres.includes(genre);
               return (
                 <Badge
@@ -89,7 +91,6 @@ export function GenreSelector({ selectedGenres, onChange, className = '' }: Genr
         </div>
       )}
 
-      {/* Clear All Button */}
       {selectedGenres.length > 0 && (
         <div className="flex justify-end">
           <Button
