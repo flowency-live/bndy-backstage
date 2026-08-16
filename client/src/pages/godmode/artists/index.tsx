@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/hooks/use-confirm';
 import { useToast } from '@/hooks/use-toast';
+import { useArtistTaxonomy } from '@/lib/artist-taxonomy';
 import type { Artist } from '@/lib/services/godmode-service';
 import DataTable, { type Column } from '../components/DataTable';
 import {
@@ -58,6 +59,7 @@ const hasGigs = (a: Artist, counts: Record<string, number>) => (counts[a.id] ?? 
 export default function ArtistsPage() {
   const { confirm, ConfirmDialog } = useConfirm();
   const { toast } = useToast();
+  const { data: taxonomy } = useArtistTaxonomy();
 
   const artistsQuery = useGodmodeArtists();
   const eventsQuery = useGodmodeEvents();
@@ -135,6 +137,8 @@ export default function ArtistsPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const selectedType = typeFilter ? taxonomy.artistTypes.find((type) => type.value === typeFilter) : undefined;
+    const typeAliases = selectedType ? new Set([selectedType.value.toLowerCase(), selectedType.label.toLowerCase()]) : null;
     return artists.filter((a) => {
       if (q) {
         const hit =
@@ -146,13 +150,15 @@ export default function ArtistsPage() {
       for (const f of activeFacets) {
         if (!matchesFacet(a, f)) return false;
       }
-      if (typeFilter && a.artistType !== typeFilter) return false;
+      // Compatibility while old records are being normalised: both `band` and
+      // the historical `Band` representation match the same filter choice.
+      if (typeAliases && (!a.artistType || !typeAliases.has(String(a.artistType).toLowerCase()))) return false;
       if (acousticFilter === 'acoustic' && a.acoustic !== true) return false;
       if (acousticFilter === 'non-acoustic' && a.acoustic === true) return false;
-      if (actTypeFilter && (!a.actType || !a.actType.includes(actTypeFilter))) return false;
+      if (actTypeFilter && (!a.actType || !a.actType.some((value) => String(value).toLowerCase() === actTypeFilter))) return false;
       return true;
     });
-  }, [artists, search, activeFacets, typeFilter, acousticFilter, actTypeFilter, futureEventCounts]);
+  }, [artists, search, activeFacets, typeFilter, acousticFilter, actTypeFilter, futureEventCounts, taxonomy.artistTypes]);
 
   const facets = useMemo(
     () => [
@@ -446,12 +452,7 @@ export default function ArtistsPage() {
           className="h-8 rounded-md border bg-background px-2 text-sm"
         >
           <option value="">Any type</option>
-          <option value="band">Band</option>
-          <option value="solo">Solo</option>
-          <option value="duo">Duo</option>
-          <option value="group">Group</option>
-          <option value="dj">DJ</option>
-          <option value="collective">Collective</option>
+          {taxonomy.artistTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
         </select>
         <select
           value={acousticFilter}
@@ -468,9 +469,7 @@ export default function ArtistsPage() {
           className="h-8 rounded-md border bg-background px-2 text-sm"
         >
           <option value="">Any act type</option>
-          <option value="originals">Originals</option>
-          <option value="covers">Covers</option>
-          <option value="tribute">Tribute</option>
+          {taxonomy.actTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
         </select>
       </div>
 
