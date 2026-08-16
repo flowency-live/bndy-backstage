@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { artistsService } from '@/lib/services/artists-service';
+import { canonicalActTypes, canonicalArtistType } from '@/lib/artist-taxonomy';
 import type { Artist } from '@/types/api';
 import type { ArtistType, ActType } from '@/lib/constants/artist';
 
@@ -66,9 +67,12 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
   const [initialSettings, setInitialSettings] = useState<ArtistSettings>(settings);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Initialize settings from artistData
+  // Initialize settings from artistData. Canonicalise old display-valued artist
+  // types and the historical `acoustic` pseudo-act on read so untouched legacy
+  // records still render correctly before the background data migration runs.
   useEffect(() => {
     if (artistData) {
+      const legacyActs = canonicalActTypes(artistData.actType || []);
       const newSettings: ArtistSettings = {
         name: artistData.name || '',
         bio: artistData.bio || '',
@@ -78,9 +82,9 @@ export function useArtistSettings(artistId: string, artistData: Artist | null) {
         avatar: artistData.profileImageUrl || null,
         displayColour: artistData.displayColour || '#f97316',
         genres: artistData.genres || [],
-        artistType: artistData.artistType as ArtistType,
-        actType: (artistData.actType || []) as ActType[],
-        acoustic: artistData.acoustic || false,
+        artistType: canonicalArtistType(artistData.artistType) as ArtistType | undefined,
+        actType: legacyActs.actTypes as ActType[],
+        acoustic: artistData.acoustic === true || legacyActs.acousticFromLegacy,
         publishAvailability: artistData.publishAvailability || false,
         availabilityMode: (artistData.availabilityMode as 'selected_dates_only' | 'free_weekends') || 'selected_dates_only',
         contactMethod: (artistData.contactMethod as 'phone' | 'whatsapp') || 'phone',
