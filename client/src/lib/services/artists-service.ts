@@ -1,6 +1,6 @@
 // src/lib/services/artists-service.ts
 // Artist management service for the new platform architecture
-// NOTE: "band" is just one artist type (band, solo, duo, group, dj, collective)
+// NOTE: "band" is just one artist type (band, solo, duo, trio, group, dj, collective)
 // This service provides artist-specific operations following the new architecture
 
 import { API_BASE_URL } from '../../config/api';
@@ -24,7 +24,7 @@ export interface Artist {
   profileImageUrl?: string;
   displayColour?: string;
   genres?: string[];
-  artistType?: 'band' | 'solo' | 'duo' | 'group' | 'dj' | 'collective';
+  artistType?: 'band' | 'solo' | 'duo' | 'trio' | 'group' | 'dj' | 'collective';
   actType?: string[];
   acoustic?: boolean;
   facebookUrl?: string;
