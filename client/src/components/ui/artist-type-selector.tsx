@@ -1,10 +1,10 @@
 // Artist Type Selector Component
 // Single-select radio button group for artist type
-// Created: 2025-11-07
 
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ARTIST_TYPES, type ArtistType } from '@/lib/constants/artist';
+import { useArtistTaxonomy } from '@/lib/artist-taxonomy';
+import type { ArtistType } from '@/lib/constants/artist';
 
 interface ArtistTypeSelectorProps {
   selectedType?: ArtistType;
@@ -21,6 +21,8 @@ export function ArtistTypeSelector({
   required = false,
   error
 }: ArtistTypeSelectorProps) {
+  const { data: taxonomy } = useArtistTaxonomy();
+
   return (
     <div className={className}>
       <Label className="text-sm font-medium mb-2 block">
@@ -32,7 +34,7 @@ export function ArtistTypeSelector({
         onValueChange={(value) => onChange(value as ArtistType)}
         className="grid grid-cols-2 md:grid-cols-3 gap-3"
       >
-        {ARTIST_TYPES.map((type) => (
+        {taxonomy.artistTypes.map((type) => (
           <div key={type.value} className="flex items-center space-x-2">
             <RadioGroupItem value={type.value} id={type.value} />
             <Label
