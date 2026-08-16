@@ -1,21 +1,15 @@
-// Artist Type Constants
-export const ARTIST_TYPES = [
-  { value: 'band', label: 'Band' },
-  { value: 'solo', label: 'Solo Act' },
-  { value: 'duo', label: 'Duo' },
-  { value: 'trio', label: 'Trio' },
-  { value: 'group', label: 'Group' },
-  { value: 'dj', label: 'DJ' },
-  { value: 'collective', label: 'Collective' }
-] as const;
+import { FALLBACK_ARTIST_TAXONOMY } from '@/lib/artist-taxonomy';
 
-export type ArtistType = typeof ARTIST_TYPES[number]['value'];
+/**
+ * Stable storage contracts. UI option lists come from the Artists API at
+ * runtime; these unions describe the canonical machine values persisted by the
+ * backend and used by existing TypeScript call sites.
+ */
+export type ArtistType = 'band' | 'solo' | 'duo' | 'trio' | 'group' | 'dj' | 'collective';
+export type ActType = 'originals' | 'covers' | 'tribute';
 
-// Act Type Constants
-export const ACT_TYPES = [
-  { value: 'originals', label: 'Originals' },
-  { value: 'covers', label: 'Covers' },
-  { value: 'tribute', label: 'Tribute Act' }
-] as const;
+/** @deprecated Prefer useArtistTaxonomy().artistTypes in UI code. */
+export const ARTIST_TYPES = FALLBACK_ARTIST_TAXONOMY.artistTypes as ReadonlyArray<{ value: ArtistType; label: string }>;
 
-export type ActType = typeof ACT_TYPES[number]['value'];
+/** @deprecated Prefer useArtistTaxonomy().actTypes in UI code. */
+export const ACT_TYPES = FALLBACK_ARTIST_TAXONOMY.actTypes as ReadonlyArray<{ value: ActType; label: string }>;
