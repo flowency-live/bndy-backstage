@@ -1,10 +1,11 @@
 // Act Type Selector Component
-// Multi-select checkbox group for act type (originals, covers, tribute)
-// Created: 2025-11-07
+// Multi-select checkbox group for originals / covers / tribute.
+// Acoustic is deliberately separate: artist.acoustic boolean.
 
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ACT_TYPES, type ActType } from '@/lib/constants/artist';
+import { useArtistTaxonomy } from '@/lib/artist-taxonomy';
+import type { ActType } from '@/lib/constants/artist';
 
 interface ActTypeSelectorProps {
   selectedTypes: ActType[];
@@ -21,14 +22,13 @@ export function ActTypeSelector({
   required = false,
   error
 }: ActTypeSelectorProps) {
+  const { data: taxonomy } = useArtistTaxonomy();
+
   const toggleActType = (actType: ActType) => {
     const isSelected = selectedTypes.includes(actType);
 
     if (isSelected) {
-      // Don't allow deselection if this is the last selected item and required
-      if (required && selectedTypes.length === 1) {
-        return;
-      }
+      if (required && selectedTypes.length === 1) return;
       onChange(selectedTypes.filter(t => t !== actType));
     } else {
       onChange([...selectedTypes, actType]);
@@ -46,8 +46,9 @@ export function ActTypeSelector({
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {ACT_TYPES.map((type) => {
-          const isSelected = selectedTypes.includes(type.value as ActType);
+        {taxonomy.actTypes.map((type) => {
+          const actType = type.value as ActType;
+          const isSelected = selectedTypes.includes(actType);
           const isOnlySelected = isSelected && selectedTypes.length === 1 && required;
 
           return (
@@ -55,7 +56,7 @@ export function ActTypeSelector({
               <Checkbox
                 id={type.value}
                 checked={isSelected}
-                onCheckedChange={() => toggleActType(type.value as ActType)}
+                onCheckedChange={() => toggleActType(actType)}
                 disabled={isOnlySelected}
               />
               <Label
