@@ -10,7 +10,8 @@ import { fetchFacebookProfilePicture } from "@/lib/utils/facebook-utils";
 import { FaFacebook, FaInstagram, FaYoutube, FaSpotify, FaXTwitter } from "react-icons/fa6";
 import { GenreSelector } from "@/components/ui/genre-selector";
 import { ActTypeSelector } from "@/components/ui/act-type-selector";
-import { ARTIST_TYPES, ACT_TYPES, type ArtistType, type ActType } from "@/lib/constants/artist";
+import { useArtistTaxonomy } from "@/lib/artist-taxonomy";
+import type { ArtistType, ActType } from "@/lib/constants/artist";
 
 interface WizardData {
   artistType: ArtistType | null;
@@ -43,6 +44,7 @@ interface CreateArtistWizardProps {
 export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistWizardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: taxonomy } = useArtistTaxonomy();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [wizardData, setWizardData] = useState<WizardData>({
@@ -66,13 +68,12 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
   const [existingArtists, setExistingArtists] = useState<ExistingArtist[]>([]);
   const [checkingName, setCheckingName] = useState(false);
 
-  // All artist types are now enabled
-  const enabledTypes = ARTIST_TYPES;
+  const enabledTypes = taxonomy.artistTypes;
 
   // Get context-aware labels
   const getTypeLabel = (type: ArtistType | null): string => {
     if (!type) return "Artist";
-    const typeConfig = ARTIST_TYPES.find(t => t.value === type);
+    const typeConfig = taxonomy.artistTypes.find(t => t.value === type);
     return typeConfig?.label || "Artist";
   };
 
@@ -292,7 +293,7 @@ export default function CreateArtistWizard({ onClose, onSuccess }: CreateArtistW
                 {enabledTypes.map((type) => (
                   <button
                     key={type.value}
-                    onClick={() => handleTypeSelect(type.value)}
+                    onClick={() => handleTypeSelect(type.value as ArtistType)}
                     className="w-full p-4 rounded-lg border-2 text-left transition-all border-border hover:border-primary/50 hover:bg-muted"
                     data-testid={`button-type-${type.value}`}
                   >
