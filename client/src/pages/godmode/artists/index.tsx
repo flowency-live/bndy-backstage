@@ -364,6 +364,18 @@ export default function ArtistsPage() {
       render: (a) => <SourceBadge source={a.source} />,
     },
     {
+      key: 'created',
+      header: 'Created',
+      widthClass: 'w-28',
+      className: 'hidden xl:table-cell',
+      sortValue: (a) => a.createdAt,
+      render: (a) => (
+        <span className="text-muted-foreground text-xs">
+          {a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB') : '—'}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: '',
       widthClass: 'w-28',

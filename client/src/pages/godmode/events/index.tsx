@@ -240,6 +240,18 @@ export default function EventsPage() {
       ),
     },
     {
+      key: 'created',
+      header: 'Created',
+      widthClass: 'w-28',
+      className: 'hidden xl:table-cell',
+      sortValue: (e) => e.createdAt,
+      render: (e) => (
+        <span className="text-muted-foreground text-xs">
+          {e.createdAt ? new Date(e.createdAt).toLocaleDateString('en-GB') : '—'}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: '',
       widthClass: 'w-20',

@@ -289,6 +289,18 @@ export default function VenuesPage() {
       render: (v) => <BoolMark value={v.validated === true} />,
     },
     {
+      key: 'created',
+      header: 'Created',
+      widthClass: 'w-28',
+      className: 'hidden xl:table-cell',
+      sortValue: (v) => v.createdAt,
+      render: (v) => (
+        <span className="text-muted-foreground text-xs">
+          {v.createdAt ? new Date(v.createdAt).toLocaleDateString('en-GB') : '—'}
+        </span>
+      ),
+    },
+    {
       key: 'actions',
       header: '',
       widthClass: 'w-20',
