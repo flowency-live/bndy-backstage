@@ -1,5 +1,8 @@
 // API Configuration
-export const API_BASE_URL = 'https://api.bndy.co.uk';
+// Same-origin detection: when on bndy.live, CloudFront routes /api/* to API Gateway
+export const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname.endsWith('bndy.live')
+  ? ''  // Same-origin, no CORS preflight needed
+  : 'https://api.bndy.co.uk';
 
 // Helper function for API requests
 export const apiUrl = (path: string) => {
