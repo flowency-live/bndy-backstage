@@ -1,4 +1,4 @@
-// Godmode › Curators — curator activity feed + hidden records with restore.
+// Godmode › Curators — access policies, curator activity, hidden records + restore.
 // Feature 4 (2026-08-11): a curator "delete" hides the record and lands here.
 
 import { useMemo, useState } from 'react';
@@ -10,6 +10,7 @@ import type { ActivityEntry } from '@/lib/services/godmode-service';
 import DataTable, { type Column } from '../components/DataTable';
 import { FacetChips, GodmodePageHeader, TableSearch } from '../components/godmode-ui';
 import { useGodmodeActivity, useGodmodeFlags, useResolveFlag, useRestoreHidden } from '../lib/queries';
+import CuratorAccessPanel from './CuratorAccessPanel';
 
 /**
  * The activity feed is the source of truth for the hidden list: the latest
@@ -32,6 +33,7 @@ const ACTION_STYLES: Record<string, string> = {
   hide: 'bg-red-500/20 text-red-400',
   restore: 'bg-emerald-500/20 text-emerald-400',
   'set-role': 'bg-purple-500/20 text-purple-400',
+  'set-curator-access': 'bg-cyan-500/20 text-cyan-400',
   flag: 'bg-amber-500/20 text-amber-400',
   cancel: 'bg-amber-500/20 text-amber-400',
   uncancel: 'bg-emerald-500/20 text-emerald-400',
@@ -94,6 +96,7 @@ export default function CuratorsPage() {
       { value: 'hide', label: 'Hides', count: entries.filter((e) => e.action === 'hide').length },
       { value: 'restore', label: 'Restores', count: entries.filter((e) => e.action === 'restore').length },
       { value: 'set-role', label: 'Role changes', count: entries.filter((e) => e.action === 'set-role').length },
+      { value: 'set-curator-access', label: 'Access changes', count: entries.filter((e) => e.action === 'set-curator-access').length },
     ],
     [entries, hiddenNow, openFlags],
   );
@@ -227,6 +230,8 @@ export default function CuratorsPage() {
         isFetching={activityQuery.isFetching || flagsQuery.isFetching}
         onRefresh={() => { activityQuery.refetch(); flagsQuery.refetch(); }}
       />
+
+      <CuratorAccessPanel />
 
       <div className="flex flex-wrap items-center gap-3">
         <TableSearch value={search} onChange={setSearch} placeholder="Search record, curator…" />
