@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatSourceName } from '@/lib/services/source-runs-service';
+import AnalyticsPanel from './AnalyticsPanel';
 import {
   useGodmodeArtists,
   useGodmodeEvents,
@@ -146,6 +147,8 @@ export default function GodmodeDashboard() {
           </div>
         </Card>
       )}
+
+      <AnalyticsPanel />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Review queue preview */}

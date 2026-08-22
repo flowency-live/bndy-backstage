@@ -1,0 +1,23 @@
+name: bndy backstage CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      # The repository currently has substantial pre-existing TypeScript debt,
+      # so full `tsc` is not a useful merge gate yet. The production Vite build
+      # still catches syntax/import/bundling regressions in changed UI code.
+      - name: Production build
+        run: npm run build
