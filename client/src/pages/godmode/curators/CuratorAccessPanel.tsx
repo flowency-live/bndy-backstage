@@ -72,7 +72,7 @@ export default function CuratorAccessPanel() {
     try {
       const result = await setCuratorAccess(user.id, {
         scope,
-        postcodePrefixes: scope === 'postcode' ? [...new Set(postcodePrefixes)] : [],
+        postcodePrefixes: scope === 'postcode' ? Array.from(new Set(postcodePrefixes)) : [],
         ownRecordsOnly,
       });
       setEditingId(null);
