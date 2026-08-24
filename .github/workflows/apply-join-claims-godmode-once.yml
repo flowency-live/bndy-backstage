@@ -1,0 +1,60 @@
+name: Apply Join claims Godmode once
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: contains(github.event.head_commit.message, 'Run Join claims Godmode')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Add claim review navigation and route
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          let app = fs.readFileSync('client/src/App.tsx', 'utf8');
+          let layout = fs.readFileSync('client/src/pages/godmode/GodmodeLayout.tsx', 'utf8');
+
+          if (!app.includes('ClaimsPage from "@/pages/godmode/claims"')) {
+            app = app.replace(
+              'import CuratorsPage from "@/pages/godmode/curators";\n',
+              'import CuratorsPage from "@/pages/godmode/curators";\nimport ClaimsPage from "@/pages/godmode/claims";\n',
+            );
+          }
+          if (!app.includes('path="/godmode/claims"')) {
+            app = app.replace(
+              '      <Route path="/godmode/curators">\n        <GodmodeLayout>\n          <CuratorsPage />\n        </GodmodeLayout>\n      </Route>\n',
+              '      <Route path="/godmode/curators">\n        <GodmodeLayout>\n          <CuratorsPage />\n        </GodmodeLayout>\n      </Route>\n      <Route path="/godmode/claims">\n        <GodmodeLayout>\n          <ClaimsPage />\n        </GodmodeLayout>\n      </Route>\n',
+            );
+          }
+          if (!layout.includes("name: 'Ownership claims'")) {
+            layout = layout.replace(
+              "      { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, reviewBadge: true },\n",
+              "      { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, reviewBadge: true },\n      { name: 'Ownership claims', href: '/godmode/claims', icon: ShieldCheck },\n",
+            );
+          }
+
+          fs.writeFileSync('client/src/App.tsx', app);
+          fs.writeFileSync('client/src/pages/godmode/GodmodeLayout.tsx', layout);
+          NODE
+          cd client
+          npm ci
+          npm run build
+      - name: Commit
+        run: |
+          git config user.name 'bndy-product-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add client/src/App.tsx client/src/pages/godmode/GodmodeLayout.tsx
+          git commit -m 'Add ownership Claim review to Godmode'
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
