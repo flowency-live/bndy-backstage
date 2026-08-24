@@ -48,7 +48,10 @@ jobs:
         id: build
         if: steps.install.outcome == 'success'
         continue-on-error: true
-        run: npm run build
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee /tmp/backstage-build.log
 
       - name: Configure AWS credentials
         id: aws_auth
@@ -75,7 +78,6 @@ jobs:
             --query 'jobSummary.jobId' \
             --output text)
           echo "Amplify job: $JOB_ID"
-
           for i in $(seq 1 90); do
             STATUS=$(aws amplify get-job \
               --region "$AWS_REGION" \
@@ -91,7 +93,6 @@ jobs:
             esac
             sleep 10
           done
-          echo "Timed out waiting for Amplify job" >&2
           exit 1
 
       - name: Publish deployment stages
@@ -122,6 +123,14 @@ jobs:
           publish bndy/build "$BUILD_OUTCOME" "production build: $BUILD_OUTCOME"
           publish bndy/aws-auth "$AUTH_OUTCOME" "AWS auth: $AUTH_OUTCOME"
           publish bndy/amplify-release "$AMPLIFY_OUTCOME" "Amplify release: $AMPLIFY_OUTCOME"
+
+          if [ "$BUILD_OUTCOME" != success ] && [ -s /tmp/backstage-build.log ]; then
+            ERROR_LINE=$(grep -E "Could not resolve|Failed to resolve|error during build|RollupError|ERROR|Error:" /tmp/backstage-build.log | tail -n 1 || true)
+            [ -n "$ERROR_LINE" ] || ERROR_LINE=$(tail -n 8 /tmp/backstage-build.log | head -n 1)
+            SAFE=$(printf '%s' "$ERROR_LINE" | tr -cd '[:alnum:] ._:/@()\[\]-' | cut -c1-72)
+            [ -n "$SAFE" ] || SAFE='unknown-build-error'
+            publish "bndy/build-error/$SAFE" failure "Vite build error"
+          fi
 
           test "$INSTALL_OUTCOME" = success \
             && test "$BUILD_OUTCOME" = success \
