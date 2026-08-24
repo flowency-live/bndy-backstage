@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'wouter';
 import {
   Activity,
@@ -12,14 +13,19 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatSourceName } from '@/lib/services/source-runs-service';
-import AnalyticsPanel from './AnalyticsPanel';
-import IntelligencePanel from './IntelligencePanel';
 import {
   useGodmodeArtists,
   useGodmodeVenues,
   useReviewItems,
   useSourceActivity,
 } from './lib/queries';
+
+const IntelligencePanel = lazy(() => import('./IntelligencePanel'));
+const AnalyticsPanel = lazy(() => import('./AnalyticsPanel'));
+
+function PanelFallback({ height = 'h-72' }: { height?: string }) {
+  return <Skeleton className={cn('w-full rounded-2xl', height)} />;
+}
 
 function KpiCard({
   label,
@@ -93,7 +99,9 @@ export default function GodmodeDashboard() {
         <p className="mt-1 text-sm text-muted-foreground">Intelligence first. Operations and exceptions underneath.</p>
       </div>
 
-      <IntelligencePanel />
+      <Suspense fallback={<PanelFallback height="h-[620px]" />}>
+        <IntelligencePanel />
+      </Suspense>
 
       <section className="space-y-4 border-t pt-7">
         <div>
@@ -101,7 +109,9 @@ export default function GodmodeDashboard() {
           <h2 className="mt-1 text-lg font-black tracking-tight">bndy.live traffic</h2>
           <p className="text-xs text-muted-foreground">What people are actually doing with the public experience.</p>
         </div>
-        <AnalyticsPanel />
+        <Suspense fallback={<PanelFallback />}>
+          <AnalyticsPanel />
+        </Suspense>
       </section>
 
       <section className="space-y-4 border-t pt-7">
