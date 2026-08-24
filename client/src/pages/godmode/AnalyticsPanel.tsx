@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Globe2, MonitorSmartphone, MousePointerClick } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -12,57 +13,48 @@ const RANGE_OPTIONS = [
   { days: 30 as const, label: '30 days' },
 ];
 
+const tooltipStyle = {
+  borderRadius: 12,
+  border: '1px solid hsl(var(--border))',
+  background: 'hsl(var(--popover))',
+  color: 'hsl(var(--popover-foreground))',
+  boxShadow: '0 12px 30px rgba(0,0,0,.15)',
+  fontSize: 12,
+};
+
 function CompactMetric({ label, value, icon: Icon, loading }: { label: string; value?: string | number; icon: typeof Activity; loading?: boolean }) {
   return (
-    <Card className="p-3">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-      </div>
-      {loading ? <Skeleton className="mt-2 h-7 w-16" /> : <div className="mt-1 text-2xl font-bold tabular-nums">{typeof value === 'number' ? value.toLocaleString() : value ?? '—'}</div>}
+    <Card className="rounded-2xl p-4">
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground"><Icon className="h-3.5 w-3.5" /> {label}</div>
+      {loading ? <Skeleton className="mt-2 h-8 w-20" /> : <div className="mt-1 text-3xl font-black tabular-nums tracking-tight">{typeof value === 'number' ? value.toLocaleString() : value ?? '—'}</div>}
     </Card>
   );
 }
 
 function RankedList({ title, rows, loading }: { title: string; rows?: AnalyticsMetricRow[]; loading?: boolean }) {
+  const max = Math.max(...(rows ?? []).map((row) => row.pageViews), 1);
   return (
-    <Card className="p-4">
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    <Card className="rounded-2xl p-4">
+      <h3 className="mb-3 text-sm font-bold">{title}</h3>
       {loading ? (
-        <div className="space-y-2"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-5/6" /><Skeleton className="h-5 w-3/4" /></div>
+        <div className="space-y-3"><Skeleton className="h-7 w-full" /><Skeleton className="h-7 w-5/6" /><Skeleton className="h-7 w-3/4" /></div>
       ) : !rows?.length ? (
         <p className="py-4 text-sm text-muted-foreground">No traffic yet.</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-3">
           {rows.slice(0, 8).map((row, index) => (
-            <div key={`${row.label}-${index}`} className="flex min-w-0 items-center gap-3 text-sm">
-              <span className="min-w-0 flex-1 truncate" title={row.label}>{row.label}</span>
-              <span className="shrink-0 tabular-nums text-muted-foreground">{row.pageViews.toLocaleString()}</span>
+            <div key={`${row.label}-${index}`}>
+              <div className="flex min-w-0 items-center gap-3 text-xs">
+                <span className="w-4 text-right font-black text-muted-foreground">{index + 1}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold" title={row.label}>{row.label || 'Direct'}</span>
+                <span className="shrink-0 font-black tabular-nums">{row.pageViews.toLocaleString()}</span>
+              </div>
+              <div className="ml-7 mt-1 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary/70" style={{ width: `${Math.max(3, (row.pageViews / max) * 100)}%` }} /></div>
             </div>
           ))}
         </div>
       )}
     </Card>
-  );
-}
-
-function TrafficBars({ points }: { points: Array<{ date: string; pageViews: number }> }) {
-  if (!points.length) return <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">No traffic yet.</div>;
-  const max = Math.max(...points.map((p) => p.pageViews), 1);
-  return (
-    <div className="flex h-32 items-end gap-1" aria-label="Page views over time">
-      {points.map((point) => (
-        <div key={point.date} className="group relative flex min-w-0 flex-1 items-end justify-center h-full">
-          <div
-            className="w-full min-w-[3px] rounded-t bg-primary/70 transition-colors group-hover:bg-primary"
-            style={{ height: `${Math.max((point.pageViews / max) * 100, point.pageViews ? 3 : 0)}%` }}
-          />
-          <div className="pointer-events-none absolute bottom-full z-10 mb-1 hidden whitespace-nowrap rounded bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow group-hover:block">
-            {new Date(`${point.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}: {point.pageViews.toLocaleString()} views
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -81,22 +73,16 @@ export default function AnalyticsPanel() {
   const mobileShare = data?.pageViews && mobile ? `${Math.round((mobile.pageViews / data.pageViews) * 100)}%` : '—';
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">bndy.live traffic</h2>
-          <p className="text-xs text-muted-foreground">Cloudflare Web Analytics · privacy-first site traffic</p>
-        </div>
-        <div className="inline-flex rounded-md border bg-card p-0.5">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground"><Globe2 className="h-3.5 w-3.5" /> Cloudflare Web Analytics · privacy-first</div>
+        <div className="inline-flex rounded-xl border bg-muted/30 p-1">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.days}
               type="button"
               onClick={() => setDays(option.days)}
-              className={cn(
-                'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                days === option.days ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
-              )}
+              className={cn('rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors', days === option.days ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
             >
               {option.label}
             </button>
@@ -104,11 +90,7 @@ export default function AnalyticsPanel() {
         </div>
       </div>
 
-      {query.isError && (
-        <Card className="border-destructive/40 p-4 text-sm text-destructive">
-          Analytics unavailable: {(query.error as Error).message}
-        </Card>
-      )}
+      {query.isError && <Card className="rounded-2xl border-destructive/40 p-4 text-sm text-destructive">Analytics unavailable: {(query.error as Error).message}</Card>}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <CompactMetric label="Page views" value={data?.pageViews} icon={Activity} loading={query.isLoading} />
@@ -117,20 +99,35 @@ export default function AnalyticsPanel() {
         <CompactMetric label="Mobile" value={mobileShare} icon={MonitorSmartphone} loading={query.isLoading} />
       </div>
 
-      <Card className="p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Page views</h3>
+      <Card className="rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div><h3 className="text-sm font-bold">Traffic pulse</h3><p className="text-xs text-muted-foreground">Page views over the selected period.</p></div>
           {data?.generatedAt && <span className="text-[11px] text-muted-foreground">Updated {new Date(data.generatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
         </div>
-        {query.isLoading ? <Skeleton className="h-32 w-full" /> : <TrafficBars points={data?.series ?? []} />}
+        <div className="mt-4 h-[230px]">
+          {query.isLoading ? <Skeleton className="h-full w-full rounded-xl" /> : !data?.series.length ? (
+            <div className="grid h-full place-items-center text-sm text-muted-foreground">No traffic yet.</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.series} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+                <defs><linearGradient id="trafficArea" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#60a5fa" stopOpacity={0.38} /><stop offset="95%" stopColor="#60a5fa" stopOpacity={0.02} /></linearGradient></defs>
+                <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="date" tickFormatter={(value) => new Date(`${value}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} tick={{ fontSize: 10 }} minTickGap={28} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10 }} width={42} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={tooltipStyle} labelFormatter={(value) => new Date(`${String(value)}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} />
+                <Area type="monotone" dataKey="pageViews" name="Page views" stroke="#60a5fa" strokeWidth={2.5} fill="url(#trafficArea)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RankedList title="Top pages" rows={data?.topPages} loading={query.isLoading} />
         <RankedList title="Referrers" rows={data?.referrers} loading={query.isLoading} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <RankedList title="Countries" rows={data?.countries} loading={query.isLoading} />
         <RankedList title="Devices" rows={data?.devices} loading={query.isLoading} />
         <RankedList title="Browsers" rows={data?.browsers} loading={query.isLoading} />
