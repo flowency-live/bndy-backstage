@@ -125,11 +125,14 @@ jobs:
           publish bndy/amplify-release "$AMPLIFY_OUTCOME" "Amplify release: $AMPLIFY_OUTCOME"
 
           if [ "$BUILD_OUTCOME" != success ] && [ -s /tmp/backstage-build.log ]; then
-            ERROR_LINE=$(grep -E "Could not resolve|Failed to resolve|error during build|RollupError|ERROR|Error:" /tmp/backstage-build.log | tail -n 1 || true)
-            [ -n "$ERROR_LINE" ] || ERROR_LINE=$(tail -n 8 /tmp/backstage-build.log | head -n 1)
-            SAFE=$(printf '%s' "$ERROR_LINE" | tr -cd '[:alnum:] ._:/@()\[\]-' | cut -c1-72)
-            [ -n "$SAFE" ] || SAFE='unknown-build-error'
-            publish "bndy/build-error/$SAFE" failure "Vite build error"
+            n=0
+            while IFS= read -r line; do
+              [ -n "$line" ] || continue
+              n=$((n+1))
+              SAFE=$(printf '%s' "$line" | tr -cd '[:alnum:] ._:/@()\[\]-' | cut -c1-68)
+              [ -n "$SAFE" ] || SAFE='blank'
+              publish "bndy/build-log-$n/$SAFE" failure "Vite build log"
+            done < <(tail -n 12 /tmp/backstage-build.log | tail -n 6)
           fi
 
           test "$INSTALL_OUTCOME" = success \
