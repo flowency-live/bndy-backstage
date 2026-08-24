@@ -26,7 +26,6 @@ interface NavItem {
   href: string;
   icon: typeof Activity;
   exact?: boolean;
-  /** Show the open review-item count badge on this entry. */
   reviewBadge?: boolean;
 }
 
@@ -35,13 +34,11 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// Two groups, ordered by what godmode is actually for: first triage what the
-// automated pipeline produced, then curate the catalogue it wrote into.
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Operate',
+    label: 'Control room',
     items: [
-      { name: 'Dashboard', href: '/godmode', icon: LayoutDashboard, exact: true },
+      { name: 'Intelligence', href: '/godmode', icon: LayoutDashboard, exact: true },
       { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, reviewBadge: true },
       { name: 'Sources', href: '/godmode/sources', icon: Activity, exact: true },
       { name: 'Agent Work', href: '/godmode/sources/activity', icon: TrendingUp },
@@ -69,18 +66,14 @@ interface GodmodeLayoutProps {
 function GodmodeNav() {
   const [location] = useLocation();
   const openReviews = useOpenReviewCount();
-
-  const isActive = (item: NavItem) =>
-    item.exact ? location === item.href : location.startsWith(item.href);
+  const isActive = (item: NavItem) => item.exact ? location === item.href : location.startsWith(item.href);
 
   return (
-    <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+    <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
       {NAV_GROUPS.map((group) => (
         <div key={group.label}>
-          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-            {group.label}
-          </div>
-          <div className="space-y-0.5">
+          <div className="px-2 pb-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/65">{group.label}</div>
+          <div className="space-y-1">
             {group.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
@@ -89,21 +82,16 @@ function GodmodeNav() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors',
+                    'group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold transition-all',
                     active
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1 truncate">{item.name}</span>
+                  <span className="min-w-0 flex-1 truncate">{item.name}</span>
                   {item.reviewBadge && openReviews !== undefined && openReviews > 0 && (
-                    <span
-                      className={cn(
-                        'rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none tabular-nums',
-                        active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-orange-500 text-white',
-                      )}
-                    >
+                    <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-black leading-none tabular-nums', active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-orange-500 text-white')}>
                       {openReviews > 99 ? '99+' : openReviews}
                     </span>
                   )}
@@ -128,47 +116,39 @@ export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
     await signOut();
   };
 
-  const handleBackToBackstage = () => {
-    setLocation('/dashboard');
-  };
-
   return (
     <PlatformAdminGate>
       <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        <div className="flex w-52 shrink-0 flex-col border-r bg-card">
-          <div className="border-b px-4 py-4">
-            <h1 className="text-lg font-bold leading-tight">Godmode</h1>
-            <p className="text-xs text-muted-foreground">Platform admin</p>
+        <aside className="flex w-56 shrink-0 flex-col border-r bg-card/95 backdrop-blur">
+          <div className="relative overflow-hidden border-b px-4 py-4">
+            <div className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-orange-500/15 blur-2xl" />
+            <div className="relative flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-500"><Activity className="h-4 w-4" /></div>
+              <div>
+                <h1 className="text-base font-black leading-tight tracking-tight">BNDY Godmode</h1>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Platform control room
+                </div>
+              </div>
+            </div>
           </div>
-          <GodmodeNav />
-          <div className="border-t px-3 py-3 space-y-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToBackstage}
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Backstage
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground hover:text-destructive"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-            <div className="px-2 text-[11px] text-muted-foreground">bndy platform · godmode v3</div>
-          </div>
-        </div>
 
-        {/* Main content — full width; the tables want the room. */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-5">{children}</div>
-        </div>
+          <GodmodeNav />
+
+          <div className="space-y-2 border-t px-3 py-3">
+            <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')} className="w-full justify-start rounded-xl text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Backstage
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="w-full justify-start rounded-xl text-muted-foreground hover:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+            </Button>
+            <div className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Intelligence · catalogue · operations</div>
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="p-4 lg:p-6">{children}</div>
+        </main>
       </div>
     </PlatformAdminGate>
   );
