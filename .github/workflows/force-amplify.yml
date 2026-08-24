@@ -29,12 +29,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -d '{"state":"pending","context":"bndy/amplify-deploy","description":"Building Backstage before Amplify release"}' >/dev/null
+          for CONTEXT in bndy/install bndy/build bndy/aws-auth bndy/amplify-release; do
+            jq -n --arg context "$CONTEXT" '{state:"pending",context:$context,description:"Backstage forced release in progress"}' >/tmp/status.json
+            curl -fsS -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+              --data-binary @/tmp/status.json >/dev/null
+          done
 
       - name: Install dependencies
         id: install
@@ -91,7 +94,7 @@ jobs:
           echo "Timed out waiting for Amplify job" >&2
           exit 1
 
-      - name: Publish deployment result
+      - name: Publish deployment stages
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
@@ -101,25 +104,26 @@ jobs:
           AMPLIFY_OUTCOME: ${{ steps.amplify.outcome }}
         shell: bash
         run: |
-          if [ "$INSTALL_OUTCOME" != "success" ]; then
-            STATE=failure; DESCRIPTION='npm ci failed'
-          elif [ "$BUILD_OUTCOME" != "success" ]; then
-            STATE=failure; DESCRIPTION='Backstage production build failed'
-          elif [ "$AUTH_OUTCOME" != "success" ]; then
-            STATE=failure; DESCRIPTION='AWS credentials unavailable to Backstage workflow'
-          elif [ "$AMPLIFY_OUTCOME" != "success" ]; then
-            STATE=failure; DESCRIPTION='Amplify release failed'
-          else
-            STATE=success; DESCRIPTION='Backstage released successfully through Amplify'
-          fi
+          publish() {
+            local context="$1" outcome="$2" description="$3"
+            local state=failure
+            [ "$outcome" = success ] && state=success
+            jq -n --arg state "$state" --arg context "$context" --arg description "$description" \
+              '{state:$state,context:$context,description:$description}' >/tmp/status.json
+            curl -fsS -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+              --data-binary @/tmp/status.json >/dev/null
+          }
 
-          jq -n --arg state "$STATE" --arg description "$DESCRIPTION" \
-            '{state:$state,context:"bndy/amplify-deploy",description:$description}' >/tmp/status.json
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            --data-binary @/tmp/status.json >/dev/null
+          publish bndy/install "$INSTALL_OUTCOME" "npm ci: $INSTALL_OUTCOME"
+          publish bndy/build "$BUILD_OUTCOME" "production build: $BUILD_OUTCOME"
+          publish bndy/aws-auth "$AUTH_OUTCOME" "AWS auth: $AUTH_OUTCOME"
+          publish bndy/amplify-release "$AMPLIFY_OUTCOME" "Amplify release: $AMPLIFY_OUTCOME"
 
-          test "$STATE" = success
+          test "$INSTALL_OUTCOME" = success \
+            && test "$BUILD_OUTCOME" = success \
+            && test "$AUTH_OUTCOME" = success \
+            && test "$AMPLIFY_OUTCOME" = success
