@@ -106,8 +106,9 @@ function GodmodeNav() {
 }
 
 export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { signOut } = useServerAuth();
+  const isIntelligence = location === '/godmode';
 
   const handleSignOut = async () => {
     localStorage.removeItem('bndy-selected-artist-id');
@@ -119,7 +120,11 @@ export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
   return (
     <PlatformAdminGate>
       <div className="flex h-screen bg-background">
-        <aside className="flex w-56 shrink-0 flex-col border-r bg-card/95 backdrop-blur">
+        {/* Intelligence is a genuine mobile dashboard. The rest of Godmode remains desktop-first. */}
+        <aside className={cn(
+          'flex w-56 shrink-0 flex-col border-r bg-card/95 backdrop-blur',
+          isIntelligence && 'hidden md:flex',
+        )}>
           <div className="relative overflow-hidden border-b px-4 py-4">
             <div className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-orange-500/15 blur-2xl" />
             <div className="relative flex items-center gap-3">
@@ -147,7 +152,25 @@ export default function GodmodeLayout({ children }: GodmodeLayoutProps) {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6">{children}</div>
+          {isIntelligence && (
+            <div className="sticky top-0 z-[1001] flex items-center justify-between border-b bg-background/92 px-3 py-2.5 backdrop-blur md:hidden">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-500">
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-black tracking-tight">BNDY Intelligence</div>
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live data
+                  </div>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')} className="h-9 rounded-xl px-2.5 text-xs text-muted-foreground">
+                <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Backstage
+              </Button>
+            </div>
+          )}
+          <div className={cn(isIntelligence ? 'p-2.5 sm:p-4 lg:p-6' : 'p-4 lg:p-6')}>{children}</div>
         </main>
       </div>
     </PlatformAdminGate>
