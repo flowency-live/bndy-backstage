@@ -12,8 +12,9 @@ import { cn } from '@/lib/utils';
 // ===== Page header =====
 
 interface PageHeaderProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: string;
+  description?: string;
   /** Row count summary, e.g. "312 of 4,120". */
   count?: string;
   isFetching?: boolean;
@@ -21,15 +22,22 @@ interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
-export function GodmodePageHeader({ icon: Icon, title, count, isFetching, onRefresh, children }: PageHeaderProps) {
+export function GodmodePageHeader({ icon: Icon, title, description, count, isFetching, onRefresh, children }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-baseline gap-3">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Icon className="h-5 w-5 text-muted-foreground" />
-          {title}
-        </h1>
-        {count && <span className="text-sm text-muted-foreground tabular-nums">{count}</span>}
+      <div className="min-w-0">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            {Icon && <Icon className="h-5 w-5 text-muted-foreground" />}
+            {title}
+          </h1>
+          {count && <span className="text-sm text-muted-foreground tabular-nums">{count}</span>}
+        </div>
+        {description && (
+          <p data-testid="godmode-page-description" className="mt-1 text-sm text-muted-foreground">
+            {description}
+          </p>
+        )}
       </div>
       <div className="flex items-center gap-2">
         {children}

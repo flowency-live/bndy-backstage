@@ -76,6 +76,7 @@ export default function ClaimsPage() {
   return (
     <div className="space-y-5">
       <GodmodePageHeader
+        icon={ShieldCheck}
         title="Ownership claims"
         description="Join bndy requests waiting for verification. Approval creates the real owner/admin relationship; rejection leaves the public record untouched."
       />
