@@ -23,6 +23,9 @@ const statusClass: Record<string, string> = {
   historical: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
   passed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   'needs-review': 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  'capture-failed': 'bg-red-500/10 text-red-600 dark:text-red-400',
+  'awaiting-human-review': 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  reviewed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   conflicted: 'bg-red-500/10 text-red-600 dark:text-red-400',
   unresolved: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
   resolved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -253,6 +256,58 @@ export default function BacklineExplorer() {
               these {latestTrustLoop.candidatesSeen.toLocaleString()} cases are a bounded safety and quality sample drawn from the live shadow sources.
               The source-family cards and corpus counters below show the much larger production dataset.
             </div>
+            {latestTrustLoop.providerQualification && (
+              <div className="space-y-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <div className="font-medium">Grounded enrichment qualification</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Bounded provider safety test. No accepted result can write to canonical BNDY.
+                    </div>
+                  </div>
+                  <span className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase ${statusClass[latestTrustLoop.providerQualification.gateStatus] || 'bg-muted'}`}>
+                    {latestTrustLoop.providerQualification.gateStatus.replaceAll('-', ' ')}
+                  </span>
+                </div>
+                <div className="grid gap-3 md:grid-cols-4">
+                  <MetricCard
+                    label="Cases attempted"
+                    value={latestTrustLoop.providerQualification.cases}
+                    detail={`${latestTrustLoop.providerQualification.artistCases} Artists, ${latestTrustLoop.providerQualification.venueCases} Venues`}
+                  />
+                  <MetricCard
+                    label="Clean captures"
+                    value={latestTrustLoop.providerQualification.capturedCases}
+                    detail={`${latestTrustLoop.providerQualification.captureErrors} capture errors`}
+                  />
+                  <MetricCard
+                    label="Accepted facts"
+                    value={latestTrustLoop.providerQualification.acceptedFacts}
+                    detail={`${latestTrustLoop.providerQualification.quarantinedFacts} individually quarantined`}
+                  />
+                  <MetricCard
+                    label="Measured cost"
+                    value={`${latestTrustLoop.providerQualification.totalEstimatedCost.toFixed(2)}`}
+                    detail={latestTrustLoop.providerQualification.costMeasurement === 'complete' ? 'complete measurement' : 'partial because failed cases lost usage'}
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Captured {shortDate(latestTrustLoop.providerQualification.capturedAt)} · review {latestTrustLoop.providerQualification.reviewStatus} · canonical writes {latestTrustLoop.providerQualification.canonicalWrites}
+                </div>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {latestTrustLoop.providerQualification.artifactUrl && (
+                    <a href={latestTrustLoop.providerQualification.artifactUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
+                      Evidence artefact <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  {latestTrustLoop.providerQualification.sourceRunUrl && (
+                    <a href={latestTrustLoop.providerQualification.sourceRunUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
+                      Capture run <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="grid gap-3 md:grid-cols-4">
               <MetricCard label="Cohort classified" value={`${latestTrustLoop.candidatesClassified}/${latestTrustLoop.candidatesSeen}`} detail={latestTrustLoop.noSilentDrops ? 'bounded sample, no silent drops' : 'incomplete cohort'} />
               <MetricCard label="Resolved" value={latestTrustLoop.classifications.resolved} detail={`${latestTrustLoop.classifications.unresolved} unresolved`} />
