@@ -1,0 +1,6 @@
+Approved Backstage Amplify release
+
+UI source commit: e4412434fa4a6782ab8e559e42beb70a97ecf6e9
+Scope: one further Amplify release of the read-only Backstage UI.
+Safety: zero provider calls and zero canonical writes.
+Date: 2026-08-28.
