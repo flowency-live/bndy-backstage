@@ -209,6 +209,26 @@ export interface BacklineTrustLoopRun {
     traceableDecisions?: boolean;
     reviewedKnownAnswerSetPassed?: boolean;
   };
+  providerQualification?: {
+    schemaVersion: number;
+    providerId: string;
+    capturedAt: string;
+    publishedAt: string;
+    gateStatus: 'capture-failed' | 'awaiting-human-review' | 'reviewed';
+    reviewStatus: string;
+    cases: number;
+    artistCases: number;
+    venueCases: number;
+    capturedCases: number;
+    captureErrors: number;
+    acceptedFacts: number;
+    quarantinedFacts: number;
+    totalEstimatedCost: number;
+    costMeasurement: 'partial-error-path' | 'complete';
+    canonicalWrites: 0;
+    sourceRunUrl?: string;
+    artifactUrl?: string;
+  } | null;
   status: 'passed' | 'needs-review' | 'failed';
   reviewCases: BacklineTrustLoopReviewCase[];
 }
