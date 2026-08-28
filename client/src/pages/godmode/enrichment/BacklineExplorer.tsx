@@ -248,8 +248,13 @@ export default function BacklineExplorer() {
         {!latestTrustLoop && !trustLoop.isLoading && <div className="p-4 text-sm text-muted-foreground">No Trust Loop cohort has been recorded yet.</div>}
         {latestTrustLoop && (
           <div className="space-y-4 p-4">
+            <div className="rounded-md border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-sm">
+              <span className="font-medium">Verification cohort, not corpus:</span>{' '}
+              these {latestTrustLoop.candidatesSeen.toLocaleString()} cases are a bounded safety and quality sample drawn from the live shadow sources.
+              The source-family cards and corpus counters below show the much larger production dataset.
+            </div>
             <div className="grid gap-3 md:grid-cols-4">
-              <MetricCard label="Classified" value={`${latestTrustLoop.candidatesClassified}/${latestTrustLoop.candidatesSeen}`} detail={latestTrustLoop.noSilentDrops ? 'no silent drops' : 'incomplete cohort'} />
+              <MetricCard label="Cohort classified" value={`${latestTrustLoop.candidatesClassified}/${latestTrustLoop.candidatesSeen}`} detail={latestTrustLoop.noSilentDrops ? 'bounded sample, no silent drops' : 'incomplete cohort'} />
               <MetricCard label="Resolved" value={latestTrustLoop.classifications.resolved} detail={`${latestTrustLoop.classifications.unresolved} unresolved`} />
               <MetricCard label="Conflicted" value={latestTrustLoop.classifications.conflicted} detail="parked, never forced" />
               <MetricCard label="Wrong links" value={latestTrustLoop.enrichment.wrongLinkIncidents ?? 0} detail="one incident fails the cohort" />
