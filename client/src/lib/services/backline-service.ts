@@ -239,7 +239,7 @@ export interface BacklineTrustLoopRun {
     acceptedFacts: number;
     quarantinedFacts: number;
     totalEstimatedCost: number;
-    costMeasurement: 'partial-error-path' | 'complete';
+    costMeasurement: 'complete' | 'partial' | 'unavailable' | 'partial-error-path';
     canonicalWrites: 0;
     sourceRunUrl?: string;
     artifactUrl?: string;

@@ -290,8 +290,14 @@ export default function BacklineExplorer() {
                   />
                   <MetricCard
                     label="Measured cost"
-                    value={`$${latestTrustLoop.providerQualification.totalEstimatedCost.toFixed(2)}`}
-                    detail={latestTrustLoop.providerQualification.costMeasurement === 'complete' ? 'complete measurement' : 'partial because failed cases have no usage'}
+                    value={latestTrustLoop.providerQualification.costMeasurement === 'unavailable'
+                      ? 'Unavailable'
+                      : `$${latestTrustLoop.providerQualification.totalEstimatedCost.toFixed(2)}`}
+                    detail={latestTrustLoop.providerQualification.costMeasurement === 'complete'
+                      ? 'complete measurement'
+                      : latestTrustLoop.providerQualification.costMeasurement === 'unavailable'
+                        ? 'provider calls occurred; legacy error path lost usage'
+                        : 'partial measurement from cases retaining usage'}
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
