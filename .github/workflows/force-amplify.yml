@@ -17,6 +17,7 @@ jobs:
   release:
     if: contains(github.event.head_commit.message, '[force-amplify]')
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
