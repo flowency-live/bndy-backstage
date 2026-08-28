@@ -26,6 +26,9 @@ const statusClass: Record<string, string> = {
   'capture-failed': 'bg-red-500/10 text-red-600 dark:text-red-400',
   'awaiting-human-review': 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
   reviewed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  'capture-error': 'bg-red-500/10 text-red-600 dark:text-red-400',
+  abstained: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  'review-required': 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
   conflicted: 'bg-red-500/10 text-red-600 dark:text-red-400',
   unresolved: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
   resolved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -278,7 +281,7 @@ export default function BacklineExplorer() {
                   <MetricCard
                     label="Clean captures"
                     value={latestTrustLoop.providerQualification.capturedCases}
-                    detail={`${latestTrustLoop.providerQualification.captureErrors} capture errors`}
+                    detail={`${latestTrustLoop.providerQualification.highConfidenceCases ?? 0} high confidence, ${latestTrustLoop.providerQualification.captureErrors} errors`}
                   />
                   <MetricCard
                     label="Accepted facts"
@@ -287,8 +290,8 @@ export default function BacklineExplorer() {
                   />
                   <MetricCard
                     label="Measured cost"
-                    value={`${latestTrustLoop.providerQualification.totalEstimatedCost.toFixed(2)}`}
-                    detail={latestTrustLoop.providerQualification.costMeasurement === 'complete' ? 'complete measurement' : 'partial because failed cases lost usage'}
+                    value={`$${latestTrustLoop.providerQualification.totalEstimatedCost.toFixed(2)}`}
+                    detail={latestTrustLoop.providerQualification.costMeasurement === 'complete' ? 'complete measurement' : 'partial because failed cases have no usage'}
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
@@ -300,12 +303,47 @@ export default function BacklineExplorer() {
                       Evidence artefact <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
+                  {latestTrustLoop.providerQualification.reviewUrl && (
+                    <a href={latestTrustLoop.providerQualification.reviewUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
+                      Human-readable review <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                   {latestTrustLoop.providerQualification.sourceRunUrl && (
                     <a href={latestTrustLoop.providerQualification.sourceRunUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
                       Capture run <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
                 </div>
+                {(latestTrustLoop.providerQualification.reviewCases?.length ?? 0) > 0 && (
+                  <div className="overflow-hidden rounded border bg-background/60">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-xs">
+                      <span className="font-medium">Grounded-enrichment case review</span>
+                      <span className="text-muted-foreground">
+                        {latestTrustLoop.providerQualification.highConfidenceCases ?? 0} high confidence · {latestTrustLoop.providerQualification.abstainedCases ?? 0} abstained
+                      </span>
+                    </div>
+                    <div className="max-h-80 overflow-auto">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-muted/95 text-left text-muted-foreground">
+                          <tr><th className="px-3 py-2">Entity</th><th>Source</th><th>Confidence</th><th>Facts</th><th>Outcome</th></tr>
+                        </thead>
+                        <tbody>{latestTrustLoop.providerQualification.reviewCases!.map((item) => (
+                          <tr key={item.caseId} className="border-t align-top">
+                            <td className="max-w-[320px] px-3 py-2">
+                              <div className="truncate font-medium">{item.displayName}</div>
+                              <div className="truncate text-[10px] text-muted-foreground">{item.entityType} · {item.caseId}</div>
+                              {item.reason && <div className="mt-1 line-clamp-2 text-[10px] text-muted-foreground">{item.reason}</div>}
+                            </td>
+                            <td className="max-w-[180px] pr-3 py-2"><div className="truncate">{item.sourceId}</div></td>
+                            <td className="pr-3 py-2 tabular-nums">{Math.round(item.identityConfidence * 100)}%</td>
+                            <td className="pr-3 py-2 tabular-nums">{item.acceptedFacts} accepted<br /><span className="text-muted-foreground">{item.quarantinedFacts} quarantined</span></td>
+                            <td className="pr-3 py-2"><span className={`rounded-full px-2 py-0.5 font-medium ${statusClass[item.decision] || 'bg-muted'}`}>{item.decision.replaceAll('-', ' ')}</span></td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             <div className="grid gap-3 md:grid-cols-4">
