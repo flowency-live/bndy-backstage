@@ -9,6 +9,7 @@ import {
   type BacklineFamily,
   type BacklineObservation,
   type BacklineTask,
+  type BacklineTrustLoopReviewCase,
 } from '@/lib/services/backline-service';
 
 const statusClass: Record<string, string> = {
@@ -20,6 +21,11 @@ const statusClass: Record<string, string> = {
   failed: 'bg-red-500/10 text-red-600 dark:text-red-400',
   inactive: 'bg-muted text-muted-foreground',
   historical: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  passed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  'needs-review': 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  conflicted: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  unresolved: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  resolved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
 };
 
 function StatCard({ label, discovered, hydrated, failed }: { label: string; discovered: number; hydrated: number; failed: number }) {
@@ -67,6 +73,12 @@ function FamilyCard({ family, selected, onClick }: { family: BacklineFamily; sel
       </div>
     </button>
   );
+}
+
+function reviewLabel(item: BacklineTrustLoopReviewCase): string {
+  if (item.displayName) return item.displayName;
+  if (item.artistName || item.venueName) return [item.artistName, item.venueName, item.date].filter(Boolean).join(' at ');
+  return item.candidateKey;
 }
 
 function subjectForTask(task: BacklineTask): { type: string; key: string } | null {
@@ -148,6 +160,11 @@ export default function BacklineExplorer() {
     queryFn: () => backlineService.observation(selectedObservation!.id),
     enabled: Boolean(selectedObservation),
   });
+  const trustLoop = useQuery({
+    queryKey: ['backline', 'trust-loop'],
+    queryFn: () => backlineService.trustLoop(5),
+    refetchInterval: 60000,
+  });
 
   const filteredTasks = useMemo(() => {
     const rows = tasks.data?.tasks ?? [];
@@ -173,6 +190,7 @@ export default function BacklineExplorer() {
     if (subject) subjectQuery.refetch();
     if (selectedSource) sourceQuery.refetch();
     if (selectedObservation) observationQuery.refetch();
+    trustLoop.refetch();
   };
 
   if (summary.isError) {
@@ -188,6 +206,7 @@ export default function BacklineExplorer() {
   const latestRun = summary.data?.runMetrics[0];
   const hasTaskLedger = (summary.data?.taskHistoryRows ?? 0) > 0;
   const familyLabel = summary.data?.family?.label ?? family;
+  const latestTrustLoop = trustLoop.data?.runs[0];
 
   return (
     <div className="space-y-5">
@@ -216,6 +235,54 @@ export default function BacklineExplorer() {
             <FamilyCard key={item.id} family={item} selected={family === item.id} onClick={() => selectFamily(item.id)} />
           ))}
         </div>
+      </section>
+
+      <section className="rounded-lg border bg-card">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
+          <div>
+            <div className="font-medium">Backline Trust Loop v1</div>
+            <div className="mt-1 text-xs text-muted-foreground">Deterministic identity classification and evidence-backed enrichment health. Canonical projection is off.</div>
+          </div>
+          {latestTrustLoop && <span className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase ${statusClass[latestTrustLoop.status] || 'bg-muted'}`}>{latestTrustLoop.status}</span>}
+        </div>
+        {!latestTrustLoop && !trustLoop.isLoading && <div className="p-4 text-sm text-muted-foreground">No Trust Loop cohort has been recorded yet.</div>}
+        {latestTrustLoop && (
+          <div className="space-y-4 p-4">
+            <div className="grid gap-3 md:grid-cols-4">
+              <MetricCard label="Classified" value={`${latestTrustLoop.candidatesClassified}/${latestTrustLoop.candidatesSeen}`} detail={latestTrustLoop.noSilentDrops ? 'no silent drops' : 'incomplete cohort'} />
+              <MetricCard label="Resolved" value={latestTrustLoop.classifications.resolved} detail={`${latestTrustLoop.classifications.unresolved} unresolved`} />
+              <MetricCard label="Conflicted" value={latestTrustLoop.classifications.conflicted} detail="parked, never forced" />
+              <MetricCard label="Wrong links" value={latestTrustLoop.enrichment.wrongLinkIncidents ?? 0} detail="one incident fails the cohort" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <MetricCard label="Artist classification" value={`${Math.round((latestTrustLoop.enrichment.classificationCoverage ?? 0) * 100)}%`} detail={`${latestTrustLoop.enrichment.assessedArtists ?? 0} Artists assessed`} />
+              <MetricCard label="Genre evidence" value={`${Math.round((latestTrustLoop.enrichment.genreCoverage ?? 0) * 100)}%`} detail="confirmed or canonical evidence" />
+              <MetricCard label="Official presence" value={`${Math.round((latestTrustLoop.enrichment.officialLinkCoverage ?? 0) * 100)}%`} detail={`${latestTrustLoop.enrichment.attemptedNoOfficialPresence ?? 0} attempted with none found`} />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Latest run {shortDate(latestTrustLoop.completedAt)} · {latestTrustLoop.sourceIds.length} sources · {latestTrustLoop.entityTypes.artist} Artists · {latestTrustLoop.entityTypes.venue} Venues · {latestTrustLoop.entityTypes.event} Events · canonical writes {latestTrustLoop.canonicalWrites}
+            </div>
+            {latestTrustLoop.reviewCases.length > 0 && (
+              <div className="overflow-hidden rounded border">
+                <div className="border-b px-3 py-2 text-xs font-medium">Identity review queue</div>
+                <div className="max-h-72 overflow-auto">
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-muted/95 text-left text-muted-foreground"><tr><th className="px-3 py-2">Candidate</th><th>Source</th><th>Type</th><th>Decision</th><th>Hypotheses</th></tr></thead>
+                    <tbody>{latestTrustLoop.reviewCases.slice(0, 40).map((item) => (
+                      <tr key={`${item.sourceId}:${item.candidateType}:${item.candidateKey}`} className="border-t">
+                        <td className="max-w-[320px] px-3 py-2"><div className="truncate font-medium">{reviewLabel(item)}</div><div className="truncate font-mono text-[10px] text-muted-foreground">{item.candidateKey}</div></td>
+                        <td className="pr-3">{item.sourceId}</td>
+                        <td className="pr-3">{item.candidateType}</td>
+                        <td className="pr-3"><span className={`rounded-full px-2 py-0.5 font-medium ${statusClass[item.status] || 'bg-muted'}`}>{item.status}</span></td>
+                        <td className="pr-3 tabular-nums">{item.canonicalHypotheses.length}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {hasTaskLedger ? (
