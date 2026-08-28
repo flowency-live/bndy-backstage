@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "releasedAt": "2026-08-28T17:12:25.046Z",
+  "purpose": "Release the read-only Backline grounded enrichment qualification status to Godmode",
+  "sourceCommit": "ed7803df14331ea8bd91f3e6062884e545d73419",
+  "qualificationPublisherRun": "https://github.com/flowency-live/bndy-enrichment/actions/runs/33193230950",
+  "canonicalWrites": 0
+}
