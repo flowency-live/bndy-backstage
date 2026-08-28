@@ -279,9 +279,9 @@ export default function BacklineExplorer() {
                     detail={`${latestTrustLoop.providerQualification.artistCases} Artists, ${latestTrustLoop.providerQualification.venueCases} Venues`}
                   />
                   <MetricCard
-                    label="Clean captures"
+                    label="Cases captured"
                     value={latestTrustLoop.providerQualification.capturedCases}
-                    detail={`${latestTrustLoop.providerQualification.highConfidenceCases ?? 0} high confidence, ${latestTrustLoop.providerQualification.captureErrors} errors`}
+                    detail={`${latestTrustLoop.providerQualification.highConfidenceCases ?? 0} high-confidence identities, ${latestTrustLoop.providerQualification.captureErrors} error`}
                   />
                   <MetricCard
                     label="Accepted facts"
