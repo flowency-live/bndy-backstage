@@ -182,6 +182,19 @@ export interface BacklineTrustLoopReviewCase {
   decisionReasoning: string[];
 }
 
+export interface BacklineProviderQualificationCase {
+  caseId: string;
+  sourceId: string;
+  entityType: 'artist' | 'venue';
+  displayName: string;
+  captureStatus: 'captured' | 'error';
+  identityConfidence: number;
+  acceptedFacts: number;
+  quarantinedFacts: number;
+  decision: 'capture-error' | 'abstained' | 'review-required';
+  reason?: string;
+}
+
 export interface BacklineTrustLoopRun {
   id: string;
   startedAt: string;
@@ -221,6 +234,8 @@ export interface BacklineTrustLoopRun {
     venueCases: number;
     capturedCases: number;
     captureErrors: number;
+    highConfidenceCases?: number;
+    abstainedCases?: number;
     acceptedFacts: number;
     quarantinedFacts: number;
     totalEstimatedCost: number;
@@ -228,6 +243,8 @@ export interface BacklineTrustLoopRun {
     canonicalWrites: 0;
     sourceRunUrl?: string;
     artifactUrl?: string;
+    reviewUrl?: string;
+    reviewCases?: BacklineProviderQualificationCase[];
   } | null;
   status: 'passed' | 'needs-review' | 'failed';
   reviewCases: BacklineTrustLoopReviewCase[];
