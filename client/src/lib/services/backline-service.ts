@@ -161,6 +161,58 @@ export interface BacklineObservationDetail {
   truncated: boolean;
 }
 
+export interface BacklineTrustLoopReviewCase {
+  candidateType: 'artist' | 'venue' | 'event' | 'festival';
+  candidateKey: string;
+  sourceId: string;
+  displayName?: string;
+  artistName?: string;
+  venueName?: string;
+  date?: string;
+  status: 'resolved' | 'unresolved' | 'conflicted';
+  canonicalEntityId?: string;
+  canonicalHypotheses: Array<{
+    canonicalEntityId: string;
+    displayName?: string;
+    artistName?: string;
+    venueName?: string;
+    date?: string;
+  }>;
+  supportingClaimIds: string[];
+  decisionReasoning: string[];
+}
+
+export interface BacklineTrustLoopRun {
+  id: string;
+  startedAt: string;
+  completedAt: string;
+  sourceIds: string[];
+  candidatesSeen: number;
+  candidatesClassified: number;
+  classifications: { resolved: number; unresolved: number; conflicted: number };
+  entityTypes: { artist: number; venue: number; event: number; festival: number };
+  noSilentDrops: boolean;
+  canonicalWrites: 0;
+  enrichment: {
+    eligibleArtists?: number;
+    assessedArtists?: number;
+    classificationCoverage?: number;
+    genreCoverage?: number;
+    officialLinkCoverage?: number;
+    attemptedNoOfficialPresence?: number;
+    parkedOrConflicted?: number;
+    wrongLinkIncidents?: number;
+  };
+  acceptance: {
+    completeClassification?: boolean;
+    zeroWrongLinks?: boolean;
+    traceableDecisions?: boolean;
+    reviewedKnownAnswerSetPassed?: boolean;
+  };
+  status: 'passed' | 'needs-review' | 'failed';
+  reviewCases: BacklineTrustLoopReviewCase[];
+}
+
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
@@ -193,5 +245,9 @@ export const backlineService = {
   observation: (observationId: string) => {
     const params = new URLSearchParams({ observationId });
     return get<BacklineObservationDetail>(`/api/source-runs/backline/observation?${params.toString()}`);
+  },
+  trustLoop: (limit = 5) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    return get<{ runs: BacklineTrustLoopRun[]; readOnly: true; canonicalWritesEnabled: false }>(`/api/source-runs/backline/trust-loop?${params.toString()}`);
   },
 };
