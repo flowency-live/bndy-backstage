@@ -95,9 +95,12 @@ export interface BacklineSummary {
     gigs: BacklineEntityStats;
     pages: { discovered: number; completed: number; failed: number };
     queue: Record<BacklineTaskStatus, number>;
-  };
-  taskHistoryRows: number;
-  uniqueCurrentTasks: number;
+  } | null;
+  taskLedgerAvailable: boolean;
+  taskStatsAvailable: boolean;
+  taskStatsReason: string;
+  taskHistoryRows: number | null;
+  uniqueCurrentTasks: number | null;
   failures: BacklineTask[];
   sources: BacklineSource[];
   runMetrics: BacklineRunMetric[];
