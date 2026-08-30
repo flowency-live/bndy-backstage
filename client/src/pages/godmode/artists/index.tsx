@@ -31,6 +31,7 @@ import {
   useDeleteArtist,
   useGodmodeArtists,
   useGodmodeEvents,
+  useGodmodeAllEvents,
   useGodmodeMemberships,
   useGodmodeUsers,
   useMarkArtistReviewed,
@@ -63,6 +64,7 @@ export default function ArtistsPage() {
 
   const artistsQuery = useGodmodeArtists();
   const eventsQuery = useGodmodeEvents();
+  const allEventsQuery = useGodmodeAllEvents();
   const usersQuery = useGodmodeUsers();
   const membershipsQuery = useGodmodeMemberships();
 
@@ -106,6 +108,18 @@ export default function ArtistsPage() {
     }
     return counts;
   }, [eventsQuery.data]);
+
+  // Past events = all events minus future events (for showing "0 (3)" in gig column)
+  const pastEventCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const today = new Date().toISOString().split('T')[0];
+    for (const event of allEventsQuery.data ?? []) {
+      if (event.artistId && event.date < today) {
+        counts[event.artistId] = (counts[event.artistId] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [allEventsQuery.data]);
 
   const ownerByArtist = useMemo(() => {
     const users = usersQuery.data ?? [];
@@ -317,11 +331,23 @@ export default function ArtistsPage() {
       key: 'events',
       header: 'Gigs',
       align: 'right',
-      widthClass: 'w-16',
+      widthClass: 'w-20',
       sortValue: (a) => futureEventCounts[a.id] || 0,
       render: (a) => {
-        const n = futureEventCounts[a.id] || 0;
-        return n > 0 ? n : <span className="text-muted-foreground">0</span>;
+        const future = futureEventCounts[a.id] || 0;
+        const past = pastEventCounts[a.id] || 0;
+        if (future === 0 && past === 0) {
+          return <span className="text-muted-foreground">0</span>;
+        }
+        if (past === 0) {
+          return future;
+        }
+        return (
+          <span>
+            {future > 0 ? future : <span className="text-muted-foreground">0</span>}
+            <span className="text-muted-foreground text-xs ml-0.5">({past})</span>
+          </span>
+        );
       },
     },
     {

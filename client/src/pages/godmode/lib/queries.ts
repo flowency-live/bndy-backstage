@@ -38,6 +38,7 @@ export const godmodeKeys = {
   artists: ['godmode', 'artists'] as const,
   venues: ['godmode', 'venues'] as const,
   events: ['godmode', 'events'] as const,
+  allEvents: ['godmode', 'all-events'] as const,
   users: ['godmode', 'users'] as const,
   memberships: ['godmode', 'memberships'] as const,
   songs: ['godmode', 'songs'] as const,
@@ -72,6 +73,15 @@ export function useGodmodeEvents() {
   return useQuery<Event[]>({
     queryKey: godmodeKeys.events,
     queryFn: () => godmodeService.getAllEvents(),
+    staleTime: STALE_MS,
+  });
+}
+
+/** All events including past (for artist gig counts showing past events). */
+export function useGodmodeAllEvents() {
+  return useQuery<Event[]>({
+    queryKey: godmodeKeys.allEvents,
+    queryFn: () => godmodeService.getAllEvents('2020-01-01'),
     staleTime: STALE_MS,
   });
 }
