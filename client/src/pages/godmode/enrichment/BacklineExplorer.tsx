@@ -210,7 +210,8 @@ export default function BacklineExplorer() {
 
   const stats = summary.data?.stats;
   const latestRun = summary.data?.runMetrics[0];
-  const hasTaskLedger = (summary.data?.taskHistoryRows ?? 0) > 0;
+  const hasTaskLedger = summary.data?.taskLedgerAvailable === true;
+  const hasTaskStats = summary.data?.taskStatsAvailable === true;
   const familyLabel = summary.data?.family?.label ?? family;
   const latestTrustLoop = trustLoop.data?.runs[0];
 
@@ -389,7 +390,7 @@ export default function BacklineExplorer() {
         )}
       </section>
 
-      {hasTaskLedger ? (
+      {hasTaskStats ? (
         <div className="grid gap-3 md:grid-cols-3">
           <StatCard label={family === 'onthecase' ? 'Bands' : 'Artists'} discovered={stats?.artists.discovered ?? 0} hydrated={stats?.artists.hydrated ?? 0} failed={stats?.artists.failed ?? 0} />
           <StatCard label="Venues" discovered={stats?.venues.discovered ?? 0} hydrated={stats?.venues.hydrated ?? 0} failed={stats?.venues.failed ?? 0} />
@@ -400,6 +401,12 @@ export default function BacklineExplorer() {
           <MetricCard label="Events" value={latestRun?.validEvents ?? 0} detail={latestRun ? `latest ${latestRun.reason} run` : 'no recorded source run metric'} />
           <MetricCard label="Profiles" value={latestRun?.entityProfiles ?? 0} detail={latestRun ? `${latestRun.parked.toLocaleString()} parked safely` : 'no recorded source run metric'} />
           <MetricCard label="Claims" value={latestRun?.claims ?? 0} detail={latestRun ? shortDate(latestRun.completedAt) : 'inspect source Observations below'} />
+        </div>
+      )}
+
+      {hasTaskLedger && !hasTaskStats && (
+        <div className="rounded-lg border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+          Live task totals are not calculated during interactive requests. Source-run metrics remain exact, and the task ledger below is loaded in bounded pages.
         </div>
       )}
 
