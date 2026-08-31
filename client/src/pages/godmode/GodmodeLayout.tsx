@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Building2,
   ShieldCheck,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { name: 'Intelligence', href: '/godmode', icon: LayoutDashboard, exact: true },
       { name: 'Review Queue', href: '/godmode/sources/review', icon: ClipboardList, reviewBadge: true },
+      { name: 'Submissions', href: '/godmode/submissions', icon: Inbox },
       { name: 'Ownership claims', href: '/godmode/claims', icon: ShieldCheck },
       { name: 'Sources', href: '/godmode/sources', icon: Activity, exact: true },
       { name: 'Agent Work', href: '/godmode/sources/activity', icon: TrendingUp },
