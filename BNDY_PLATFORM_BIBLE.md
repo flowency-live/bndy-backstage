@@ -164,10 +164,7 @@ Cognito User Pools → JWT Session Management
 - Proxy: `/api/*` and `/auth/*` → `api.bndy.co.uk`
 
 **bndy-frontstage** (`d196da2xtqukv2`):
-- Domain: `live.bndy.co.uk` (mapped)
-- Status: ✅ **OPERATIONAL**
-- Features: Venue map via DynamoDB Lambda API (9x performance improvement), Community event wizard
-- Proxy: `/api/*` → API Gateway → Lambda → DynamoDB
+- Status: ⛔ **DECOMMISSIONED** - Replaced by bndy-app at `bndy.live`
 
 **bndy-centrestage** (`d11w6zg9bc5o1g`):
 - Domain: `centrestage.bndy.co.uk`
@@ -287,12 +284,7 @@ Admin Interface → Lambda APIs → DynamoDB (9x faster than previous)
 - **Features**: Authentication, profiles, image uploads, OAuth pictures
 
 #### **bndy-frontstage** - Event Discovery
-- **Local Path**: `C:\VSProjects\bndy-frontstage` ⚠️ **ALWAYS use this path, NOT bndy.live**
-- **Repository**: https://github.com/flowency-live/bndy.live (GitHub repo name differs from local folder)
-- **Technology**: Next.js + React
-- **Deployment**: ✅ **AWS Amplify** - Auto-deploy on push to main
-- **Domain**: https://live.bndy.co.uk
-- **Status**: ✅ **OPERATIONAL** - DynamoDB integration complete
+- **Status**: ⛔ **DECOMMISSIONED** - Replaced by bndy-app at `bndy.live`
 
 #### **bndy-centrestage** - Admin Interface
 - **Local Path**: `C:\VSProjects\bndy-centrestage`
@@ -910,13 +902,14 @@ if (!stateStore.has(state)) {
 ### **Domain Strategy**
 ```
 Target Production Domains:
+- bndy.live → bndy-app (✅ LIVE - canonical public app)
 - backstage.bndy.co.uk → bndy-backstage (✅ LIVE)
-- live.bndy.co.uk → bndy-frontstage (✅ MAPPED)
 - centrestage.bndy.co.uk → bndy-centrestage (✅ LIVE)
 - api.bndy.co.uk → API Gateway (✅ LIVE)
 
-Legacy:
-- bndy.live → Redirect to live.bndy.co.uk (pending)
+Retired:
+- live.bndy.co.uk (was bndy-frontstage, now decommissioned)
+- map.bndy.co.uk, gigmap.bndy.co.uk, gigs.bndy.co.uk (retired)
 ```
 
 ### **Single-Domain Proxy Pattern** (All Apps)
@@ -954,7 +947,6 @@ Legacy:
 ### **Phase 1: Complete Serverless Migration**
 1. **User Management Migration**: Move remaining App Runner features to Lambda
 2. **App Runner Shutdown**: Eliminate $35/month cost
-3. **Domain Redirect**: Set up bndy.live → live.bndy.co.uk
 
 ### **Phase 2: Feature Expansion**
 1. **Band Management**: Implement band creation/joining workflows
