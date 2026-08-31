@@ -224,7 +224,12 @@ export default function BacklineExplorer() {
             <h2 className="text-xl font-semibold">Backline Explorer</h2>
             <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">READ ONLY</span>
             {summary.data?.canonicalWritesEnabled === false && (
-              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">SHADOW</span>
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">
+                SHADOW · {summary.data.projectionControl?.state === 'disabled-explicit' ? 'EXPLICITLY OFF' : 'DEFAULT OFF'}
+              </span>
+            )}
+            {summary.data?.canonicalWritesEnabled === true && (
+              <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:text-red-300">CANONICAL WRITES ENABLED</span>
             )}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">All Backline sources: evidence → Observations → Claims → resolution. Raw evidence stays in S3.</p>
@@ -248,7 +253,7 @@ export default function BacklineExplorer() {
         <div className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-3">
           <div>
             <div className="font-medium">Backline Trust Loop v1</div>
-            <div className="mt-1 text-xs text-muted-foreground">Deterministic identity classification and evidence-backed enrichment health. Canonical projection is off.</div>
+            <div className="mt-1 text-xs text-muted-foreground">Deterministic identity classification and evidence-backed enrichment health. Global projection state: {summary.data?.canonicalWritesEnabled ? 'enabled' : 'disabled'}.</div>
           </div>
           {latestTrustLoop && <span className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase ${statusClass[latestTrustLoop.status] || 'bg-muted'}`}>{latestTrustLoop.status}</span>}
         </div>

@@ -106,7 +106,34 @@ export interface BacklineSummary {
   runMetrics: BacklineRunMetric[];
   readOnly: boolean;
   canonicalWritesEnabled: boolean;
+  projectionControl?: {
+    enabled: boolean;
+    state: 'enabled' | 'disabled-explicit' | 'disabled-default';
+    updatedAt?: string | null;
+  };
   computedAt: string;
+}
+
+export type BacklineGraphNodeKind = 'source' | 'observation' | 'claim' | 'candidate' | 'entity';
+
+export interface BacklineGraphNode {
+  ref: string;
+  kind: BacklineGraphNodeKind;
+  label: string;
+  data?: Record<string, unknown>;
+}
+
+export interface BacklineGraphEdge {
+  from: string;
+  to: string;
+  kind: 'PRODUCED' | 'ASSERTS' | 'ABOUT' | 'RESOLVES_TO' | 'SUPPORTS' | 'REFERENCES';
+}
+
+export interface BacklineGraphNeighborhood {
+  center: string;
+  nodes: BacklineGraphNode[];
+  edges: BacklineGraphEdge[];
+  truncated: boolean;
 }
 
 export interface BacklineClaim {
@@ -285,6 +312,10 @@ export const backlineService = {
   observation: (observationId: string) => {
     const params = new URLSearchParams({ observationId });
     return get<BacklineObservationDetail>(`/api/source-runs/backline/observation?${params.toString()}`);
+  },
+  graph: (node: string, limit = 60) => {
+    const params = new URLSearchParams({ node, limit: String(limit) });
+    return get<BacklineGraphNeighborhood>(`/api/source-runs/backline/graph?${params.toString()}`);
   },
   trustLoop: (limit = 5) => {
     const params = new URLSearchParams({ limit: String(limit) });
