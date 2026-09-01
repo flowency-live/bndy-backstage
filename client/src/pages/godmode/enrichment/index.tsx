@@ -1,7 +1,8 @@
-import { Database, Network, Sparkles } from 'lucide-react';
+import { Database, Network, RefreshCw, Sparkles } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BacklineExplorer from './BacklineExplorer';
 import BacklineGraph from './BacklineGraph';
+import BacklineCorpus from './BacklineCorpus';
 import EntityEnrichmentDashboard from './EntityEnrichmentDashboard';
 
 export default function EnrichmentDashboard() {
@@ -14,6 +15,9 @@ export default function EnrichmentDashboard() {
         <TabsTrigger value="entity-enrichment" className="gap-2">
           <Sparkles className="h-4 w-4" /> Entity Enrichment
         </TabsTrigger>
+        <TabsTrigger value="corpus" className="gap-2">
+          <RefreshCw className="h-4 w-4" /> Canonical Corpus
+        </TabsTrigger>
         <TabsTrigger value="graph" className="gap-2">
           <Network className="h-4 w-4" /> Intelligence Graph
         </TabsTrigger>
@@ -23,6 +27,9 @@ export default function EnrichmentDashboard() {
       </TabsContent>
       <TabsContent value="entity-enrichment" className="mt-0">
         <EntityEnrichmentDashboard />
+      </TabsContent>
+      <TabsContent value="corpus" className="mt-0">
+        <BacklineCorpus />
       </TabsContent>
       <TabsContent value="graph" className="mt-0">
         <BacklineGraph />
