@@ -136,6 +136,52 @@ export interface BacklineGraphNeighborhood {
   truncated: boolean;
 }
 
+export interface BacklineCanonicalBaseline {
+  snapshotId: string;
+  startedAt?: string;
+  completedAt?: string;
+  status: 'running' | 'complete' | 'failed';
+  shadow: boolean;
+  canonicalWritesEnabled: boolean;
+  totals?: Record<string, number> | null;
+  claims?: number;
+  observations?: number;
+  errors: string[];
+}
+
+export interface BacklineCanonicalHydrationRun {
+  runId: string;
+  baselineSnapshotId: string;
+  startedAt: string;
+  completedAt?: string;
+  updatedAt?: string;
+  status: 'running' | 'complete' | 'failed';
+  mode: 'backline-write' | 'read-only-plan';
+  canonicalWritesEnabled: boolean;
+  scanned: number;
+  unchanged: number;
+  inserted: number;
+  modified: number;
+  removed: number;
+  claims: number;
+  checkpointsBackfilled: number;
+  skippedWithoutId: number;
+  errors: string[];
+}
+
+export interface BacklineCanonicalHydration {
+  state: 'not-ready' | 'baseline-stale' | 'hydrating' | 'attention' | 'converged';
+  baseline: BacklineCanonicalBaseline | null;
+  latest: BacklineCanonicalHydrationRun | null;
+  projectionControl: {
+    enabled: boolean;
+    state: 'enabled' | 'disabled-explicit' | 'disabled-default';
+    updatedAt?: string | null;
+  };
+  readOnly: true;
+  computedAt: string;
+}
+
 export interface BacklineClaim {
   id: string;
   observationId: string;
@@ -317,6 +363,7 @@ export const backlineService = {
     const params = new URLSearchParams({ node, limit: String(limit) });
     return get<BacklineGraphNeighborhood>(`/api/source-runs/backline/graph?${params.toString()}`);
   },
+  hydration: () => get<BacklineCanonicalHydration>('/api/source-runs/backline/hydration'),
   trustLoop: (limit = 5) => {
     const params = new URLSearchParams({ limit: String(limit) });
     return get<{ runs: BacklineTrustLoopRun[]; readOnly: true; canonicalWritesEnabled: false }>(`/api/source-runs/backline/trust-loop?${params.toString()}`);
