@@ -114,6 +114,88 @@ export interface BacklineSummary {
   computedAt: string;
 }
 
+export type BacklineFreshnessStatus = 'healthy' | 'stale' | 'missing' | 'invalid' | 'disabled';
+
+export interface BacklineFreshness {
+  sourceId: string;
+  name?: string;
+  enabled: boolean;
+  cadence?: string;
+  sourceRole?: string;
+  shadow: boolean;
+  writerAuthority?: string;
+  nextScanAt?: string | null;
+  maxStalenessHours: number;
+  lastSuccessfulRunAt?: string | null;
+  lastFailureAt?: string | null;
+  consecutiveFailures: number;
+  ageHours: number | null;
+  status: BacklineFreshnessStatus;
+}
+
+export interface BacklineProjectionCandidate {
+  sourceEventKey?: string;
+  artistName?: string;
+  artistExternalId?: string;
+  artistLocation?: string;
+  venueName?: string;
+  venueExternalId?: string;
+  venueLocation?: string;
+  venueAddress?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  title?: string;
+  eventUrl?: string;
+  ticketUrl?: string;
+  admissionStatus?: string;
+  price?: string;
+  status?: string;
+  observedAt?: string;
+  supportingClaims: number;
+}
+
+export type BacklineProjectionStatus = 'shadow' | 'success' | 'failed';
+
+export interface BacklineProjectionItem {
+  idempotencyKey?: string;
+  sourceId: string;
+  observationId: string;
+  candidateKey: string;
+  action: string;
+  status: BacklineProjectionStatus;
+  completedAt?: string;
+  wouldWrite: string | null;
+  reason: string | null;
+  outcome?: string | null;
+  candidate: BacklineProjectionCandidate | null;
+  error?: string;
+}
+
+export interface BacklineProjectionRun {
+  observationId: string;
+  sourceId: string;
+  runId?: string;
+  status: 'success' | 'partial' | 'running' | string;
+  expectedItems: number;
+  completedAt?: string;
+  counts: Partial<Record<'itemsSeen' | 'claims' | 'artistsCreated' | 'artistsMatched' | 'venuesCreated' | 'venuesMatched' | 'eventsCreated' | 'eventsUpdated' | 'eventsCancelled' | 'projectionFailures', number>>;
+}
+
+export interface BacklineOperations {
+  sourceFamily: string;
+  freshness: BacklineFreshness[];
+  projectionRuns: BacklineProjectionRun[];
+  wouldWrite: BacklineProjectionItem[];
+  truncated: boolean;
+  observationsSampled: number;
+  exceptions: { available: boolean; reason: string };
+  readOnly: boolean;
+  canonicalWritesEnabled: boolean;
+  projectionControl?: BacklineSummary['projectionControl'];
+  computedAt: string;
+}
+
 export type BacklineGraphNodeKind = 'source' | 'observation' | 'claim' | 'candidate' | 'entity';
 
 export interface BacklineGraphNode {
@@ -364,6 +446,10 @@ export const backlineService = {
     return get<BacklineGraphNeighborhood>(`/api/source-runs/backline/graph?${params.toString()}`);
   },
   hydration: () => get<BacklineCanonicalHydration>('/api/source-runs/backline/hydration'),
+  operations: (family = 'lemonrock', limit = 25) => {
+    const params = new URLSearchParams({ family, limit: String(limit) });
+    return get<BacklineOperations>(`/api/source-runs/backline/operations?${params.toString()}`);
+  },
   trustLoop: (limit = 5) => {
     const params = new URLSearchParams({ limit: String(limit) });
     return get<{ runs: BacklineTrustLoopRun[]; readOnly: true; canonicalWritesEnabled: false }>(`/api/source-runs/backline/trust-loop?${params.toString()}`);
